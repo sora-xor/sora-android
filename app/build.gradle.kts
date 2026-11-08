@@ -381,7 +381,7 @@ dependencies {
 
     implementation(libs.roomDep)
     implementation(project(":xcrypto"))
-    implementation(libs.xsubstrateDep)
+    implementation(project(":xsubstrate"))
     implementation(libs.soramitsu.android.foundation)
 
     implementation(libs.daggerDep)
@@ -400,7 +400,7 @@ dependencies {
     implementation(libs.composeFoundationDep)
     implementation(libs.core.splashscreen)
     implementation(libs.composeMaterialDep)
-    implementation(libs.uiCoreDep)
+    implementation(project(":ui-core"))
     implementation(libs.composeAnimationDep)
     implementation(libs.composeToolingPreviewDep)
     debugImplementation(libs.composeToolingDep)

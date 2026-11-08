@@ -21,7 +21,7 @@ TEST_ONLY_MODULES = {"test_data", "baselineprofile"}
 # Upstream libraries built from vendored source instead of a prebuilt binary; each README
 # names the upstream commit. Like the dependencies they replace, they are not app code, and
 # their own differential and device tests qualify them. App modules never belong here.
-VENDORED_LIBRARY_MODULES = {"xcrypto", "polkaj-scale"}
+VENDORED_LIBRARY_MODULES = {"xcrypto", "polkaj-scale", "xsubstrate", "ui-core"}
 
 
 def source_files(root):

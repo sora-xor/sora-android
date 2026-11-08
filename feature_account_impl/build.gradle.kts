@@ -80,7 +80,7 @@ dependencies {
     implementation(project(":sorasubstrate"))
 
     implementation(project(":xcrypto"))
-    implementation(libs.xsubstrateDep)
+    implementation(project(":xsubstrate"))
     implementation(libs.soramitsu.android.foundation)
 
     implementation(libs.daggerDep)

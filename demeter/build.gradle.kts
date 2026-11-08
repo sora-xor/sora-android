@@ -87,7 +87,7 @@ dependencies {
     implementation(libs.coroutineDep)
     implementation(libs.coroutineAndroidDep)
 
-    implementation(libs.xsubstrateDep)
+    implementation(project(":xsubstrate"))
     implementation(libs.soramitsu.android.foundation)
 
     implementation(platform(libs.compose.bom))

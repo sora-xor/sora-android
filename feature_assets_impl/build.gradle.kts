@@ -82,7 +82,7 @@ dependencies {
     implementation(project(":feature_main_api"))
     implementation(project(":feature_blockexplorer_api"))
 
-    implementation(libs.xsubstrateDep)
+    implementation(project(":xsubstrate"))
     implementation(project(":xcrypto"))
     implementation(libs.soramitsu.android.foundation)
 
@@ -120,7 +120,7 @@ dependencies {
     implementation(libs.roomDep)
     implementation(libs.roomKtxDep)
 
-    implementation(libs.uiCoreDep)
+    implementation(project(":ui-core"))
 
     implementation(platform(libs.compose.bom))
     implementation(libs.composeUiDep)

@@ -194,7 +194,8 @@ class PinCodeViewModel @Inject constructor(
                 PinCodeAction.OPEN_JSON,
                 PinCodeAction.LOGOUT,
                 PinCodeAction.CUSTOM_NODE,
-                PinCodeAction.SELECT_NODE -> {
+                PinCodeAction.SELECT_NODE,
+                PinCodeAction.GOOGLE_BACKUP -> {
                     state = state.copy(
                         toolbarTitleString = resourceManager.getString(R.string.pincode_enter_pin_code),
                         isBiometricButtonVisible = true
@@ -479,6 +480,10 @@ class PinCodeViewModel @Inject constructor(
                 PinCodeAction.CUSTOM_NODE,
                 PinCodeAction.SELECT_NODE -> {
                     selectNodeRouter.returnFromPinCodeCheck()
+                }
+
+                PinCodeAction.GOOGLE_BACKUP -> {
+                    mainRouter.returnFromPinConfirmation(PinCodeAction.GOOGLE_BACKUP)
                 }
 
                 else -> {

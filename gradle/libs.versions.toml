@@ -56,12 +56,11 @@ lazySodium = "5.0.2"
 jna = "5.17.0"
 kover = "0.9.8"
 soramitsuXnetworking = "1.0.15-K2"
-soramitsuXsubstrate = "1.2.7"
-soramitsuUicore = "0.2.39"
 soramitsuAndroidFoundation = "0.0.4"
 okhttp = "4.12.0"
 web3jCrypto = "4.8.7-android"
 lz4Java = "1.12.1"
+savedstate = "1.4.0"
 
 [libraries]
 jackson-bom = { module = "com.fasterxml.jackson:jackson-bom", version = "2.22.4" }
@@ -69,8 +68,6 @@ spongycastle-provider = { module = "com.madgag.spongycastle:prov", version = "1.
 core-splashscreen = { module = "androidx.core:core-splashscreen", version = "1.2.0" }
 soramitsu-android-foundation = { module = "jp.co.soramitsu:android-foundation", version.ref = "soramitsuAndroidFoundation" }
 xnetworkingLibDep = { module = "jp.co.soramitsu.xnetworking:lib-android", version.ref = "soramitsuXnetworking" }
-xsubstrateDep = { module = "jp.co.soramitsu:xsubstrate", version.ref = "soramitsuXsubstrate" }
-uiCoreDep = { module = "jp.co.soramitsu:ui-core", version.ref = "soramitsuUicore" }
 roomDep = { module = "androidx.room:room-runtime", version.ref = "room" }
 roomCompilerDep = { module = "androidx.room:room-compiler", version.ref = "room" }
 roomKtxDep = { module = "androidx.room:room-ktx", version.ref = "room" }
@@ -102,6 +99,9 @@ ed25519Dep = { module = "com.github.warchant:ed25519-sha3-java", version.ref = "
 xercesDep = { module = "org.eclipse.birt.runtime.3_7_1:org.apache.xerces", version.ref = "xerces" }
 bcprovDep = { module = "org.bouncycastle:bcprov-jdk18on", version.ref = "bouncycastle" }
 web3jCryptoDep = { module = "org.web3j:crypto", version.ref = "web3jCrypto" }
+activityDep = { module = "androidx.activity:activity", version.ref = "activityCompose" }
+savedstateDep = { module = "androidx.savedstate:savedstate", version.ref = "savedstate" }
+kotlinxSerializationCoreDep = { module = "org.jetbrains.kotlinx:kotlinx-serialization-core", version.ref = "xserializationjson" }
 lz4JavaDep = { module = "at.yawk.lz4:lz4-java", version.ref = "lz4Java" }
 timberDep = { module = "com.jakewharton.timber:timber", version.ref = "timber" }
 workManagerDep = { module = "androidx.work:work-runtime-ktx", version.ref = "workManager" }

@@ -16,21 +16,8 @@ plugins {
 subprojects {
     dependencies {
         components {
-            // These exact vendor builds publish unused test dependencies at runtime.
+            // This exact vendor build publishes unused test dependencies at runtime.
             // Source and bytecode evidence: docs/security/android-test-dependency-usage-20261024.json.
-            withModule("jp.co.soramitsu:xsubstrate") {
-                if (id.version == "1.2.7") {
-                    allVariants {
-                        withDependencies {
-                            removeIf {
-                                "${it.group}:${it.name}" in setOf(
-                                    "org.mockito.kotlin:mockito-kotlin", "junit:junit", "io.mockk:mockk",
-                                )
-                            }
-                        }
-                    }
-                }
-            }
             withModule("jp.co.soramitsu:android-foundation") {
                 if (id.version == "0.0.4") {
                     allVariants {

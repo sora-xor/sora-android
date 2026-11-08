@@ -109,7 +109,7 @@ dependencies {
 
     implementation(libs.lifecycleProcessDep)
 
-    implementation(libs.uiCoreDep)
+    implementation(project(":ui-core"))
     implementation(libs.soramitsu.android.foundation)
 
     implementation(platform(libs.compose.bom))

@@ -67,7 +67,7 @@ dependencies {
     implementation(project(":common"))
     implementation(project(":sorasubstrate"))
 
-    implementation(libs.xsubstrateDep)
+    implementation(project(":xsubstrate"))
 
     implementation(libs.coroutineAndroidDep)
     implementation(libs.coroutineDep)

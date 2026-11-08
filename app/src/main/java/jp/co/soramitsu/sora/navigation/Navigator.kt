@@ -46,6 +46,7 @@ import jp.co.soramitsu.feature_ecosystem_impl.presentation.claimdemeter.ClaimDem
 import jp.co.soramitsu.feature_ecosystem_impl.presentation.editfarm.EditFarmFragment
 import jp.co.soramitsu.feature_ecosystem_impl.presentation.farmdetails.FarmDetailsFragment
 import jp.co.soramitsu.common.account.AccountOptionsRouter
+import jp.co.soramitsu.feature_main_api.domain.model.PIN_CONFIRMED_ACTION_KEY
 import jp.co.soramitsu.feature_main_api.domain.model.PinCodeAction
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_main_impl.presentation.util.action
@@ -112,6 +113,14 @@ class Navigator :
                 this.addresses = addresses
             }
         )
+    }
+
+    override fun returnFromPinConfirmation(action: PinCodeAction) {
+        navController?.previousBackStackEntry?.savedStateHandle?.set(
+            PIN_CONFIRMED_ACTION_KEY,
+            action.name,
+        )
+        navController?.popBackStack()
     }
 
     override fun showFlexibleUpdateScreen() {

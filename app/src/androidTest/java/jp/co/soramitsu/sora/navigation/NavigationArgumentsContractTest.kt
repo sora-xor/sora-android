@@ -11,6 +11,7 @@ import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.presentation.args.*
 import jp.co.soramitsu.common.presentation.compose.webview.title
 import jp.co.soramitsu.common.presentation.compose.webview.url
+import jp.co.soramitsu.feature_main_api.domain.model.PIN_CONFIRMED_ACTION_KEY
 import jp.co.soramitsu.feature_main_api.domain.model.PinCodeAction
 import jp.co.soramitsu.feature_main_impl.presentation.util.action
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.protection.ExportProtectionViewModel
@@ -162,6 +163,13 @@ class NavigationArgumentsContractTest {
         subject.returnToAddLiquidity(token, null)
         val result = handle.get<Bundle>(BUNDLE_KEY)!!
         assertEquals(token, result.tokenFromNullable); assertNull(result.tokenToNullable)
+        verify(exactly = 1) { controller.popBackStack() }
+    }
+    @Test fun confirmedPinReturnsTheConfirmedActionToTheScreenBelow() {
+        val handle = SavedStateHandle(); val previous = mockk<NavBackStackEntry>()
+        every { previous.savedStateHandle } returns handle; every { controller.previousBackStackEntry } returns previous
+        subject.returnFromPinConfirmation(PinCodeAction.GOOGLE_BACKUP)
+        assertEquals(PinCodeAction.GOOGLE_BACKUP.name, handle.get<String>(PIN_CONFIRMED_ACTION_KEY))
         verify(exactly = 1) { controller.popBackStack() }
     }
     @Test fun completedPinCheckReturnsAnExplicitSuccessFlag() {
