@@ -25,7 +25,7 @@ import javax.inject.Singleton
 import jp.co.soramitsu.common.account.WalletMutationCoordinator
 import jp.co.soramitsu.common.account.WalletRecoveryCapabilityGate
 import jp.co.soramitsu.common.domain.DuplicateWaitingTransactionException
-import jp.co.soramitsu.common.logger.FirebaseWrapper
+import jp.co.soramitsu.common.logger.WalletDiagnostics
 import jp.co.soramitsu.core_db.AppDatabase
 import jp.co.soramitsu.core_db.WalletSigningGate
 import jp.co.soramitsu.sora.substrate.models.ExtrinsicSubmitStatus
@@ -457,7 +457,7 @@ class ExtrinsicManager @Inject constructor(
         try {
             withContext(NonCancellable) { block() }
         } catch (_: Exception) {
-            recordErrorClassBestEffort(FirebaseWrapper.PrivacySafeErrorClass.STATE_FAILURE)
+            recordErrorClassBestEffort(WalletDiagnostics.PrivacySafeErrorClass.STATE_FAILURE)
         }
     }
 
@@ -521,7 +521,7 @@ class ExtrinsicManager @Inject constructor(
         } catch (_: Throwable) {
             // A local history observer cannot change an authoritative finalized chain result.
             recordErrorClassBestEffort(
-                FirebaseWrapper.PrivacySafeErrorClass.STATE_FAILURE
+                WalletDiagnostics.PrivacySafeErrorClass.STATE_FAILURE
             )
         }
     }
@@ -535,7 +535,7 @@ class ExtrinsicManager @Inject constructor(
         if (error !is Sora2FinalityPendingException) {
             // A wait that simply has no final answer yet is the normal pending case, not an error.
             recordErrorClassBestEffort(
-                FirebaseWrapper.PrivacySafeErrorClass.EXTRINSIC_SUBMISSION
+                WalletDiagnostics.PrivacySafeErrorClass.EXTRINSIC_SUBMISSION
             )
         }
         return if (error is CancellationException) {
@@ -546,10 +546,10 @@ class ExtrinsicManager @Inject constructor(
     }
 
     private fun recordErrorClassBestEffort(
-        errorClass: FirebaseWrapper.PrivacySafeErrorClass,
+        errorClass: WalletDiagnostics.PrivacySafeErrorClass,
     ) {
         try {
-            FirebaseWrapper.recordErrorClass(errorClass)
+            WalletDiagnostics.recordErrorClass(errorClass)
         } catch (_: Throwable) {
             // Telemetry is never part of submission classification or a finalized result.
         }

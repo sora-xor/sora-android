@@ -20,8 +20,8 @@ import jp.co.soramitsu.common.util.KeyMaterialUnavailableException
 import jp.co.soramitsu.common.account.WalletRecoveryCapabilityGate
 import jp.co.soramitsu.common.data.WalletPreferenceIntegrity
 import jp.co.soramitsu.common.data.WalletPreferenceKeys
-import jp.co.soramitsu.common.logger.FirebaseWrapper
-import jp.co.soramitsu.common.logger.FirebaseWrapper.WalletRecoveryEvent
+import jp.co.soramitsu.common.logger.WalletDiagnostics
+import jp.co.soramitsu.common.logger.WalletDiagnostics.WalletRecoveryEvent
 import jp.co.soramitsu.core_db.model.NetworkAccountLocal
 import jp.co.soramitsu.core_db.model.SoraAccountLocal
 import jp.co.soramitsu.core_db.model.WalletDeletionContract
@@ -743,7 +743,7 @@ object WalletUpgradeBackup {
         migrationRecoverySnapshot = recovery
         blockingFailure = failure
         if (failure != null) {
-            FirebaseWrapper.recordWalletRecovery(when (failure.code) {
+            WalletDiagnostics.recordWalletRecovery(when (failure.code) {
                 "STORAGE_FULL", "INSUFFICIENT_BACKUP_STORAGE" -> WalletRecoveryEvent.GATE_STORAGE_FULL
                 "DATABASE_LOCKED" -> WalletRecoveryEvent.GATE_DATABASE_LOCKED
                 "DATABASE_IO" -> WalletRecoveryEvent.GATE_DATABASE_IO
@@ -807,7 +807,7 @@ object WalletUpgradeBackup {
         }
         migrationRecoverySnapshot = current
         WalletRecoveryCapabilityGate.enterLegacyReadOnly()
-        FirebaseWrapper.recordWalletRecovery(WalletRecoveryEvent.READ_ONLY_ENTERED)
+        WalletDiagnostics.recordWalletRecovery(WalletRecoveryEvent.READ_ONLY_ENTERED)
         keepCodeForRecoveryScreen()
         blockingFailure = null
     }
@@ -1004,7 +1004,7 @@ object WalletUpgradeBackup {
             WalletRecoveryCapabilityGate.enterBlocked()
         }
         WalletRecoveryCapabilityGate.enterLegacyReadOnly()
-        FirebaseWrapper.recordWalletRecovery(WalletRecoveryEvent.READ_ONLY_ENTERED)
+        WalletDiagnostics.recordWalletRecovery(WalletRecoveryEvent.READ_ONLY_ENTERED)
         keepCodeForRecoveryScreen()
         blockingFailure = null
         SafeReadOnlyRoute.ROOM_READ_ONLY
@@ -4649,7 +4649,7 @@ object WalletUpgradeBackup {
                 throw WalletUpgradeBackupException("DATABASE_RECOVERY_FAILED")
             }
             nonBlockingWarnings = nonBlockingWarnings + "DATABASE_JOURNAL_RECOVERED"
-            FirebaseWrapper.recordWalletRecovery(WalletRecoveryEvent.JOURNAL_RECOVERED)
+            WalletDiagnostics.recordWalletRecovery(WalletRecoveryEvent.JOURNAL_RECOVERED)
         } finally {
             removeExactValidationTree(directory, identity, parentIdentity)
         }

@@ -7,7 +7,7 @@ import com.google.gson.JsonParser
 import java.io.File
 import java.io.FileOutputStream
 import jp.co.soramitsu.common.domain.TransactionNodeRefusal
-import jp.co.soramitsu.common.logger.FirebaseWrapper
+import jp.co.soramitsu.common.logger.WalletDiagnostics
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -334,7 +334,7 @@ class FileSora2SubmissionDetailsStore(
 
     private fun recordStateFailureBestEffort() {
         try {
-            FirebaseWrapper.recordErrorClass(FirebaseWrapper.PrivacySafeErrorClass.STATE_FAILURE)
+            WalletDiagnostics.recordErrorClass(WalletDiagnostics.PrivacySafeErrorClass.STATE_FAILURE)
         } catch (_: Throwable) {
             // Telemetry never decides what the wallet shows.
         }

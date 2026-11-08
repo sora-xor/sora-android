@@ -194,7 +194,8 @@ class PinCodeViewModel @Inject constructor(
                 PinCodeAction.OPEN_JSON,
                 PinCodeAction.LOGOUT,
                 PinCodeAction.CUSTOM_NODE,
-                PinCodeAction.SELECT_NODE -> {
+                PinCodeAction.SELECT_NODE,
+                PinCodeAction.GOOGLE_BACKUP -> {
                     state = state.copy(
                         toolbarTitleString = resourceManager.getString(R.string.pincode_enter_pin_code),
                         isBiometricButtonVisible = true
@@ -481,6 +482,10 @@ class PinCodeViewModel @Inject constructor(
                     selectNodeRouter.returnFromPinCodeCheck()
                 }
 
+                PinCodeAction.GOOGLE_BACKUP -> {
+                    mainRouter.returnFromPinConfirmation(PinCodeAction.GOOGLE_BACKUP)
+                }
+
                 else -> {
                     proceed()
                 }
@@ -634,7 +639,7 @@ class PinCodeViewModel @Inject constructor(
     }
 
     private suspend fun handleWalletDeletionError(error: Throwable) {
-        jp.co.soramitsu.common.logger.FirebaseWrapper.recordException(error)
+        jp.co.soramitsu.common.logger.WalletDiagnostics.recordException(error)
         val failureCode = try {
             interactor.walletDeletionFailureCode()
         } catch (lookupError: CancellationException) {
@@ -750,7 +755,7 @@ class PinCodeViewModel @Inject constructor(
                 } catch (error: Throwable) {
                     // The claim check is optional: it runs again at the next unlock (nothing was
                     // recorded). It never keeps the person out of the wallet.
-                    jp.co.soramitsu.common.logger.FirebaseWrapper.recordException(error)
+                    jp.co.soramitsu.common.logger.WalletDiagnostics.recordException(error)
                     false
                 }
                 state = state.copy(

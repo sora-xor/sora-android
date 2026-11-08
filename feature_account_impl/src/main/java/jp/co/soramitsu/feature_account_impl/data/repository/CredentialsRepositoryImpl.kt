@@ -32,7 +32,7 @@ import jp.co.soramitsu.common.account.WalletRecoveryCapabilityGate
 import jp.co.soramitsu.common.domain.ResponseCode
 import jp.co.soramitsu.common.domain.SigningKeyUnavailableException
 import jp.co.soramitsu.common.domain.SoraException
-import jp.co.soramitsu.common.logger.FirebaseWrapper
+import jp.co.soramitsu.common.logger.WalletDiagnostics
 import jp.co.soramitsu.common.util.Const
 import jp.co.soramitsu.common.util.CryptoAssistant
 import jp.co.soramitsu.common.util.KeyMaterialUnavailableException
@@ -347,9 +347,9 @@ class CredentialsRepositoryImpl constructor(
         }
         if (absent.isNotEmpty()) {
             credentialsPrefs.writeCredentialsIfAbsent(address, absent)
-            FirebaseWrapper.log(FirebaseWrapper.Breadcrumb.KEYS_CREATED)
+            WalletDiagnostics.log(WalletDiagnostics.Breadcrumb.KEYS_CREATED)
         } else {
-            FirebaseWrapper.log(FirebaseWrapper.Breadcrumb.RETAINED_KEYS_ADOPTED)
+            WalletDiagnostics.log(WalletDiagnostics.Breadcrumb.RETAINED_KEYS_ADOPTED)
         }
         // Read back: whatever is stored now must sign for this address.
         check(scopedVerdict(address, storedValues(address)).canSign) {
@@ -393,7 +393,7 @@ class CredentialsRepositoryImpl constructor(
                     else -> after.seed == BackupMatch.MATCHES
                 }
             ) { "WALLET_KEYS_READBACK_MISMATCH" }
-            FirebaseWrapper.log(FirebaseWrapper.Breadcrumb.RECOVERY_BACKUP_ADDED)
+            WalletDiagnostics.log(WalletDiagnostics.Breadcrumb.RECOVERY_BACKUP_ADDED)
             true
         }
 
@@ -458,7 +458,7 @@ class CredentialsRepositoryImpl constructor(
             check(scopedVerdict(address, storedValues(address)).canSign) {
                 "WALLET_KEYS_READBACK_MISMATCH"
             }
-            FirebaseWrapper.log(FirebaseWrapper.Breadcrumb.ACCOUNT_KEYS_REPAIRED)
+            WalletDiagnostics.log(WalletDiagnostics.Breadcrumb.ACCOUNT_KEYS_REPAIRED)
             SoraAccount(address, draft.accountName)
         }
 
@@ -744,7 +744,7 @@ class CredentialsRepositoryImpl constructor(
                 claimSignature = signature.toHexString(),
                 publicKey = keys.public.encoded.toHexString()
             )
-            FirebaseWrapper.log(FirebaseWrapper.Breadcrumb.LEGACY_CREDENTIALS_READ)
+            WalletDiagnostics.log(WalletDiagnostics.Breadcrumb.LEGACY_CREDENTIALS_READ)
             irohaCash[soraAccount.substrateAddress] = data
             return data
         }
@@ -761,7 +761,7 @@ class CredentialsRepositoryImpl constructor(
                 keyPair?.privateKey?.fill(0)
                 keyPair?.nonce?.fill(0)
             }
-            FirebaseWrapper.log(FirebaseWrapper.Breadcrumb.ADDRESS_RECREATED)
+            WalletDiagnostics.log(WalletDiagnostics.Breadcrumb.ADDRESS_RECREATED)
         }
         return address
     }

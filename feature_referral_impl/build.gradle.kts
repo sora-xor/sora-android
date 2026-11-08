@@ -89,7 +89,7 @@ dependencies {
     implementation(libs.coroutineDep)
     implementation(libs.viewmodelKtxDep)
 
-    implementation(libs.uiCoreDep)
+    implementation(project(":ui-core"))
     implementation(libs.soramitsu.android.foundation)
     implementation(libs.navigationComposeDep)
 
@@ -111,7 +111,7 @@ dependencies {
 
     implementation(libs.timberDep)
 
-    implementation(libs.xsubstrateDep)
+    implementation(project(":xsubstrate"))
 
     implementation(libs.lifecycleProcessDep)
 

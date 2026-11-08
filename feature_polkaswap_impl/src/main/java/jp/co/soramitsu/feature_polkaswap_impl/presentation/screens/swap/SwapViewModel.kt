@@ -48,7 +48,7 @@ import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.domain.TransactionOutcome
 import jp.co.soramitsu.common.domain.printFiat
 import jp.co.soramitsu.common.domain.subtractFee
-import jp.co.soramitsu.common.logger.FirebaseWrapper
+import jp.co.soramitsu.common.logger.WalletDiagnostics
 import jp.co.soramitsu.common.presentation.compose.states.ButtonState
 import jp.co.soramitsu.common.presentation.transaction.TransactionResultBadge
 import jp.co.soramitsu.common.presentation.transaction.badge
@@ -616,7 +616,7 @@ class SwapViewModel @AssistedInject constructor(
     } catch (error: CancellationException) {
         throw error
     } catch (error: Exception) {
-        FirebaseWrapper.recordException(error)
+        WalletDiagnostics.recordException(error)
         _swapMainState.value = _swapMainState.value.copy(
             feeUnavailable = NetworkFeeUnavailable.from(error),
         )

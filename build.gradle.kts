@@ -9,9 +9,6 @@ plugins {
     alias(libs.plugins.hilt) apply false
     alias(libs.plugins.ksp) apply false
     alias(libs.plugins.serialization) apply false
-    alias(libs.plugins.googleServicesPlugin) apply false
-    alias(libs.plugins.firebaseCrashlyticsPlugin) apply false
-    alias(libs.plugins.firebaseAppDistributionPlugin) apply false
     alias(libs.plugins.triplet) apply false
     alias(libs.plugins.kover)
 }
@@ -19,21 +16,8 @@ plugins {
 subprojects {
     dependencies {
         components {
-            // These exact vendor builds publish unused test dependencies at runtime.
+            // This exact vendor build publishes unused test dependencies at runtime.
             // Source and bytecode evidence: docs/security/android-test-dependency-usage-20261024.json.
-            withModule("jp.co.soramitsu:xsubstrate") {
-                if (id.version == "1.2.7") {
-                    allVariants {
-                        withDependencies {
-                            removeIf {
-                                "${it.group}:${it.name}" in setOf(
-                                    "org.mockito.kotlin:mockito-kotlin", "junit:junit", "io.mockk:mockk",
-                                )
-                            }
-                        }
-                    }
-                }
-            }
             withModule("jp.co.soramitsu:android-foundation") {
                 if (id.version == "0.0.4") {
                     allVariants {
@@ -77,14 +61,16 @@ subprojects {
                 substitute(module("androidx.compose.ui:ui-tooling-android"))
                     .using(module("androidx.compose.ui:ui-tooling-android:1.11.1-sora.1"))
                     .because("Keep preview parameter controls in the app's Material2 theme")
-                // Keep Drive's transport/API intact while removing its unused insecure TLS opt-outs.
-                substitute(module("com.google.http-client:google-http-client"))
-                    .using(module("com.google.http-client:google-http-client:1.43.3-sora.1"))
-                    .because("Certificate and hostname verification cannot be disabled")
-                // Source-built local security fork replaces EdDSA with maintained BC Ed25519.
+                // xcrypto is built from source in this repository (:xcrypto); vendored libraries
+                // that name the jp.co.soramitsu:xcrypto coordinate get the in-repo module.
                 substitute(module("jp.co.soramitsu:xcrypto"))
-                    .using(module("jp.co.soramitsu:xcrypto:1.2.8-sora.2"))
-                    .because("Remove vulnerable EdDSA implementation from every vendor consumer")
+                    .using(project(":xcrypto"))
+                    .because("xcrypto and its sr25519 JNI library are built from in-repo source")
+                // The polkaj-scale 0.2.3 jar that xsubstrate depends on came from a fork whose source
+                // was never published; :polkaj-scale is that SCALE codec built from in-repo source.
+                substitute(module("io.emeraldpay.polkaj:polkaj-scale"))
+                    .using(project(":polkaj-scale"))
+                    .because("polkaj-scale is built from in-repo source")
                 // The original coordinate is unmaintained. This continuation preserves the
                 // net.jpountz API used by xcrypto and fixes native/buffer bounds vulnerabilities.
                 substitute(module("org.lz4:lz4-java"))

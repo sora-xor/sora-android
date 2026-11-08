@@ -10,7 +10,7 @@ import io.mockk.verify
 import java.io.IOException
 import java.math.BigDecimal
 import jp.co.soramitsu.androidfoundation.testing.MainCoroutineRule
-import jp.co.soramitsu.common.logger.FirebaseWrapper
+import jp.co.soramitsu.common.logger.WalletDiagnostics
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
 import jp.co.soramitsu.feature_assets_api.presentation.selectsearchtoken.SearchTokenFilter
@@ -39,14 +39,14 @@ class TokenSelectionFailureTest {
 
     @Before
     fun setup() {
-        mockkObject(FirebaseWrapper)
-        justRun { FirebaseWrapper.recordException(any()) }
+        mockkObject(WalletDiagnostics)
+        justRun { WalletDiagnostics.recordException(any()) }
     }
 
     @After
     fun cleanup() {
         store.clear()
-        unmockkObject(FirebaseWrapper)
+        unmockkObject(WalletDiagnostics)
     }
 
     private fun viewModel() = SelectSearchTokenViewModel(interactor, NumbersFormatter()).also {
@@ -62,7 +62,7 @@ class TokenSelectionFailureTest {
         runCurrent()
 
         assertTrue(viewModel.state.value.list.isEmpty())
-        verify(exactly = 1) { FirebaseWrapper.recordException(failure) }
+        verify(exactly = 1) { WalletDiagnostics.recordException(failure) }
     }
 
     @Test
@@ -83,7 +83,7 @@ class TokenSelectionFailureTest {
         assertTrue(viewModel.state.value.list.isEmpty())
         viewModel.onFilterChange(SearchTokenFilter("XOR", emptyList()))
         assertTrue(viewModel.state.value.list.isEmpty())
-        verify(exactly = 1) { FirebaseWrapper.recordException(failure) }
+        verify(exactly = 1) { WalletDiagnostics.recordException(failure) }
     }
 
     @Test
@@ -98,6 +98,6 @@ class TokenSelectionFailureTest {
         store.clear()
         runCurrent()
 
-        verify(exactly = 0) { FirebaseWrapper.recordException(any()) }
+        verify(exactly = 0) { WalletDiagnostics.recordException(any()) }
     }
 }

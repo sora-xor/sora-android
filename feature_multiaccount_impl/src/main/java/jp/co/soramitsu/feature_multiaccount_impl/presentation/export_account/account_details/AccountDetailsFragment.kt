@@ -41,6 +41,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.fragment.app.viewModels
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
+import androidx.navigation.fragment.findNavController
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import jp.co.soramitsu.androidfoundation.fragment.CustomViewModelFactory
@@ -51,6 +52,8 @@ import jp.co.soramitsu.common.domain.ResponseCode
 import jp.co.soramitsu.common.domain.SoraException
 import jp.co.soramitsu.common.presentation.args.address
 import jp.co.soramitsu.common.presentation.compose.components.animatedComposable
+import jp.co.soramitsu.feature_main_api.domain.model.PIN_CONFIRMED_ACTION_KEY
+import jp.co.soramitsu.feature_main_api.domain.model.PinCodeAction
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.OnboardingActivity
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.backup_password.BackupPasswordScreen
 import jp.co.soramitsu.ui_core.resources.Dimens
@@ -94,6 +97,17 @@ class AccountDetailsFragment : SoraBaseFragment<AccountDetailsViewModel>() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         (activity as BottomBarController).hideBottomBar()
+        // The PIN screen that Google backup opened hands its confirmation back here. It is
+        // cleared once read, so a recreated screen does not act on it twice.
+        findNavController().currentBackStackEntry?.savedStateHandle?.let { handle ->
+            handle.getLiveData<String?>(PIN_CONFIRMED_ACTION_KEY)
+                .observe(viewLifecycleOwner) { action ->
+                    if (action == PinCodeAction.GOOGLE_BACKUP.name) {
+                        handle[PIN_CONFIRMED_ACTION_KEY] = null
+                        viewModel.onPinConfirmed(launcher)
+                    }
+                }
+        }
         viewModel.consentExceptionHandler.observe {
             consentHandlerLauncher?.launch(it)
         }

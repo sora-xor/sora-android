@@ -3,8 +3,9 @@
 
 Kover emits JaCoCo-compatible XML. Merge by source file and line number, rather
 than averaging percentages or double-counting lines executed by both suites.
-Only compiler-generated sources are removed: every checked-in source compiled
-by the productionDebug variant, including UI and debug support, stays in scope.
+Only compiler-generated sources and upstream libraries vendored as source are
+removed: every other checked-in source compiled by the productionDebug variant,
+including UI and debug support, stays in scope.
 """
 import argparse
 import hashlib
@@ -17,13 +18,17 @@ import xml.etree.ElementTree as ET
 
 SOURCE_SETS = ("main", "production", "debug", "productionDebug")
 TEST_ONLY_MODULES = {"test_data", "baselineprofile"}
+# Upstream libraries built from vendored source instead of a prebuilt binary; each README
+# names the upstream commit. Like the dependencies they replace, they are not app code, and
+# their own differential and device tests qualify them. App modules never belong here.
+VENDORED_LIBRARY_MODULES = {"xcrypto", "polkaj-scale", "xsubstrate", "ui-core"}
 
 
 def source_files(root):
     result = {}
     for source_set in SOURCE_SETS:
         for path in sorted(root.glob(f"*/src/{source_set}/**/*")):
-            if path.relative_to(root).parts[0] in TEST_ONLY_MODULES:
+            if path.relative_to(root).parts[0] in TEST_ONLY_MODULES | VENDORED_LIBRARY_MODULES:
                 continue
             if path.suffix not in (".kt", ".java") or not path.is_file():
                 continue

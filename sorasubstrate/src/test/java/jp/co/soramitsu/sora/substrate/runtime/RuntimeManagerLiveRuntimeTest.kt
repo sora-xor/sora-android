@@ -14,8 +14,9 @@ import jp.co.soramitsu.androidfoundation.coroutine.CoroutineManager
 import jp.co.soramitsu.common.data.SoraPreferences
 import jp.co.soramitsu.common.domain.NetworkFeeUnavailable
 import jp.co.soramitsu.common.io.FileManager
-import jp.co.soramitsu.common.logger.FirebaseWrapper
+import jp.co.soramitsu.common.logger.WalletDiagnostics
 import jp.co.soramitsu.common.network.BoundedHttpTextClient
+import jp.co.soramitsu.common.util.BuildUtils
 import jp.co.soramitsu.feature_blockexplorer_api.data.SoraConfigManager
 import jp.co.soramitsu.sora.substrate.testing.TestRuntimeSnapshots
 import jp.co.soramitsu.xcrypto.util.fromHex
@@ -23,6 +24,7 @@ import jp.co.soramitsu.xcrypto.util.toHexString
 import jp.co.soramitsu.xsubstrate.runtime.metadata.RuntimeMetadataReader
 import jp.co.soramitsu.xsubstrate.runtime.metadata.v14.ExtrinsicMetadataV14
 import jp.co.soramitsu.xsubstrate.runtime.metadata.v14.LookupSchema
+import jp.co.soramitsu.xsubstrate.runtime.metadata.v14.PalletMetadataV14
 import jp.co.soramitsu.xsubstrate.runtime.metadata.v14.PortableType
 import jp.co.soramitsu.xsubstrate.runtime.metadata.v14.RegistryType
 import jp.co.soramitsu.xsubstrate.runtime.metadata.v14.RuntimeMetadataSchemaV14
@@ -89,13 +91,13 @@ class RuntimeManagerLiveRuntimeTest {
     @Before
     fun setUp() {
         // Spy only: calls still pass through, so tests can check what was recorded.
-        mockkObject(FirebaseWrapper)
+        mockkObject(WalletDiagnostics)
     }
 
     @After
     fun tearDown() {
         scope.cancel()
-        unmockkObject(FirebaseWrapper)
+        unmockkObject(WalletDiagnostics)
     }
 
     private fun TestScope.runtimeManager(): RuntimeManager {
@@ -375,7 +377,7 @@ class RuntimeManagerLiveRuntimeTest {
 
     private fun verifyLegacyMismatchRecorded(times: Int) {
         verify(exactly = times) {
-            FirebaseWrapper.log(FirebaseWrapper.Breadcrumb.RUNTIME_LEGACY_CACHE_IDENTITY_MISMATCH)
+            WalletDiagnostics.log(WalletDiagnostics.Breadcrumb.RUNTIME_LEGACY_CACHE_IDENTITY_MISMATCH)
         }
     }
 
@@ -786,6 +788,96 @@ class RuntimeManagerLiveRuntimeTest {
     }
 
     @Suppress("UNCHECKED_CAST")
+    /** Runs [block] as a production build, where the call table is enforced. */
+    private inline fun <T> asProductionBuild(block: () -> T): T {
+        mockkObject(BuildUtils)
+        try {
+            every { BuildUtils.isFlavors(*anyVararg()) } returns false
+            return block()
+        } finally {
+            unmockkObject(BuildUtils)
+        }
+    }
+
+    @Test
+    fun `a node that serves another call table stops signing with an update-the-app error`() =
+        runTest {
+            // PoolXYK served at the Assets index: "remove liquidity" would be signed as
+            // Assets.transfer (audit 2026-11-07, H1).
+            val tampered = metadataWithPalletIndex(pallet = "PoolXYK", index = 21)
+            liveChain(specVersion = 140, transactionVersion = 135)
+            coEvery { rpc.getMetadataAtFinalized(FINALIZED_HASH) } returns tampered
+            coEvery { http.getUtf8(CONFIG_TYPES_URL, any()) } returns bundledTypes
+            val manager = runtimeManager()
+
+            val error = asProductionBuild {
+                runCatching { manager.getMutationRuntimeContext() }.exceptionOrNull()
+            }
+
+            assertTrue(error is Sora2CallTableMismatchException)
+            assertEquals(
+                listOf(
+                    "PoolXYK.deposit_liquidity",
+                    "PoolXYK.withdraw_liquidity",
+                    "PoolXYK.initialize_pool",
+                ),
+                (error as Sora2CallTableMismatchException).calls,
+            )
+            assertEquals(
+                NetworkFeeUnavailable.APP_UPDATE_REQUIRED,
+                NetworkFeeUnavailable.from(IllegalStateException("fee", error)),
+            )
+            // Reads go on with that runtime; only signing is refused, and stays refused.
+            assertEquals(140, manager.getRuntimeSpecVersion())
+            assertTrue(
+                asProductionBuild {
+                    runCatching { manager.getMutationRuntimeContext() }.exceptionOrNull()
+                } is Sora2CallTableMismatchException
+            )
+        }
+
+    @Test
+    fun `test-network builds record a different call table and keep signing`() = runTest {
+        val tampered = metadataWithPalletIndex(pallet = "PoolXYK", index = 21)
+        liveChain(specVersion = 140, transactionVersion = 135)
+        coEvery { rpc.getMetadataAtFinalized(FINALIZED_HASH) } returns tampered
+        coEvery { http.getUtf8(CONFIG_TYPES_URL, any()) } returns bundledTypes
+        mockkObject(BuildUtils)
+        try {
+            every { BuildUtils.isFlavors(*anyVararg()) } returns true
+
+            val context = runtimeManager().getMutationRuntimeContext()
+
+            assertEquals(140, context.runtimeVersion.specVersion)
+        } finally {
+            unmockkObject(BuildUtils)
+        }
+    }
+
+    @Test
+    fun `remote aliases that change a call are replaced by the packaged aliases`() = runTest {
+        liveChain()
+        coEvery { http.getUtf8(CONFIG_TYPES_URL, any()) } returns bundledTypes.replace(
+            "\"sp_core::crypto::AccountId32\": \"GenericAccountId\"",
+            "\"sp_core::crypto::AccountId32\": \"[u8; 20]\"",
+        ).also { check(it != bundledTypes) }
+
+        val context = asProductionBuild { runtimeManager().getMutationRuntimeContext() }
+
+        assertEquals(bundledTypes.rawSha256(), context.typesSha256)
+        assertEquals(emptyList<String>(), Sora2CallTable.mismatches(context.snapshot))
+    }
+
+    /** The packaged metadata with [pallet] moved to [index], re-encoded as a node sends it. */
+    private fun metadataWithPalletIndex(pallet: String, index: Int): String {
+        val metadata = v14Metadata(bundledMetadata)
+        metadata[RuntimeMetadataSchemaV14.pallets]
+            .first { it[PalletMetadataV14.name] == pallet }[PalletMetadataV14.index] = index.toUByte()
+        val magicAndVersion = bundledMetadata.trim().fromHex().copyOfRange(0, 5)
+        return (magicAndVersion + RuntimeMetadataSchemaV14.toByteArray(metadata))
+            .toHexString(withPrefix = true)
+    }
+
     private fun v14Metadata(metadataHex: String): EncodableStruct<RuntimeMetadataSchemaV14> =
         RuntimeMetadataReader.read(metadataHex.trim()).metadata
             as EncodableStruct<RuntimeMetadataSchemaV14>

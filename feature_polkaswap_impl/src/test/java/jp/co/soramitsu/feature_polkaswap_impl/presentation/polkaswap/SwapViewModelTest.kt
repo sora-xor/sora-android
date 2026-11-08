@@ -256,6 +256,24 @@ class SwapViewModelTest {
     }
 
     @Test
+    fun `token cards without a fiat price show the balance without empty parentheses`() = runTest {
+        given(swapInteractor.fetchAvailableSources(TestTokens.valToken.id, TestTokens.xorToken.id))
+            .willReturn(setOf(Market.SMART, Market.XYK))
+
+        // The test tokens have no fiat price, as every token has while the price feed is down.
+        initViewModel(
+            xorBalance = BigDecimal("100"),
+            valBalance = BigDecimal("2.5"),
+            firstTokenId = TestTokens.valToken.id,
+            secondTokenId = TestTokens.xorToken.id,
+        )
+        advanceUntilIdle()
+
+        assertEquals("2.5", viewModel.swapMainState.value.tokenFromState?.balance)
+        assertEquals("100", viewModel.swapMainState.value.tokenToState?.balance)
+    }
+
+    @Test
     fun `repeated confirmation submits a swap only once while pending`() = runTest {
         val submitted = CompletableDeferred<TransactionOutcome>()
         doSuspendableAnswer { submitted.await() }.whenever(swapInteractor)

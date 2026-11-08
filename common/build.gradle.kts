@@ -64,20 +64,24 @@ android {
     flavorDimensions += listOf("default")
 
     productFlavors {
+        // Google Drive backup needs no client ID or secret: Google issues Drive tokens to the
+        // app's Android OAuth client (package name and signing certificate) through
+        // AccountManager. Development builds keep backup off unless SORA_GOOGLE_TOKEN_TEST marks
+        // a build signed for a registered development client.
         create("develop") {
             dimension = "default"
 
-            buildConfigField("String", "GOOGLE_API_TOKEN", maybeWrapQuotes(secret("SORA_GOOGLE_TOKEN_TEST")))
+            buildConfigField("boolean", "CLOUD_BACKUP_ENABLED", secret("SORA_GOOGLE_TOKEN_TEST").trim().trim('"').isNotBlank().toString())
         }
         create("soralution") {
             dimension = "default"
 
-            buildConfigField("String", "GOOGLE_API_TOKEN", maybeWrapQuotes(secret("SORA_GOOGLE_TOKEN_TEST")))
+            buildConfigField("boolean", "CLOUD_BACKUP_ENABLED", secret("SORA_GOOGLE_TOKEN_TEST").trim().trim('"').isNotBlank().toString())
         }
         create("production") {
             dimension = "default"
 
-            buildConfigField("String", "GOOGLE_API_TOKEN", maybeWrapQuotes(secret("SORA_GOOGLE_TOKEN_PROD")))
+            buildConfigField("boolean", "CLOUD_BACKUP_ENABLED", "true")
         }
     }
 
@@ -113,9 +117,6 @@ dependencies {
         api("org.bouncycastle:bcprov-jdk18on:1.86") {
             because("Use current security fixes consistently for signing and backups")
         }
-        api("com.google.oauth-client:google-oauth-client:1.39.0") {
-            because("Fix OAuth token signature verification (CVE-2021-22573)")
-        }
         api("com.google.guava:guava:33.7.2-android") {
             because("Fix insecure temporary-directory handling (CVE-2023-2976)")
         }
@@ -132,7 +133,7 @@ dependencies {
     implementation(libs.coroutineAndroidDep)
     implementation(libs.coroutineDep)
 
-    implementation(libs.uiCoreDep)
+    implementation(project(":ui-core"))
     api(libs.soramitsu.android.foundation)
 
     api(libs.kotlinxSerializationJsonDep)
@@ -140,7 +141,7 @@ dependencies {
     api(libs.coilSvgDep)
 
     implementation(libs.webSocketLibDep)
-    implementation(libs.uiCoreDep)
+    implementation(project(":ui-core"))
 
     implementation(libs.lifecycleProcessDep)
 
@@ -155,9 +156,9 @@ dependencies {
     implementation(libs.navigationFragmentDep)
     implementation(libs.navigationUiDep)
 
-    api(libs.xbackupDep)
-    api(libs.xsubstrateDep)
-    implementation(libs.xcryptoDep)
+    api(project(":xbackup"))
+    api(project(":xsubstrate"))
+    implementation(project(":xcrypto"))
     implementation(libs.ed25519Dep) {
         // Ed25519Sha3 uses only the digest provider, never PKIX/TLS utilities.
         exclude(group = "com.madgag.spongycastle", module = "bcpkix-jdk15on")
@@ -168,9 +169,6 @@ dependencies {
 
     api(libs.gsonDep)
     implementation(libs.zXingCoreDep)
-
-    implementation(platform(libs.googleFirebaseBomDep))
-    implementation(libs.googleCrashlyticsDep)
 
     implementation(libs.lazySodiumDep) {
         artifact {
@@ -207,20 +205,6 @@ dependencies {
     testImplementation(libs.coroutineTestDep)
     androidTestImplementation(libs.androidxTestExtJunitDep)
     androidTestImplementation(libs.androidxTestEspressoCoreDep)
-}
-
-// Development builds support local recovery without Google; distributed production builds must retain cloud recovery.
-val validateProductionCloudBackupConfiguration by tasks.registering {
-    group = "verification"
-    description = "Checks that production Google backup has an OAuth client configured without exposing its value."
-    doLast {
-        check(secret("SORA_GOOGLE_TOKEN_PROD").trim().trim('"').isNotBlank()) {
-            "Production Google backup requires SORA_GOOGLE_TOKEN_PROD. Configure the release OAuth client before packaging."
-        }
-    }
-}
-tasks.matching { it.name == "preProductionReleaseBuild" }.configureEach {
-    dependsOn(validateProductionCloudBackupConfiguration)
 }
 
 // JsonAccountsEncoderExportTest reads the release keep rules: the one-account JSON export is
