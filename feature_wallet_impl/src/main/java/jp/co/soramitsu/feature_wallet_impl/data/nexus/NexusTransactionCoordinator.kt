@@ -435,10 +435,17 @@ class NexusTransactionCoordinator @Inject constructor(
         pollDelayMillis = pollDelayMillis,
     )
 
-    suspend fun submitAndTrack(prepared: NexusPreparedSend): NexusSendResult {
+    /** [onSubmitted] hears as soon as Torii has the transfer; following it to its end takes longer. */
+    suspend fun submitAndTrack(
+        prepared: NexusPreparedSend,
+        onSubmitted: (NexusSendResult) -> Unit = {},
+    ): NexusSendResult {
         return submitAndTrackNexus(
             submit = { submit(prepared) },
-            track = { reconcileUntilTerminal(it.localId) },
+            track = { submitted ->
+                onSubmitted(submitted)
+                reconcileUntilTerminal(submitted.localId)
+            },
         )
     }
 
@@ -564,13 +571,15 @@ class NexusTransactionCoordinator @Inject constructor(
         network: jp.co.soramitsu.common.nexus.NexusNetwork,
         quote: NexusTransferFeeQuote,
     ) {
+        // A quote without a block limit has nothing to compare a checkpoint with: Taira's quotes
+        // expire by time (TairaTransactionSigner). As on iOS, they neither wait for one nor fail
+        // when the node cannot give one.
+        val validUntil = quote.validUntilBlock ?: return
         check(finalityReader.isQualifiedFor(network)) {
             "NEXUS_FINALITY_READER_NOT_QUALIFIED"
         }
         val finalized = finalityReader.finalizedCheckpoint(network).requireFor(network)
-        quote.validUntilBlock?.let { validUntil ->
-            check(finalized <= validUntil) { "NEXUS_QUOTE_EXPIRED" }
-        }
+        check(finalized <= validUntil) { "NEXUS_QUOTE_EXPIRED" }
     }
 
     private suspend fun requirePendingChainRecoveryClear() {
@@ -736,6 +745,13 @@ internal suspend fun submitAndTrackNexus(
         if (!error.submissionMayHaveReachedTorii) throw NexusNotSubmittedException(error)
         throw error
     }
-    // A status lookup failure after successful submission can never authorize another send.
-    return track(submitted)
+    // Torii has this transfer. A failed status lookup can neither authorize another send nor make
+    // the submission unknown: it stays pending, and the recovery worker keeps following its hash.
+    return try {
+        track(submitted)
+    } catch (error: CancellationException) {
+        throw error
+    } catch (_: Throwable) {
+        submitted
+    }
 }

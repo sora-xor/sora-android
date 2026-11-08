@@ -206,14 +206,22 @@ class NexusPendingReconciler @Inject constructor(
         require(maxAttempts in 1..MAX_STATUS_ATTEMPTS)
         require(pollDelayMillis in 0..MAX_STATUS_POLL_DELAY_MILLIS)
         var result: NexusSendResult? = null
+        var failure: Throwable? = null
         repeat(maxAttempts) { attempt ->
-            result = reconcile(localId)
-            if (result.state in TERMINAL_STATES || attempt == maxAttempts - 1) {
-                return checkNotNull(result)
+            try {
+                val current = reconcile(localId)
+                result = current
+                failure = null
+                if (current.state in TERMINAL_STATES) return current
+            } catch (error: CancellationException) {
+                throw error
+            } catch (error: Throwable) {
+                // A status or proof read that fails now can answer on the next attempt.
+                failure = error
             }
-            if (pollDelayMillis > 0) delay(pollDelayMillis)
+            if (attempt < maxAttempts - 1 && pollDelayMillis > 0) delay(pollDelayMillis)
         }
-        return checkNotNull(result)
+        return result ?: throw checkNotNull(failure)
     }
 
     suspend fun recoverAfterRestart(): NexusRecoveryPass =
