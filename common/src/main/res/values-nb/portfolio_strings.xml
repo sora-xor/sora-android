@@ -15,9 +15,6 @@
     <string name="portfolio_all_wallets">Alle lommebøker</string>
     <string name="portfolio_wallets">Lommebøker</string>
     <string name="portfolio_scope_label">Omfang: %1$s. Velg en lommebok</string>
-    <string name="portfolio_lens_tokens">Tokener</string>
-    <string name="portfolio_lens_networks">Nettverk</string>
-    <string name="portfolio_lens_wallets">Lommebøker</string>
     <string name="portfolio_where_it_lives">Hvor midlene ligger</string>
     <string name="portfolio_where_it_lives_title">%1$s · hvor midlene ligger</string>
     <plurals name="portfolio_networks">
@@ -31,10 +28,6 @@
     <plurals name="portfolio_holdings">
         <item quantity="one">%1$d beholdning</item>
         <item quantity="other">%1$d beholdninger</item>
-    </plurals>
-    <plurals name="portfolio_tokens">
-        <item quantity="one">%1$d token</item>
-        <item quantity="other">%1$d tokener</item>
     </plurals>
     <plurals name="portfolio_assets_not_included">
         <item quantity="one">%1$d eiendel ikke inkludert</item>
@@ -55,10 +48,9 @@
     <string name="portfolio_route_none">Det finnes ingen rute fra %1$s i denne versjonen.</string>
     <string name="portfolio_route_test">Eiendeler på testnett har ingen pengeverdi.</string>
     <string name="portfolio_route_ready">På SORA2. Bytt på Polkaswap nå med SORA2-kontoen din i %1$s.</string>
-    <string name="portfolio_no_route">ingen rute</string>
     <string name="portfolio_receive_on_sora2">Motta på SORA2</string>
-    <string name="portfolio_send_on">Send på %1$s</string>
     <string name="portfolio_send_unavailable">Sending på %1$s er ikke tilgjengelig i denne versjonen.</string>
+    <string name="portfolio_send_on">Send på %1$s</string>
     <string name="portfolio_move_no_other_wallet">Flytting krever en annen av lommebøkene dine med en konto på %1$s.</string>
     <string name="portfolio_move_needs_wallets">Du kan flytte mellom dine egne lommebøker. Legg til en annen lommebok for å overføre midler mellom dem.</string>
     <string name="portfolio_nothing_to_move">Ingenting her kan flyttes akkurat nå.</string>
@@ -71,6 +63,7 @@
     <string name="portfolio_excluded_unpriced">Uten pris: %1$d</string>
     <string name="portfolio_excluded_testnet">Eiendeler på testnett: %1$d</string>
     <string name="portfolio_excluded_caption">%1$s ikke inkludert</string>
+    <string name="portfolio_prices_as_of">Priser per %1$s</string>
     <string name="portfolio_counted">Medregnet</string>
     <string name="portfolio_hidden_by_you">Skjult av deg</string>
     <string name="portfolio_without_price">Ingen pris</string>
@@ -85,6 +78,9 @@
     <string name="portfolio_state_saved">LAGRET</string>
     <string name="portfolio_state_partial">DELVIS</string>
     <string name="portfolio_state_offline">FRAKOBLET</string>
+    <string name="portfolio_state_reading">LESER</string>
+    <string name="portfolio_reading_balances">Leser saldoer…</string>
+    <string name="portfolio_excluded_unread">Lommebøker som ikke er lest ennå: %1$d</string>
     <string name="portfolio_age_seconds">%1$d s</string>
     <string name="portfolio_age_minutes">%1$d min</string>
     <string name="portfolio_age_hours">%1$d t</string>
@@ -97,15 +93,14 @@
     <string name="portfolio_unreachable">%1$s kan ikke nås</string>
     <string name="portfolio_refresh_all">Oppdater alle lommebøker</string>
     <string name="portfolio_wallets_together">Lommebøker samlet: %1$d</string>
-    <string name="portfolio_wallets_note">Alle lommebøker summerer totalen til hver lommebok. Lommebøker som ikke er valgt, beholder siste synkronisering, så listen viser hvor gamle dataene deres er.</string>
+    <string name="portfolio_wallets_note">«Alle lommebøker» legger sammen hver lommeboks egen sum. Lommebøker som ikke er valgt, oppdateres omtrent hvert minutt mens du ser på, så hver av dem viser hvor gamle tallene er.</string>
     <string name="portfolio_manage_wallets">Administrer lommebøker</string>
+    <string name="portfolio_manage_assets">Administrer valgt lommeboks eiendeler</string>
     <string name="portfolio_selected">Valgt</string>
-    <string name="portfolio_open_wallet_alone">Åpne bare %1$s</string>
     <string name="portfolio_other">Annet</string>
     <string name="portfolio_legend_description">%1$s, %2$s prosent, %3$s</string>
-    <string name="portfolio_no_price">Ingen pris</string>
-    <string name="portfolio_no_value">Ingen verdi</string>
     <string name="portfolio_nothing_listed">Ingenting å vise. Skjulte eiendeler vises ikke her.</string>
+    <string name="portfolio_no_balance_yet">Ingen saldo ennå</string>
     <string name="portfolio_wallet_ready">Lommeboken din er klar.</string>
     <string name="portfolio_wallet_ready_body">Motta tokener i denne lommeboken. De vises her på alle nettverk appen støtter.</string>
     <string name="portfolio_token_gone">Dette tokenet finnes ikke lenger i denne visningen.</string>
@@ -137,8 +132,8 @@
     <string name="portfolio_you_pay">Du betaler</string>
     <string name="portfolio_you_get">Du mottar</string>
     <string name="portfolio_swap_note">Polkaswap viser pris, gebyr og prispåvirkning før du signerer. Dette velger bare paret.</string>
-    <string name="portfolio_send_from">Send fra</string>
-    <string name="portfolio_receive_to">Motta i</string>
+    <string name="portfolio_send_from">Send fra hvilken lommebok?</string>
+    <string name="portfolio_receive_to">Motta til hvilken lommebok?</string>
     <string name="portfolio_sample_handoff_off">Eksempelportefølje: Adressene er oppdiktet, så dette åpner ikke Send.</string>
     <string name="portfolio_nexus_send_unavailable">Sending på dette nettverket er ikke tilgjengelig for denne lommeboken akkurat nå.</string>
     <string name="asset_add_to_favorites">Legg til %1$s som favoritt</string>

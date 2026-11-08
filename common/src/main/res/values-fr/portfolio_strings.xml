@@ -15,9 +15,6 @@
     <string name="portfolio_all_wallets">Tous les portefeuilles</string>
     <string name="portfolio_wallets">Portefeuilles</string>
     <string name="portfolio_scope_label">Périmètre : %1$s. Choisissez un portefeuille</string>
-    <string name="portfolio_lens_tokens">Jetons</string>
-    <string name="portfolio_lens_networks">Réseaux</string>
-    <string name="portfolio_lens_wallets">Portefeuilles</string>
     <string name="portfolio_where_it_lives">Répartition</string>
     <string name="portfolio_where_it_lives_title">%1$s · répartition</string>
     <plurals name="portfolio_networks">
@@ -34,11 +31,6 @@
         <item quantity="one">%1$d position</item>
         <item quantity="many">%1$d positions</item>
         <item quantity="other">%1$d positions</item>
-    </plurals>
-    <plurals name="portfolio_tokens">
-        <item quantity="one">%1$d jeton</item>
-        <item quantity="many">%1$d jetons</item>
-        <item quantity="other">%1$d jetons</item>
     </plurals>
     <plurals name="portfolio_assets_not_included">
         <item quantity="one">%1$d actif non inclus</item>
@@ -60,10 +52,9 @@
     <string name="portfolio_route_none">Aucun itinéraire depuis %1$s n’est disponible dans cette version.</string>
     <string name="portfolio_route_test">Les actifs des réseaux de test n’ont aucune valeur monétaire.</string>
     <string name="portfolio_route_ready">Sur SORA2. Échangez dès maintenant sur Polkaswap avec votre compte SORA2 dans %1$s.</string>
-    <string name="portfolio_no_route">aucun itinéraire</string>
     <string name="portfolio_receive_on_sora2">Recevoir sur SORA2</string>
-    <string name="portfolio_send_on">Envoyer sur %1$s</string>
     <string name="portfolio_send_unavailable">L’envoi sur %1$s n’est pas disponible dans cette version.</string>
+    <string name="portfolio_send_on">Envoyer sur %1$s</string>
     <string name="portfolio_move_no_other_wallet">Pour déplacer ces fonds, il vous faut un autre portefeuille avec un compte sur %1$s.</string>
     <string name="portfolio_move_needs_wallets">Le déplacement s’effectue entre vos propres portefeuilles. Ajoutez un autre portefeuille pour transférer des fonds entre eux.</string>
     <string name="portfolio_nothing_to_move">Aucun fonds ne peut être déplacé pour le moment.</string>
@@ -76,6 +67,7 @@
     <string name="portfolio_excluded_unpriced">Sans prix : %1$d</string>
     <string name="portfolio_excluded_testnet">Actifs des réseaux de test : %1$d</string>
     <string name="portfolio_excluded_caption">%1$s non inclus</string>
+    <string name="portfolio_prices_as_of">Prix du %1$s</string>
     <string name="portfolio_counted">Comptabilisé</string>
     <string name="portfolio_hidden_by_you">Masqué par vous</string>
     <string name="portfolio_without_price">Aucun prix</string>
@@ -90,6 +82,9 @@
     <string name="portfolio_state_saved">ENREGISTRÉ</string>
     <string name="portfolio_state_partial">PARTIEL</string>
     <string name="portfolio_state_offline">HORS LIGNE</string>
+    <string name="portfolio_state_reading">LECTURE</string>
+    <string name="portfolio_reading_balances">Lecture des soldes…</string>
+    <string name="portfolio_excluded_unread">Portefeuilles pas encore lus : %1$d</string>
     <string name="portfolio_age_seconds">%1$d s</string>
     <string name="portfolio_age_minutes">%1$d min</string>
     <string name="portfolio_age_hours">%1$d h</string>
@@ -102,15 +97,14 @@
     <string name="portfolio_unreachable">%1$s inaccessible</string>
     <string name="portfolio_refresh_all">Actualiser tous les portefeuilles</string>
     <string name="portfolio_wallets_together">Portefeuilles regroupés : %1$d</string>
-    <string name="portfolio_wallets_note">Tous les portefeuilles additionne le total de chaque portefeuille. Les portefeuilles non sélectionnés conservent leur dernière synchronisation ; la liste indique donc l’ancienneté de leurs données.</string>
+    <string name="portfolio_wallets_note">« Tous les portefeuilles » additionne le total de chaque portefeuille. Les portefeuilles non sélectionnés s’actualisent environ une fois par minute pendant que vous regardez, et chacun indique l’ancienneté de ses chiffres.</string>
     <string name="portfolio_manage_wallets">Gérer les portefeuilles</string>
+    <string name="portfolio_manage_assets">Gérer les actifs du portefeuille sélectionné</string>
     <string name="portfolio_selected">Sélectionné</string>
-    <string name="portfolio_open_wallet_alone">Ouvrir uniquement %1$s</string>
     <string name="portfolio_other">Autre</string>
     <string name="portfolio_legend_description">%1$s, %2$s pour cent, %3$s</string>
-    <string name="portfolio_no_price">Aucun prix</string>
-    <string name="portfolio_no_value">Aucune valeur</string>
     <string name="portfolio_nothing_listed">Rien à afficher. Les actifs masqués ne sont pas affichés ici.</string>
+    <string name="portfolio_no_balance_yet">Pas encore de solde</string>
     <string name="portfolio_wallet_ready">Votre portefeuille est prêt.</string>
     <string name="portfolio_wallet_ready_body">Recevez des jetons dans ce portefeuille. Ils s’affichent ici, sur tous les réseaux pris en charge par l’application.</string>
     <string name="portfolio_token_gone">Ce jeton ne figure plus dans cette vue.</string>
@@ -142,8 +136,8 @@
     <string name="portfolio_you_pay">Vous payez</string>
     <string name="portfolio_you_get">Vous recevez</string>
     <string name="portfolio_swap_note">Polkaswap affiche le prix, les frais et l’impact avant la signature. Cette étape sélectionne uniquement la paire.</string>
-    <string name="portfolio_send_from">Envoyer depuis</string>
-    <string name="portfolio_receive_to">Recevoir dans</string>
+    <string name="portfolio_send_from">Envoyer depuis quel portefeuille ?</string>
+    <string name="portfolio_receive_to">Recevoir sur quel portefeuille ?</string>
     <string name="portfolio_sample_handoff_off">Portefeuille de démonstration : les adresses sont fictives, cet exemple n’ouvre donc pas Envoyer.</string>
     <string name="portfolio_nexus_send_unavailable">L’envoi sur ce réseau n’est pas disponible pour ce portefeuille pour le moment.</string>
     <string name="asset_add_to_favorites">Ajouter %1$s aux favoris</string>

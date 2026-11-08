@@ -15,9 +15,6 @@
     <string name="portfolio_all_wallets">Tüm cüzdanlar</string>
     <string name="portfolio_wallets">Cüzdanlar</string>
     <string name="portfolio_scope_label">Kapsam: %1$s. Bir cüzdan seçin</string>
-    <string name="portfolio_lens_tokens">Tokenlar</string>
-    <string name="portfolio_lens_networks">Ağlar</string>
-    <string name="portfolio_lens_wallets">Cüzdanlar</string>
     <string name="portfolio_where_it_lives">Bulunduğu yer</string>
     <string name="portfolio_where_it_lives_title">%1$s · bulunduğu yer</string>
     <plurals name="portfolio_networks">
@@ -31,10 +28,6 @@
     <plurals name="portfolio_holdings">
         <item quantity="one">%1$d varlık bakiyesi</item>
         <item quantity="other">%1$d varlık bakiyesi</item>
-    </plurals>
-    <plurals name="portfolio_tokens">
-        <item quantity="one">%1$d token</item>
-        <item quantity="other">%1$d token</item>
     </plurals>
     <plurals name="portfolio_assets_not_included">
         <item quantity="one">%1$d varlık dahil edilmedi</item>
@@ -55,10 +48,9 @@
     <string name="portfolio_route_none">Bu sürümde %1$s üzerinden bir rota yok.</string>
     <string name="portfolio_route_test">Test ağı varlıklarının parasal değeri yoktur.</string>
     <string name="portfolio_route_ready">SORA2 üzerinde. %1$s içindeki SORA2 hesabınızla şimdi Polkaswap\'ta takas edin.</string>
-    <string name="portfolio_no_route">rota yok</string>
     <string name="portfolio_receive_on_sora2">SORA2 üzerinden al</string>
-    <string name="portfolio_send_on">%1$s üzerinden gönder</string>
     <string name="portfolio_send_unavailable">Bu sürümde %1$s üzerinden gönderim kullanılamıyor.</string>
+    <string name="portfolio_send_on">%1$s üzerinden gönder</string>
     <string name="portfolio_move_no_other_wallet">Taşımak için %1$s üzerinde hesabı olan başka bir cüzdanınız gerekir.</string>
     <string name="portfolio_move_needs_wallets">Taşıma kendi cüzdanlarınız arasında yapılır. Aralarında para taşımak için başka bir cüzdan ekleyin.</string>
     <string name="portfolio_nothing_to_move">Burada şu anda taşınabilecek varlık yok.</string>
@@ -71,6 +63,7 @@
     <string name="portfolio_excluded_unpriced">Fiyatı yok: %1$d</string>
     <string name="portfolio_excluded_testnet">Test ağı varlıkları: %1$d</string>
     <string name="portfolio_excluded_caption">%1$s dahil edilmedi</string>
+    <string name="portfolio_prices_as_of">%1$s itibarıyla fiyatlar</string>
     <string name="portfolio_counted">Hesaba katıldı</string>
     <string name="portfolio_hidden_by_you">Sizin gizledikleriniz</string>
     <string name="portfolio_without_price">Fiyat yok</string>
@@ -85,6 +78,9 @@
     <string name="portfolio_state_saved">KAYITLI</string>
     <string name="portfolio_state_partial">KISMİ</string>
     <string name="portfolio_state_offline">ÇEVRİMDIŞI</string>
+    <string name="portfolio_state_reading">OKUNUYOR</string>
+    <string name="portfolio_reading_balances">Bakiyeler okunuyor…</string>
+    <string name="portfolio_excluded_unread">Henüz okunmamış cüzdanlar: %1$d</string>
     <string name="portfolio_age_seconds">%1$d sn</string>
     <string name="portfolio_age_minutes">%1$d dk</string>
     <string name="portfolio_age_hours">%1$d sa</string>
@@ -97,15 +93,14 @@
     <string name="portfolio_unreachable">%1$s erişilemiyor</string>
     <string name="portfolio_refresh_all">Tüm cüzdanları yenile</string>
     <string name="portfolio_wallets_together">Birlikte hesaplanan cüzdanlar: %1$d</string>
-    <string name="portfolio_wallets_note">Tüm cüzdanlar, her cüzdanın toplamını birleştirir. Seçilmeyen cüzdanlar son eşitleme verisini korur; liste her birinin ne kadar eski olduğunu gösterir.</string>
+    <string name="portfolio_wallets_note">\"Tüm cüzdanlar\" her cüzdanın kendi toplamını toplar. Seçili olmayan cüzdanlar siz bakarken yaklaşık dakikada bir yenilenir, bu yüzden her biri sayılarının ne kadar eski olduğunu gösterir.</string>
     <string name="portfolio_manage_wallets">Cüzdanları yönet</string>
+    <string name="portfolio_manage_assets">Seçili cüzdanın varlıklarını yönet</string>
     <string name="portfolio_selected">Seçili</string>
-    <string name="portfolio_open_wallet_alone">Yalnızca %1$s cüzdanını aç</string>
     <string name="portfolio_other">Diğer</string>
     <string name="portfolio_legend_description">%1$s, yüzde %2$s, %3$s</string>
-    <string name="portfolio_no_price">Fiyat yok</string>
-    <string name="portfolio_no_value">Değer yok</string>
     <string name="portfolio_nothing_listed">Listelenecek varlık yok. Gizli varlıklar burada gösterilmez.</string>
+    <string name="portfolio_no_balance_yet">Henüz bakiye yok</string>
     <string name="portfolio_wallet_ready">Cüzdanınız hazır.</string>
     <string name="portfolio_wallet_ready_body">Bu cüzdana token alın. Uygulamanın desteklediği her ağdaki tokenlar burada görünür.</string>
     <string name="portfolio_token_gone">Bu token artık bu görünümde değil.</string>
@@ -137,8 +132,8 @@
     <string name="portfolio_you_pay">Ödeyeceğiniz</string>
     <string name="portfolio_you_get">Alacağınız</string>
     <string name="portfolio_swap_note">Polkaswap imzalamadan önce fiyatı, ücreti ve fiyat etkisini gösterir. Burada yalnızca işlem çifti seçilir.</string>
-    <string name="portfolio_send_from">Gönderen</string>
-    <string name="portfolio_receive_to">Alıcı</string>
+    <string name="portfolio_send_from">Hangi cüzdandan gönderilsin?</string>
+    <string name="portfolio_receive_to">Hangi cüzdana alınsın?</string>
     <string name="portfolio_sample_handoff_off">Örnek portföy: adresler kurgusaldır, bu nedenle Gönder ekranı açılmaz.</string>
     <string name="portfolio_nexus_send_unavailable">Bu cüzdan için bu ağda gönderim şu anda kullanılamıyor.</string>
     <string name="asset_add_to_favorites">%1$s varlığını favorilere ekle</string>

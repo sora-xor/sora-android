@@ -15,9 +15,6 @@
     <string name="portfolio_all_wallets">Kaikki lompakot</string>
     <string name="portfolio_wallets">Lompakot</string>
     <string name="portfolio_scope_label">Rajaus: %1$s. Valitse lompakko</string>
-    <string name="portfolio_lens_tokens">Tokenit</string>
-    <string name="portfolio_lens_networks">Verkot</string>
-    <string name="portfolio_lens_wallets">Lompakot</string>
     <string name="portfolio_where_it_lives">Missä varat ovat</string>
     <string name="portfolio_where_it_lives_title">%1$s · missä varat ovat</string>
     <plurals name="portfolio_networks">
@@ -31,10 +28,6 @@
     <plurals name="portfolio_holdings">
         <item quantity="one">%1$d omistus</item>
         <item quantity="other">%1$d omistusta</item>
-    </plurals>
-    <plurals name="portfolio_tokens">
-        <item quantity="one">%1$d token</item>
-        <item quantity="other">%1$d tokenia</item>
     </plurals>
     <plurals name="portfolio_assets_not_included">
         <item quantity="one">%1$d omaisuuserä ei mukana</item>
@@ -55,10 +48,9 @@
     <string name="portfolio_route_none">Tässä versiossa ei ole reittiä verkosta %1$s.</string>
     <string name="portfolio_route_test">Testiverkkojen omaisuuserillä ei ole rahallista arvoa.</string>
     <string name="portfolio_route_ready">SORA2-verkossa. Vaihda nyt Polkaswapissa lompakon %1$s SORA2-tililläsi.</string>
-    <string name="portfolio_no_route">ei reittiä</string>
     <string name="portfolio_receive_on_sora2">Vastaanota SORA2-verkossa</string>
-    <string name="portfolio_send_on">Lähetä verkossa %1$s</string>
     <string name="portfolio_send_unavailable">Lähettäminen verkossa %1$s ei ole saatavilla tässä versiossa.</string>
+    <string name="portfolio_send_on">Lähetä verkossa %1$s</string>
     <string name="portfolio_move_no_other_wallet">Siirtämiseen tarvitset toisen oman lompakon, jossa on tili verkossa %1$s.</string>
     <string name="portfolio_move_needs_wallets">Voit siirtää varoja omien lompakkojesi välillä. Lisää toinen lompakko, jotta voit siirtää varoja niiden välillä.</string>
     <string name="portfolio_nothing_to_move">Täällä ei ole tällä hetkellä siirrettäviä varoja.</string>
@@ -71,6 +63,7 @@
     <string name="portfolio_excluded_unpriced">Ilman hintaa: %1$d</string>
     <string name="portfolio_excluded_testnet">Testiverkkojen omaisuuseriä: %1$d</string>
     <string name="portfolio_excluded_caption">%1$s ei mukana</string>
+    <string name="portfolio_prices_as_of">Hinnat %1$s</string>
     <string name="portfolio_counted">Laskettu mukaan</string>
     <string name="portfolio_hidden_by_you">Piilottamasi</string>
     <string name="portfolio_without_price">Ei hintaa</string>
@@ -85,6 +78,9 @@
     <string name="portfolio_state_saved">TALLENNETTU</string>
     <string name="portfolio_state_partial">OSITTAINEN</string>
     <string name="portfolio_state_offline">EI YHTEYTTÄ</string>
+    <string name="portfolio_state_reading">LUETAAN</string>
+    <string name="portfolio_reading_balances">Saldoja luetaan…</string>
+    <string name="portfolio_excluded_unread">Lukemattomia lompakoita: %1$d</string>
     <string name="portfolio_age_seconds">%1$d s</string>
     <string name="portfolio_age_minutes">%1$d min</string>
     <string name="portfolio_age_hours">%1$d t</string>
@@ -97,15 +93,14 @@
     <string name="portfolio_unreachable">%1$s ei tavoitettavissa</string>
     <string name="portfolio_refresh_all">Päivitä kaikki lompakot</string>
     <string name="portfolio_wallets_together">Lompakkoja yhdessä: %1$d</string>
-    <string name="portfolio_wallets_note">Kaikki lompakot laskee yhteen kunkin lompakon kokonaissumman. Valitsemattomat lompakot säilyttävät viimeisimmän synkronointinsa, joten luettelo kertoo kunkin tietojen iän.</string>
+    <string name="portfolio_wallets_note">”Kaikki lompakot” laskee yhteen kunkin lompakon oman summan. Valitsemattomat lompakot päivittyvät noin kerran minuutissa katsellessasi, ja kukin näyttää lukujensa iän.</string>
     <string name="portfolio_manage_wallets">Hallitse lompakoita</string>
+    <string name="portfolio_manage_assets">Hallitse valitun lompakon omaisuuseriä</string>
     <string name="portfolio_selected">Valittu</string>
-    <string name="portfolio_open_wallet_alone">Avaa vain %1$s</string>
     <string name="portfolio_other">Muu</string>
     <string name="portfolio_legend_description">%1$s, %2$s prosenttia, %3$s</string>
-    <string name="portfolio_no_price">Ei hintaa</string>
-    <string name="portfolio_no_value">Ei arvoa</string>
     <string name="portfolio_nothing_listed">Ei näytettävää. Piilotettuja omaisuuseriä ei näytetä tässä.</string>
+    <string name="portfolio_no_balance_yet">Ei vielä saldoa</string>
     <string name="portfolio_wallet_ready">Lompakkosi on valmis.</string>
     <string name="portfolio_wallet_ready_body">Vastaanota tokeneita tähän lompakkoon. Ne näkyvät täällä kaikissa sovelluksen tukemissa verkoissa.</string>
     <string name="portfolio_token_gone">Tämä token ei ole enää tässä näkymässä.</string>
@@ -137,8 +132,8 @@
     <string name="portfolio_you_pay">Maksat</string>
     <string name="portfolio_you_get">Saat</string>
     <string name="portfolio_swap_note">Polkaswap näyttää hinnan, maksun ja hintavaikutuksen ennen allekirjoitusta. Tässä valitaan vain pari.</string>
-    <string name="portfolio_send_from">Lähetä lompakosta</string>
-    <string name="portfolio_receive_to">Vastaanota lompakkoon</string>
+    <string name="portfolio_send_from">Mistä lompakosta lähetetään?</string>
+    <string name="portfolio_receive_to">Mihin lompakkoon vastaanotetaan?</string>
     <string name="portfolio_sample_handoff_off">Esimerkkisalkku: osoitteet ovat keksittyjä, joten lähetysnäkymää ei avata.</string>
     <string name="portfolio_nexus_send_unavailable">Lähettäminen tässä verkossa ei ole tällä hetkellä saatavilla tälle lompakolle.</string>
     <string name="asset_add_to_favorites">Lisää %1$s suosikkeihin</string>

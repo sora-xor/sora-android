@@ -15,9 +15,6 @@
     <string name="portfolio_all_wallets">所有钱包</string>
     <string name="portfolio_wallets">钱包</string>
     <string name="portfolio_scope_label">范围：%1$s。选择钱包</string>
-    <string name="portfolio_lens_tokens">代币</string>
-    <string name="portfolio_lens_networks">网络</string>
-    <string name="portfolio_lens_wallets">钱包</string>
     <string name="portfolio_where_it_lives">资产所在位置</string>
     <string name="portfolio_where_it_lives_title">%1$s · 资产所在位置</string>
     <plurals name="portfolio_networks">
@@ -28,9 +25,6 @@
     </plurals>
     <plurals name="portfolio_holdings">
         <item quantity="other">%1$d项持仓</item>
-    </plurals>
-    <plurals name="portfolio_tokens">
-        <item quantity="other">%1$d种代币</item>
     </plurals>
     <plurals name="portfolio_assets_not_included">
         <item quantity="other">%1$d项资产未计入</item>
@@ -50,10 +44,9 @@
     <string name="portfolio_route_none">此版本没有从%1$s出发的路径。</string>
     <string name="portfolio_route_test">测试网资产没有货币价值。</string>
     <string name="portfolio_route_ready">资产位于SORA2。现在可使用%1$s中的SORA2账户在Polkaswap上兑换。</string>
-    <string name="portfolio_no_route">无路径</string>
     <string name="portfolio_receive_on_sora2">在SORA2上接收</string>
-    <string name="portfolio_send_on">在%1$s上发送</string>
     <string name="portfolio_send_unavailable">此版本不支持在%1$s上发送。</string>
+    <string name="portfolio_send_on">在%1$s上发送</string>
     <string name="portfolio_move_no_other_wallet">划转需要您的另一个钱包在%1$s上拥有账户。</string>
     <string name="portfolio_move_needs_wallets">划转在您自己的钱包之间进行。添加另一个钱包后，即可在钱包间划转资金。</string>
     <string name="portfolio_nothing_to_move">这里目前没有可划转的资产。</string>
@@ -66,6 +59,7 @@
     <string name="portfolio_excluded_unpriced">无价格：%1$d</string>
     <string name="portfolio_excluded_testnet">测试网资产：%1$d</string>
     <string name="portfolio_excluded_caption">%1$s未计入</string>
+    <string name="portfolio_prices_as_of">截至 %1$s 的价格</string>
     <string name="portfolio_counted">已计入</string>
     <string name="portfolio_hidden_by_you">您已隐藏</string>
     <string name="portfolio_without_price">无价格</string>
@@ -80,6 +74,9 @@
     <string name="portfolio_state_saved">已保存</string>
     <string name="portfolio_state_partial">部分</string>
     <string name="portfolio_state_offline">离线</string>
+    <string name="portfolio_state_reading">读取中</string>
+    <string name="portfolio_reading_balances">正在读取余额…</string>
+    <string name="portfolio_excluded_unread">尚未读取的钱包：%1$d</string>
     <string name="portfolio_age_seconds">%1$d秒</string>
     <string name="portfolio_age_minutes">%1$d分钟</string>
     <string name="portfolio_age_hours">%1$d小时</string>
@@ -92,15 +89,14 @@
     <string name="portfolio_unreachable">无法连接%1$s</string>
     <string name="portfolio_refresh_all">刷新所有钱包</string>
     <string name="portfolio_wallets_together">合计钱包数：%1$d</string>
-    <string name="portfolio_wallets_note">“所有钱包”累加各钱包的总额。未选中的钱包保留上次同步的数据，因此列表会显示每个钱包数据的时间。</string>
+    <string name="portfolio_wallets_note">“所有钱包”累加每个钱包自己的总额。未选中的钱包在您查看时约每分钟刷新一次，因此每个钱包都会显示其数字有多旧。</string>
     <string name="portfolio_manage_wallets">管理钱包</string>
+    <string name="portfolio_manage_assets">管理所选钱包的资产</string>
     <string name="portfolio_selected">已选择</string>
-    <string name="portfolio_open_wallet_alone">仅打开%1$s</string>
     <string name="portfolio_other">其他</string>
     <string name="portfolio_legend_description">%1$s，百分之%2$s，%3$s</string>
-    <string name="portfolio_no_price">无价格</string>
-    <string name="portfolio_no_value">无价值</string>
     <string name="portfolio_nothing_listed">暂无可列出的资产。隐藏资产不会显示在这里。</string>
+    <string name="portfolio_no_balance_yet">暂无余额</string>
     <string name="portfolio_wallet_ready">您的钱包已就绪。</string>
     <string name="portfolio_wallet_ready_body">向此钱包接收代币。应用支持的各个网络上的代币都会显示在这里。</string>
     <string name="portfolio_token_gone">此视图已不再包含该代币。</string>
@@ -132,8 +128,8 @@
     <string name="portfolio_you_pay">您支付</string>
     <string name="portfolio_you_get">您获得</string>
     <string name="portfolio_swap_note">Polkaswap会在签名前显示价格、手续费和价格影响。此处仅选择交易对。</string>
-    <string name="portfolio_send_from">发送来源</string>
-    <string name="portfolio_receive_to">接收至</string>
+    <string name="portfolio_send_from">从哪个钱包发送？</string>
+    <string name="portfolio_receive_to">接收到哪个钱包？</string>
     <string name="portfolio_sample_handoff_off">示例资产组合：地址为虚构，因此不会打开发送页面。</string>
     <string name="portfolio_nexus_send_unavailable">此钱包目前无法在该网络上发送。</string>
     <string name="asset_add_to_favorites">将%1$s加入收藏</string>

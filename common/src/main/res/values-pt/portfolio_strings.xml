@@ -15,9 +15,6 @@
     <string name="portfolio_all_wallets">Todas as carteiras</string>
     <string name="portfolio_wallets">Carteiras</string>
     <string name="portfolio_scope_label">Escopo: %1$s. Escolha uma carteira</string>
-    <string name="portfolio_lens_tokens">Tokens</string>
-    <string name="portfolio_lens_networks">Redes</string>
-    <string name="portfolio_lens_wallets">Carteiras</string>
     <string name="portfolio_where_it_lives">Onde está</string>
     <string name="portfolio_where_it_lives_title">%1$s · onde está</string>
     <plurals name="portfolio_networks">
@@ -34,11 +31,6 @@
         <item quantity="one">%1$d posição</item>
         <item quantity="many">%1$d posições</item>
         <item quantity="other">%1$d posições</item>
-    </plurals>
-    <plurals name="portfolio_tokens">
-        <item quantity="one">%1$d token</item>
-        <item quantity="many">%1$d tokens</item>
-        <item quantity="other">%1$d tokens</item>
     </plurals>
     <plurals name="portfolio_assets_not_included">
         <item quantity="one">%1$d ativo não incluído</item>
@@ -60,10 +52,9 @@
     <string name="portfolio_route_none">Não há rota a partir de %1$s nesta versão.</string>
     <string name="portfolio_route_test">Os ativos de redes de testes não têm valor monetário.</string>
     <string name="portfolio_route_ready">Na SORA2. Troque agora no Polkaswap com sua conta SORA2 em %1$s.</string>
-    <string name="portfolio_no_route">sem rota</string>
     <string name="portfolio_receive_on_sora2">Receber na SORA2</string>
-    <string name="portfolio_send_on">Enviar em %1$s</string>
     <string name="portfolio_send_unavailable">O envio em %1$s não está disponível nesta versão.</string>
+    <string name="portfolio_send_on">Enviar em %1$s</string>
     <string name="portfolio_move_no_other_wallet">Para mover estes fundos, você precisa de outra carteira sua com uma conta em %1$s.</string>
     <string name="portfolio_move_needs_wallets">Você pode mover fundos entre suas próprias carteiras. Adicione outra carteira para transferir fundos entre elas.</string>
     <string name="portfolio_nothing_to_move">Nada aqui pode ser movido no momento.</string>
@@ -76,6 +67,7 @@
     <string name="portfolio_excluded_unpriced">Sem preço: %1$d</string>
     <string name="portfolio_excluded_testnet">Ativos de redes de testes: %1$d</string>
     <string name="portfolio_excluded_caption">%1$s não incluído</string>
+    <string name="portfolio_prices_as_of">Preços de %1$s</string>
     <string name="portfolio_counted">Contabilizado</string>
     <string name="portfolio_hidden_by_you">Oculto por você</string>
     <string name="portfolio_without_price">Sem preço</string>
@@ -90,6 +82,9 @@
     <string name="portfolio_state_saved">SALVO</string>
     <string name="portfolio_state_partial">PARCIAL</string>
     <string name="portfolio_state_offline">SEM CONEXÃO</string>
+    <string name="portfolio_state_reading">LENDO</string>
+    <string name="portfolio_reading_balances">Lendo saldos…</string>
+    <string name="portfolio_excluded_unread">Carteiras ainda não lidas: %1$d</string>
     <string name="portfolio_age_seconds">%1$d s</string>
     <string name="portfolio_age_minutes">%1$d min</string>
     <string name="portfolio_age_hours">%1$d h</string>
@@ -102,15 +97,14 @@
     <string name="portfolio_unreachable">%1$s inacessível</string>
     <string name="portfolio_refresh_all">Atualizar todas as carteiras</string>
     <string name="portfolio_wallets_together">Carteiras agrupadas: %1$d</string>
-    <string name="portfolio_wallets_note">Todas as carteiras soma o total de cada carteira. As carteiras não selecionadas mantêm a última sincronização, por isso a lista informa a idade dos dados de cada uma.</string>
+    <string name="portfolio_wallets_note">\"Todas as carteiras\" soma o total de cada carteira. As carteiras não selecionadas são atualizadas cerca de uma vez por minuto enquanto você olha, e cada uma mostra a idade dos seus números.</string>
     <string name="portfolio_manage_wallets">Gerenciar carteiras</string>
+    <string name="portfolio_manage_assets">Gerenciar ativos da carteira selecionada</string>
     <string name="portfolio_selected">Selecionado</string>
-    <string name="portfolio_open_wallet_alone">Abrir apenas %1$s</string>
     <string name="portfolio_other">Outros</string>
     <string name="portfolio_legend_description">%1$s, %2$s por cento, %3$s</string>
-    <string name="portfolio_no_price">Sem preço</string>
-    <string name="portfolio_no_value">Sem valor</string>
     <string name="portfolio_nothing_listed">Nada para listar. Os ativos ocultos não aparecem aqui.</string>
+    <string name="portfolio_no_balance_yet">Ainda sem saldo</string>
     <string name="portfolio_wallet_ready">Sua carteira está pronta.</string>
     <string name="portfolio_wallet_ready_body">Receba tokens nesta carteira. Eles aparecem aqui em todas as redes compatíveis com este aplicativo.</string>
     <string name="portfolio_token_gone">Este token não está mais nesta visualização.</string>
@@ -142,8 +136,8 @@
     <string name="portfolio_you_pay">Você paga</string>
     <string name="portfolio_you_get">Você recebe</string>
     <string name="portfolio_swap_note">O Polkaswap mostra preço, taxa e impacto antes da assinatura. Aqui você apenas escolhe o par.</string>
-    <string name="portfolio_send_from">Enviar de</string>
-    <string name="portfolio_receive_to">Receber em</string>
+    <string name="portfolio_send_from">Enviar de qual carteira?</string>
+    <string name="portfolio_receive_to">Receber em qual carteira?</string>
     <string name="portfolio_sample_handoff_off">Portfólio de exemplo: os endereços são fictícios, por isso Enviar não é aberto.</string>
     <string name="portfolio_nexus_send_unavailable">O envio nesta rede não está disponível para esta carteira no momento.</string>
     <string name="asset_add_to_favorites">Adicionar %1$s aos favoritos</string>

@@ -15,9 +15,6 @@
     <string name="portfolio_all_wallets">كل المحافظ</string>
     <string name="portfolio_wallets">المحافظ</string>
     <string name="portfolio_scope_label">النطاق: %1$s. اختر محفظة</string>
-    <string name="portfolio_lens_tokens">الرموز</string>
-    <string name="portfolio_lens_networks">الشبكات</string>
-    <string name="portfolio_lens_wallets">المحافظ</string>
     <string name="portfolio_where_it_lives">مكان حفظ الأصول</string>
     <string name="portfolio_where_it_lives_title">%1$s · مكان الحفظ</string>
     <plurals name="portfolio_networks">
@@ -44,14 +41,6 @@
         <item quantity="many">الحيازات: %1$d</item>
         <item quantity="other">الحيازات: %1$d</item>
     </plurals>
-    <plurals name="portfolio_tokens">
-        <item quantity="zero">الرموز: %1$d</item>
-        <item quantity="one">الرموز: %1$d</item>
-        <item quantity="two">الرموز: %1$d</item>
-        <item quantity="few">الرموز: %1$d</item>
-        <item quantity="many">الرموز: %1$d</item>
-        <item quantity="other">الرموز: %1$d</item>
-    </plurals>
     <plurals name="portfolio_assets_not_included">
         <item quantity="zero">أصول غير مشمولة: %1$d</item>
         <item quantity="one">أصول غير مشمولة: %1$d</item>
@@ -75,10 +64,9 @@
     <string name="portfolio_route_none">لا يوجد مسار من %1$s في هذا الإصدار.</string>
     <string name="portfolio_route_test">أصول شبكة الاختبار ليست لها قيمة نقدية.</string>
     <string name="portfolio_route_ready">على SORA2. بادل الآن على Polkaswap باستخدام حساب SORA2 الخاص بك في %1$s.</string>
-    <string name="portfolio_no_route">لا يوجد مسار</string>
     <string name="portfolio_receive_on_sora2">الاستلام على SORA2</string>
-    <string name="portfolio_send_on">الإرسال على %1$s</string>
     <string name="portfolio_send_unavailable">الإرسال على %1$s غير متاح في هذا الإصدار.</string>
+    <string name="portfolio_send_on">الإرسال على %1$s</string>
     <string name="portfolio_move_no_other_wallet">يتطلب النقل محفظة أخرى لك تحتوي على حساب على %1$s.</string>
     <string name="portfolio_move_needs_wallets">يتم النقل بين محافظك الخاصة. أضف محفظة أخرى لنقل الأموال بينهما.</string>
     <string name="portfolio_nothing_to_move">لا توجد هنا أصول يمكن نقلها الآن.</string>
@@ -91,6 +79,7 @@
     <string name="portfolio_excluded_unpriced">بلا سعر: %1$d</string>
     <string name="portfolio_excluded_testnet">أصول شبكة الاختبار: %1$d</string>
     <string name="portfolio_excluded_caption">%1$s غير مشمول</string>
+    <string name="portfolio_prices_as_of">الأسعار حتى %1$s</string>
     <string name="portfolio_counted">محتسب</string>
     <string name="portfolio_hidden_by_you">أخفيتها أنت</string>
     <string name="portfolio_without_price">بلا سعر</string>
@@ -105,6 +94,9 @@
     <string name="portfolio_state_saved">محفوظ</string>
     <string name="portfolio_state_partial">جزئي</string>
     <string name="portfolio_state_offline">غير متصل</string>
+    <string name="portfolio_state_reading">جارٍ القراءة</string>
+    <string name="portfolio_reading_balances">جارٍ قراءة الأرصدة…</string>
+    <string name="portfolio_excluded_unread">محافظ لم تُقرأ بعد: %1$d</string>
     <string name="portfolio_age_seconds">%1$d ث</string>
     <string name="portfolio_age_minutes">%1$d د</string>
     <string name="portfolio_age_hours">%1$d س</string>
@@ -117,15 +109,14 @@
     <string name="portfolio_unreachable">يتعذر الوصول إلى %1$s</string>
     <string name="portfolio_refresh_all">تحديث كل المحافظ</string>
     <string name="portfolio_wallets_together">المحافظ المجمّعة: %1$d</string>
-    <string name="portfolio_wallets_note">يجمع عرض كل المحافظ إجمالي كل محفظة. تحتفظ المحافظ غير المحددة ببيانات آخر مزامنة، وتوضح القائمة عمر بيانات كل منها.</string>
+    <string name="portfolio_wallets_note">يجمع عرض «كل المحافظ» إجمالي كل محفظة. تُحدَّث المحافظ غير المحددة نحو مرة في الدقيقة أثناء العرض، ويُظهر كل منها عمر أرقامه.</string>
     <string name="portfolio_manage_wallets">إدارة المحافظ</string>
+    <string name="portfolio_manage_assets">إدارة أصول المحفظة المحددة</string>
     <string name="portfolio_selected">محددة</string>
-    <string name="portfolio_open_wallet_alone">فتح %1$s وحدها</string>
     <string name="portfolio_other">أخرى</string>
     <string name="portfolio_legend_description">%1$s، %2$s بالمئة، %3$s</string>
-    <string name="portfolio_no_price">بلا سعر</string>
-    <string name="portfolio_no_value">بلا قيمة</string>
     <string name="portfolio_nothing_listed">لا توجد أصول لعرضها. الأصول المخفية لا تظهر هنا.</string>
+    <string name="portfolio_no_balance_yet">لا يوجد رصيد بعد</string>
     <string name="portfolio_wallet_ready">محفظتك جاهزة.</string>
     <string name="portfolio_wallet_ready_body">استلم الرموز في هذه المحفظة. ستظهر هنا على كل شبكة يدعمها التطبيق.</string>
     <string name="portfolio_token_gone">لم يعد هذا الرمز موجودًا في هذا العرض.</string>
@@ -157,8 +148,8 @@
     <string name="portfolio_you_pay">تدفع</string>
     <string name="portfolio_you_get">تستلم</string>
     <string name="portfolio_swap_note">يعرض Polkaswap السعر والرسوم وتأثير السعر قبل التوقيع. هنا تختار الزوج فقط.</string>
-    <string name="portfolio_send_from">الإرسال من</string>
-    <string name="portfolio_receive_to">الاستلام في</string>
+    <string name="portfolio_send_from">الإرسال من أي محفظة؟</string>
+    <string name="portfolio_receive_to">الاستلام إلى أي محفظة؟</string>
     <string name="portfolio_sample_handoff_off">محفظة أصول تجريبية: العناوين وهمية، لذا لا تُفتح شاشة الإرسال.</string>
     <string name="portfolio_nexus_send_unavailable">الإرسال على هذه الشبكة غير متاح لهذه المحفظة حاليًا.</string>
     <string name="asset_add_to_favorites">إضافة %1$s إلى المفضلة</string>
