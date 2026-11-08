@@ -40,7 +40,9 @@ class OnboardingCloudLifecycleContractTest {
     private val resources = mockk<ResourceManager>(relaxed = true)
     private val starter = mockk<MainStarter>(relaxed = true)
     private val nav = mockk<NavController>(relaxed = true)
-    private val activity = mockk<Activity>()
+    // Only handed on to the starter. A plain Activity, not a mock: mocking one makes MockK rewrite
+    // Activity and Context for the rest of the shared test process, and later tests run far slower.
+    private val activity = plainActivity()
     private val store = ViewModelStore()
     private val account = SoraAccount("public-account", "Fixture wallet")
     private val password = "public-test-password"
@@ -94,6 +96,11 @@ class OnboardingCloudLifecycleContractTest {
 
     private val instrumentation = InstrumentationRegistry.getInstrumentation()
     private fun act(block: () -> Unit) { instrumentation.runOnMainSync(block); instrumentation.waitForIdleSync() }
+    private fun plainActivity(): Activity {
+        lateinit var created: Activity
+        InstrumentationRegistry.getInstrumentation().runOnMainSync { created = Activity() }
+        return created
+    }
     private fun viewModel(): OnboardingViewModel { lateinit var value: OnboardingViewModel; act { value = createViewModel() }; return value }
     private fun consent() = mockk<AuthConsentException>(relaxed = true) { every { intent } returns Intent("fixture.consent") }
     @Test fun cloudLoginFailuresSettleLoadingAndPermitTheSameScreenToRetry() {
