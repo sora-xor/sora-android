@@ -194,11 +194,28 @@ class AssetCatalogAndBalancesContractTest {
         val result = subject().subscribeAssetsActive(owner).first()
         assertEquals(listOf("beta", xor), result.map { it.token.id })
     }
+    @Test fun `every whitelist row of a wallet is one flow, read without creating any row`() = runTest {
+        every { dao.subscribeAssetsOfWhitelist(owner, "USD") } returns flowOf(listOf(asset("beta"), asset("alpha", exists = false), asset(xor, 18)))
+        val result = subject().subscribeAssetsOfWhitelist(owner).first()
+        assertEquals(listOf("beta", xor), result.map { it.token.id })
+        coVerify(exactly = 0) { dao.insertAssets(any()) }
+    }
     @Test fun `token subscription keeps exact precision and current fiat symbol`() = runTest {
         currency = SoraCurrency("JPY", "Yen", "¥")
         every { dao.subscribeTokens("JPY") } returns flowOf(listOf(TokenWithFiatLocal(token("alpha", 12), null)))
         val result = subject().subscribeTokensList().first().single()
         assertEquals("alpha", result.id); assertEquals(12, result.precision); assertEquals("¥", result.fiatSymbol)
+    }
+    @Test fun `the newest price time is in milliseconds, for the selected currency`() = runTest {
+        currency = SoraCurrency("JPY", "Yen", "¥")
+        every { dao.subscribeNewestFiatPriceTime("JPY") } returns flowOf(1_700_000_000L)
+        assertEquals(1_700_000_000_000L, subject().subscribeNewestPriceMillis().first())
+    }
+    @Test fun `a price with no time, or no price at all, has no price time`() = runTest {
+        every { dao.subscribeNewestFiatPriceTime("USD") } returns flowOf(null, 0L)
+        val times = mutableListOf<Long?>()
+        subject().subscribeNewestPriceMillis().collect { times += it }
+        assertEquals(listOf<Long?>(null, null), times)
     }
     @Test fun `visibility and favorites stay scoped to the selected account`() = runTest {
         coEvery { dao.hideAssets(any(), any()) } just Runs; coEvery { dao.displayAssets(any(), any()) } just Runs

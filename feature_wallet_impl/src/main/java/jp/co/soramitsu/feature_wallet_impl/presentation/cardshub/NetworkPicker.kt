@@ -36,6 +36,7 @@ import jp.co.soramitsu.common.presentation.compose.TokenIcon
 import jp.co.soramitsu.common.presentation.compose.components.WalletSheet
 import jp.co.soramitsu.common.presentation.compose.neon.ContentCard
 import jp.co.soramitsu.common.presentation.compose.neon.FilledButton
+import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.feature_wallet_impl.data.nexus.NexusPortfolioBalance
 import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.component.button.properties.Size
@@ -250,9 +251,10 @@ private fun NetworkAssetRow(
     onClick: () -> Unit,
 ) {
     val pending = balance.pendingTransactions.size + balance.recoveryPendingTransactions.size
+    val numbers = remember { NumbersFormatter() }
     val amount = when {
         !balance.networkLive -> stringResource(R.string.network_address_ready)
-        balance.xorQuantity != null -> "${balance.xorQuantity} XOR"
+        balance.xorQuantity != null -> numbers.nexusXor(balance.xorQuantity)
         balance.errorCode != null -> stringResource(R.string.balance_unavailable)
         else -> "…"
     } + if (pending > 0) " · $pending ${stringResource(R.string.wallet_status_checking)}" else ""
@@ -289,6 +291,7 @@ internal fun OtherNetworksCard(
     xorName: String?,
     isNexusBalanceCurrent: (NexusPortfolioBalance) -> Boolean,
     onOpen: (NexusPortfolioBalance) -> Unit,
+    walletName: String? = null,
 ) {
     ContentCard(modifier = Modifier.fillMaxWidth()) {
         Column(Modifier.padding(top = Dimens.x3, bottom = Dimens.x3)) {
@@ -298,6 +301,15 @@ internal fun OtherNetworksCard(
                 color = MaterialTheme.customColors.fgPrimary,
                 modifier = Modifier.padding(horizontal = Dimens.x3),
             )
+            // With every wallet on screen above it, this card says whose rows these are.
+            walletName?.let {
+                Text(
+                    text = it,
+                    style = MaterialTheme.customTypography.textXSBold,
+                    color = MaterialTheme.customColors.fgSecondary,
+                    modifier = Modifier.padding(horizontal = Dimens.x3),
+                )
+            }
             NetworkAssetRows(
                 balances = balances.filter(isNexusBalanceCurrent),
                 xorIcon = xorIcon,

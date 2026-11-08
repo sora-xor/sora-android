@@ -4,7 +4,6 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.core.withInfiniteAnimationFrameMillis
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -13,11 +12,11 @@ import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
@@ -41,6 +40,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import jp.co.soramitsu.common.presentation.compose.theme.neon.LocalFx
+import jp.co.soramitsu.common.presentation.compose.theme.neon.neon
 import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.FanSlice
 import jp.co.soramitsu.feature_wallet_impl.presentation.portfolio.motion.TiltState
 import jp.co.soramitsu.feature_wallet_impl.presentation.portfolio.motion.tiltLayer
@@ -73,6 +73,9 @@ internal object SkyGeometry {
     val ORBIT_OUTER: Dp = 150.dp
     val ORBIT_INNER: Dp = 106.dp
 
+    /** Over this much the sky fades in from the page colour the status bar above it keeps. */
+    val TOP_FADE: Dp = 72.dp
+
     /** How far beyond the band, on screen, a tap still picks a segment. */
     val TAP_SLOP: Dp = 12.dp
 
@@ -91,8 +94,6 @@ internal object SkyGeometry {
     const val SELECTED_WIDTH = 1.35f
     const val DIMMED = 0.26f
 
-    /** Seconds per lap of the light that runs round the ring. */
-    const val COMET_LAP_S = 9f
     const val INTRO_MS = 1100
 
     /** Depths at full deflection, x then y (y is 0.65 × x). The planet and its ring move as one. */
@@ -190,10 +191,9 @@ internal fun ringSliceAt(
 /**
  * The hero sky: night (dark) or dawn (light) gradient, a nebula with the planet's halo, twinkling
  * stars, and the SORA planet with the allocation ring round it. The ring is the chart: 3.6 degrees
- * of band per ray, coloured by the entity's slot, its back half passing behind the planet. A light
- * runs round it while the sky is on screen. Only these layers move with the tilt; [overlay] (scope
- * chip and buttons) never moves. The ring is decorative for accessibility; the legend chips are the
- * real buttons.
+ * of band per ray, coloured by the entity's slot, its back half passing behind the planet. It draws
+ * itself in once; after that only the tilt moves these layers. [overlay] (scope chip and buttons)
+ * never moves. The ring is decorative for accessibility; the legend chips are the real buttons.
  */
 @Composable
 internal fun PortfolioSky(
@@ -203,20 +203,17 @@ internal fun PortfolioSky(
     tilt: TiltState,
     onSliceTap: (String) -> Unit,
     modifier: Modifier = Modifier,
-    active: Boolean = true,
     overlay: @Composable BoxScope.() -> Unit,
 ) {
     val dark = isDarkTheme
     val fx = LocalFx.current
-    val loops = active && fx.loops
-    val glows = fx.glows
-    // The sky fades out at its bottom edge into the app's aurora background behind the content.
+    val page = MaterialTheme.neon.canvas
+    // The sky fades out at its bottom edge into the page behind the content.
     val background = remember(dark) {
         val top = if (dark) PortfolioPalette.nightTop else PortfolioPalette.dawnTop
         val bottom = if (dark) PortfolioPalette.nightBottom else PortfolioPalette.dawnBottom
         Brush.verticalGradient(0f to top, 0.72f to bottom, 1f to bottom.copy(alpha = 0f))
     }
-    val clock = rememberSkyClock(loops)
     val intro = rememberRingIntro(fan.map { it.key }, animate = !fx.reduceMotion)
     // Reduce Motion: the highlight only fades in and out.
     val highlight by animateFloatAsState(if (highlighted != null) 1f else 0f, tween(220), label = "ringHighlight")
@@ -230,15 +227,14 @@ internal fun PortfolioSky(
             .height(SkyGeometry.HEIGHT)
             .background(background)
     ) {
-        // Nebula and the planet's halo: x only. The halo breathes while the sky is on screen.
+        // Nebula and the planet's halo: x only.
         Canvas(
             Modifier
                 .fillMaxSize()
                 .tiltLayer(tilt, SkyGeometry.NEBULA, 0f)
                 .semantics { hideFromAccessibility() }
         ) {
-            val breath = if (loops) 0.88f + 0.12f * sin(clock.value * 2f * PI.toFloat() / 6f) else 1f
-            drawNebula(dark, Offset(size.width / 2f, SkyGeometry.CENTER_Y.toPx()), breath)
+            drawNebula(dark, Offset(size.width / 2f, SkyGeometry.CENTER_Y.toPx()))
         }
         if (dark) {
             Canvas(
@@ -247,7 +243,7 @@ internal fun PortfolioSky(
                     .tiltLayer(tilt, SkyGeometry.STARS, SkyGeometry.STARS * SkyGeometry.Y_RATIO)
                     .semantics { hideFromAccessibility() }
             ) {
-                drawStars(if (loops) clock.value else null)
+                drawStars()
             }
         }
         Canvas(
@@ -288,35 +284,19 @@ internal fun PortfolioSky(
                 reveal = 360f * intro.value,
                 band = SkyGeometry.RING_WIDTH.toPx(),
                 dark = dark,
-                glows = glows,
-                comet = if (loops) cometAngle(clock.value) else null,
-                glint = 90f - 50f * tilt.x,
             )
             drawRingHalf(pose, ring, front = false)
-            ring.comet?.let { drawCometBead(pose, it, front = false) }
-            drawPlanet(pose.center, SkyGeometry.PLANET_RADIUS.toPx(), glyph, dark, glows, tilt.x, tilt.y)
+            drawPlanet(pose.center, SkyGeometry.PLANET_RADIUS.toPx(), glyph, dark, tilt.x, tilt.y)
             drawRingHalf(pose, ring, front = true)
-            ring.comet?.let { drawCometBead(pose, it, front = true) }
         }
+        Box(
+            Modifier
+                .fillMaxWidth()
+                .height(SkyGeometry.TOP_FADE)
+                .background(Brush.verticalGradient(listOf(page, page.copy(alpha = 0f))))
+        )
         overlay()
     }
-}
-
-/** Seconds since the sky started looping (wraps hourly); frozen while [running] is false. */
-@Composable
-private fun rememberSkyClock(running: Boolean): State<Float> {
-    val seconds = remember { mutableFloatStateOf(0f) }
-    LaunchedEffect(running) {
-        if (!running) return@LaunchedEffect
-        val offset = seconds.floatValue
-        val start = withInfiniteAnimationFrameMillis { it }
-        while (true) {
-            withInfiniteAnimationFrameMillis { now ->
-                seconds.floatValue = (offset + (now - start) / 1000f) % 3600f
-            }
-        }
-    }
-    return seconds
 }
 
 /** The ring draws itself in, once per set of slices (first data, a new lens). */
@@ -334,9 +314,6 @@ private fun rememberRingIntro(keys: List<String?>, animate: Boolean): State<Floa
     return progress.asState()
 }
 
-/** The comet's angle: it laps the ring from the front, clockwise. */
-private fun cometAngle(seconds: Float): Float = 90f + 360f * ((seconds / SkyGeometry.COMET_LAP_S) % 1f)
-
 private class RingStyle(
     val arcs: List<RingArc>,
     val colorOf: (String?) -> Color,
@@ -345,9 +322,6 @@ private class RingStyle(
     val reveal: Float,
     val band: Float,
     val dark: Boolean,
-    val glows: Boolean,
-    val comet: Float?,
-    val glint: Float,
 )
 
 /**
@@ -385,9 +359,6 @@ private fun DrawScope.drawRingHalf(pose: RingPose, ring: RingStyle, front: Boole
             val alpha = if (selected) 1f else 1f - (1f - SkyGeometry.DIMMED) * ring.highlight
             val width = ring.band * if (selected) 1f + (SkyGeometry.SELECTED_WIDTH - 1f) * ring.highlight else 1f
             val start = arc.start + gap / 2f
-            if (selected && ring.glows && ring.highlight > 0f) {
-                drawArc(color.copy(alpha = 0.3f * ring.highlight), start, sweep, false, topLeft, box, style = Stroke(width * 1.9f))
-            }
             val brush = if (front) {
                 SolidColor(color.copy(alpha = alpha))
             } else {
@@ -401,61 +372,14 @@ private fun DrawScope.drawRingHalf(pose: RingPose, ring: RingStyle, front: Boole
             }
             drawArc(brush, start, sweep, false, topLeft, box, style = Stroke(width, cap = StrokeCap.Butt))
         }
-        // The light running round the band: brightest at its head.
-        ring.comet?.let { head ->
-            listOf(34f to 0.10f, 20f to 0.14f, 9f to 0.22f).forEach { (span, a) ->
-                drawArc(Color.White.copy(alpha = a), head - span, span, false, topLeft, box, style = Stroke(ring.band))
-            }
-        }
-        // A glint on the near side of the band, sliding with the tilt.
-        if (front && ring.glows && ring.arcs.isNotEmpty()) {
-            listOf(28f to 0.06f, 15f to 0.09f, 6f to 0.13f).forEach { (span, a) ->
-                drawArc(Color.White.copy(alpha = a), ring.glint - span / 2f, span, false, topLeft, box, style = Stroke(ring.band))
-            }
-        }
     }
-}
-
-/** The comet's head: a round bead of light (not flattened), drawn on the half it is in. */
-private fun DrawScope.drawCometBead(pose: RingPose, deg: Float, front: Boolean) {
-    val inFront = sin(deg * PI.toFloat() / 180f) >= 0f
-    if (inFront != front) return
-    val p = pose.point(deg)
-    val glow = 10.dp.toPx()
-    drawCircle(
-        Brush.radialGradient(
-            0f to Color.White.copy(alpha = 0.9f),
-            0.35f to PortfolioPalette.soraGlow.copy(alpha = 0.45f),
-            1f to Color.Transparent,
-            center = p,
-            radius = glow,
-        ),
-        radius = glow,
-        center = p,
-    )
-    drawCircle(Color.White, radius = 2.2.dp.toPx(), center = p)
 }
 
 /**
  * The SORA planet: the brand's red disc with the 天 mark, shaded as a sphere lit from the top left,
  * a specular highlight that slides against the tilt, and a cool rim on the shadow side.
  */
-private fun DrawScope.drawPlanet(c: Offset, r: Float, glyph: Path, dark: Boolean, glows: Boolean, tx: Float, ty: Float) {
-    if (glows) {
-        val atmosphere = r * 1.3f
-        drawCircle(
-            Brush.radialGradient(
-                0f to Color.Transparent,
-                0.72f to Color.Transparent,
-                0.79f to PortfolioPalette.soraRed.copy(alpha = if (dark) 0.6f else 0.32f),
-                1f to Color.Transparent,
-                center = c,
-                radius = atmosphere,
-            ),
-            radius = atmosphere,
-            center = c,
-        )
-    }
+private fun DrawScope.drawPlanet(c: Offset, r: Float, glyph: Path, dark: Boolean, tx: Float, ty: Float) {
     val light = Offset(c.x - r * 0.34f, c.y - r * 0.38f)
     drawCircle(
         Brush.radialGradient(
@@ -516,7 +440,7 @@ private fun DrawScope.drawPlanet(c: Offset, r: Float, glyph: Path, dark: Boolean
 }
 
 /** Violet and cyan haze in the corners and the red halo behind the planet. */
-private fun DrawScope.drawNebula(dark: Boolean, planet: Offset, breath: Float) {
+private fun DrawScope.drawNebula(dark: Boolean, planet: Offset) {
     fun haze(color: Color, alpha: Float, center: Offset, radius: Float) = drawCircle(
         Brush.radialGradient(0f to color.copy(alpha = alpha), 1f to Color.Transparent, center = center, radius = radius),
         radius = radius,
@@ -525,7 +449,7 @@ private fun DrawScope.drawNebula(dark: Boolean, planet: Offset, breath: Float) {
     haze(PortfolioPalette.hazeViolet, if (dark) 0.16f else 0.05f, Offset(size.width * 0.1f, size.height * 0.32f), size.width * 0.62f)
     haze(PortfolioPalette.hazeCyan, if (dark) 0.10f else 0.05f, Offset(size.width * 0.92f, size.height * 0.12f), size.width * 0.5f)
     val halo = 175.dp.toPx()
-    val core = (if (dark) 0.5f else 0.22f) * breath
+    val core = if (dark) 0.5f else 0.22f
     drawCircle(
         Brush.radialGradient(
             0f to PortfolioPalette.soraGlow.copy(alpha = core),
@@ -540,7 +464,7 @@ private fun DrawScope.drawNebula(dark: Boolean, planet: Offset, breath: Float) {
 }
 
 /** A deterministic speckle (the same on every launch), and a few brighter stars with a cross flare. */
-private fun DrawScope.drawStars(seconds: Float?) {
+private fun DrawScope.drawStars() {
     var seed = 11L
     fun rnd(): Float {
         seed = (seed * 9301 + 49297) % 233280
@@ -558,14 +482,11 @@ private fun DrawScope.drawStars(seconds: Float?) {
     }
     repeat(FLARE_COUNT) { i ->
         val p = Offset(rnd() * size.width, (0.08f + rnd() * 0.5f) * size.height)
-        val phase = rnd()
-        val twinkle = seconds?.let { 0.55f + 0.45f * sin(2f * PI.toFloat() * (it / (2.6f + i) + phase)) } ?: 0.8f
         val arm = (5f + 2f * (i % 2)) * density
-        val color = PortfolioPalette.starlight.copy(alpha = 0.7f * twinkle)
-        val flare = color.copy(alpha = 0.45f * twinkle)
+        val flare = PortfolioPalette.starlight.copy(alpha = 0.26f)
         drawLine(flare, p - Offset(arm, 0f), p + Offset(arm, 0f), strokeWidth = 0.8f * density)
         drawLine(flare, p - Offset(0f, arm), p + Offset(0f, arm), strokeWidth = 0.8f * density)
-        drawCircle(color, radius = 1.4f * density, center = p)
+        drawCircle(PortfolioPalette.starlight.copy(alpha = 0.56f), radius = 1.4f * density, center = p)
     }
 }
 

@@ -17,6 +17,7 @@ import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.PortfolioFixtures.va
 import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.PortfolioFixtures.xor
 import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.PortfolioFixtures.xstusd
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -31,6 +32,15 @@ class PortfolioCalculatorTest {
         holding(MAIN, xor, "500", network = WalletNetworkId.TAIRA),
         holding(MAIN, xor, "250", network = WalletNetworkId.MINAMOTO),
     )
+    @Test
+    fun `prices are old only after ten minutes without a new one`() {
+        val now = 1_000_000_000L
+        assertFalse(PortfolioFreshness.pricesAreOld(null, now))
+        assertFalse(PortfolioFreshness.pricesAreOld(now, now))
+        assertFalse(PortfolioFreshness.pricesAreOld(now - PortfolioFreshness.PRICES_OLD_AFTER_MS, now))
+        assertTrue(PortfolioFreshness.pricesAreOld(now - PortfolioFreshness.PRICES_OLD_AFTER_MS - 1, now))
+    }
+
 
     @Test
     fun `counts only visible priced mainnet holdings and names the rest`() {
@@ -284,5 +294,57 @@ class PortfolioCalculatorTest {
         assertEquals(2000.0, summaries[0].totals.fiat, 1e-9)
         assertEquals(listOf(WalletNetworkId.MINAMOTO), summaries[1].networks)
         assertEquals(FreshnessKind.SAVED, summaries[2].freshness!!.kind)
+    }
+
+    @Test
+    fun `a total counts priced holdings only, and is unknown while none is priced`() {
+        val noPrices = PortfolioFixtures.snapshot(
+            listOf(holding(PortfolioFixtures.MAIN, kxor, "5"), holding(PortfolioFixtures.SAVINGS, kxor, "6")),
+        )
+        val totals = PortfolioCalculator.scopeTotals(noPrices, noPrices.wallets.map { it.id })
+        assertFalse(totals.known)
+        assertEquals(2, totals.unpriced)
+        val mixed = PortfolioFixtures.snapshot(
+            listOf(holding(PortfolioFixtures.MAIN, kxor, "5"), holding(PortfolioFixtures.SAVINGS, dai, "6")),
+        )
+        val some = PortfolioCalculator.scopeTotals(mixed, mixed.wallets.map { it.id })
+        assertTrue(some.known)
+        assertEquals(6.0, some.fiat, 1e-9)
+        assertEquals(1, some.unpriced)
+        assertEquals(1, some.priced)
+    }
+
+    @Test
+    fun `an unread wallet is named in the totals and reads as reading, not as zero`() {
+        val snapshot = PortfolioFixtures.snapshot(
+            emptyList(),
+            wallets = listOf(PortfolioFixtures.MAIN, PortfolioFixtures.SAVINGS),
+            sync = mapOf(
+                PortfolioFixtures.MAIN to WalletSync(1_000L, live = true),
+                PortfolioFixtures.SAVINGS to WalletSync(null, unread = true),
+            ),
+        )
+        val totals = PortfolioCalculator.scopeTotals(snapshot, snapshot.wallets.map { it.id })
+        assertFalse(totals.known)
+        assertEquals(1, totals.unread)
+        assertEquals(1, totals.excluded)
+        assertEquals(FreshnessKind.READING, PortfolioFreshness.of(snapshot.sync[PortfolioFixtures.SAVINGS], true, 2_000L).kind)
+        assertEquals(FreshnessKind.READING, PortfolioCalculator.worstFreshness(snapshot, snapshot.wallets.map { it.id }, 2_000L)?.kind)
+        assertEquals(FreshnessKind.OFFLINE, PortfolioFreshness.of(snapshot.sync[PortfolioFixtures.SAVINGS], false, 2_000L).kind)
+        assertEquals(1, PortfolioCalculator.walletSummaries(snapshot, 2_000L).last().totals.unread)
+    }
+
+    @Test
+    fun `without prices the known tokens keep the app's order`() {
+        val noPrice = { token: PortfolioToken -> token.copy(price = null) }
+        val snapshot = PortfolioFixtures.snapshot(
+            listOf(
+                holding(PortfolioFixtures.MAIN, noPrice(kxor), "5"),
+                holding(PortfolioFixtures.MAIN, noPrice(valToken), "5"),
+                holding(PortfolioFixtures.MAIN, noPrice(xor), "5"),
+            ),
+        )
+        val order = PortfolioCalculator.groups(snapshot, listOf(PortfolioFixtures.MAIN), PortfolioLens.TOKENS).map { it.holdings.first().token.symbol }
+        assertEquals(listOf("XOR", "VAL", "KXOR"), order)
     }
 }

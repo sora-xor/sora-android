@@ -7,7 +7,6 @@ import io.mockk.mockk
 import io.mockk.runs
 import jp.co.soramitsu.common.data.SoraPreferences
 import jp.co.soramitsu.common.data.WalletPreferenceKeys
-import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.PortfolioLens
 import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.PortfolioScope
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -22,23 +21,18 @@ class PortfolioPreferencesTest {
     private val preferences = PortfolioPreferences(store)
 
     @Test
-    fun `scope and lens are remembered per device`() = runTest {
+    fun `the scope is remembered per device`() = runTest {
         coEvery { store.getString(PortfolioPreferences.SCOPE_KEY) } returns "all"
-        coEvery { store.getString(PortfolioPreferences.LENS_KEY) } returns "networks"
         coEvery { store.putString(any(), any()) } just runs
         assertEquals(PortfolioScope.ALL, preferences.scope())
-        assertEquals(PortfolioLens.NETWORKS, preferences.lens())
         preferences.setScope(PortfolioScope.SELECTED)
-        preferences.setLens(PortfolioLens.WALLETS)
         coVerify { store.putString("portfolio.scope.v1", "selected") }
-        coVerify { store.putString("portfolio.lens.v1", "wallets") }
     }
 
     @Test
     fun `nothing stored means the defaults apply`() = runTest {
         coEvery { store.getString(any()) } returns ""
         assertNull(preferences.scope())
-        assertNull(preferences.lens())
         assertTrue(preferences.slotMaps().isEmpty())
     }
 
@@ -53,7 +47,7 @@ class PortfolioPreferencesTest {
 
     @Test
     fun `dashboard keys never hold wallet state`() {
-        listOf(PortfolioPreferences.SCOPE_KEY, PortfolioPreferences.LENS_KEY, PortfolioPreferences.SLOTS_KEY).forEach {
+        listOf(PortfolioPreferences.SCOPE_KEY, PortfolioPreferences.SLOTS_KEY).forEach {
             assertFalse(it, WalletPreferenceKeys.isWalletStateKey(it))
         }
     }

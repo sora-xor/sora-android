@@ -57,6 +57,9 @@ interface UserRepository {
 
     fun flowCurSoraAccount(): Flow<SoraAccount>
 
+    /** The selected account if it is already in memory. Reads nothing, so it can never wait. */
+    fun curSoraAccountIfLoaded(): SoraAccount? = null
+
     fun flowSoraAccountsList(): Flow<List<SoraAccount>>
 
     suspend fun soraAccountsList(): List<SoraAccount>

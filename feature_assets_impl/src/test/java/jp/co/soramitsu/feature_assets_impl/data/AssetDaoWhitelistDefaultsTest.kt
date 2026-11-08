@@ -22,6 +22,7 @@ class AssetDaoWhitelistDefaultsTest {
         dao.subscribeAssetsFavorite("cnAddress", "USD")
         dao.subscribeAssetsVisible("cnAddress", "USD")
         dao.subscribeAssetsActive("cnAddress", "USD")
+        dao.subscribeAssetsOfWhitelist("cnAddress", "USD")
         dao.getAssetsFavorite("cnAddress", "USD")
         dao.getAssetsVisible("cnAddress", "USD")
         dao.getAssetsActive("cnAddress", "USD")
@@ -30,6 +31,7 @@ class AssetDaoWhitelistDefaultsTest {
         verify { dao.subscribeAssetsFavorite("cnAddress", "USD", whitelist) }
         verify { dao.subscribeAssetsVisible("cnAddress", "USD", whitelist) }
         verify { dao.subscribeAssetsActive("cnAddress", "USD", whitelist) }
+        verify { dao.subscribeAssetsOfWhitelist("cnAddress", "USD", whitelist) }
         coVerify { dao.getAssetsFavorite("cnAddress", "USD", whitelist) }
         coVerify { dao.getAssetsVisible("cnAddress", "USD", whitelist) }
         coVerify { dao.getAssetsActive("cnAddress", "USD", whitelist) }

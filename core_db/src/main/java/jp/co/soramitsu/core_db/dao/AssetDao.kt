@@ -67,6 +67,19 @@ interface AssetDao {
     @Query("DELETE FROM assets")
     suspend fun clearTable()
 
+    /** Every whitelisted asset row this account has, whatever its visibility or favourite state. */
+    @Query(
+        """
+        select * from assets inner join ($joinFiatToken) tokensfiats on assets.tokenId=tokensfiats.id 
+        where assets.accountAddress=:address and tokensfiats.whitelistName=:whitelist order by assets.position
+    """
+    )
+    fun subscribeAssetsOfWhitelist(
+        address: String,
+        isoCode: String,
+        whitelist: String = AssetHolder.DEFAULT_WHITE_LIST_NAME
+    ): Flow<List<AssetTokenWithFiatLocal>>
+
     @Query(QUERY_ASSET_TOKEN_FAVORITE)
     fun subscribeAssetsFavorite(
         address: String,
@@ -227,6 +240,10 @@ interface AssetDao {
 
     @Query("select * from fiatTokenPrices where currencyId=:isoCode")
     suspend fun getFiatTokenPriceLocal(isoCode: String): List<FiatTokenPriceLocal>
+
+    /** When the newest price in this currency was read, in seconds; null when there is none. */
+    @Query("select max(fiatPriceTime) from fiatTokenPrices where currencyId=:isoCode")
+    fun subscribeNewestFiatPriceTime(isoCode: String): Flow<Long?>
 
     @Query("update fiatTokenPrices set fiatPrice=:fiat, fiatPriceTime=:time where tokenIdFiat=:tokenId and currencyId=:isoCode")
     suspend fun updateFiatValueOfToken(tokenId: String, isoCode: String, fiat: Double, time: Long)

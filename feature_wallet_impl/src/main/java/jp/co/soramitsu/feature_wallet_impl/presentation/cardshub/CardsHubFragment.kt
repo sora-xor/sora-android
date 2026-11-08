@@ -71,9 +71,7 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
-import androidx.navigation.NavType
 import androidx.navigation.compose.composable
-import androidx.navigation.navArgument
 import dagger.hilt.android.AndroidEntryPoint
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.androidfoundation.intent.ShareUtil
@@ -120,8 +118,9 @@ class CardsHubFragment : SoraBaseFragment<CardsHubViewModel>() {
 
     override val viewModel: CardsHubViewModel by viewModels()
 
-    // The Portfolio view (portfolio-view SPEC): on in every build, production included.
-    // With it off, the home below is drawn exactly as before and this view model is never made.
+    // The Portfolio view (portfolio-view SPEC) is the Wallet tab's home in every build, production
+    // included. With the policy's constant off, the classic home below is drawn exactly as in
+    // 3.8.6 and this view model is never made.
     private val portfolioView = ReleaseSurfacePolicy.portfolioView
     private val portfolioViewModel: PortfolioViewModel by viewModels()
 
@@ -254,7 +253,7 @@ class CardsHubFragment : SoraBaseFragment<CardsHubViewModel>() {
         if (portfolioView) {
             composable(
                 route = PortfolioRoutes.TOKEN,
-                arguments = listOf(navArgument(PortfolioRoutes.TOKEN_ARG) { type = NavType.StringType }),
+                arguments = PortfolioRoutes.tokenArguments,
             ) { entry ->
                 FollowNexusSend(viewModel, entry, navController)
                 PortfolioWhereItLivesHost(
@@ -262,6 +261,7 @@ class CardsHubFragment : SoraBaseFragment<CardsHubViewModel>() {
                     navController = navController,
                     portfolio = portfolioViewModel,
                     hub = viewModel,
+                    holdingKey = entry.arguments?.getString(PortfolioRoutes.HOLDING_ARG),
                 )
             }
         }
