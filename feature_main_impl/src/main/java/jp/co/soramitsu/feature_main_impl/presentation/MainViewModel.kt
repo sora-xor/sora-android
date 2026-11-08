@@ -101,7 +101,7 @@ class MainViewModel @Inject constructor(
                     } catch (error: kotlinx.coroutines.CancellationException) {
                         throw error
                     } catch (error: Exception) {
-                        jp.co.soramitsu.common.logger.FirebaseWrapper.recordException(error)
+                        jp.co.soramitsu.common.logger.WalletDiagnostics.recordException(error)
                         _badConnectionVisibilityLiveData.postValue(true)
                     }
                 }
@@ -134,7 +134,7 @@ class MainViewModel @Inject constructor(
             } catch (error: CancellationException) {
                 throw error
             } catch (error: Throwable) {
-                jp.co.soramitsu.common.logger.FirebaseWrapper.recordException(error)
+                jp.co.soramitsu.common.logger.WalletDiagnostics.recordException(error)
                 false
             }
         }

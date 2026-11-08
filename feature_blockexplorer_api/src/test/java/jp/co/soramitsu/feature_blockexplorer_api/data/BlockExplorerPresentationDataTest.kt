@@ -2,7 +2,7 @@ package jp.co.soramitsu.feature_blockexplorer_api.data
 
 import io.mockk.*
 import jp.co.soramitsu.common.domain.AppStateProvider
-import jp.co.soramitsu.common.logger.FirebaseWrapper
+import jp.co.soramitsu.common.logger.WalletDiagnostics
 import jp.co.soramitsu.core_db.AppDatabase
 import jp.co.soramitsu.core_db.dao.AssetDao
 import jp.co.soramitsu.core_db.model.*
@@ -29,7 +29,7 @@ class BlockExplorerPresentationDataTest {
     private fun info(id: String, supply: String? = "1000000", change: Double? = 12.5, usd: String? = "4.5") = IndexerAssetInfo(id, usd, supply, change)
     private fun token(id: String) = TokenLocal(id, id, id.uppercase(), 6, true, "", true)
     @Before fun setup() {
-        mockkObject(FirebaseWrapper); every { FirebaseWrapper.recordException(any()) } just Runs
+        mockkObject(WalletDiagnostics); every { WalletDiagnostics.recordException(any()) } just Runs
         coEvery { config.getSelectedCurrency() } answers { currency }
         coEvery { dao.getFiatTokenPriceLocal(any()) } answers { localPrices }
         coEvery { dao.getPrecisionOfToken(any()) } returns 6
@@ -39,7 +39,7 @@ class BlockExplorerPresentationDataTest {
         coEvery { client.getFiat() } answers { response }
         coEvery { client.getPoolApys() } returns listOf(IndexerPoolApy("xor-val", "0.125"))
     }
-    @After fun cleanup() = unmockkObject(FirebaseWrapper)
+    @After fun cleanup() = unmockkObject(WalletDiagnostics)
     @Test fun liquidityUsesTokenPrecisionAndLocalFiatPrice() = runTest {
         assertEquals(listOf("xor" to 2.0), manager.getTokensLiquidity(listOf("xor")))
         assertEquals(0.125, writes.single().single().fiatChange!!, 0.0)

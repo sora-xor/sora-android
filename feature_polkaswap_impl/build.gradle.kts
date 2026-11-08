@@ -84,7 +84,7 @@ dependencies {
     implementation(project(":network"))
 
     implementation(libs.xsubstrateDep)
-    implementation(libs.xcryptoDep)
+    implementation(project(":xcrypto"))
     implementation(libs.soramitsu.android.foundation)
 
     implementation(libs.appcompatDep)

@@ -242,28 +242,28 @@ class CardsHubViewModelTest {
     fun `failed downstream holdings read clears previous cards without crashing`() = runTest {
         advanceUntilIdle()
         assertTrue(cardsHubViewModel.state.value.cards.isNotEmpty())
-        io.mockk.mockkObject(jp.co.soramitsu.common.logger.FirebaseWrapper)
-        every { jp.co.soramitsu.common.logger.FirebaseWrapper.recordException(any()) } just Runs
+        io.mockk.mockkObject(jp.co.soramitsu.common.logger.WalletDiagnostics)
+        every { jp.co.soramitsu.common.logger.WalletDiagnostics.recordException(any()) } just Runs
         try {
             favoriteReadFailure.value = IllegalStateException("PI_INDEXER_GRAPHQL_ERROR")
             advanceUntilIdle()
             assertTrue(cardsHubViewModel.state.value.cards.isEmpty())
             assertFalse(cardsHubViewModel.state.value.loading)
-        } finally { io.mockk.unmockkObject(jp.co.soramitsu.common.logger.FirebaseWrapper) }
+        } finally { io.mockk.unmockkObject(jp.co.soramitsu.common.logger.WalletDiagnostics) }
     }
 
     @Test
     fun `cancelled downstream holdings read is not converted to unavailable state`() = runTest {
         advanceUntilIdle()
         val before = cardsHubViewModel.state.value
-        io.mockk.mockkObject(jp.co.soramitsu.common.logger.FirebaseWrapper)
-        every { jp.co.soramitsu.common.logger.FirebaseWrapper.recordException(any()) } just Runs
+        io.mockk.mockkObject(jp.co.soramitsu.common.logger.WalletDiagnostics)
+        every { jp.co.soramitsu.common.logger.WalletDiagnostics.recordException(any()) } just Runs
         try {
             favoriteReadFailure.value = kotlinx.coroutines.CancellationException("stop display subscription")
             advanceUntilIdle()
             assertEquals(before, cardsHubViewModel.state.value)
-            io.mockk.verify(exactly = 0) { jp.co.soramitsu.common.logger.FirebaseWrapper.recordException(any()) }
-        } finally { io.mockk.unmockkObject(jp.co.soramitsu.common.logger.FirebaseWrapper) }
+            io.mockk.verify(exactly = 0) { jp.co.soramitsu.common.logger.WalletDiagnostics.recordException(any()) }
+        } finally { io.mockk.unmockkObject(jp.co.soramitsu.common.logger.WalletDiagnostics) }
     }
 
     @Test

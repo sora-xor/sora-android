@@ -33,7 +33,7 @@ import jp.co.soramitsu.common.data.network.dto.PolkamarktMarketId
 import jp.co.soramitsu.common.data.network.dto.PolkamarktMarketStateDto
 import jp.co.soramitsu.common.data.network.dto.PolkamarktSellQuoteDto
 import jp.co.soramitsu.common.data.network.dto.TokenInfoDto
-import jp.co.soramitsu.common.logger.FirebaseWrapper
+import jp.co.soramitsu.common.logger.WalletDiagnostics
 import jp.co.soramitsu.common.util.ext.sumByBigInteger
 import jp.co.soramitsu.common_wallet.data.XorBalanceDto
 import jp.co.soramitsu.sora.substrate.models.BlockEvent
@@ -695,8 +695,8 @@ class SubstrateCalls @Inject constructor(
                 }
         }.getOrElse {
             if (it is CancellationException) throw it
-            FirebaseWrapper.recordErrorClass(
-                FirebaseWrapper.PrivacySafeErrorClass.FINALIZED_EVENT_READ
+            WalletDiagnostics.recordErrorClass(
+                WalletDiagnostics.PrivacySafeErrorClass.FINALIZED_EVENT_READ
             )
             emptyList()
         }

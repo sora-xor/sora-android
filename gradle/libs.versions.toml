@@ -35,10 +35,6 @@ uiAutomator = "2.4.0"
 compose-bom = "2026.05.00"
 composeLifecycle = "2.10.0"
 composeConstraintLayout = "1.1.1"
-firebasebom = "34.19.0"
-googleServices = "4.4.4"
-firebaseCrashlytics = "3.0.8"
-firebaseAppDistribution = "5.2.0"
 tripletVersion = "4.0.0"
 timber = "5.0.1"
 ktor = "2.3.13"
@@ -62,9 +58,10 @@ kover = "0.9.8"
 soramitsuXnetworking = "1.0.15-K2"
 soramitsuXsubstrate = "1.2.7"
 soramitsuUicore = "0.2.39"
-soramitsuXbackup = "1.2.3"
-soramitsuXcrypto = "1.2.8-sora.2"
 soramitsuAndroidFoundation = "0.0.4"
+okhttp = "4.12.0"
+web3jCrypto = "4.8.7-android"
+lz4Java = "1.12.1"
 
 [libraries]
 jackson-bom = { module = "com.fasterxml.jackson:jackson-bom", version = "2.22.4" }
@@ -74,8 +71,6 @@ soramitsu-android-foundation = { module = "jp.co.soramitsu:android-foundation", 
 xnetworkingLibDep = { module = "jp.co.soramitsu.xnetworking:lib-android", version.ref = "soramitsuXnetworking" }
 xsubstrateDep = { module = "jp.co.soramitsu:xsubstrate", version.ref = "soramitsuXsubstrate" }
 uiCoreDep = { module = "jp.co.soramitsu:ui-core", version.ref = "soramitsuUicore" }
-xbackupDep = { module = "jp.co.soramitsu:xbackup", version.ref = "soramitsuXbackup" }
-xcryptoDep = { module = "jp.co.soramitsu:xcrypto", version.ref = "soramitsuXcrypto" }
 roomDep = { module = "androidx.room:room-runtime", version.ref = "room" }
 roomCompilerDep = { module = "androidx.room:room-compiler", version.ref = "room" }
 roomKtxDep = { module = "androidx.room:room-ktx", version.ref = "room" }
@@ -101,10 +96,13 @@ jnaDep = { module = "net.java.dev.jna:jna", version.ref = "jna" }
 ktorLoggingDep = { module = "io.ktor:ktor-client-logging", version.ref = "ktor" }
 ktorContentNegotiationDep = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
 ktorOkHttpDep = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktor" }
+okhttpDep = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
 ktorWebSocketDep = { module = "io.ktor:ktor-client-websockets", version.ref = "ktor" }
 ed25519Dep = { module = "com.github.warchant:ed25519-sha3-java", version.ref = "ed" }
 xercesDep = { module = "org.eclipse.birt.runtime.3_7_1:org.apache.xerces", version.ref = "xerces" }
 bcprovDep = { module = "org.bouncycastle:bcprov-jdk18on", version.ref = "bouncycastle" }
+web3jCryptoDep = { module = "org.web3j:crypto", version.ref = "web3jCrypto" }
+lz4JavaDep = { module = "at.yawk.lz4:lz4-java", version.ref = "lz4Java" }
 timberDep = { module = "com.jakewharton.timber:timber", version.ref = "timber" }
 workManagerDep = { module = "androidx.work:work-runtime-ktx", version.ref = "workManager" }
 insetterDep = { module = "dev.chrisbanes.insetter:insetter", version.ref = "insetter" }
@@ -121,9 +119,6 @@ svgDep = { module = "com.caverock:androidsvg-aar", version.ref = "svg" }
 coilDep = { module = "io.coil-kt:coil", version.ref = "coil" }
 coilSvgDep = { module = "io.coil-kt:coil-svg", version.ref = "coil" }
 coilComposeDep = { module = "io.coil-kt:coil-compose", version.ref = "coil" }
-googleFirebaseBomDep = { module = "com.google.firebase:firebase-bom", version.ref = "firebasebom" }
-googleCrashlyticsDep = { module = "com.google.firebase:firebase-crashlytics" }
-firebaseAnalyticsDep = { module = "com.google.firebase:firebase-analytics" }
 coreKtxDep = { module = "androidx.core:core-ktx", version.ref = "coreKtx" }
 archFragmentTestDep = { module = "androidx.fragment:fragment-testing", version.ref = "archFragmentTest" }
 mockkDep = { module = "io.mockk:mockk", version.ref = "mockk" }
@@ -177,7 +172,4 @@ ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }
 serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 composeCompiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
-googleServicesPlugin = { id = "com.google.gms.google-services", version.ref = "googleServices" }
-firebaseCrashlyticsPlugin = { id = "com.google.firebase.crashlytics", version.ref = "firebaseCrashlytics" }
-firebaseAppDistributionPlugin = { id = "com.google.firebase.appdistribution", version.ref = "firebaseAppDistribution" }
 triplet = { id = "com.github.triplet.play", version.ref = "tripletVersion" }

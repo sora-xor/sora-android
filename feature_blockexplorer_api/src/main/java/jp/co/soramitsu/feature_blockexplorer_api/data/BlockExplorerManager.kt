@@ -25,7 +25,7 @@ import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
 import jp.co.soramitsu.common.domain.AppStateProvider
-import jp.co.soramitsu.common.logger.FirebaseWrapper
+import jp.co.soramitsu.common.logger.WalletDiagnostics
 import jp.co.soramitsu.common.util.mapBalance
 import jp.co.soramitsu.core_db.AppDatabase
 import jp.co.soramitsu.core_db.model.FiatTokenPriceLocal
@@ -93,7 +93,7 @@ class BlockExplorerManager @Inject constructor(
             resultList
         }.getOrElse {
             if (it is CancellationException) throw it
-            FirebaseWrapper.recordException(it)
+            WalletDiagnostics.recordException(it)
             emptyList()
         }
     }
@@ -128,7 +128,7 @@ class BlockExplorerManager @Inject constructor(
             }
         }.onFailure {
             if (it is CancellationException) throw it
-            FirebaseWrapper.recordException(it)
+            WalletDiagnostics.recordException(it)
         }
     }
 

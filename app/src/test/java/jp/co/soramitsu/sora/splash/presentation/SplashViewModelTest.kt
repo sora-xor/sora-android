@@ -25,7 +25,7 @@ import io.mockk.mockkObject
 import jp.co.soramitsu.androidfoundation.coroutine.CoroutineManager
 import jp.co.soramitsu.androidfoundation.testing.MainCoroutineRule
 import jp.co.soramitsu.androidfoundation.testing.getOrAwaitValue
-import jp.co.soramitsu.common.logger.FirebaseWrapper
+import jp.co.soramitsu.common.logger.WalletDiagnostics
 import jp.co.soramitsu.core_db.RecoveryFacts
 import jp.co.soramitsu.core_db.SetUpAgainScope
 import jp.co.soramitsu.core_db.WalletRecoveryKind
@@ -77,8 +77,8 @@ class SplashViewModelTest {
     @OptIn(ExperimentalStdlibApi::class)
     @Before
     fun setUp() = runTest {
-        mockkObject(FirebaseWrapper)
-        every { FirebaseWrapper.log(any()) } returns Unit
+        mockkObject(WalletDiagnostics)
+        every { WalletDiagnostics.log(any()) } returns Unit
         whenever(coroutineManager.io).thenReturn(this.coroutineContext[CoroutineDispatcher]!!)
         splashViewModel = SplashViewModel(
             interactor,

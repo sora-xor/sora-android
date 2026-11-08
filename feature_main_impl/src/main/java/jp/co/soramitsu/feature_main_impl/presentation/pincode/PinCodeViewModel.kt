@@ -634,7 +634,7 @@ class PinCodeViewModel @Inject constructor(
     }
 
     private suspend fun handleWalletDeletionError(error: Throwable) {
-        jp.co.soramitsu.common.logger.FirebaseWrapper.recordException(error)
+        jp.co.soramitsu.common.logger.WalletDiagnostics.recordException(error)
         val failureCode = try {
             interactor.walletDeletionFailureCode()
         } catch (lookupError: CancellationException) {
@@ -750,7 +750,7 @@ class PinCodeViewModel @Inject constructor(
                 } catch (error: Throwable) {
                     // The claim check is optional: it runs again at the next unlock (nothing was
                     // recorded). It never keeps the person out of the wallet.
-                    jp.co.soramitsu.common.logger.FirebaseWrapper.recordException(error)
+                    jp.co.soramitsu.common.logger.WalletDiagnostics.recordException(error)
                     false
                 }
                 state = state.copy(

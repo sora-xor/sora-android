@@ -77,14 +77,6 @@ def production_manifest():
         el(
             "service",
             {
-                "name": "com.google.android.gms.auth.api.signin.RevocationBoundService",
-                "exported": True,
-                "permission": "com.google.android.gms.auth.api.signin.permission.REVOCATION_NOTIFICATION",
-            },
-        ),
-        el(
-            "service",
-            {
                 "name": "androidx.work.impl.background.systemjob.SystemJobService",
                 "exported": True,
                 "permission": "android.permission.BIND_JOB_SERVICE",
@@ -341,28 +333,27 @@ class ReleaseManifestTest(unittest.TestCase):
                 self.assertIn(f"targetSdk {json.loads(checker.DEFAULT_POLICY_FILE.read_text())['targetSdkVersion']}", result.stdout)
                 self.assertIn("merged manifest matches", result.stdout)
 
-    def test_packaged_firebase_defaults_keep_metrics_and_deny_advertising(self):
-        policy = json.loads(checker.DEFAULT_POLICY_FILE.read_text())
-        for name, expected in policy["requiredApplicationMetadata"].items():
-            with self.subTest(name=name):
+    def test_closed_source_sdk_components_metadata_and_permissions_are_rejected(self):
+        additions = [
+            el("provider", {"name": "com.google.firebase.provider.FirebaseInitProvider", "exported": False}),
+            el("service", {"name": "com.google.firebase.components.ComponentDiscoveryService", "exported": False}),
+            el("activity", {"name": "com.google.android.gms.auth.api.signin.internal.SignInHubActivity", "exported": False}),
+            el("service", {"name": "com.google.android.datatransport.runtime.backends.TransportBackendDiscovery", "exported": False}),
+            el("meta-data", {"name": "firebase_analytics_collection_enabled", "value": True}),
+            el("meta-data", {"name": "google_analytics_adid_collection_enabled", "value": False}),
+            el("meta-data", {"name": "com.google.android.gms.version", "value": 1}),
+        ]
+        for addition in additions:
+            with self.subTest(name=addition["attributes"]["name"]):
                 manifest = production_manifest()
-                metadata = component(manifest, name)
-                metadata["attributes"]["value"] = not expected
-                self.assert_rejected(manifest, name)
-                application_of(manifest)["children"].remove(metadata)
-                self.assert_rejected(manifest, name)
-
-    def test_duplicate_defaults_and_permanent_analytics_deactivation_are_rejected(self):
-        manifest = production_manifest()
-        application_of(manifest)["children"].append(
-            el("meta-data", {"name": "google_analytics_adid_collection_enabled", "value": True})
-        )
-        self.assert_rejected(manifest, "google_analytics_adid_collection_enabled")
-        manifest = production_manifest()
-        application_of(manifest)["children"].append(
-            el("meta-data", {"name": "firebase_analytics_collection_deactivated", "value": True})
-        )
-        self.assert_rejected(manifest, "must not be permanently deactivated")
+                application_of(manifest)["children"].append(addition)
+                self.assert_rejected(manifest, "closed-source SDK in the manifest")
+        for permission in ("com.google.android.gms.permission.AD_ID",
+                           "com.google.android.finsky.permission.BIND_GET_INSTALL_REFERRER_SERVICE"):
+            with self.subTest(permission=permission):
+                manifest = production_manifest()
+                manifest["children"].insert(0, el("uses-permission", {"name": permission}))
+                self.assert_rejected(manifest, "closed-source SDK in the manifest")
 
     def test_backup_must_be_off(self):
         manifest = production_manifest()

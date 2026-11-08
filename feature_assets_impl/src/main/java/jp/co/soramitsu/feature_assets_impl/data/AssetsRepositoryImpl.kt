@@ -95,7 +95,7 @@ class AssetsRepositoryImpl @Inject constructor(
                 // Catalog availability must not terminate the wallet host. Consumers still fail
                 // closed; no unverified runtime, token catalog or balance is substituted.
                 tokensDeferred.completeExceptionally(error)
-                jp.co.soramitsu.common.logger.FirebaseWrapper.recordException(error)
+                jp.co.soramitsu.common.logger.WalletDiagnostics.recordException(error)
             }
         }
     }

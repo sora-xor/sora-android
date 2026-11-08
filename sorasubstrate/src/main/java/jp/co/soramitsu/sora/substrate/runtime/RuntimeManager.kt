@@ -29,7 +29,7 @@ import javax.inject.Singleton
 import jp.co.soramitsu.androidfoundation.coroutine.CoroutineManager
 import jp.co.soramitsu.common.data.SoraPreferences
 import jp.co.soramitsu.common.io.FileManager
-import jp.co.soramitsu.common.logger.FirebaseWrapper
+import jp.co.soramitsu.common.logger.WalletDiagnostics
 import jp.co.soramitsu.common.network.BoundedHttpTextClient
 import jp.co.soramitsu.common.util.BuildUtils
 import jp.co.soramitsu.common.util.Flavor
@@ -588,7 +588,7 @@ class RuntimeManager @Inject constructor(
 
     init {
         coroutineManager.applicationScope.launch {
-            prefetchRuntimeForDisplay(onFailure = FirebaseWrapper::recordException) { getRuntimeSnapshot() }
+            prefetchRuntimeForDisplay(onFailure = WalletDiagnostics::recordException) { getRuntimeSnapshot() }
         }
     }
 
@@ -769,7 +769,7 @@ class RuntimeManager @Inject constructor(
         } catch (error: CancellationException) {
             throw error
         } catch (error: Exception) {
-            FirebaseWrapper.recordException(error)
+            WalletDiagnostics.recordException(error)
             null
         }
     }
@@ -817,7 +817,7 @@ class RuntimeManager @Inject constructor(
         } catch (error: CancellationException) {
             throw error
         } catch (error: Exception) {
-            FirebaseWrapper.recordException(error)
+            WalletDiagnostics.recordException(error)
             null
         }
     }
@@ -827,7 +827,7 @@ class RuntimeManager @Inject constructor(
         val cached = try {
             fileManager.readInternalCacheFileAtomically(cachedTypesFile, MAX_RUNTIME_TYPES_BYTES)
         } catch (error: Exception) {
-            FirebaseWrapper.recordException(error)
+            WalletDiagnostics.recordException(error)
             null
         }
         cached?.let { yield(it) }
@@ -855,7 +855,7 @@ class RuntimeManager @Inject constructor(
         } catch (error: CancellationException) {
             throw error
         } catch (error: Exception) {
-            FirebaseWrapper.recordException(error)
+            WalletDiagnostics.recordException(error)
         }
         while (recoveryRuntimes.size >= MAX_IN_MEMORY_RECOVERY_RUNTIMES) {
             recoveryRuntimes.remove(recoveryRuntimes.keys.first())
@@ -907,7 +907,7 @@ class RuntimeManager @Inject constructor(
                 MAX_RUNTIME_CODE_BINDING_BYTES,
             )?.let { gson.fromJson(it, RuntimeCodeBinding::class.java) }
         } catch (error: Exception) {
-            FirebaseWrapper.recordException(error)
+            WalletDiagnostics.recordException(error)
             null
         }
         return saved
@@ -933,7 +933,7 @@ class RuntimeManager @Inject constructor(
             )
         } catch (error: Exception) {
             // Only an optimization for the next process; a full disk must not stop a transfer.
-            FirebaseWrapper.recordException(error)
+            WalletDiagnostics.recordException(error)
         }
     }
 
@@ -947,7 +947,7 @@ class RuntimeManager @Inject constructor(
     } catch (error: CancellationException) {
         throw error
     } catch (error: Exception) {
-        FirebaseWrapper.recordException(error)
+        WalletDiagnostics.recordException(error)
         null
     }
 
@@ -1075,7 +1075,7 @@ class RuntimeManager @Inject constructor(
                 } catch (error: CancellationException) {
                     throw error
                 } catch (error: Throwable) {
-                    FirebaseWrapper.recordException(error)
+                    WalletDiagnostics.recordException(error)
                 }
             }
             publishRuntimeCandidate(candidate)
@@ -1121,7 +1121,7 @@ class RuntimeManager @Inject constructor(
                 MAX_RUNTIME_CACHE_MANIFEST_BYTES,
             )
         } catch (error: Exception) {
-            FirebaseWrapper.recordException(error)
+            WalletDiagnostics.recordException(error)
             return initFromBundledAssets()
         }
         if (manifestRaw != null) {
@@ -1152,7 +1152,7 @@ class RuntimeManager @Inject constructor(
             } catch (error: Exception) {
                 // A corrupt or partially evicted generation is never combined with legacy cache
                 // files. The bundled metadata/types pair is the only safe recovery source.
-                FirebaseWrapper.recordException(error)
+                WalletDiagnostics.recordException(error)
                 initFromBundledAssets()
             }
         }
@@ -1196,7 +1196,7 @@ class RuntimeManager @Inject constructor(
         ) {
             // An older runtime cache is expected on upgrade; the bundled/live contract replaces
             // it. A fixed breadcrumb records that path without counting it as an app failure.
-            FirebaseWrapper.log(FirebaseWrapper.Breadcrumb.RUNTIME_LEGACY_CACHE_IDENTITY_MISMATCH)
+            WalletDiagnostics.log(WalletDiagnostics.Breadcrumb.RUNTIME_LEGACY_CACHE_IDENTITY_MISMATCH)
         }
         return buildBundledCandidate(
             metadata = if (legacyPairMatchesAssets) {
@@ -1229,7 +1229,7 @@ class RuntimeManager @Inject constructor(
         // I/O, security, directory, malformed UTF-8, and oversize failures are evidence of an
         // unreadable legacy entry. Record the class only through the existing privacy-safe crash
         // channel and admit the validated packaged pair; never combine a surviving half-cache.
-        FirebaseWrapper.recordException(error)
+        WalletDiagnostics.recordException(error)
         RuntimeCacheReadResult(null, RuntimeCacheReadState.UNREADABLE)
     }
 
@@ -1314,7 +1314,7 @@ class RuntimeManager @Inject constructor(
             // Read-only startup may use a validated installed cache only when no live chain
             // identity was obtained. Mutation preparation uses getMutationRuntimeContext() and
             // never takes this availability fallback.
-            FirebaseWrapper.recordException(error)
+            WalletDiagnostics.recordException(error)
             return candidate
         }
         // A complete live identity is now available. An unexpected chain is identity drift, not
@@ -1345,7 +1345,7 @@ class RuntimeManager @Inject constructor(
                 )
         val refreshRequired = liveIdentityDrift || reviewedFixtureNeedsRefresh
         if (refreshRequired || refreshRequested) {
-            FirebaseWrapper.log(FirebaseWrapper.Breadcrumb.RUNTIME_VERSION_REFRESHED)
+            WalletDiagnostics.log(WalletDiagnostics.Breadcrumb.RUNTIME_VERSION_REFRESHED)
             try {
                 val metadata = sora2RuntimeRpcClient.getMetadataAtFinalized(
                     liveIdentity.finalizedHash
@@ -1395,7 +1395,7 @@ class RuntimeManager @Inject constructor(
                     } catch (error: Throwable) {
                         // The manifest already contains the authoritative runtime version. A
                         // stale preference can only trigger a redundant refresh next time.
-                        FirebaseWrapper.recordException(error)
+                        WalletDiagnostics.recordException(error)
                     }
                 }
                 // The code hash of the same finalized block the metadata was read at.
@@ -1420,7 +1420,7 @@ class RuntimeManager @Inject constructor(
                 // metadata while still connected to that node.
                 throw error
             } catch (t: Throwable) {
-                FirebaseWrapper.recordException(t)
+                WalletDiagnostics.recordException(t)
                 if (refreshRequired) {
                     throw Sora2RuntimeIdentityException("SORA2_RUNTIME_REFRESH_FAILED", t)
                 }
@@ -1441,7 +1441,7 @@ class RuntimeManager @Inject constructor(
     } catch (error: CancellationException) {
         throw error
     } catch (error: Exception) {
-        FirebaseWrapper.recordException(error)
+        WalletDiagnostics.recordException(error)
         false
     }
 
@@ -1550,7 +1550,7 @@ class RuntimeManager @Inject constructor(
         } catch (error: Exception) {
             // Publication already succeeded and the active generation is explicitly excluded.
             // Cache hygiene failure is reportable but cannot invalidate the verified pointer.
-            FirebaseWrapper.recordException(error)
+            WalletDiagnostics.recordException(error)
         }
     }
 
@@ -1582,7 +1582,7 @@ class RuntimeManager @Inject constructor(
             } catch (error: Exception) {
                 // Retry once with the packaged aliases. A wrong network or malformed metadata
                 // fails the same way there, and that second failure is the one reported.
-                FirebaseWrapper.recordException(error)
+                WalletDiagnostics.recordException(error)
             }
         }
         return buildRuntimeCandidate(
@@ -1617,7 +1617,7 @@ class RuntimeManager @Inject constructor(
     } catch (error: CancellationException) {
         throw error
     } catch (error: Exception) {
-        FirebaseWrapper.recordException(error)
+        WalletDiagnostics.recordException(error)
         null
     }
 
@@ -1693,7 +1693,7 @@ class RuntimeManager @Inject constructor(
         val validatedPrefix = requireSora2Ss58Prefix(
             observedPrefix
         )
-        FirebaseWrapper.log(FirebaseWrapper.Breadcrumb.RUNTIME_NETWORK_SELECTED)
+        WalletDiagnostics.log(WalletDiagnostics.Breadcrumb.RUNTIME_NETWORK_SELECTED)
         return RuntimeCandidate(
             snapshot = snapshot,
             prefix = validatedPrefix,
@@ -1759,7 +1759,7 @@ class RuntimeManager @Inject constructor(
             upto14 = upto14,
         )
         if (sora2ParseResult.unknownTypes.isNotEmpty()) {
-            FirebaseWrapper.log(FirebaseWrapper.Breadcrumb.RUNTIME_SNAPSHOT_BUILT)
+            WalletDiagnostics.log(WalletDiagnostics.Breadcrumb.RUNTIME_SNAPSHOT_BUILT)
         }
         return TypeRegistry(
             types = sora2ParseResult.typePreset,

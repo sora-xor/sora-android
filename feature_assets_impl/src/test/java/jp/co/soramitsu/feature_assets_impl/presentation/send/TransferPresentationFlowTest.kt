@@ -12,7 +12,7 @@ import jp.co.soramitsu.androidfoundation.testing.MainCoroutineRule
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.account.*
 import jp.co.soramitsu.common.domain.*
-import jp.co.soramitsu.common.logger.FirebaseWrapper
+import jp.co.soramitsu.common.logger.WalletDiagnostics
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
 import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
@@ -40,14 +40,14 @@ class TransferPresentationFlowTest {
     private val avatar = mockk<AccountAvatarGenerator> { every { createAvatar(any(), any()) } returns mockk<PictureDrawable>() }
     private val store = ViewModelStore()
     @Before fun setup() {
-        mockkObject(FirebaseWrapper); every { FirebaseWrapper.recordException(any()) } just Runs
+        mockkObject(WalletDiagnostics); every { WalletDiagnostics.recordException(any()) } just Runs
         every { interactor.subscribeAssetsActiveOfCurAccount() } returns assets
         every { interactor.flowCurSoraAccount() } returns account
         coEvery { interactor.getCurSoraAccount() } answers { account.value }
         coEvery { interactor.calcTransactionFee(any(), any(), any(), any()) } returns BigDecimal("0.07")
         coEvery { interactor.isNotEnoughXorLeftAfterTransaction(any(), any()) } returns false
     }
-    @After fun cleanup() { store.clear(); unmockkObject(FirebaseWrapper) }
+    @After fun cleanup() { store.clear(); unmockkObject(WalletDiagnostics) }
     private fun vm(amount: String? = "1", asset: String = assets.value.first().token.id) = TransferAmountViewModel(
         interactor, walletRouter, assetsRouter, NumbersFormatter(), clipboard, resources, avatar, "public-recipient", asset, amount
     ).also { store.put("vm", it) }
