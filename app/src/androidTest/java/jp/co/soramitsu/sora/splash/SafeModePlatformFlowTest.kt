@@ -2,7 +2,9 @@ package jp.co.soramitsu.sora.splash
 
 import android.content.ActivityNotFoundException
 import android.content.Context
+import android.content.ContextWrapper
 import android.content.Intent
+import android.content.SharedPreferences
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import androidx.test.core.app.ApplicationProvider
@@ -21,15 +23,27 @@ class SafeModePlatformFlowTest {
     private val preferenceName = "safety-platform-fixture-${UUID.randomUUID()}"
     private val preferences = app.getSharedPreferences(preferenceName, Context.MODE_PRIVATE)
     private val packages = mockk<PackageManager>()
-    private val context = mockk<Context>()
     private val info = PackageInfo().apply { firstInstallTime = 100; lastUpdateTime = 200 }
     private val launched = mutableListOf<Intent>()
+    private var launchFailure: RuntimeException? = null
+    private var preferencesFailure: RuntimeException? = null
+    // A small fixture, not a mock. Mocking Context makes MockK rewrite Context for the rest of the
+    // shared test process, and every later test then runs far slower.
+    private val context = object : ContextWrapper(app) {
+        override fun getPackageName() = "fixture.wallet"
+        override fun getPackageManager() = packages
+        override fun getSharedPreferences(name: String, mode: Int): SharedPreferences {
+            preferencesFailure?.let { throw it }
+            check(name == "sora_upgrade_welcome" && mode == Context.MODE_PRIVATE) { "unexpected preferences" }
+            return preferences
+        }
+        override fun startActivity(intent: Intent) {
+            launchFailure?.let { throw it }
+            launched += intent
+        }
+    }
     @Before fun setup() {
-        every { context.packageName } returns "fixture.wallet"
-        every { context.packageManager } returns packages
-        every { context.getSharedPreferences("sora_upgrade_welcome", Context.MODE_PRIVATE) } returns preferences
         every { packages.getPackageInfo("fixture.wallet", 0) } returns info
-        every { context.startActivity(any()) } answers { launched += firstArg<Intent>(); Unit }
     }
     @After fun cleanup() { app.deleteSharedPreferences(preferenceName) }
     @Test fun freshInstallDoesNotShowUpgradeWelcome() {
@@ -49,7 +63,7 @@ class SafeModePlatformFlowTest {
         assertFalse(UpgradeWelcome.isPending(context))
     }
     @Test fun unreadableWelcomePreferencesDoNotPreventWalletEntry() {
-        every { context.getSharedPreferences(any(), any()) } throws SecurityException("preferences unavailable")
+        preferencesFailure = SecurityException("preferences unavailable")
         assertFalse(UpgradeWelcome.isPending(context)); UpgradeWelcome.markDone(context)
     }
     @Test fun supportEmailEncodesSubjectAndBodyWithoutChangingTheirContents() {
@@ -63,11 +77,11 @@ class SafeModePlatformFlowTest {
         assertEquals(Intent.FLAG_ACTIVITY_NEW_TASK, intent.flags and Intent.FLAG_ACTIVITY_NEW_TASK)
     }
     @Test fun noEmailApplicationReturnsFailureWithoutCrashing() {
-        every { context.startActivity(any()) } throws ActivityNotFoundException()
+        launchFailure = ActivityNotFoundException()
         assertFalse(SafeModeSupport.email(context, "fixture", "public diagnostic"))
     }
     @Test fun restrictedEmailLaunchReturnsFailureWithoutCrashing() {
-        every { context.startActivity(any()) } throws SecurityException("restricted")
+        launchFailure = SecurityException("restricted")
         assertFalse(SafeModeSupport.email(context, "fixture", "public diagnostic"))
     }
     @Test fun retryWithNoLauncherDoesNothing() {
