@@ -124,12 +124,14 @@ class LivePortfolioSource @Inject constructor(
                 if (error is CancellationException) throw error
                 emit(null)
             }
-        val nexus: Flow<List<NexusPortfolioBalance>> = nexusPortfolioRepository.observeWallet(id)
-            .onStart { emit(emptyList()) }
-            .catch { error ->
-                if (error is CancellationException) throw error
-                emit(emptyList())
-            }
+        // Balances only: the Portfolio view shows no history, so it never asks Torii for one.
+        val nexus: Flow<List<NexusPortfolioBalance>> =
+            nexusPortfolioRepository.observeWallet(id, history = false)
+                .onStart { emit(emptyList()) }
+                .catch { error ->
+                    if (error is CancellationException) throw error
+                    emit(emptyList())
+                }
         return combine(assets, nexus) { a, n -> WalletRaw(account, a, n, clock()) }
     }
 

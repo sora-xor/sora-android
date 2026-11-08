@@ -74,8 +74,8 @@ class LivePortfolioSourceTest {
         every { userRepository.flowCurSoraAccount() } returns current
         every { assetsRepository.subscribeAssetsActive("cnMain") } returns mainAssets
         every { assetsRepository.subscribeAssetsActive("cnSavings") } returns savingsAssets
-        every { nexus.observeWallet("cnMain") } returns mainNexus
-        every { nexus.observeWallet("cnSavings") } returns MutableStateFlow(emptyList())
+        every { nexus.observeWallet("cnMain", history = false) } returns mainNexus
+        every { nexus.observeWallet("cnSavings", history = false) } returns MutableStateFlow(emptyList())
         every { nexus.refresh() } just Runs
         every { connection.connectionState } returns connected
         every { connection.isConnected } answers { connected.value }

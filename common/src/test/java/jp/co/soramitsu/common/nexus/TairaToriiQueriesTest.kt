@@ -62,6 +62,35 @@ class TairaToriiQueriesTest {
     }
 
     @Test
+    fun `a hash lookup narrowed to its committed block asks for that block after the hash`() {
+        val hash = "ab".repeat(32)
+        val narrowed = query(URI(NexusToriiRoutes.accountHistory(network, account, asset,
+            transactionHash = hash, committedBlockHeight = 10_491)))
+
+        assertEquals(
+            "asset_definition_id = \"$asset\" and source = \"transaction\"" +
+                " and type = \"TRANSFER\" and status = \"SUCCESS\" and result_ok = true" +
+                " and tx_hash = \"$hash\" and block_height = 10491",
+            narrowed.getValue("filter"),
+        )
+        assertEquals(setOf("filter", "limit"), narrowed.keys)
+        assertFalse(
+            query(URI(NexusToriiRoutes.accountHistory(network, account, asset, transactionHash = hash)))
+                .getValue("filter").contains("block_height")
+        )
+        // A height is never sent alone, and never one that is not a block.
+        assertThrows(IllegalArgumentException::class.java) {
+            NexusToriiRoutes.accountHistory(network, account, asset, committedBlockHeight = 10_491)
+        }
+        listOf(0L, -1L).forEach { height ->
+            assertThrows(IllegalArgumentException::class.java) {
+                NexusToriiRoutes.accountHistory(network, account, asset,
+                    transactionHash = hash, committedBlockHeight = height)
+            }
+        }
+    }
+
+    @Test
     fun `collection queries reject invalid cursors and page sizes before requesting`() {
         listOf("", "a b", "a&limit=500", "a/b", "a=", "a".repeat(4097)).forEach { cursor ->
             assertThrows(IllegalArgumentException::class.java) {

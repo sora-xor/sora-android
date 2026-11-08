@@ -893,11 +893,17 @@ interface NexusToriiReadClient {
         transactionHash: String,
     ): NexusTransactionStatus
 
+    /**
+     * [committedBlockHeight] is the block the pipeline status reported for [transactionHash]. On
+     * Taira it narrows the history lookup to that block (see [NexusToriiRoutes.accountHistory]);
+     * it can only remove evidence, never add it.
+     */
     suspend fun hasAuthoritativeCommittedTransaction(
         network: NexusNetwork,
         accountId: String,
         assetDefinitionId: String,
         transactionHash: String,
+        committedBlockHeight: Long? = null,
     ): Boolean
 
     suspend fun getAssetBalanceByDefinition(
@@ -919,11 +925,13 @@ interface NexusToriiReadClient {
         cursor: String?,
     ): NexusTransferHistorySlice
 
+    /** The transfers under one hash; [committedBlockHeight] as for the authoritative proof. */
     suspend fun committedXorTransfersForHash(
         network: NexusNetwork,
         accountId: String,
         assetDefinitionId: String,
         transactionHash: String,
+        committedBlockHeight: Long? = null,
     ): List<NexusTransferHistoryItem>
 }
 
@@ -1126,6 +1134,7 @@ class NexusToriiClient internal constructor(
         accountId: String,
         assetDefinitionId: String,
         transactionHash: String,
+        committedBlockHeight: Long?,
     ): Boolean {
         NexusNetworks.requireLive(network)
         val account = NexusToriiRoutes.canonicalAccount(network, accountId)
@@ -1133,8 +1142,12 @@ class NexusToriiClient internal constructor(
             "NEXUS_INVALID_ASSET_SELECTOR"
         }
         if (network.id == WalletNetworkId.TAIRA) {
-            return committedXorTransfersForHash(network, account, assetDefinitionId, transactionHash).isNotEmpty()
+            return committedXorTransfersForHash(
+                network, account, assetDefinitionId, transactionHash, committedBlockHeight,
+            ).isNotEmpty()
         }
+        // Other networks prove the hash from their exact-count transaction list, which has no
+        // height filter; the height is not needed there.
         val proof = NexusAccountTransactionProof(
             network = network,
             accountId = account,
@@ -1224,27 +1237,36 @@ class NexusToriiClient internal constructor(
         assetDefinitionId: String, cursor: String?): NexusTransferHistorySlice =
         readCommittedTransferPage(network, accountId, assetDefinitionId, cursor)
 
-    /** Exact-hash evidence is independent of the size of the account's lifetime history. */
+    /**
+     * Exact-hash evidence is independent of the size of the account's lifetime history. Without
+     * [committedBlockHeight] Taira walks every block range of the account's history before the
+     * cursor ends; with it Torii answers from that block alone, and a row from another block
+     * fails the whole lookup.
+     */
     override suspend fun committedXorTransfersForHash(network: NexusNetwork, accountId: String,
-        assetDefinitionId: String, transactionHash: String): List<NexusTransferHistoryItem> {
+        assetDefinitionId: String, transactionHash: String,
+        committedBlockHeight: Long?): List<NexusTransferHistoryItem> {
         val hash = requireNotNull(NexusTransactionHash.normalized(transactionHash)) { "NEXUS_INVALID_TRANSACTION_HASH" }
+        require(committedBlockHeight == null || committedBlockHeight > 0) { "NEXUS_INVALID_BLOCK_HEIGHT" }
         return NexusHistoryCursorCollector.collect { cursor ->
-            readCommittedTransferPage(network, accountId, assetDefinitionId, cursor, hash)
+            readCommittedTransferPage(network, accountId, assetDefinitionId, cursor, hash, committedBlockHeight)
         }
     }
 
     private suspend fun readCommittedTransferPage(network: NexusNetwork, accountId: String,
-        assetDefinitionId: String, cursor: String?, transactionHash: String? = null): NexusTransferHistorySlice {
+        assetDefinitionId: String, cursor: String?, transactionHash: String? = null,
+        committedBlockHeight: Long? = null): NexusTransferHistorySlice {
         NexusNetworks.requireLive(network)
         val account = NexusToriiRoutes.canonicalAccount(network, accountId)
         check(assetDefinitionId == TairaTestnetContract.XOR_ASSET_DEFINITION_ID) { "TAIRA_XOR_ASSET_DEFINITION_MISMATCH" }
         val body: JsonObject = decode(get(
             NexusToriiRoutes.accountHistory(network, account, assetDefinitionId,
-                limit = HISTORY_PAGE_SIZE, cursor = cursor, transactionHash = transactionHash),
+                limit = HISTORY_PAGE_SIZE, cursor = cursor, transactionHash = transactionHash,
+                committedBlockHeight = committedBlockHeight),
             requireFanout = true,
         ))
         return NexusAccountHistoryParser.pageBody(body, network, account, assetDefinitionId,
-            HISTORY_PAGE_SIZE, transactionHash)
+            HISTORY_PAGE_SIZE, transactionHash, committedBlockHeight)
     }
 
     private suspend fun getAllAccountAssets(

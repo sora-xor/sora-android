@@ -219,6 +219,7 @@ class NexusTransactionCoordinatorTest {
                 account.address,
                 XOR_DEFINITION_ID,
                 hash,
+                COMMITTED_BLOCK,
             )
         } returns listOf(
             NexusTransferHistoryItem(
@@ -241,7 +242,15 @@ class NexusTransactionCoordinatorTest {
 
         assertEquals("FINALIZED", result.state)
         coVerify(exactly = 0) { torii.committedXorTransfers(any(), any(), any()) }
-        coVerify(exactly = 1) { torii.committedXorTransfersForHash(NexusNetworks.taira, account.address, XOR_DEFINITION_ID, hash) }
+        // Both history proofs ask for the block the status reported, never the whole history.
+        coVerify(exactly = 1) {
+            torii.hasAuthoritativeCommittedTransaction(
+                NexusNetworks.taira, account.address, XOR_DEFINITION_ID, hash, COMMITTED_BLOCK,
+            )
+        }
+        coVerify(exactly = 1) { torii.committedXorTransfersForHash(NexusNetworks.taira, account.address, XOR_DEFINITION_ID, hash, COMMITTED_BLOCK) }
+        coVerify(exactly = 0) { torii.hasAuthoritativeCommittedTransaction(any(), any(), any(), any(), null) }
+        coVerify(exactly = 0) { torii.committedXorTransfersForHash(any(), any(), any(), any(), null) }
         coVerify(exactly = 2) {
             torii.transactionStatus(NexusNetworks.taira, hash)
         }
@@ -288,6 +297,7 @@ class NexusTransactionCoordinatorTest {
                 account.address,
                 XOR_DEFINITION_ID,
                 hash,
+                COMMITTED_BLOCK,
             )
         } returns emptyList()
         coEvery {
@@ -347,6 +357,7 @@ class NexusTransactionCoordinatorTest {
                 account.address,
                 XOR_DEFINITION_ID,
                 hash,
+                COMMITTED_BLOCK,
             )
         } returns listOf(
             duplicate,
@@ -398,7 +409,7 @@ class NexusTransactionCoordinatorTest {
 
         assertEquals("NEXUS_FINALITY_NETWORK_MISMATCH", error?.message)
         coVerify(exactly = 0) { torii.getAssetBalanceByDefinition(any(), any(), any()) }
-        coVerify(exactly = 0) { torii.committedXorTransfersForHash(any(), any(), any(), any()) }
+        coVerify(exactly = 0) { torii.committedXorTransfersForHash(any(), any(), any(), any(), any()) }
         coVerify(exactly = 0) { signer.sign(any(), any()) }
         coVerify(exactly = 0) { torii.submit(any(), any(), any()) }
     }
@@ -436,7 +447,7 @@ class NexusTransactionCoordinatorTest {
         coVerify(exactly = 0) { finalityReader.finalizedCheckpoint(any()) }
         coVerify(exactly = 0) { torii.getXorBalance(any(), any()) }
         coVerify(exactly = 0) { torii.getAssetBalanceByDefinition(any(), any(), any()) }
-        coVerify(exactly = 0) { torii.committedXorTransfersForHash(any(), any(), any(), any()) }
+        coVerify(exactly = 0) { torii.committedXorTransfersForHash(any(), any(), any(), any(), any()) }
         coVerify(exactly = 0) { torii.submit(any(), any(), any()) }
     }
 
@@ -486,6 +497,7 @@ class NexusTransactionCoordinatorTest {
                     account.address,
                     XOR_DEFINITION_ID,
                     hash,
+                    COMMITTED_BLOCK,
                 )
             } returns listOf(
                 NexusTransferHistoryItem(
@@ -1327,6 +1339,7 @@ class NexusTransactionCoordinatorTest {
                 accountId = any(),
                 assetDefinitionId = any(),
                 transactionHash = any(),
+                committedBlockHeight = any(),
             )
         } returns true
         every { signer.isQualifiedFor(network) } returns true
@@ -1392,7 +1405,7 @@ class NexusTransactionCoordinatorTest {
         hash = hash,
         status = NexusTransactionStatusValue(
             kind = kind,
-            blockHeight = if (kind in setOf("committed", "applied", "approved")) 1L else null,
+            blockHeight = if (kind in setOf("committed", "applied", "approved")) COMMITTED_BLOCK else null,
         ),
         scope = "global",
         resolvedFrom = when (kind) {
@@ -1417,5 +1430,7 @@ class NexusTransactionCoordinatorTest {
     private companion object {
         const val WALLET_ID = "cnWallet"
         const val XOR_DEFINITION_ID = "6TEAJqbb8oEPmLncoNiMRbLEK6tw"
+        /** The block the fixtures' committed status reports. */
+        const val COMMITTED_BLOCK = 1L
     }
 }
