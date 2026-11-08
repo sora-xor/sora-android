@@ -70,6 +70,8 @@ class PinCodeInteractorTest {
     @Before
     fun setUp() = runTest {
         given(userRepository.retrievePin()).willReturn(pin)
+        given(userRepository.retrievePinTriesUsed()).willReturn(0)
+        given(userRepository.retrieveTimerStartedTimestamp()).willReturn(0L)
         interactor = PinCodeInteractor(userRepository, credentialsRepository, walletRepository)
     }
 

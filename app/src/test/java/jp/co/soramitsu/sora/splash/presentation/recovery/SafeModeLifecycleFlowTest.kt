@@ -1,6 +1,7 @@
 package jp.co.soramitsu.sora.splash.presentation.recovery
 
 import android.content.Context
+import androidx.biometric.BiometricManager
 import androidx.lifecycle.ViewModelStore
 import io.mockk.*
 import java.nio.file.Files
@@ -60,7 +61,14 @@ class SafeModeLifecycleFlowTest {
         coEvery { user.isBiometryEnabled() } returns false
         coEvery { datasource.retainedKeySetsNeedingPhrase() } returns emptySet()
     }
-    @After fun cleanup() { store.clear(); unmockkObject(WalletUpgradeBackup); directory.deleteRecursively() }
+    @After fun cleanup() { unmockkStatic(BiometricManager::class); store.clear(); unmockkObject(WalletUpgradeBackup); directory.deleteRecursively() }
+    private fun deviceCredentialAvailable() {
+        mockkStatic(BiometricManager::class)
+        val manager = mockk<BiometricManager> {
+            every { canAuthenticate(any()) } returns BiometricManager.BIOMETRIC_SUCCESS
+        }
+        every { BiometricManager.from(any()) } returns manager
+    }
     private fun options(code: String, transient: Boolean = code == "KEYSTORE_UNAVAILABLE") =
         WalletRecoveryOptions.forState(code, transient, facts)
     private fun TestScope.vm(io: CoroutineDispatcher = StandardTestDispatcher(testScheduler)): SafeModeViewModel {
@@ -280,7 +288,7 @@ class SafeModeLifecycleFlowTest {
         val vm = vm(); vm.startReveal(); runCurrent()
         val release = CompletableDeferred<Set<String>>()
         coEvery { datasource.retainedKeySetsNeedingPhrase() } coAnswers { release.await() }
-        vm.onAuthenticated(); runCurrent(); vm.closeReveal(); vm.startReveal(); runCurrent()
+        "123456".forEach(vm::pinDigit); runCurrent(); vm.closeReveal(); vm.startReveal(); runCurrent()
         release.complete(emptySet()); runCurrent()
         assertTrue(vm.state.value.reveal is RevealUi.Auth); confirmVerified(credentials)
     }
@@ -332,13 +340,26 @@ class SafeModeLifecycleFlowTest {
         assertEquals(SheetFailure.READ_ONLY_FAILED, vm.state.value.sheetFailure)
         assertEquals("FIXTURE_READ_DENIED", vm.state.value.lastAttemptCode); assertTrue(events.isEmpty())
     }
-    @Test fun biometricPromptSurvivesExpectedStopAndCancelledPromptClearsOnNextStop() = runTest {
+    @Test fun noPinDevicePromptSurvivesExpectedStopAndCancelledPromptClearsOnNextStop() = runTest {
+        deviceCredentialAvailable()
+        coEvery { user.retrievePin() } returns ""
         val vm = vm(); vm.startReveal(); runCurrent(); vm.requestBiometric(); runCurrent()
-        assertEquals(listOf(SafeModeEvent.Authenticate(false)), events)
+        assertEquals(listOf(SafeModeEvent.Authenticate(true)), events)
         vm.onStopped(); assertTrue(vm.state.value.reveal is RevealUi.Auth)
         vm.onAuthenticationEnded(); vm.onStopped(); assertNull(vm.state.value.reveal)
     }
+    @Test fun biometricSuccessCannotRevealSecretsProtectedByWalletPin() = runTest {
+        val vm = vm(); vm.startReveal(); runCurrent()
+        assertFalse((vm.state.value.reveal as RevealUi.Auth).biometric)
+        vm.requestBiometric(); runCurrent()
+        assertTrue(events.isEmpty())
+        vm.onAuthenticated(); runCurrent()
+        assertTrue(vm.state.value.reveal is RevealUi.Auth)
+        coVerify(exactly = 0) { credentials.retrieveMnemonic(any()) }
+    }
+
     @Test fun noStoredPinUsesDeviceCredentialAndCanRetryAfterPinBecomesAvailable() = runTest {
+        deviceCredentialAvailable()
         coEvery { user.retrievePin() } returns ""
         val vm = vm(); vm.startReveal(); runCurrent()
         assertTrue((vm.state.value.reveal as RevealUi.Auth).noPin)
@@ -357,7 +378,7 @@ class SafeModeLifecycleFlowTest {
         every { WalletUpgradeBackup.recoveryFacts() } returns facts.copy(phraseWalletIds = listOf("fixture-a", "fixture-b"))
         coEvery { credentials.retrieveMnemonic(any()) } returns "public fixture words"
         every { credentials.convertRetainedSoraPassphraseToSeed(any()) } returns "01"
-        val vm = vm(); vm.startReveal(); runCurrent(); vm.onAuthenticated(); runCurrent()
+        val vm = vm(); vm.startReveal(); runCurrent(); "123456".forEach(vm::pinDigit); runCurrent()
         val list = vm.state.value.reveal as RevealUi.Wallets
         vm.openEntry(list.entries.first()); runCurrent(); vm.setRevealed(true)
         assertTrue((vm.state.value.reveal as RevealUi.Shown).revealed)
@@ -368,7 +389,7 @@ class SafeModeLifecycleFlowTest {
     @Test fun singleWalletRevealBackClosesAndDoesNotRetainAuthentication() = runTest {
         coEvery { credentials.retrieveMnemonic(any()) } returns "public fixture words"
         every { credentials.convertRetainedSoraPassphraseToSeed(any()) } returns "01"
-        val vm = vm(); vm.onAction(RecoveryAction.SHOW_PHRASE); runCurrent(); vm.onAuthenticated(); runCurrent()
+        val vm = vm(); vm.onAction(RecoveryAction.SHOW_PHRASE); runCurrent(); "123456".forEach(vm::pinDigit); runCurrent()
         assertFalse((vm.state.value.reveal as RevealUi.Shown).canGoBack)
         vm.backFromReveal(); assertNull(vm.state.value.reveal)
         vm.openEntry(PhraseEntry("fixture-wallet", "fixture-wallet", null, false)); runCurrent()
@@ -385,7 +406,7 @@ class SafeModeLifecycleFlowTest {
             seedInput = firstArg()
             jp.co.soramitsu.xsubstrate.encrypt.keypair.substrate.Sr25519Keypair(privateKey, publicKey, nonce)
         }
-        val vm = vm(); vm.startReveal(); runCurrent(); vm.onAuthenticated(); runCurrent()
+        val vm = vm(); vm.startReveal(); runCurrent(); "123456".forEach(vm::pinDigit); runCurrent()
         val secret = (vm.state.value.reveal as RevealUi.Shown).secret as RevealedSecret.Seed
         assertTrue(secret.checked); assertFalse(secret.otherWallet)
         assertTrue(privateKey.all { it == 0.toByte() }); assertTrue(nonce.all { it == 0.toByte() })
@@ -394,7 +415,7 @@ class SafeModeLifecycleFlowTest {
     @Test fun malformedDerivedSeedDoesNotAskCryptoToInterpretIt() = runTest {
         coEvery { credentials.retrieveMnemonic(any()) } returns "public fixture phrase"
         every { credentials.convertRetainedSoraPassphraseToSeed(any()) } returns "01"
-        val vm = vm(); vm.startReveal(); runCurrent(); vm.onAuthenticated(); runCurrent()
+        val vm = vm(); vm.startReveal(); runCurrent(); "123456".forEach(vm::pinDigit); runCurrent()
         assertTrue((vm.state.value.reveal as RevealUi.Shown).secret is RevealedSecret.Phrase)
         verify(exactly = 0) { crypto.generateKeypair(any()) }
     }

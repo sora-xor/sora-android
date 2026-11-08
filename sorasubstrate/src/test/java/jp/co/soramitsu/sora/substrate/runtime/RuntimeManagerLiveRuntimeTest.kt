@@ -644,6 +644,66 @@ class RuntimeManagerLiveRuntimeTest {
     }
 
     @Test
+    fun `signed extension fields cannot be reordered omitted or duplicated`() {
+        listOf<(List<EncodableStruct<SignedExtensionMetadataV14>>) -> List<EncodableStruct<SignedExtensionMetadataV14>>>(
+            { list -> list.reversed() },
+            { list -> list.filter { it[SignedExtensionMetadataV14.identifier] != "CheckNonce" } },
+            { list -> list + list.first { it[SignedExtensionMetadataV14.identifier] == "ChargeTransactionPayment" } },
+            { list -> list.toMutableList().also {
+                val nonce = it.indexOfFirst { item -> item[SignedExtensionMetadataV14.identifier] == "CheckNonce" }
+                val tip = it.indexOfFirst { item -> item[SignedExtensionMetadataV14.identifier] == "ChargeTransactionPayment" }
+                java.util.Collections.swap(it, nonce, tip)
+            } },
+        ).forEach { mutate ->
+            val metadata = v14Metadata(bundledMetadata)
+            val extrinsic = metadata[RuntimeMetadataSchemaV14.extrinsic]
+            extrinsic[ExtrinsicMetadataV14.signedExtensions] = mutate(extrinsic[ExtrinsicMetadataV14.signedExtensions])
+            assertTrue("Modified extension order must fail closed",
+                "SignedExtensionOrder" in Sora2SignedExtensionAdmission.unsupportedExtensions(metadata))
+        }
+    }
+
+    @Test(timeout = 5_000)
+    fun `zero sized shared type graphs have a bounded validation cost`() {
+        val metadata = v14Metadata(bundledMetadata)
+        val lookup = metadata[RuntimeMetadataSchemaV14.lookup]
+        val types = lookup[LookupSchema.types].toMutableList()
+        var previous = types.first {
+            (it[PortableType.type][RegistryType.def] as? List<*>)?.isEmpty() == true
+        }[PortableType.id]
+        var nextId = types.maxOf { it[PortableType.id] } + java.math.BigInteger.ONE
+        repeat(8) {
+            val child = previous
+            types += EncodableStruct(PortableType).also { portable ->
+                portable[PortableType.id] = nextId
+                portable[PortableType.type] = EncodableStruct(RegistryType).also { type ->
+                    type[RegistryType.path] = emptyList()
+                    type[RegistryType.params] = emptyList()
+                    type[RegistryType.docs] = emptyList()
+                    type[RegistryType.def] = List(16) { child }
+                }
+            }
+            previous = nextId
+            nextId += java.math.BigInteger.ONE
+        }
+        lookup[LookupSchema.types] = types
+        metadata[RuntimeMetadataSchemaV14.extrinsic][ExtrinsicMetadataV14.signedExtensions]
+            .first { it[SignedExtensionMetadataV14.identifier] == "CheckWeight" }[SignedExtensionMetadataV14.type] = previous
+        assertTrue("CheckWeight" in Sora2SignedExtensionAdmission.unsupportedExtensions(metadata))
+    }
+
+    @Test
+    fun `known extension cannot hide its encoded data behind a zero sized type`() {
+        val metadata = v14Metadata(bundledMetadata)
+        val empty = metadata[RuntimeMetadataSchemaV14.lookup][LookupSchema.types].first {
+            (it[PortableType.type][RegistryType.def] as? List<*>)?.isEmpty() == true
+        }[PortableType.id]
+        metadata[RuntimeMetadataSchemaV14.extrinsic][ExtrinsicMetadataV14.signedExtensions]
+            .first { it[SignedExtensionMetadataV14.identifier] == "CheckNonce" }[SignedExtensionMetadataV14.type] = empty
+        assertTrue("CheckNonce" in Sora2SignedExtensionAdmission.unsupportedExtensions(metadata))
+    }
+
+    @Test
     fun `a new signed extension with data stops signing with an update-the-app error`() =
         runTest {
             // What a runtime with CheckMetadataHash looks like: one more extension whose part

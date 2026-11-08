@@ -186,53 +186,69 @@ internal object Sora2CallShape {
 
     private const val MAXIMUM_DEPTH = 32
 
-    fun of(module: Module, function: MetadataFunction): String =
-        "${module.index}:${function.index.first}:${function.index.second}" +
+    fun of(module: Module, function: MetadataFunction): String {
+        if (function.arguments.size > 16 || function.arguments.any { it.name.length > 128 }) return "?limit"
+        return "${module.index}:${function.index.first}:${function.index.second}" +
             function.arguments.joinToString(separator = ",", prefix = "(", postfix = ")") {
                 "${it.name}:${render(it.type, 0)}"
             }
+    }
 
-    fun render(type: Type<*>?, depth: Int): String {
-        if (depth > MAXIMUM_DEPTH) return "?depth"
-        val next = depth + 1
-        return when (type) {
-            null -> "?unresolved"
-            is Alias -> render(type.aliasedReference.value, next)
-            is Struct -> type.mapping.entries.joinToString(
-                separator = ",",
-                prefix = "{",
-                postfix = "}",
-            ) { (name, reference) -> "$name:${render(reference.value, next)}" }
-            is DictEnum -> type.elements.entries.sortedBy { it.key }.joinToString(
-                separator = "|",
-                prefix = "enum{",
-                postfix = "}",
-            ) { (index, entry) ->
-                val payload = entry.value.value
-                if (payload is Null) "$index=${entry.name}" else
-                    "$index=${entry.name}:${render(payload, next)}"
+    fun render(type: Type<*>?, depth: Int): String = BoundedRenderer().render(type, depth)
+
+    private class BoundedRenderer {
+        private var remainingNodes = 4_096
+
+        fun render(type: Type<*>?, depth: Int): String {
+            // A small schema DAG can expand exponentially even with a depth cap.
+            if (depth > MAXIMUM_DEPTH || remainingNodes-- <= 0) return "?limit"
+            when (type) {
+                is Struct -> if (type.mapping.size > 64 || type.mapping.keys.any { it.length > 128 }) return "?limit"
+                is DictEnum -> if (type.elements.size > 256 || type.elements.values.any { it.name.length > 128 }) return "?limit"
+                is CollectionEnum -> if (type.elements.size > 256 || type.elements.any { it.length > 128 }) return "?limit"
+                is Tuple -> if (type.typeReferences.size > 64) return "?limit"
+                else -> Unit
             }
-            is CollectionEnum -> type.elements.withIndex().joinToString(
-                separator = "|",
-                prefix = "enum{",
-                postfix = "}",
-            ) { "${it.index}=${it.value}" }
-            is Vec -> "Vec<${render(type.innerType, next)}>"
-            is Option -> "Option<${render(type.innerType, next)}>"
-            is FixedArray -> "[${render(type.innerType, next)};${type.length}]"
-            is Tuple -> type.typeReferences.joinToString(
-                separator = ",",
-                prefix = "(",
-                postfix = ")",
-            ) { render(it.value, next) }
-            is FixedByteArray -> "bytes[${type.length}]"
-            is DynamicByteArray -> "bytes"
-            is UIntType -> type.name
-            is Compact -> "compact"
-            is BooleanType -> "bool"
-            is Null -> "()"
-            is GenericCall -> "Call"
-            else -> "?${type::class.java.simpleName}"
+            val next = depth + 1
+            return when (type) {
+                null -> "?unresolved"
+                is Alias -> render(type.aliasedReference.value, next)
+                is Struct -> type.mapping.entries.joinToString(
+                    separator = ",",
+                    prefix = "{",
+                    postfix = "}",
+                ) { (name, reference) -> "$name:${render(reference.value, next)}" }
+                is DictEnum -> type.elements.entries.sortedBy { it.key }.joinToString(
+                    separator = "|",
+                    prefix = "enum{",
+                    postfix = "}",
+                ) { (index, entry) ->
+                    val payload = entry.value.value
+                    if (payload is Null) "$index=${entry.name}" else
+                        "$index=${entry.name}:${render(payload, next)}"
+                }
+                is CollectionEnum -> type.elements.withIndex().joinToString(
+                    separator = "|",
+                    prefix = "enum{",
+                    postfix = "}",
+                ) { "${it.index}=${it.value}" }
+                is Vec -> "Vec<${render(type.innerType, next)}>"
+                is Option -> "Option<${render(type.innerType, next)}>"
+                is FixedArray -> "[${render(type.innerType, next)};${type.length}]"
+                is Tuple -> type.typeReferences.joinToString(
+                    separator = ",",
+                    prefix = "(",
+                    postfix = ")",
+                ) { render(it.value, next) }
+                is FixedByteArray -> "bytes[${type.length}]"
+                is DynamicByteArray -> "bytes"
+                is UIntType -> type.name
+                is Compact -> "compact"
+                is BooleanType -> "bool"
+                is Null -> "()"
+                is GenericCall -> "Call"
+                else -> "?${type::class.java.simpleName}"
+            }
         }
     }
 }

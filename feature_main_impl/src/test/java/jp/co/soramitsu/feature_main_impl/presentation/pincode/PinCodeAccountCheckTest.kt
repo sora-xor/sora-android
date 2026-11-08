@@ -58,6 +58,7 @@ class PinCodeAccountCheckTest {
     private val connection = MutableStateFlow(true)
     private val interactor = mockk<PinCodeInteractor>(relaxed = true).also {
         coEvery { it.isCodeSet() } returns true
+        coEvery { it.checkPin("123456") } returns true
         coEvery { it.isBiometryEnabled() } returns false
         coEvery { it.retrieveTriesUsed() } returns 0
         coEvery { it.retrieveTimerStartedTimestamp() } returns 0L
@@ -89,7 +90,7 @@ class PinCodeAccountCheckTest {
         val vm = viewModel()
         vm.startAuth(PinCodeAction.TIMEOUT_CHECK)
         advanceUntilIdle()
-        vm.onAuthenticationSucceeded()
+        vm.pinCodeNumberClicked("123456")
         advanceUntilIdle()
         // While the first check waits, the biometrics dialog answer starts another one.
         vm.biometryDialogNoClicked()
@@ -109,7 +110,7 @@ class PinCodeAccountCheckTest {
         val vm = viewModel()
         vm.startAuth(PinCodeAction.TIMEOUT_CHECK)
         advanceUntilIdle()
-        vm.onAuthenticationSucceeded()
+        vm.pinCodeNumberClicked("123456")
         advanceUntilIdle()
         assertTrue(vm.state.migrating)
         assertFalse(vm.state.checkNeedsNetwork)
@@ -125,7 +126,7 @@ class PinCodeAccountCheckTest {
         val vm = viewModel()
         vm.startAuth(PinCodeAction.TIMEOUT_CHECK)
         advanceUntilIdle()
-        vm.onAuthenticationSucceeded()
+        vm.pinCodeNumberClicked("123456")
         advanceUntilIdle()
         assertTrue(vm.state.migrating && vm.state.checkNeedsNetwork)
         verify(exactly = 0) { mainRouter.popBackStack() }

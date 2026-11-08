@@ -45,7 +45,7 @@ class FingerprintCallbackTest {
         val result = mock(BiometricPrompt.AuthenticationResult::class.java)
         fingerprintCallback.onAuthenticationSucceeded(result)
 
-        verify(pinCodeViewModel).onAuthenticationSucceeded()
+        verify(pinCodeViewModel).onAuthenticationSucceeded(null)
     }
 
     @Test fun `onAuthenticationFailed called`() {

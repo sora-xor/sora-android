@@ -29,6 +29,9 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.util.Date
 import javax.inject.Inject
+import jp.co.soramitsu.feature_account_api.domain.WalletPinLockedException
+import javax.crypto.Cipher
+import jp.co.soramitsu.common.security.BiometricUnlockGate
 import jp.co.soramitsu.androidfoundation.fragment.SingleLiveEvent
 import jp.co.soramitsu.androidfoundation.fragment.trigger
 import jp.co.soramitsu.androidfoundation.resource.ResourceManager
@@ -64,6 +67,7 @@ class PinCodeViewModel @Inject constructor(
     private val progress: WithProgress,
     private val deviceVibrator: DeviceVibrator,
     connectionManager: ConnectionManager,
+    private val biometricGate: BiometricUnlockGate = BiometricUnlockGate(),
 ) : BaseViewModel(), WithProgress by progress {
 
     internal var state by mutableStateOf(
@@ -83,7 +87,13 @@ class PinCodeViewModel @Inject constructor(
     private var buttonsDisabled = false
     private var timerStartedTimeStamp = 0L
 
+    private var pinSetupAwaitingBiometry = false
     private var inputedCode = ""
+
+    // Export, backup, PIN changes, removal and node changes always require the wallet PIN.
+    private val biometricAllowed: Boolean
+        get() = ::action.isInitialized && action == PinCodeAction.TIMEOUT_CHECK &&
+            isBiometryEnabled && !buttonsDisabled && biometricGate.isAvailable()
 
     val showFingerPrintEventLiveData = SingleLiveEvent<Boolean>()
     val startFingerprintScannerEventLiveData = SingleLiveEvent<Boolean>()
@@ -103,7 +113,7 @@ class PinCodeViewModel @Inject constructor(
     val pincodeChangedEvent: LiveData<Unit> = _pincodeChangedEvent
 
     /**
-     * Set once the PIN or biometrics were confirmed for "Forget account": the removal screen
+     * Set once the PIN was confirmed for "Forget account": the removal screen
      * replaces the keypad. Nothing is removed before [onRemovalConfirmed].
      */
     internal var removal by mutableStateOf<AccountRemovalState?>(null)
@@ -128,10 +138,6 @@ class PinCodeViewModel @Inject constructor(
             if (timerStartedTimeStamp > 0L) {
                 startTimer()
 
-                if (!buttonsDisabled) {
-                    interactor.resetTimerStartedTimestamp()
-                    timerStartedTimeStamp = 0
-                }
             }
         }
 
@@ -170,6 +176,7 @@ class PinCodeViewModel @Inject constructor(
 
     private fun startTimer() {
         buttonsDisabled = true
+        biometricGate.cancel()
         showFingerPrintEventLiveData.value = false
         createIdleTimer().start()
     }
@@ -178,6 +185,7 @@ class PinCodeViewModel @Inject constructor(
         // Back on the removal screen (from the JSON export): it is already past the PIN and
         // keeps its state; nothing is asked or started again.
         if (removal != null) return
+        biometricGate.cancel()
         if (pinCodeAction == PinCodeAction.TIMEOUT_CHECK) WalletSessionState.markLocked()
         viewModelScope.launch {
             action = pinCodeAction
@@ -198,9 +206,9 @@ class PinCodeViewModel @Inject constructor(
                 PinCodeAction.GOOGLE_BACKUP -> {
                     state = state.copy(
                         toolbarTitleString = resourceManager.getString(R.string.pincode_enter_pin_code),
-                        isBiometricButtonVisible = true
+                        isBiometricButtonVisible = false
                     )
-                    showFingerPrintEventLiveData.value = isBiometryEnabled
+                    showFingerPrintEventLiveData.value = biometricAllowed
                 }
 
                 PinCodeAction.CHANGE_PIN_CODE -> {
@@ -218,7 +226,7 @@ class PinCodeViewModel @Inject constructor(
                         isBackButtonVisible = true
                     )
 
-                    showFingerPrintEventLiveData.value = isBiometryEnabled
+                    showFingerPrintEventLiveData.value = biometricAllowed
                 }
 
                 PinCodeAction.TIMEOUT_CHECK -> {
@@ -228,14 +236,14 @@ class PinCodeViewModel @Inject constructor(
                                 toolbarTitleString = resourceManager.getString(R.string.pincode_enter_pin_code),
                                 isBackButtonVisible = false
                             )
-                            showFingerPrintEventLiveData.value = isBiometryEnabled
+                            showFingerPrintEventLiveData.value = biometricAllowed
                         } else {
                             state = state.copy(
                                 toolbarTitleString = resourceManager.getString(R.string.pincode_set_your_pin_code),
                                 isBackButtonVisible = false
                             )
-                            showFingerPrintEventLiveData.value = isBiometryEnabled
                             action = PinCodeAction.CREATE_PIN_CODE
+                            showFingerPrintEventLiveData.value = false
                         }
                     } catch (t: Throwable) {
                         onError(t)
@@ -247,7 +255,7 @@ class PinCodeViewModel @Inject constructor(
                                 toolbarTitleString = resourceManager.getString(R.string.pincode_enter_pin_code),
                                 isBackButtonVisible = false
                             )
-                            showFingerPrintEventLiveData.value = isBiometryEnabled
+                            showFingerPrintEventLiveData.value = biometricAllowed
                         } else {
                             action = PinCodeAction.CREATE_PIN_CODE
                         }
@@ -336,6 +344,7 @@ class PinCodeViewModel @Inject constructor(
         viewModelScope.launch {
             tryCatch {
                 interactor.savePin(inputedCode)
+                biometricGate.approveEnrollmentAfterPin()
                 if (isChanging) {
                     _pincodeChangedEvent.trigger()
                     WalletSessionState.markUnlocked()
@@ -343,6 +352,7 @@ class PinCodeViewModel @Inject constructor(
                 } else {
                     val available = interactor.isBiometryAvailable()
                     if (available) {
+                        pinSetupAwaitingBiometry = true
                         _biometryInitialDialogEvent.trigger()
                     } else {
                         proceed()
@@ -353,9 +363,19 @@ class PinCodeViewModel @Inject constructor(
     }
 
     private suspend fun checkPinCode() {
-        val result = interactor.checkPin(inputedCode)
+        val result = try {
+            interactor.checkPin(inputedCode)
+        } catch (_: WalletPinLockedException) {
+            inputedCode = ""
+            state = state.copy(checkedDotsCount = 0, isBackButtonVisible = false)
+            triesUsed = interactor.retrieveTriesUsed()
+            timerStartedTimeStamp = interactor.retrieveTimerStartedTimestamp()
+            startTimer()
+            return
+        }
 
         if (result) {
+            biometricGate.approveEnrollmentAfterPin()
             processSuccessfullAuth()
         } else {
             inputedCode = ""
@@ -365,7 +385,7 @@ class PinCodeViewModel @Inject constructor(
                 enableShakeAnimation = true
             )
             deviceVibrator.makeShortVibration()
-            proccessFailedAuthIdleTimer(true)
+            proccessFailedAuthIdleTimer()
         }
     }
 
@@ -406,9 +426,7 @@ class PinCodeViewModel @Inject constructor(
         // (whose Back returns here) does not ask for the PIN again. The phrase is veiled again
         // whenever the screen was left ([onRemovalHidden]).
         if (removal != null) return
-        if (action != PinCodeAction.CREATE_PIN_CODE && !buttonsDisabled) {
-            startFingerprintScannerEventLiveData.value = isBiometryEnabled
-        }
+        startFingerprintScannerEventLiveData.value = biometricAllowed
         if (state.migrating && state.isConnected) {
             viewModelScope.launch {
                 delay(300)
@@ -418,17 +436,29 @@ class PinCodeViewModel @Inject constructor(
     }
 
     fun onAuthenticationError(errString: String) {
+        biometricGate.cancel()
         fingerPrintErrorLiveData.value = errString
     }
 
-    fun onAuthenticationSucceeded() {
-        processSuccessfullAuth()
+    fun prepareBiometricUnlock(): Cipher? =
+        if (biometricAllowed) biometricGate.prepare() else null
+
+    fun cancelBiometricUnlock() = biometricGate.cancel()
+
+    fun onAuthenticationSucceeded(cipher: Cipher? = null) {
+        if (!biometricAllowed) {
+            biometricGate.cancel()
+            return
+        }
+        if (biometricGate.consume(cipher)) processSuccessfullAuth()
     }
 
-    private fun proccessFailedAuthIdleTimer(countAttempts: Boolean) {
+    private fun proccessFailedAuthIdleTimer() {
         viewModelScope.launch {
-            if (countAttempts) triesUsed++
-            interactor.saveTriesUsed(triesUsed)
+            // The verifier owns the persisted budget; this screen never overwrites another
+            // flow's failures with a stale in-memory count.
+            triesUsed = interactor.retrieveTriesUsed()
+            timerStartedTimeStamp = interactor.retrieveTimerStartedTimestamp()
 
             if (triesUsed >= 3) {
                 startTimer()
@@ -444,9 +474,8 @@ class PinCodeViewModel @Inject constructor(
     private fun processSuccessfullAuth() {
         triesUsed = 0
         viewModelScope.launch {
-            interactor.resetTriesUsed()
-            interactor.resetTimerStartedTimestamp()
-
+            // Only the counted PIN verifier resets PIN failures. Biometric unlock must not
+            // grant a fresh guessing budget for secret export or signing.
             when (action) {
                 PinCodeAction.OPEN_PASSPHRASE -> {
                     mainRouter.popBackStack()
@@ -588,7 +617,7 @@ class PinCodeViewModel @Inject constructor(
 
     fun onAuthenticationFailed() {
         deviceVibrator.makeShortVibration()
-        proccessFailedAuthIdleTimer(false)
+        proccessFailedAuthIdleTimer()
     }
 
     fun setBiometryAvailable(isAuthReady: Boolean) {
@@ -699,6 +728,8 @@ class PinCodeViewModel @Inject constructor(
             ?: "WALLET_DELETION_FAILED"
 
     fun biometryDialogYesClicked() {
+        if (!pinSetupAwaitingBiometry) return
+        pinSetupAwaitingBiometry = false
         viewModelScope.launch {
             tryCatch {
                 interactor.setBiometryEnabled(true)
@@ -708,6 +739,8 @@ class PinCodeViewModel @Inject constructor(
     }
 
     fun biometryDialogNoClicked() {
+        if (!pinSetupAwaitingBiometry) return
+        pinSetupAwaitingBiometry = false
         viewModelScope.launch {
             tryCatch {
                 interactor.setBiometryEnabled(false)
@@ -787,7 +820,7 @@ class PinCodeViewModel @Inject constructor(
             }
             isChanging = true
             isBiometryEnabled = false
-            showFingerPrintEventLiveData.value = isBiometryEnabled
+            showFingerPrintEventLiveData.value = biometricAllowed
             state =
                 state.copy(
                     toolbarTitleString = resourceManager.getString(R.string.pincode_enter_new_pin_code),
@@ -798,6 +831,7 @@ class PinCodeViewModel @Inject constructor(
     }
 
     fun canceledFromPrompt() {
+        biometricGate.cancel()
         _fingerPrintCanceledFromPromptEvent.trigger()
     }
 
@@ -843,8 +877,7 @@ class PinCodeViewModel @Inject constructor(
 
             override fun onFinish() {
                 buttonsDisabled = false
-                showFingerPrintEventLiveData.value = isBiometryEnabled
-                viewModelScope.launch { interactor.resetTimerStartedTimestamp() }
+                showFingerPrintEventLiveData.value = biometricAllowed
                 state =
                     state.copy(toolbarTitleString = resourceManager.getString(R.string.pincode_enter_pin_code))
             }
@@ -852,7 +885,7 @@ class PinCodeViewModel @Inject constructor(
     }
 
     fun changeFingerPrintButtonVisibility(isVisible: Boolean) {
-        state = state.copy(isBiometricButtonVisible = isVisible)
+        state = state.copy(isBiometricButtonVisible = isVisible && biometricAllowed)
     }
 
     fun setNewLengthPinCodeClicked() {

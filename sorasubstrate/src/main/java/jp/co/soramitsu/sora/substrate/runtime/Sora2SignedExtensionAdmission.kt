@@ -28,7 +28,6 @@ import jp.co.soramitsu.xsubstrate.runtime.metadata.v14.RegistryType
 import jp.co.soramitsu.xsubstrate.runtime.metadata.v14.RuntimeMetadataSchemaV14
 import jp.co.soramitsu.xsubstrate.runtime.metadata.v14.SignedExtensionMetadataV14
 import jp.co.soramitsu.xsubstrate.runtime.metadata.v14.TypeDefArray
-import jp.co.soramitsu.xsubstrate.runtime.metadata.v14.TypeDefCompact
 import jp.co.soramitsu.xsubstrate.runtime.metadata.v14.TypeDefComposite
 import jp.co.soramitsu.xsubstrate.runtime.metadata.v14.TypeDefCompositeField
 import jp.co.soramitsu.xsubstrate.scale.EncodableStruct
@@ -71,6 +70,11 @@ internal object Sora2SignedExtensionAdmission {
         "CheckTxVersion",
     )
 
+    // These sequences determine which signed bytes the chain reads as era, nonce and tip,
+    // and as version/genesis data. Node metadata cannot reorder or duplicate them.
+    private val EXTRINSIC_ORDER = listOf("CheckMortality", "CheckNonce", "ChargeTransactionPayment")
+    private val PAYLOAD_ORDER = listOf("CheckSpecVersion", "CheckTxVersion", "CheckGenesis", "CheckMortality")
+
     private const val MAXIMUM_TYPE_DEPTH = 16
 
     /** Identifiers, in runtime order, of extensions with data the encoder would leave out. */
@@ -79,47 +83,46 @@ internal object Sora2SignedExtensionAdmission {
     ): List<String> {
         val types = metadata[RuntimeMetadataSchemaV14.lookup][LookupSchema.types]
             .associate { it[PortableType.id] to it[PortableType.type] }
-        return metadata[RuntimeMetadataSchemaV14.extrinsic][ExtrinsicMetadataV14.signedExtensions]
-            .filter { extension ->
-                val identifier = extension[SignedExtensionMetadataV14.identifier]
-                val inExtrinsic = extension[SignedExtensionMetadataV14.type]
-                val inSignedPayload = extension[SignedExtensionMetadataV14.additionalSigned]
-                (identifier !in ENCODED_IN_EXTRINSIC && !isZeroSized(types, inExtrinsic, 0)) ||
-                    (
-                        identifier !in ENCODED_IN_SIGNED_PAYLOAD &&
-                            !isZeroSized(types, inSignedPayload, 0)
-                        )
-            }
-            .map { it[SignedExtensionMetadataV14.identifier] }
+        val extensions = metadata[RuntimeMetadataSchemaV14.extrinsic][ExtrinsicMetadataV14.signedExtensions]
+        val unsupported = extensions.filter { extension ->
+            val identifier = extension[SignedExtensionMetadataV14.identifier]
+            val inExtrinsic = extension[SignedExtensionMetadataV14.type]
+            val inSignedPayload = extension[SignedExtensionMetadataV14.additionalSigned]
+            ((identifier in ENCODED_IN_EXTRINSIC) != !isZeroSized(types, inExtrinsic, 0)) ||
+                ((identifier in ENCODED_IN_SIGNED_PAYLOAD) != !isZeroSized(types, inSignedPayload, 0))
+        }.map { it[SignedExtensionMetadataV14.identifier] }
+        val identifiers = extensions.map { it[SignedExtensionMetadataV14.identifier] }
+        return if (identifiers.filter { it in ENCODED_IN_EXTRINSIC } != EXTRINSIC_ORDER ||
+            identifiers.filter { it in ENCODED_IN_SIGNED_PAYLOAD } != PAYLOAD_ORDER
+        ) (unsupported + "SignedExtensionOrder").distinct() else unsupported
     }
 
     /**
      * True only when the SCALE encoding of the type is provably empty: a tuple or composite of
-     * such types, an array of none or of such a type, or a compact of such a type. Anything else,
+     * such types, or an array of none or of such a type. Anything else,
      * including a shape this function cannot follow, counts as carrying data.
      */
     private fun isZeroSized(
         types: Map<BigInteger, EncodableStruct<RegistryType>>,
         id: BigInteger,
         depth: Int,
+        visits: IntArray = intArrayOf(4_096),
     ): Boolean {
-        if (depth > MAXIMUM_TYPE_DEPTH) return false
+        if (depth > MAXIMUM_TYPE_DEPTH || --visits[0] < 0) return false
         val definition = types[id]?.get(RegistryType.def) ?: return false
         return when (definition) {
             is EncodableStruct<*> -> when (definition.schema) {
                 is TypeDefComposite -> definition[TypeDefComposite.fields2].all { field ->
-                    isZeroSized(types, field[TypeDefCompositeField.type], depth + 1)
+                    isZeroSized(types, field[TypeDefCompositeField.type], depth + 1, visits)
                 }
                 is TypeDefArray -> definition[TypeDefArray.len] == 0u ||
-                    isZeroSized(types, definition[TypeDefArray.type], depth + 1)
-                is TypeDefCompact ->
-                    isZeroSized(types, definition[TypeDefCompact.type], depth + 1)
+                    isZeroSized(types, definition[TypeDefArray.type], depth + 1, visits)
                 // A variant has an index byte, a sequence a length, a bit sequence a length.
                 else -> false
             }
             // A tuple is a list of type ids; `()` is the empty one.
             is List<*> -> definition.all { element ->
-                element is BigInteger && isZeroSized(types, element, depth + 1)
+                element is BigInteger && isZeroSized(types, element, depth + 1, visits)
             }
             // A primitive.
             else -> false

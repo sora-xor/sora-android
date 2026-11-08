@@ -663,13 +663,11 @@ class SafeModeViewModel @Inject constructor(
         autoRetryJob?.cancel()
         enteredPin.clear()
         authenticated = false
+        authenticating = false
         mutableState.update { it.copy(reveal = RevealUi.Auth(loading = true)) }
         viewModelScope.launch {
             val lock = pinAttempts.lockRemainingMillis()
             val stored = withContext(coroutineManager.io) { runCatching { userDatasource.retrievePin() } }
-            val biometryEnabled = withContext(coroutineManager.io) {
-                runCatching { userDatasource.isBiometryEnabled() }.getOrDefault(false)
-            }
             if (generation != revealGeneration) return@launch
             val pin = stored.getOrNull()
             val auth = when {
@@ -682,7 +680,8 @@ class SafeModeViewModel @Inject constructor(
                 else -> RevealUi.Auth(
                     loading = false,
                     pinLength = pin.length,
-                    biometric = biometryEnabled && canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_STRONG),
+                    // Recovery secrets require the wallet PIN whenever one is set.
+                    biometric = false,
                     error = if (lock > 0) AuthError.LOCKED else null,
                     lockedForMillis = lock,
                 )
@@ -700,7 +699,7 @@ class SafeModeViewModel @Inject constructor(
 
     fun requestBiometric() {
         val auth = state.value.reveal as? RevealUi.Auth ?: return
-        if (auth.error == AuthError.LOCKED) return
+        if (!auth.noPin || auth.loading || auth.error != null) return
         authenticating = true
         eventChannel.trySend(SafeModeEvent.Authenticate(deviceCredential = auth.noPin))
     }
@@ -746,7 +745,7 @@ class SafeModeViewModel @Inject constructor(
                 }
                 SafeModeVault.pinMatches(pin, entered) -> {
                     withContext(coroutineManager.io) { pinAttempts.reset() }
-                    if (generation == revealGeneration) onAuthenticated()
+                    if (generation == revealGeneration) revealAfterVerifiedPin()
                 }
                 else -> {
                     val lock = withContext(coroutineManager.io) {
@@ -769,8 +768,16 @@ class SafeModeViewModel @Inject constructor(
         }
     }
 
-    /** PIN, biometrics or the phone's screen lock confirmed the person. */
+    /** A system callback can only complete the explicit no-wallet-PIN recovery flow. */
     fun onAuthenticated() {
+        val auth = state.value.reveal as? RevealUi.Auth ?: return
+        val wasAuthenticating = authenticating
+        authenticating = false
+        if (!wasAuthenticating || !auth.noPin || auth.loading || auth.error != null) return
+        revealAfterVerifiedPin()
+    }
+
+    private fun revealAfterVerifiedPin() {
         authenticating = false
         if (state.value.reveal !is RevealUi.Auth) return
         authenticated = true

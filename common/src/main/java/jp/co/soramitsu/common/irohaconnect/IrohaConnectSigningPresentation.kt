@@ -8,11 +8,14 @@ import java.nio.charset.CodingErrorAction
  */
 object IrohaConnectSigningPresentation {
     const val MAX_MESSAGE_BYTES = 4096
+    private const val TRANSACTION_DIGEST_BYTES = 32
 
     fun readableMessage(kind: IrohaConnectSigningKind, payload: ByteArray): String? {
         if (kind != IrohaConnectSigningKind.RAW || payload.isEmpty() ||
-            payload.size > MAX_MESSAGE_BYTES
+            payload.size > MAX_MESSAGE_BYTES || payload.size == TRANSACTION_DIGEST_BYTES
         ) return null
+        // The transaction key also signs 32-byte digests. A digest can be valid UTF-8;
+        // readability alone cannot distinguish it from a message the user intended to sign.
         val text = runCatching {
             Charsets.UTF_8.newDecoder()
                 .onMalformedInput(CodingErrorAction.REPORT)

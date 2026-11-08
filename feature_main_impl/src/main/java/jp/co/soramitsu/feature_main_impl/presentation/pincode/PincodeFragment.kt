@@ -62,12 +62,15 @@ class PincodeFragment : SoraBaseFragment<PinCodeViewModel>() {
             BiometricPrompt(this, MainThreadExecutor(), FingerprintCallback(viewModel))
         val promptInfo = BiometricPrompt.PromptInfo.Builder()
             .setTitle(getString(R.string.biometric_dialog_title))
+            .setAllowedAuthenticators(BiometricManager.Authenticators.BIOMETRIC_STRONG)
             .setNegativeButtonText(getString(R.string.common_cancel))
             .build()
         FingerprintWrapper(
             biometricManager,
             biometricPrompt,
-            promptInfo
+            promptInfo,
+            viewModel::prepareBiometricUnlock,
+            viewModel::cancelBiometricUnlock,
         )
     }
 

@@ -3,6 +3,10 @@ package jp.co.soramitsu.sora.substrate.runtime
 import io.mockk.every
 import io.mockk.mockk
 import java.math.BigInteger
+import jp.co.soramitsu.xsubstrate.runtime.definitions.types.Type
+import jp.co.soramitsu.xsubstrate.runtime.definitions.types.TypeReference
+import jp.co.soramitsu.xsubstrate.runtime.definitions.types.composite.Tuple
+import jp.co.soramitsu.xsubstrate.runtime.definitions.types.composite.Struct
 import jp.co.soramitsu.common_wallet.domain.model.WithDesired
 import jp.co.soramitsu.sora.substrate.substrate.claimDemeter
 import jp.co.soramitsu.sora.substrate.substrate.depositDemeter
@@ -58,6 +62,24 @@ class Sora2CallTableTest {
     private fun offeredBy(runtime: RuntimeSnapshot) = Sora2CallTable.pinned
         .filter { runtime.metadata.moduleOrNull(it.pallet)?.callOrNull(it.call) != null }
         .map { it.id }
+
+    @Test
+    fun `oversized field names and wide tuples fail before expansion`() {
+        val unit = Tuple("unit", emptyList())
+        assertEquals("?limit", Sora2CallShape.render(
+            Struct("large", linkedMapOf("x".repeat(129) to TypeReference(unit))), 0,
+        ))
+        assertEquals("?limit", Sora2CallShape.render(Tuple("wide", List(65) { TypeReference(unit) }), 0))
+    }
+
+    @Test(timeout = 5_000)
+    fun `repeated nested type graphs have a bounded expansion`() {
+        var node: Type<*> = Tuple("unit", emptyList())
+        repeat(30) { node = Tuple("branch$it", listOf(TypeReference(node), TypeReference(node))) }
+        val rendered = Sora2CallShape.render(node, 0)
+        assertTrue("?limit" in rendered)
+        assertTrue(rendered.length < 100_000)
+    }
 
     @Test
     fun `the table is the encoding of mainnet runtime 138`() {

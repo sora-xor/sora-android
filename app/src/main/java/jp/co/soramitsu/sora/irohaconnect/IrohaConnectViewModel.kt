@@ -1,5 +1,7 @@
 package jp.co.soramitsu.sora.irohaconnect
 
+import jp.co.soramitsu.feature_account_api.domain.WalletPinVerifier
+import jp.co.soramitsu.feature_account_api.domain.WalletPinLockedException
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -55,6 +57,7 @@ data class IrohaConnectUiState(
     val appName: String = "",
     val message: String = "",
     val error: String? = null,
+    val authorizationError: String? = null,
 )
 
 @HiltViewModel
@@ -64,6 +67,7 @@ class IrohaConnectViewModel @Inject constructor(
     private val database: AppDatabase,
     private val transportFactory: IrohaConnectTransportFactory,
     private val resourceManager: jp.co.soramitsu.androidfoundation.resource.ResourceManager,
+    private val pinVerifier: WalletPinVerifier = WalletPinVerifier(userRepository),
 ) : ViewModel() {
     private data class ActiveAccount(
         val walletId: String,
@@ -76,6 +80,7 @@ class IrohaConnectViewModel @Inject constructor(
     val state: StateFlow<IrohaConnectUiState> = _state.asStateFlow()
 
     private var generation = 0L
+    @Volatile private var authorizationRevision = 0L
     private var launch: IrohaConnectLaunch? = null
     private var walletSession: IrohaConnectWalletSession? = null
     private var transport: IrohaConnectTransport? = null
@@ -84,6 +89,7 @@ class IrohaConnectViewModel @Inject constructor(
     private var expiryJob: Job? = null
 
     fun start(rawUri: String?) {
+        authorizationRevision++
         val attempt = ++generation
         viewModelScope.launch {
             protocolMutex.withLock {
@@ -122,14 +128,18 @@ class IrohaConnectViewModel @Inject constructor(
         }
     }
 
-    fun approvePairingAfterAuthentication() {
+    fun approvePairing(pin: String, sessionFingerprint: String) {
         val attempt = generation
+        val approval = authorizationRevision
         viewModelScope.launch {
             protocolMutex.withLock {
-                if (attempt != generation || _state.value.phase != IrohaConnectUiPhase.PAIRING) {
+                if (attempt != generation || _state.value.phase != IrohaConnectUiPhase.PAIRING ||
+                    _state.value.pairing?.sessionFingerprint != sessionFingerprint
+                ) {
                     return@withLock
                 }
                 val session = walletSession ?: return@withLock
+                if (!verifyPin(pin) || attempt != generation || approval != authorizationRevision) return@withLock
                 _state.value = _state.value.copy(
                     phase = IrohaConnectUiPhase.AUTHORIZING,
                     message = resourceManager.getString(jp.co.soramitsu.common.R.string.wallet_connect_verifying),
@@ -140,6 +150,7 @@ class IrohaConnectViewModel @Inject constructor(
                             accountId = derived.address,
                             nowMillis = System.currentTimeMillis(),
                         ) { message ->
+                            check(approval == authorizationRevision) { "APPROVAL_CANCELED" }
                             IrohaConnectCrypto.signEd25519(derived.privateKeySeed, message)
                         }
                     }
@@ -159,6 +170,7 @@ class IrohaConnectViewModel @Inject constructor(
     }
 
     fun rejectPairing() {
+        authorizationRevision++
         viewModelScope.launch {
             protocolMutex.withLock {
                 val session = walletSession ?: return@withLock
@@ -173,19 +185,21 @@ class IrohaConnectViewModel @Inject constructor(
         }
     }
 
-    fun approveSigningAfterAuthentication() {
+    fun approveSigning(pin: String, requestToken: String) {
         val attempt = generation
+        val approval = authorizationRevision
         viewModelScope.launch {
             protocolMutex.withLock {
                 val review = _state.value.signing
                 if (
                     attempt != generation ||
                     _state.value.phase != IrohaConnectUiPhase.SIGNING ||
-                    review == null || review.readableMessage == null
+                    review == null || review.readableMessage == null || review.requestToken != requestToken
                 ) {
                     return@withLock
                 }
                 val session = walletSession ?: return@withLock
+                if (!verifyPin(pin) || attempt != generation || approval != authorizationRevision) return@withLock
                 _state.value = _state.value.copy(
                     phase = IrohaConnectUiPhase.AUTHORIZING,
                     message = resourceManager.getString(jp.co.soramitsu.common.R.string.wallet_connect_signing),
@@ -196,6 +210,7 @@ class IrohaConnectViewModel @Inject constructor(
                             requestToken = review.requestToken,
                             nowMillis = System.currentTimeMillis(),
                         ) { message ->
+                            check(approval == authorizationRevision) { "APPROVAL_CANCELED" }
                             IrohaConnectCrypto.signEd25519(derived.privateKeySeed, message)
                         }
                     }
@@ -219,6 +234,7 @@ class IrohaConnectViewModel @Inject constructor(
     }
 
     fun rejectSigning() {
+        authorizationRevision++
         viewModelScope.launch {
             protocolMutex.withLock {
                 val review = _state.value.signing ?: return@withLock
@@ -241,6 +257,7 @@ class IrohaConnectViewModel @Inject constructor(
     }
 
     fun closeByUser() {
+        authorizationRevision++
         viewModelScope.launch {
             protocolMutex.withLock {
                 dispose(sendClose = true)
@@ -255,6 +272,7 @@ class IrohaConnectViewModel @Inject constructor(
     }
 
     fun onAppBackgrounded() {
+        authorizationRevision++
         val attempt = generation
         viewModelScope.launch {
             protocolMutex.withLock {
@@ -268,6 +286,24 @@ class IrohaConnectViewModel @Inject constructor(
                 )
             }
         }
+    }
+
+    private suspend fun verifyPin(pin: String): Boolean {
+        val error = try {
+            if (pinVerifier.verify(pin)) return true
+            resourceManager.getString(jp.co.soramitsu.common.R.string.common_error_pincode_check_error)
+        } catch (locked: WalletPinLockedException) {
+            resourceManager.getString(
+                jp.co.soramitsu.common.R.string.account_repair_pin_locked,
+                ((locked.remainingMillis + 59_999) / 60_000).toString(),
+            )
+        } catch (cancelled: kotlinx.coroutines.CancellationException) {
+            throw cancelled
+        } catch (_: Exception) {
+            resourceManager.getString(jp.co.soramitsu.common.R.string.wallet_connect_pin_unavailable)
+        }
+        _state.value = _state.value.copy(authorizationError = error)
+        return false
     }
 
     fun authorizationUnavailable() {
@@ -285,7 +321,7 @@ class IrohaConnectViewModel @Inject constructor(
                 }
                 dispose(sendClose = true)
                 fail(
-                    resourceManager.getString(jp.co.soramitsu.common.R.string.wallet_connect_lock_required),
+                    resourceManager.getString(jp.co.soramitsu.common.R.string.wallet_connect_pin_unavailable),
                 )
             }
         }
@@ -354,6 +390,7 @@ class IrohaConnectViewModel @Inject constructor(
                 expiryJob?.cancel()
                 _state.value = _state.value.copy(
                     phase = IrohaConnectUiPhase.PAIRING,
+                    authorizationError = null,
                     pairing = event.review,
                     appName = event.review.appName,
                     message = resourceManager.getString(jp.co.soramitsu.common.R.string.wallet_connect_review_app),
@@ -363,6 +400,7 @@ class IrohaConnectViewModel @Inject constructor(
             is IrohaConnectSessionEvent.SigningRequested -> {
                 _state.value = _state.value.copy(
                     phase = IrohaConnectUiPhase.SIGNING,
+                    authorizationError = null,
                     signing = event.review,
                     message = resourceManager.getString(jp.co.soramitsu.common.R.string.wallet_connect_review_scope),
                 )

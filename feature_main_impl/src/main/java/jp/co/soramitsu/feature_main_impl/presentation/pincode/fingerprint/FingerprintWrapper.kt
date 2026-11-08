@@ -21,27 +21,37 @@ package jp.co.soramitsu.feature_main_impl.presentation.pincode.fingerprint
 
 import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricPrompt
+import javax.crypto.Cipher
 
 class FingerprintWrapper(
     private val biometricManager: BiometricManager,
     private val biometricPrompt: BiometricPrompt,
-    private val promptInfo: BiometricPrompt.PromptInfo
+    private val promptInfo: BiometricPrompt.PromptInfo,
+    private val prepare: () -> Cipher?,
+    private val clearPending: () -> Unit,
 ) {
 
     private var isAuthActive = false
 
     fun startAuth() {
-        biometricPrompt.authenticate(promptInfo)
+        if (isAuthActive) return
+        val cipher = prepare() ?: return
         isAuthActive = true
+        try {
+            biometricPrompt.authenticate(promptInfo, BiometricPrompt.CryptoObject(cipher))
+        } catch (_: Exception) {
+            cancel()
+        }
     }
 
     fun cancel() {
+        clearPending()
         biometricPrompt.cancelAuthentication()
         isAuthActive = false
     }
 
     fun isAuthReady(): Boolean {
-        return biometricManager.canAuthenticate() == BiometricManager.BIOMETRIC_SUCCESS
+        return biometricManager.canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_STRONG) == BiometricManager.BIOMETRIC_SUCCESS
     }
 
     fun toggleScanner() {
