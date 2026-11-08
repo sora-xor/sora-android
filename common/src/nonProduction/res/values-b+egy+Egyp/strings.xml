@@ -614,7 +614,6 @@
     <string name="wallet_connect_sign_declined">𓐍𓏏𓅓 𓂧𓃀𓎛 𓐍𓋴𓆑</string>
     <string name="wallet_connect_session_closed">IrohaConnect 𓏏𓂋𓈖𓂧𓅓𓆓 𓐍𓏏𓅓</string>
     <string name="wallet_connect_background_closed">𓏏𓂋𓈖𓂧𓅓𓆓 𓐍𓏏𓅓 𓏏𓂋 𓊪𓂋𓎛𓆓 𓋴𓊪 𓅓𓅓𓄿𓄿</string>
-    <string name="wallet_connect_lock_required">𓋴𓅓𓈖 𓐍𓏏𓈖𓇋𓂋𓏏 𓅓𓄿𓄿𓏏 𓐍𓏏𓅓 𓂋𓊪𓅱 𓋴𓅓𓈖 𓈖𓐍𓏏 𓐍𓄿𓇋𓈖𓄡𓏏 𓅓𓎛𓄿𓏏 𓎛𓂋𓂋𓂧𓇋𓇋𓃀 IrohaConnect 𓂧𓃀𓎛𓅱</string>
     <string name="wallet_connect_relay_ready">𓋴𓈙𓏏𓄿 𓅱𓄿𓏏𓈖𓅓𓂧𓅱 𓎼𓂋𓎼. 𓎛𓂋𓅱𓄿𓎛 𓈖 𓋴𓈙𓂝𓈖𓐍 𓂋𓈖𓈖𓆓𓏏…</string>
     <string name="wallet_connect_invalid_message">𓋴𓈙𓂝𓈖𓐍 𓉔𓄿𓃀 𓈖𓅓𓄿𓂝 𓂋𓊪𓅱 𓅱𓎛𓅓𓇋𓂋 IrohaConnect 𓅓𓂧𓅱</string>
     <string name="wallet_connect_app_closed">𓋴𓈙𓂝𓈖𓐍 𓐍𓏏𓅓 𓋴𓈙𓏏𓄿 𓏏𓂋𓈖𓂧𓅓𓆓</string>

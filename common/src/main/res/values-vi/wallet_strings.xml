@@ -118,7 +118,7 @@
     <string name="wallet_connect_sign_declined">Đã từ chối yêu cầu ký</string>
     <string name="wallet_connect_session_closed">Đã đóng phiên IrohaConnect</string>
     <string name="wallet_connect_background_closed">Phiên đã đóng khi ví rời khỏi tiền cảnh</string>
-    <string name="wallet_connect_lock_required">Thiết lập khóa màn hình hoặc đăng ký sinh trắc học mạnh trước khi chấp thuận yêu cầu IrohaConnect</string>
+    <string name="wallet_connect_pin_unavailable">Mã PIN ví của bạn hiện không khả dụng. Mở SORA để mở khóa ví, rồi thử lại.</string>
     <string name="wallet_connect_relay_ready">Bộ chuyển tiếp mã hóa đã sẵn sàng. Đang chờ danh tính ứng dụng…</string>
     <string name="wallet_connect_invalid_message">Ứng dụng đã gửi tin nhắn IrohaConnect không hợp lệ hoặc bị phát lại</string>
     <string name="wallet_connect_app_closed">Ứng dụng đã đóng phiên mã hóa</string>

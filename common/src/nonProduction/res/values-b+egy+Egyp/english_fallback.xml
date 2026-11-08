@@ -410,4 +410,5 @@
     <string name="hide_zero_balances">Hide zero balances</string>
     <string name="show_zero_balances">Show zero balances</string>
     <string name="global_results">Global results</string>
+    <string name="wallet_connect_pin_unavailable">Your wallet PIN is unavailable. Open SORA to unlock your wallet, then try again.</string>
 </resources>

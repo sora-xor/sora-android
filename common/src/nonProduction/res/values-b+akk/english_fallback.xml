@@ -419,7 +419,6 @@
     <string name="wallet_connect_interrupted">The secure IrohaConnect relay could not be established or was interrupted</string>
     <string name="wallet_connect_intro">The app can see this account address. Each signature request needs a separate review and your approval.</string>
     <string name="wallet_connect_invalid_message">The application sent an invalid or replayed IrohaConnect message</string>
-    <string name="wallet_connect_lock_required">Set a device screen lock or an enrolled strong biometric before approving IrohaConnect requests</string>
     <string name="wallet_connect_missing_website">Website not provided by this app</string>
     <string name="wallet_connect_network">Network</string>
     <string name="wallet_connect_not_supplied">Not supplied</string>
@@ -538,4 +537,5 @@
     <string name="hide_zero_balances">Hide zero balances</string>
     <string name="show_zero_balances">Show zero balances</string>
     <string name="global_results">Global results</string>
+    <string name="wallet_connect_pin_unavailable">Your wallet PIN is unavailable. Open SORA to unlock your wallet, then try again.</string>
 </resources>

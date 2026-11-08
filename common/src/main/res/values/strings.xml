@@ -627,7 +627,6 @@
     <string name="wallet_connect_sign_declined">Signature request declined</string>
     <string name="wallet_connect_session_closed">IrohaConnect session closed</string>
     <string name="wallet_connect_background_closed">Session closed when the wallet left the foreground</string>
-    <string name="wallet_connect_lock_required">Set a device screen lock or an enrolled strong biometric before approving IrohaConnect requests</string>
     <string name="wallet_connect_pin_unavailable">Your wallet PIN is unavailable. Open SORA to unlock your wallet, then try again.</string>
     <string name="wallet_connect_relay_ready">Encrypted relay ready. Waiting for the application identity…</string>
     <string name="wallet_connect_invalid_message">The application sent an invalid or replayed IrohaConnect message</string>

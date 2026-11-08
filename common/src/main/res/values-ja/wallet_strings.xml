@@ -119,7 +119,7 @@
     <string name="wallet_connect_sign_declined">署名リクエストを拒否しました</string>
     <string name="wallet_connect_session_closed">IrohaConnectセッションを終了しました</string>
     <string name="wallet_connect_background_closed">ウォレットがフォアグラウンドを離れたため、セッションを終了しました</string>
-    <string name="wallet_connect_lock_required">IrohaConnectリクエストを承認する前に、端末の画面ロックまたは強力な生体認証を設定してください</string>
+    <string name="wallet_connect_pin_unavailable">ウォレットのPINを利用できません。SORAを開いてウォレットのロックを解除し、もう一度お試しください。</string>
     <string name="wallet_connect_relay_ready">暗号化リレーの準備ができました。アプリの識別情報を待機中…</string>
     <string name="wallet_connect_invalid_message">アプリが無効な、または再送攻撃に該当するIrohaConnectメッセージを送信しました</string>
     <string name="wallet_connect_app_closed">アプリが暗号化されたセッションを終了しました</string>

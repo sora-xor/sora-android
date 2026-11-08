@@ -121,7 +121,7 @@
     <string name="wallet_connect_sign_declined">Pedido de assinatura recusado</string>
     <string name="wallet_connect_session_closed">Sessão IrohaConnect encerrada</string>
     <string name="wallet_connect_background_closed">A sessão foi encerrada quando a carteira saiu do primeiro plano</string>
-    <string name="wallet_connect_lock_required">Configure o bloqueio de tela ou uma biometria forte antes de aprovar pedidos IrohaConnect</string>
+    <string name="wallet_connect_pin_unavailable">O PIN da sua carteira está indisponível. Abra o SORA para desbloquear sua carteira e tente novamente.</string>
     <string name="wallet_connect_relay_ready">Retransmissor criptografado pronto. Aguardando a identidade do aplicativo…</string>
     <string name="wallet_connect_invalid_message">O aplicativo enviou uma mensagem IrohaConnect inválida ou repetida</string>
     <string name="wallet_connect_app_closed">O aplicativo encerrou a sessão criptografada</string>

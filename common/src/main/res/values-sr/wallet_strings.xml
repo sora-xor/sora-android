@@ -121,7 +121,7 @@
     <string name="wallet_connect_sign_declined">Захтев за потпис је одбијен</string>
     <string name="wallet_connect_session_closed">IrohaConnect сесија је затворена</string>
     <string name="wallet_connect_background_closed">Сесија је затворена када је новчаник напустио први план</string>
-    <string name="wallet_connect_lock_required">Подесите закључавање екрана или региструјте јаку биометријску заштиту пре одобравања IrohaConnect захтева</string>
+    <string name="wallet_connect_pin_unavailable">PIN код вашег новчаника није доступан. Отворите SORA да бисте откључали новчаник, па покушајте поново.</string>
     <string name="wallet_connect_relay_ready">Шифровани релеј је спреман. Чекање идентитета апликације…</string>
     <string name="wallet_connect_invalid_message">Апликација је послала неисправну или поновљену IrohaConnect поруку</string>
     <string name="wallet_connect_app_closed">Апликација је затворила шифровану сесију</string>

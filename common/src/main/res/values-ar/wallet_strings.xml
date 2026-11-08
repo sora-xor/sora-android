@@ -119,7 +119,7 @@
     <string name="wallet_connect_sign_declined">رُفض طلب التوقيع</string>
     <string name="wallet_connect_session_closed">أُغلقت جلسة IrohaConnect</string>
     <string name="wallet_connect_background_closed">أُغلقت الجلسة عندما غادرت المحفظة المقدمة</string>
-    <string name="wallet_connect_lock_required">اضبط قفل شاشة الجهاز أو سجّل مصادقة حيوية قوية قبل الموافقة على طلبات IrohaConnect</string>
+    <string name="wallet_connect_pin_unavailable">رمز PIN لمحفظتك غير متاح. افتح SORA لفتح قفل محفظتك، ثم حاول مرة أخرى.</string>
     <string name="wallet_connect_relay_ready">الوسيط المشفر جاهز. بانتظار هوية التطبيق…</string>
     <string name="wallet_connect_invalid_message">أرسل التطبيق رسالة IrohaConnect غير صالحة أو معاد تشغيلها</string>
     <string name="wallet_connect_app_closed">أغلق التطبيق الجلسة المشفرة</string>

@@ -123,7 +123,7 @@
     <string name="wallet_connect_sign_declined">Allekirjoituspyyntö hylätty</string>
     <string name="wallet_connect_session_closed">IrohaConnect-istunto suljettu</string>
     <string name="wallet_connect_background_closed">Istunto suljettiin, kun lompakko poistui etualalta</string>
-    <string name="wallet_connect_lock_required">Aseta laitteen näytön lukitus tai rekisteröi vahva biometrinen tunnistus ennen IrohaConnect-pyyntöjen hyväksymistä</string>
+    <string name="wallet_connect_pin_unavailable">Lompakkosi PIN-koodi ei ole käytettävissä. Avaa SORA ja poista lompakon lukitus. Yritä sitten uudelleen.</string>
     <string name="wallet_connect_relay_ready">Salattu välitysyhteys valmis. Odotetaan sovelluksen identiteettiä…</string>
     <string name="wallet_connect_invalid_message">Sovellus lähetti virheellisen tai uudelleentoistetun IrohaConnect-viestin</string>
     <string name="wallet_connect_app_closed">Sovellus sulki salatun istunnon</string>

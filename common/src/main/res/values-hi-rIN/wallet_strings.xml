@@ -120,7 +120,7 @@
     <string name="wallet_connect_sign_declined">हस्ताक्षर अनुरोध अस्वीकार कर दिया गया</string>
     <string name="wallet_connect_session_closed">IrohaConnect सत्र बंद हो गया</string>
     <string name="wallet_connect_background_closed">वॉलेट के अग्रभूमि से हटने पर सत्र बंद हो गया</string>
-    <string name="wallet_connect_lock_required">IrohaConnect अनुरोध मंज़ूर करने से पहले डिवाइस का स्क्रीन लॉक या पंजीकृत मज़बूत बायोमेट्रिक प्रमाणीकरण सेट करें</string>
+    <string name="wallet_connect_pin_unavailable">आपके वॉलेट का PIN उपलब्ध नहीं है। अपना वॉलेट अनलॉक करने के लिए SORA खोलें, फिर दोबारा कोशिश करें।</string>
     <string name="wallet_connect_relay_ready">एन्क्रिप्ट किया गया रिले तैयार है। ऐप की पहचान की प्रतीक्षा में…</string>
     <string name="wallet_connect_invalid_message">ऐप ने अमान्य या दोबारा चलाया गया IrohaConnect संदेश भेजा</string>
     <string name="wallet_connect_app_closed">ऐप ने एन्क्रिप्ट किया गया सत्र बंद कर दिया</string>

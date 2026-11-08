@@ -122,7 +122,7 @@
     <string name="wallet_connect_sign_declined">Ondertekeningsverzoek geweigerd</string>
     <string name="wallet_connect_session_closed">IrohaConnect-sessie gesloten</string>
     <string name="wallet_connect_background_closed">De sessie is gesloten toen de wallet de voorgrond verliet</string>
-    <string name="wallet_connect_lock_required">Stel een schermvergrendeling of sterke biometrische verificatie in voordat u IrohaConnect-verzoeken goedkeurt</string>
+    <string name="wallet_connect_pin_unavailable">De pincode van je wallet is niet beschikbaar. Open SORA om je wallet te ontgrendelen en probeer het opnieuw.</string>
     <string name="wallet_connect_relay_ready">Versleutelde relay gereed. Wachten op de identiteit van de applicatie…</string>
     <string name="wallet_connect_invalid_message">De applicatie heeft een ongeldig of opnieuw afgespeeld IrohaConnect-bericht verzonden</string>
     <string name="wallet_connect_app_closed">De applicatie heeft de versleutelde sessie gesloten</string>

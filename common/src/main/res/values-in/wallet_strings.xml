@@ -121,7 +121,7 @@
     <string name="wallet_connect_sign_declined">Permintaan tanda tangan ditolak</string>
     <string name="wallet_connect_session_closed">Sesi IrohaConnect ditutup</string>
     <string name="wallet_connect_background_closed">Sesi ditutup saat dompet meninggalkan latar depan</string>
-    <string name="wallet_connect_lock_required">Siapkan kunci layar perangkat atau biometrik kuat yang terdaftar sebelum menyetujui permintaan IrohaConnect</string>
+    <string name="wallet_connect_pin_unavailable">PIN dompet Anda tidak tersedia. Buka SORA untuk membuka kunci dompet Anda, lalu coba lagi.</string>
     <string name="wallet_connect_relay_ready">Relai terenkripsi siap. Menunggu identitas aplikasi…</string>
     <string name="wallet_connect_invalid_message">Aplikasi mengirim pesan IrohaConnect yang tidak valid atau diputar ulang</string>
     <string name="wallet_connect_app_closed">Aplikasi menutup sesi terenkripsi</string>

@@ -121,7 +121,7 @@
     <string name="wallet_connect_sign_declined">İmza isteği reddedildi</string>
     <string name="wallet_connect_session_closed">IrohaConnect oturumu kapatıldı</string>
     <string name="wallet_connect_background_closed">Cüzdan ön plandan ayrıldığında oturum kapatıldı</string>
-    <string name="wallet_connect_lock_required">IrohaConnect isteklerini onaylamadan önce cihaz ekran kilidi veya güçlü biyometrik kimlik doğrulama ayarlayın</string>
+    <string name="wallet_connect_pin_unavailable">Cüzdanınızın PIN kodu kullanılamıyor. Cüzdanınızın kilidini açmak için SORA uygulamasını açın ve tekrar deneyin.</string>
     <string name="wallet_connect_relay_ready">Şifreli aktarıcı hazır. Uygulama kimliği bekleniyor…</string>
     <string name="wallet_connect_invalid_message">Uygulama geçersiz veya yeniden oynatılmış bir IrohaConnect mesajı gönderdi</string>
     <string name="wallet_connect_app_closed">Uygulama şifreli oturumu kapattı</string>
