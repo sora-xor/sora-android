@@ -118,7 +118,7 @@
     <string name="wallet_connect_sign_declined">בקשת החתימה נדחתה</string>
     <string name="wallet_connect_session_closed">הפעלת IrohaConnect נסגרה</string>
     <string name="wallet_connect_background_closed">ההפעלה נסגרה כשהארנק יצא מהחזית</string>
-    <string name="wallet_connect_lock_required">יש להגדיר נעילת מסך או אימות ביומטרי חזק הרשום במכשיר לפני אישור בקשות IrohaConnect</string>
+    <string name="wallet_connect_pin_unavailable">קוד ה-PIN של הארנק שלך אינו זמין. יש לפתוח את SORA כדי לבטל את נעילת הארנק, ואז לנסות שוב.</string>
     <string name="wallet_connect_relay_ready">הממסר המוצפן מוכן. ממתין לזהות האפליקציה…</string>
     <string name="wallet_connect_invalid_message">האפליקציה שלחה הודעת IrohaConnect לא תקינה או משוחזרת</string>
     <string name="wallet_connect_app_closed">האפליקציה סגרה את ההפעלה המוצפנת</string>

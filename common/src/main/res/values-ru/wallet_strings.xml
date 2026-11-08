@@ -118,7 +118,7 @@
     <string name="wallet_connect_sign_declined">Запрос подписи отклонён</string>
     <string name="wallet_connect_session_closed">Сеанс IrohaConnect закрыт</string>
     <string name="wallet_connect_background_closed">Сеанс закрыт, когда кошелёк перестал быть на переднем плане</string>
-    <string name="wallet_connect_lock_required">Настройте блокировку экрана или надёжную биометрическую аутентификацию перед одобрением запросов IrohaConnect</string>
+    <string name="wallet_connect_pin_unavailable">PIN-код вашего кошелька недоступен. Откройте SORA, чтобы разблокировать кошелёк, и повторите попытку.</string>
     <string name="wallet_connect_relay_ready">Зашифрованный ретранслятор готов. Ожидание идентификации приложения…</string>
     <string name="wallet_connect_invalid_message">Приложение отправило некорректное или повторно воспроизведённое сообщение IrohaConnect</string>
     <string name="wallet_connect_app_closed">Приложение закрыло зашифрованный сеанс</string>

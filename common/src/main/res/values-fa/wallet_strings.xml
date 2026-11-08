@@ -121,7 +121,7 @@
     <string name="wallet_connect_sign_declined">درخواست امضا رد شد</string>
     <string name="wallet_connect_session_closed">نشست IrohaConnect بسته شد</string>
     <string name="wallet_connect_background_closed">هنگامی که کیف پول از پیش‌زمینه خارج شد، نشست بسته شد</string>
-    <string name="wallet_connect_lock_required">پیش از تأیید درخواست‌های IrohaConnect، قفل صفحه دستگاه یا احراز هویت زیستی قوی ثبت‌شده را تنظیم کنید</string>
+    <string name="wallet_connect_pin_unavailable">کد PIN کیف پول شما در دسترس نیست. SORA را باز کنید و قفل کیف پول خود را باز کنید، سپس دوباره تلاش کنید.</string>
     <string name="wallet_connect_relay_ready">رله رمزگذاری‌شده آماده است. در انتظار هویت برنامه…</string>
     <string name="wallet_connect_invalid_message">برنامه پیام IrohaConnect نامعتبر یا بازپخش‌شده فرستاد</string>
     <string name="wallet_connect_app_closed">برنامه نشست رمزگذاری‌شده را بست</string>

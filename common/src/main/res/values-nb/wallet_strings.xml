@@ -123,7 +123,7 @@
     <string name="wallet_connect_sign_declined">Signeringsforespørsel avslått</string>
     <string name="wallet_connect_session_closed">IrohaConnect-økt lukket</string>
     <string name="wallet_connect_background_closed">Økten ble lukket da lommeboken forlot forgrunnen</string>
-    <string name="wallet_connect_lock_required">Konfigurer skjermlås eller registrer sterk biometri før du godkjenner IrohaConnect-forespørsler</string>
+    <string name="wallet_connect_pin_unavailable">PIN-koden til lommeboken din er ikke tilgjengelig. Åpne SORA for å låse opp lommeboken, og prøv igjen.</string>
     <string name="wallet_connect_relay_ready">Kryptert relé klart. Venter på applikasjonens identitet…</string>
     <string name="wallet_connect_invalid_message">Applikasjonen sendte en ugyldig eller gjenbrukt IrohaConnect-melding</string>
     <string name="wallet_connect_app_closed">Applikasjonen lukket den krypterte økten</string>

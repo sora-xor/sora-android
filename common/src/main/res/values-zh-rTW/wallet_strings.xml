@@ -122,7 +122,7 @@
     <string name="wallet_connect_sign_declined">簽名請求已拒絕</string>
     <string name="wallet_connect_session_closed">IrohaConnect工作階段已關閉</string>
     <string name="wallet_connect_background_closed">錢包離開前景時，工作階段已關閉</string>
-    <string name="wallet_connect_lock_required">批准IrohaConnect請求前，請設定裝置螢幕鎖或登記強生物辨識驗證方式</string>
+    <string name="wallet_connect_pin_unavailable">錢包 PIN 碼無法使用。請開啟 SORA 解鎖錢包，然後再試一次。</string>
     <string name="wallet_connect_relay_ready">加密中繼已就緒。正在等待應用程式身分…</string>
     <string name="wallet_connect_invalid_message">應用程式發送了無效或重播的IrohaConnect訊息</string>
     <string name="wallet_connect_app_closed">應用程式已關閉加密工作階段</string>

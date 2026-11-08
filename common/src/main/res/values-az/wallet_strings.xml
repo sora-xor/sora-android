@@ -121,7 +121,7 @@
     <string name="wallet_connect_sign_declined">İmza sorğusu rədd edilib</string>
     <string name="wallet_connect_session_closed">IrohaConnect sessiyası bağlanıb</string>
     <string name="wallet_connect_background_closed">Pul kisəsi ön plandan çıxanda sessiya bağlanıb</string>
-    <string name="wallet_connect_lock_required">IrohaConnect sorğularını təsdiqləməzdən əvvəl cihaz ekran kilidi və ya güclü biometrik doğrulama qurun</string>
+    <string name="wallet_connect_pin_unavailable">Pul kisənizin PIN kodu əlçatan deyil. Pul kisənizin kilidini açmaq üçün SORA-nı açın, sonra yenidən cəhd edin.</string>
     <string name="wallet_connect_relay_ready">Şifrələnmiş ötürücü hazırdır. Tətbiqin kimliyi gözlənilir…</string>
     <string name="wallet_connect_invalid_message">Tətbiq etibarsız və ya təkrar oynadılmış IrohaConnect mesajı göndərib</string>
     <string name="wallet_connect_app_closed">Tətbiq şifrələnmiş sessiyanı bağlayıb</string>

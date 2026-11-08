@@ -119,7 +119,7 @@
     <string name="wallet_connect_sign_declined">签名请求已拒绝</string>
     <string name="wallet_connect_session_closed">IrohaConnect会话已关闭</string>
     <string name="wallet_connect_background_closed">钱包离开前台时，会话已关闭</string>
-    <string name="wallet_connect_lock_required">批准IrohaConnect请求前，请设置设备屏幕锁或登记强生物识别验证方式</string>
+    <string name="wallet_connect_pin_unavailable">钱包 PIN 码不可用。请打开 SORA 解锁钱包，然后重试。</string>
     <string name="wallet_connect_relay_ready">加密中继已就绪。正在等待应用身份…</string>
     <string name="wallet_connect_invalid_message">应用发送了无效或重放的IrohaConnect消息</string>
     <string name="wallet_connect_app_closed">应用已关闭加密会话</string>
