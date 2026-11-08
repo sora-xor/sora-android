@@ -121,6 +121,7 @@ class MainActivity :
         }
 
         fun restartAfterLanguageChange(context: Context) {
+            TrustedMainRestart.grant(ACTION_CHANGE_LANGUAGE)
             val intent = Intent(context, MainActivity::class.java).apply {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                 action = ACTION_CHANGE_LANGUAGE
@@ -129,6 +130,7 @@ class MainActivity :
         }
 
         fun restartAfterAddAccount(context: Context) {
+            TrustedMainRestart.grant(ACTION_ACCOUNT_ADDED)
             val intent = Intent(context, MainActivity::class.java).apply {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                 action = ACTION_ACCOUNT_ADDED
@@ -229,9 +231,11 @@ class MainActivity :
                 NavigationUI.setupWithNavController(binding.bottomNavigationView, it)
             }
 
-            when (intent.action) {
-                ACTION_CHANGE_LANGUAGE -> chooseBottomNavigationItem(R.id.profile_nav_graph)
-                ACTION_DARK_THEME_TOGGLED, ACTION_ACCOUNT_ADDED -> {}
+            val trustedRestart = TrustedMainRestart.consume(intent.action)
+            when {
+                trustedRestart && intent.action == ACTION_CHANGE_LANGUAGE ->
+                    chooseBottomNavigationItem(R.id.profile_nav_graph)
+                trustedRestart || intent.action == ACTION_DARK_THEME_TOGGLED -> {}
                 else -> viewModel.showPinFragment()
             }
         }

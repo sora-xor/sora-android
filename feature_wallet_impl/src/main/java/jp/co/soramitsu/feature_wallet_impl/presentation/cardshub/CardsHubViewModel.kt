@@ -555,7 +555,13 @@ class CardsHubViewModel @Inject constructor(
         _nexusSend.value = current.copy(network = network, submitting = true, errorCode = null)
         nexusSendOperation = viewModelScope.launch {
             try {
-                val result = nexusTransactionCoordinator.submitAndTrack(prepared)
+                val result = nexusTransactionCoordinator.submitAndTrack(prepared) { submitted ->
+                    // Torii has the transfer: its outcome is on screen from now on, and shows
+                    // how it ends below. Closing it leaves that to the recovery worker.
+                    if (nexusSendOperationIsCurrent(generation, network)) {
+                        _nexusSend.value = _nexusSend.value.copy(submitting = false, result = submitted)
+                    }
+                }
                 if (!nexusSendOperationIsCurrent(generation, network)) return@launch
                 _nexusSend.value = _nexusSend.value.copy(
                     submitting = false,

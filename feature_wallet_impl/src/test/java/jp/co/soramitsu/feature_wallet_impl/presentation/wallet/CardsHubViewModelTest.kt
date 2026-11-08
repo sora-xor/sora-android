@@ -59,6 +59,8 @@ import jp.co.soramitsu.feature_wallet_impl.domain.CardsHubInteractorImpl
 import jp.co.soramitsu.feature_wallet_impl.presentation.cardshub.CardsHubViewModel
 import jp.co.soramitsu.feature_wallet_impl.presentation.cardshub.NexusAssetPresentation
 import jp.co.soramitsu.feature_wallet_impl.presentation.cardshub.NexusRoutes
+import jp.co.soramitsu.feature_wallet_impl.presentation.cardshub.NexusSendStep
+import jp.co.soramitsu.feature_wallet_impl.presentation.cardshub.step
 import jp.co.soramitsu.common.base.theOnlyRoute
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import jp.co.soramitsu.test_data.PolkaswapTestData.POOL_DATA
@@ -643,14 +645,14 @@ class CardsHubViewModelTest {
     @Test fun `Nexus review confirms exactly once and keeps the final result immutable`() = runTest {
         val prepared = reviewNexusSend()
         val result = jp.co.soramitsu.feature_wallet_impl.data.nexus.NexusSendResult("local", "0x" + "12".repeat(32), "CONFIRMED")
-        coEvery { nexusTransactionCoordinator.submitAndTrack(prepared) } returns result
+        coEvery { nexusTransactionCoordinator.submitAndTrack(prepared, any()) } returns result
         cardsHubViewModel.confirmNexusSend(); advanceUntilIdle()
         assertEquals(result, cardsHubViewModel.nexusSend.value.result)
         assertFalse(cardsHubViewModel.nexusSend.value.submitting)
         cardsHubViewModel.confirmNexusSend(); cardsHubViewModel.setNexusRecipient("changed"); cardsHubViewModel.setNexusAmount("0.5"); cardsHubViewModel.editNexusSend()
         assertEquals("recipient", cardsHubViewModel.nexusSend.value.recipient)
         assertEquals("0.25", cardsHubViewModel.nexusSend.value.amount)
-        coVerify(exactly = 1) { nexusTransactionCoordinator.submitAndTrack(prepared) }
+        coVerify(exactly = 1) { nexusTransactionCoordinator.submitAndTrack(prepared, any()) }
         cardsHubViewModel.closeNexusSend(); assertFalse(cardsHubViewModel.nexusSend.value.visible)
     }
     @Test fun `editing a Nexus review discards its quote and allows fresh input`() = runTest {
@@ -660,18 +662,53 @@ class CardsHubViewModelTest {
         assertNull(cardsHubViewModel.nexusSend.value.prepared)
         cardsHubViewModel.setNexusAmount("0.5"); assertEquals("0.5", cardsHubViewModel.nexusSend.value.amount)
         cardsHubViewModel.confirmNexusSend()
-        coVerify(exactly = 0) { nexusTransactionCoordinator.submitAndTrack(any()) }
+        coVerify(exactly = 0) { nexusTransactionCoordinator.submitAndTrack(any(), any()) }
     }
     @Test fun `Nexus submission ambiguity stays locked against a second submission`() = runTest {
         val prepared = reviewNexusSend()
-        coEvery { nexusTransactionCoordinator.submitAndTrack(prepared) } throws IllegalStateException("transport lost")
+        coEvery { nexusTransactionCoordinator.submitAndTrack(prepared, any()) } throws IllegalStateException("transport lost")
         cardsHubViewModel.confirmNexusSend(); advanceUntilIdle()
         assertTrue(cardsHubViewModel.nexusSend.value.submissionNeedsCheck)
         assertEquals("transport lost", cardsHubViewModel.nexusSend.value.errorCode)
         assertNull(cardsHubViewModel.nexusSend.value.prepared)
         cardsHubViewModel.editNexusSend(); cardsHubViewModel.prepareNexusSend(); cardsHubViewModel.confirmNexusSend()
         coVerify(exactly = 1) { nexusTransactionCoordinator.prepare(any()) }
-        coVerify(exactly = 1) { nexusTransactionCoordinator.submitAndTrack(any()) }
+        coVerify(exactly = 1) { nexusTransactionCoordinator.submitAndTrack(any(), any()) }
+    }
+    @Test fun `an expired unsent quote returns to the draft for a current fresh review`() = runTest {
+        val prepared = reviewNexusSend()
+        coEvery { nexusTransactionCoordinator.submitAndTrack(prepared, any()) } throws
+            jp.co.soramitsu.feature_wallet_impl.data.nexus.NexusNotSubmittedException(
+                IllegalStateException("TAIRA_QUOTE_EXPIRED")
+            )
+        cardsHubViewModel.confirmNexusSend(); advanceUntilIdle()
+        val draft = cardsHubViewModel.nexusSend.value
+        assertEquals(NexusSendStep.FORM, draft.step())
+        assertTrue(draft.visible)
+        assertFalse(draft.submissionNeedsCheck)
+        assertFalse(draft.submitting)
+        assertNull(draft.prepared)
+        assertNull(draft.result)
+        assertEquals("TAIRA_QUOTE_EXPIRED", draft.errorCode)
+        assertEquals("recipient", draft.recipient)
+        assertEquals("0.25", draft.amount)
+        cardsHubViewModel.confirmNexusSend()
+        coVerify(exactly = 1) { nexusTransactionCoordinator.submitAndTrack(any(), any()) }
+
+        val refreshed = nexusPortfolioFlow.value.single().copy(xorQuantity = "2")
+        nexusPortfolioFlow.value = listOf(refreshed); advanceUntilIdle()
+        cardsHubViewModel.prepareNexusSend(); advanceUntilIdle()
+        assertEquals(refreshed, cardsHubViewModel.nexusSend.value.network)
+        assertEquals(prepared, cardsHubViewModel.nexusSend.value.prepared)
+        assertNull(cardsHubViewModel.nexusSend.value.errorCode)
+        coVerify(exactly = 2) { nexusTransactionCoordinator.prepare(any()) }
+
+        // A wallet change still clears the recovered draft and its freshly reviewed quote.
+        selectedAccountFlow.value = secondAccount; advanceUntilIdle()
+        cardsHubViewModel.prepareNexusSend(); cardsHubViewModel.confirmNexusSend()
+        assertFalse(cardsHubViewModel.nexusSend.value.visible)
+        coVerify(exactly = 2) { nexusTransactionCoordinator.prepare(any()) }
+        coVerify(exactly = 1) { nexusTransactionCoordinator.submitAndTrack(any(), any()) }
     }
     @Test fun `a Nexus quote for another wallet or network is cleared before any submission`() = runTest {
         for ((wallet, network) in listOf(secondAccount.substrateAddress to WalletNetworkId.TAIRA, account.substrateAddress to WalletNetworkId.MINAMOTO)) {
@@ -680,25 +717,25 @@ class CardsHubViewModelTest {
             assertFalse(cardsHubViewModel.nexusSend.value.visible)
             assertNull(cardsHubViewModel.nexusSend.value.prepared)
         }
-        coVerify(exactly = 0) { nexusTransactionCoordinator.submitAndTrack(any()) }
+        coVerify(exactly = 0) { nexusTransactionCoordinator.submitAndTrack(any(), any()) }
     }
     @Test fun `Nexus confirmation cannot be closed edited or repeated while transport runs`() = runTest {
         val prepared = reviewNexusSend()
         val completion = CompletableDeferred<jp.co.soramitsu.feature_wallet_impl.data.nexus.NexusSendResult>()
-        coEvery { nexusTransactionCoordinator.submitAndTrack(prepared) } coAnswers { completion.await() }
+        coEvery { nexusTransactionCoordinator.submitAndTrack(prepared, any()) } coAnswers { completion.await() }
         cardsHubViewModel.confirmNexusSend(); runCurrent()
         assertTrue(cardsHubViewModel.nexusSend.value.submitting)
         cardsHubViewModel.confirmNexusSend(); cardsHubViewModel.closeNexusSend(); cardsHubViewModel.editNexusSend()
         assertTrue(cardsHubViewModel.nexusSend.value.visible)
         assertEquals(prepared, cardsHubViewModel.nexusSend.value.prepared)
         completion.complete(jp.co.soramitsu.feature_wallet_impl.data.nexus.NexusSendResult("id", "hash", "PENDING")); advanceUntilIdle()
-        coVerify(exactly = 1) { nexusTransactionCoordinator.submitAndTrack(any()) }
+        coVerify(exactly = 1) { nexusTransactionCoordinator.submitAndTrack(any(), any()) }
         assertEquals("PENDING", cardsHubViewModel.nexusSend.value.result!!.state)
     }
     @Test fun `a selected wallet change cancels Nexus transport display without publishing a stale result`() = runTest {
         val prepared = reviewNexusSend()
         var cancelled = false
-        coEvery { nexusTransactionCoordinator.submitAndTrack(prepared) } coAnswers {
+        coEvery { nexusTransactionCoordinator.submitAndTrack(prepared, any()) } coAnswers {
             try { awaitCancellation() } finally { cancelled = true }
         }
         cardsHubViewModel.confirmNexusSend(); runCurrent()
@@ -753,7 +790,7 @@ class CardsHubViewModelTest {
         cardsHubViewModel.editNexusSend(); runCurrent()
         assertEquals(jp.co.soramitsu.common.R.string.wallet_send_xor, toolbarTitle())
         cardsHubViewModel.prepareNexusSend(); advanceUntilIdle()
-        coEvery { nexusTransactionCoordinator.submitAndTrack(prepared) } returns
+        coEvery { nexusTransactionCoordinator.submitAndTrack(prepared, any()) } returns
             jp.co.soramitsu.feature_wallet_impl.data.nexus.NexusSendResult("local", "ab".repeat(32), "PENDING")
         cardsHubViewModel.confirmNexusSend(); advanceUntilIdle()
         assertFalse(toolbarShown())
@@ -776,7 +813,7 @@ class CardsHubViewModelTest {
     @Test fun `back on Send does nothing while the transfer is sent, and closes its outcome`() = runTest {
         val prepared = reviewNexusSend()
         val completion = CompletableDeferred<jp.co.soramitsu.feature_wallet_impl.data.nexus.NexusSendResult>()
-        coEvery { nexusTransactionCoordinator.submitAndTrack(prepared) } coAnswers { completion.await() }
+        coEvery { nexusTransactionCoordinator.submitAndTrack(prepared, any()) } coAnswers { completion.await() }
         cardsHubViewModel.setCurDestination(NexusRoutes.SEND)
         cardsHubViewModel.confirmNexusSend(); runCurrent()
         cardsHubViewModel.nexusSendBack(); cardsHubViewModel.onBackPressed()
@@ -787,6 +824,44 @@ class CardsHubViewModelTest {
         assertFalse(cardsHubViewModel.nexusSend.value.visible)
         cardsHubViewModel.nexusSendBack()
         assertFalse(cardsHubViewModel.nexusSend.value.visible)
+    }
+
+    @Test fun `a transfer Torii took shows its outcome at once, then how it ended`() = runTest {
+        val prepared = reviewNexusSend()
+        val submitted = jp.co.soramitsu.feature_wallet_impl.data.nexus.NexusSendResult("id", "hash", "SUBMITTED")
+        val finalized = jp.co.soramitsu.feature_wallet_impl.data.nexus.NexusSendResult("id", "hash", "FINALIZED")
+        val tracking = CompletableDeferred<jp.co.soramitsu.feature_wallet_impl.data.nexus.NexusSendResult>()
+        coEvery { nexusTransactionCoordinator.submitAndTrack(prepared, any()) } coAnswers {
+            secondArg<(jp.co.soramitsu.feature_wallet_impl.data.nexus.NexusSendResult) -> Unit>().invoke(submitted)
+            tracking.await()
+        }
+        cardsHubViewModel.confirmNexusSend(); runCurrent()
+        val shown = cardsHubViewModel.nexusSend.value
+        assertFalse(shown.submitting)
+        assertFalse(shown.submissionNeedsCheck)
+        assertEquals(submitted, shown.result)
+        assertEquals(NexusSendStep.OUTCOME, shown.step())
+        tracking.complete(finalized); advanceUntilIdle()
+        assertEquals(finalized, cardsHubViewModel.nexusSend.value.result)
+        cardsHubViewModel.confirmNexusSend()
+        coVerify(exactly = 1) { nexusTransactionCoordinator.submitAndTrack(any(), any()) }
+    }
+
+    @Test fun `closing the outcome while it is followed does not reopen it`() = runTest {
+        val prepared = reviewNexusSend()
+        val tracking = CompletableDeferred<jp.co.soramitsu.feature_wallet_impl.data.nexus.NexusSendResult>()
+        coEvery { nexusTransactionCoordinator.submitAndTrack(prepared, any()) } coAnswers {
+            secondArg<(jp.co.soramitsu.feature_wallet_impl.data.nexus.NexusSendResult) -> Unit>()
+                .invoke(jp.co.soramitsu.feature_wallet_impl.data.nexus.NexusSendResult("id", "hash", "SUBMITTED"))
+            tracking.await()
+        }
+        cardsHubViewModel.setCurDestination(NexusRoutes.SEND)
+        cardsHubViewModel.confirmNexusSend(); runCurrent()
+        cardsHubViewModel.nexusSendBack()
+        assertFalse(cardsHubViewModel.nexusSend.value.visible)
+        tracking.complete(jp.co.soramitsu.feature_wallet_impl.data.nexus.NexusSendResult("id", "hash", "FINALIZED")); advanceUntilIdle()
+        assertFalse(cardsHubViewModel.nexusSend.value.visible)
+        assertNull(cardsHubViewModel.nexusSend.value.result)
     }
 
     @Test fun `the receive page is built for the selected wallet's address and shared from it`() = runTest {

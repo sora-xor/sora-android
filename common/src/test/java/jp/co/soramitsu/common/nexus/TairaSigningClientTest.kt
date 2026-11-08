@@ -71,6 +71,43 @@ class TairaSigningClientTest {
         assertEquals(3, client.checkpoint().height)
         assertEquals(2, calls)
     }
+    private fun latestBlocks(vararg heights: Int) = buildJsonObject {
+        putJsonArray("items") { heights.forEach { height -> addJsonObject { put("height", height); put("hash", TairaTestnetContract.NETWORK_LITERAL) } } }
+        put("next_cursor", "older")
+    }.toString().toByteArray()
+    @Test fun `checkpoint answers from the node's latest block while it cannot attest its tip`() = runBlocking {
+        for (status in listOf(409, 503)) {
+            val paths = mutableListOf<String>()
+            val client = TairaSigningClient(transport = { request ->
+                paths += request.path
+                if (request.path.startsWith("/v1/bridge/")) throw TairaHttpStatusException(status)
+                latestBlocks(12471)
+            })
+            assertEquals(12471, client.checkpoint().height)
+            assertEquals(listOf("/v1/bridge/finality/attestation/latest", "/v1/explorer/blocks?limit=1"), paths)
+        }
+    }
+    @Test fun `other attestation failures are not answered from the block list`() {
+        var calls = 0
+        val client = TairaSigningClient(transport = { calls++; throw TairaHttpStatusException(500) })
+        val error = assertThrows(TairaHttpStatusException::class.java) { runBlocking { client.checkpoint() } }
+        assertEquals("TAIRA_HTTP_500", error.message)
+        assertEquals(1, calls)
+    }
+    @Test fun `latest block answer must hold exactly one valid block`() {
+        for (answer in listOf(
+            latestBlocks(),
+            latestBlocks(5, 4),
+            latestBlocks(0),
+            buildJsonObject { putJsonArray("items") { addJsonObject { put("height", 5); put("hash", "not-a-hash") } } }.toString().toByteArray(),
+        )) {
+            val client = TairaSigningClient(transport = { request ->
+                if (request.path.startsWith("/v1/bridge/")) throw TairaHttpStatusException(409)
+                answer
+            })
+            assertThrows(IllegalStateException::class.java) { runBlocking { client.checkpoint() } }
+        }
+    }
     @Test fun `checkpoint rejects challenge replay before block lookup`() {
         var calls = 0
         val client = TairaSigningClient(transport = {

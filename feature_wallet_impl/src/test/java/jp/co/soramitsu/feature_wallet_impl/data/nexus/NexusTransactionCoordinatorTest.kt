@@ -22,6 +22,7 @@ import jp.co.soramitsu.common.nexus.NexusTransactionStatus
 import jp.co.soramitsu.common.nexus.NexusTransactionStatusValue
 import jp.co.soramitsu.common.nexus.NexusTransferHistoryItem
 import jp.co.soramitsu.common.nexus.WalletNetworkId
+import jp.co.soramitsu.common.nexus.TairaHttpStatusException
 import jp.co.soramitsu.common.nexus.TairaTestnetContract
 import jp.co.soramitsu.core_db.AppDatabase
 import jp.co.soramitsu.core_db.dao.WalletIdentityDao
@@ -39,6 +40,7 @@ import kotlinx.coroutines.yield
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -863,6 +865,7 @@ class NexusTransactionCoordinatorTest {
         val error = runCatching { coordinator.submit(prepared) }.exceptionOrNull()
 
         assertEquals("NEXUS_QUOTE_CHANGED", error?.message)
+        assertTrue(error is NexusNotSubmittedException)
         coVerify(exactly = 0) { signer.sign(any(), any()) }
         coVerify(exactly = 0) { dao.insertPendingTransaction(any()) }
         coVerify(exactly = 0) { torii.submit(any(), any(), any()) }
@@ -904,9 +907,43 @@ class NexusTransactionCoordinatorTest {
         val error = runCatching { coordinator.submit(prepared) }.exceptionOrNull()
 
         assertEquals("NEXUS_QUOTE_CHANGED", error?.message)
+        assertTrue(error is NexusNotSubmittedException)
         coVerify(exactly = 0) { signer.sign(any(), any()) }
         coVerify(exactly = 0) { dao.insertPendingTransaction(any()) }
         coVerify(exactly = 0) { torii.submit(any(), any(), any()) }
+    }
+
+    @Test
+    fun `an expired quote permits a fresh review without claiming an unknown submission`() = runTest {
+        val account = verifiedNetworkAccount(WalletNetworkId.TAIRA)
+        every { database.walletIdentityDao() } returns dao
+        stubVerifiedWallet(account)
+        coEvery { featureManager.getStateForNetwork(any()) } returns enabledFeatureState()
+        coEvery { torii.getXorBalance(NexusNetworks.taira, account.address) } returns
+            NexusAssetBalance(asset = XOR_DEFINITION_ID, quantity = "10")
+        coEvery { signer.quote(any()) } returns NexusTransferFeeQuote(
+            networkId = WalletNetworkId.TAIRA.wireId,
+            authority = account.address,
+            recipient = account.address,
+            assetDefinitionId = XOR_DEFINITION_ID,
+            amount = "1",
+            fee = "0.1",
+            quoteIdentity = "quote-before-expiry",
+            validUntilBlock = 20,
+        )
+        val prepared = coordinator.prepare(
+            NexusSendRequest(WALLET_ID, WalletNetworkId.TAIRA, account.address, "1")
+        )
+        coEvery { signer.quote(any()) } throws IllegalStateException("TAIRA_QUOTE_EXPIRED")
+
+        val error = runCatching { coordinator.submitAndTrack(prepared) }.exceptionOrNull()
+
+        assertTrue(error is NexusNotSubmittedException)
+        assertEquals("TAIRA_QUOTE_EXPIRED", error?.message)
+        coVerify(exactly = 0) { signer.sign(any(), any()) }
+        coVerify(exactly = 0) { dao.insertPendingTransaction(any()) }
+        coVerify(exactly = 0) { torii.submit(any(), any(), any()) }
+        coVerify(exactly = 0) { torii.transactionStatus(any(), any()) }
     }
 
     @Test
@@ -1158,6 +1195,7 @@ class NexusTransactionCoordinatorTest {
 
         assertEquals("SUBMITTED", result.state)
         assertEquals("NEXUS_CONFIRMATION_ALREADY_SUBMITTED", replayError?.message)
+        assertFalse(replayError is NexusNotSubmittedException)
         coVerifyOrder {
             signer.sign(any(), any())
             dao.insertPendingTransaction(any())
@@ -1226,6 +1264,7 @@ class NexusTransactionCoordinatorTest {
         val error = runCatching { coordinator.submit(prepared) }.exceptionOrNull()
 
         assertEquals("NEXUS_SEND_DISABLED", error?.message)
+        assertTrue(error is NexusNotSubmittedException)
         assertEquals("REJECTED", persisted?.state)
         assertFalse(persisted?.submissionIsAmbiguous ?: true)
         assertTrue(signedBytes.all { it == 0.toByte() })
@@ -1291,6 +1330,7 @@ class NexusTransactionCoordinatorTest {
         val replayError = runCatching { coordinator.submit(prepared) }.exceptionOrNull()
 
         assertTrue(submissionError is NexusToriiException)
+        assertFalse(submissionError is NexusNotSubmittedException)
         assertEquals("UNKNOWN", persisted?.state)
         assertTrue(persisted?.submissionIsAmbiguous == true)
         assertEquals(hash, persisted?.transactionHash)
@@ -1299,6 +1339,219 @@ class NexusTransactionCoordinatorTest {
         coVerify(exactly = 1) { signer.sign(any(), any()) }
         coVerify(exactly = 1) { torii.submit(network, any(), any()) }
         verify(exactly = 1) { pendingRecoveryScheduler.kickAfterJournal() }
+    }
+
+    @Test
+    fun `a time-limited quote is sent and followed while the node has no checkpoint`() = runTest {
+        val account = verifiedNetworkAccount(WalletNetworkId.TAIRA)
+        val network = NexusNetworks.taira
+        val hash = "ab".repeat(32)
+        var persisted: PendingNetworkTransactionLocal? = null
+        every { database.walletIdentityDao() } returns dao
+        stubVerifiedWallet(account)
+        coEvery { featureManager.getStateForNetwork(any()) } returns enabledFeatureState()
+        coEvery { torii.getXorBalance(network, account.address) } returns
+            NexusAssetBalance(asset = XOR_DEFINITION_ID, quantity = "10")
+        coEvery { signer.quote(any()) } returns NexusTransferFeeQuote(
+            networkId = WalletNetworkId.TAIRA.wireId,
+            authority = account.address,
+            recipient = account.address,
+            assetDefinitionId = XOR_DEFINITION_ID,
+            amount = "1",
+            fee = "0.1",
+            quoteIdentity = "quote-limited-by-time",
+            validUntilBlock = null,
+        )
+        coEvery { signer.sign(any(), any()) } returns NexusSignedTransaction(
+            noritoBytes = byteArrayOf(1, 2, 3),
+            transactionHash = hash,
+        )
+        coEvery { dao.insertPendingTransaction(any()) } coAnswers { persisted = firstArg() }
+        coEvery { dao.getPendingTransaction(any()) } coAnswers { persisted }
+        coEvery {
+            dao.updatePendingTransaction(any(), any(), any(), any(), any())
+        } coAnswers {
+            persisted = checkNotNull(persisted).copy(
+                transactionHash = secondArg(),
+                state = arg(2),
+                submissionIsAmbiguous = arg(3),
+                updatedAt = arg(4),
+            )
+        }
+        coEvery { torii.submit(any(), any(), any()) } returns NexusSubmissionReceipt(
+            payload = NexusSubmissionPayload(
+                transactionHash = hash,
+                entrypointHash = hash,
+                signedTransactionHash = hash,
+                submittedAtMillis = 1,
+                submittedAtHeight = 1,
+            )
+        )
+        coEvery { torii.transactionStatus(network, hash) } returns transactionStatus(hash, "applied")
+        // Taira's attestation answers 409 for minutes after each block.
+        coEvery { finalityReader.finalizedCheckpoint(network) } throws TairaHttpStatusException(409)
+        val heard = mutableListOf<NexusSendResult>()
+
+        val prepared = coordinator.prepare(
+            NexusSendRequest(WALLET_ID, WalletNetworkId.TAIRA, account.address, "1")
+        )
+        coVerify(exactly = 0) { finalityReader.finalizedCheckpoint(any()) }
+        val result = coordinator.submitAndTrack(prepared) { heard += it }
+
+        assertEquals(listOf("SUBMITTED"), heard.map { it.state })
+        assertEquals("SUBMITTED", result.state)
+        assertEquals("SUBMITTED", persisted?.state)
+        assertEquals(false, persisted?.submissionIsAmbiguous)
+        coVerify(exactly = 1) { signer.sign(any(), any()) }
+        coVerify(exactly = 1) { torii.submit(any(), any(), any()) }
+    }
+
+    @Test
+    fun `a quote with a block limit still needs a checkpoint and is refused past its limit`() = runTest {
+        val account = verifiedNetworkAccount(WalletNetworkId.TAIRA)
+        val network = NexusNetworks.taira
+        every { database.walletIdentityDao() } returns dao
+        stubVerifiedWallet(account)
+        coEvery { featureManager.getStateForNetwork(any()) } returns enabledFeatureState()
+        coEvery { torii.getXorBalance(network, account.address) } returns
+            NexusAssetBalance(asset = XOR_DEFINITION_ID, quantity = "10")
+        val quote = NexusTransferFeeQuote(
+            networkId = WalletNetworkId.TAIRA.wireId,
+            authority = account.address,
+            recipient = account.address,
+            assetDefinitionId = XOR_DEFINITION_ID,
+            amount = "1",
+            fee = "0.1",
+            quoteIdentity = "quote-limited-by-block",
+            validUntilBlock = 5,
+        )
+        coEvery { signer.quote(any()) } returns quote
+        val request = NexusSendRequest(WALLET_ID, WalletNetworkId.TAIRA, account.address, "1")
+
+        // The fixture's checkpoint is block 10.
+        assertEquals("NEXUS_QUOTE_EXPIRED", runCatching { coordinator.prepare(request) }.exceptionOrNull()?.message)
+
+        coEvery { signer.quote(any()) } returns quote.copy(validUntilBlock = 20)
+        coEvery { finalityReader.finalizedCheckpoint(network) } throws TairaHttpStatusException(409)
+        assertEquals("TAIRA_HTTP_409", runCatching { coordinator.prepare(request) }.exceptionOrNull()?.message)
+    }
+
+    private fun stubCommittedSend(hash: String, account: NetworkAccountLocal) {
+        every { database.walletIdentityDao() } returns dao
+        coEvery { dao.getPendingTransaction("${TairaTestnetContract.PENDING_JOURNAL_PREFIX}local") } returns PendingNetworkTransactionLocal(
+            localId = "${TairaTestnetContract.PENDING_JOURNAL_PREFIX}local",
+            walletId = WALLET_ID,
+            networkId = WalletNetworkId.TAIRA.wireId,
+            chainId = NexusNetworks.taira.chainId,
+            transactionHash = hash,
+            assetId = XOR_DEFINITION_ID,
+            amount = "1",
+            recipient = account.address,
+            state = "SUBMITTED",
+            submissionIsAmbiguous = false,
+            createdAt = 1,
+            updatedAt = 1,
+        )
+        stubVerifiedWallet(account)
+        coEvery { dao.updatePendingTransaction(any(), any(), any(), any(), any()) } returns Unit
+    }
+
+    @Test
+    fun `tracking reads again after a failed checkpoint and reaches finality without resubmitting`() = runTest {
+        val hash = "ab".repeat(32)
+        val account = verifiedNetworkAccount(WalletNetworkId.TAIRA)
+        stubCommittedSend(hash, account)
+        coEvery { torii.transactionStatus(NexusNetworks.taira, hash) } returns transactionStatus(hash, "applied")
+        coEvery { finalityReader.finalizedCheckpoint(NexusNetworks.taira) } throws TairaHttpStatusException(409) andThen
+            NexusFinalityCheckpoint(
+                networkId = WalletNetworkId.TAIRA,
+                chainId = NexusNetworks.taira.chainId,
+                finalizedBlockHeight = COMMITTED_BLOCK,
+                finalizedBlockHash = "ab".repeat(32),
+            )
+        coEvery {
+            torii.getAssetBalanceByDefinition(NexusNetworks.taira, account.address, XOR_DEFINITION_ID)
+        } returns NexusAssetBalance(asset = XOR_DEFINITION_ID, quantity = "9")
+        coEvery {
+            torii.committedXorTransfersForHash(NexusNetworks.taira, account.address, XOR_DEFINITION_ID, hash, COMMITTED_BLOCK)
+        } returns listOf(
+            NexusTransferHistoryItem(
+                transactionHash = hash,
+                timestampMillis = 1,
+                amount = "1",
+                sender = account.address,
+                receiver = account.address,
+            )
+        )
+
+        val result = coordinator.reconcileUntilTerminal(
+            localId = "${TairaTestnetContract.PENDING_JOURNAL_PREFIX}local",
+            maxAttempts = 2,
+            pollDelayMillis = 0,
+        )
+
+        assertEquals("FINALIZED", result.state)
+        coVerify(exactly = 2) { finalityReader.finalizedCheckpoint(NexusNetworks.taira) }
+        coVerify(exactly = 0) { signer.sign(any(), any()) }
+        coVerify(exactly = 0) { torii.submit(any(), any(), any()) }
+    }
+
+    @Test
+    fun `tracking that never reads a status tries every attempt, then reports why`() = runTest {
+        val hash = "ab".repeat(32)
+        val account = verifiedNetworkAccount(WalletNetworkId.TAIRA)
+        stubCommittedSend(hash, account)
+        val offline = NexusToriiException("NEXUS_NETWORK_IO", submissionMayHaveReachedTorii = false)
+        coEvery { torii.transactionStatus(NexusNetworks.taira, hash) } throws offline
+
+        val error = runCatching {
+            coordinator.reconcileUntilTerminal(
+                localId = "${TairaTestnetContract.PENDING_JOURNAL_PREFIX}local",
+                maxAttempts = 3,
+                pollDelayMillis = 0,
+            )
+        }.exceptionOrNull()
+
+        assertSame(offline, error)
+        coVerify(exactly = 3) { torii.transactionStatus(NexusNetworks.taira, hash) }
+    }
+
+    @Test
+    fun `tracking keeps the last status it read when a later read fails`() = runTest {
+        val hash = "ab".repeat(32)
+        val account = verifiedNetworkAccount(WalletNetworkId.TAIRA)
+        stubCommittedSend(hash, account)
+        coEvery { torii.transactionStatus(NexusNetworks.taira, hash) } returns
+            transactionStatus(hash, "pending") andThenThrows
+            NexusToriiException("NEXUS_NETWORK_IO", submissionMayHaveReachedTorii = false)
+
+        val result = coordinator.reconcileUntilTerminal(
+            localId = "${TairaTestnetContract.PENDING_JOURNAL_PREFIX}local",
+            maxAttempts = 2,
+            pollDelayMillis = 0,
+        )
+
+        assertEquals("SUBMITTED", result.state)
+    }
+
+    @Test
+    fun `closing the outcome stops tracking at once`() = runTest {
+        val hash = "ab".repeat(32)
+        val account = verifiedNetworkAccount(WalletNetworkId.TAIRA)
+        stubCommittedSend(hash, account)
+        val closed = kotlinx.coroutines.CancellationException("closed")
+        coEvery { torii.transactionStatus(NexusNetworks.taira, hash) } throws closed
+
+        val error = runCatching {
+            coordinator.reconcileUntilTerminal(
+                localId = "${TairaTestnetContract.PENDING_JOURNAL_PREFIX}local",
+                maxAttempts = 3,
+                pollDelayMillis = 0,
+            )
+        }.exceptionOrNull()
+
+        assertSame(closed, error)
+        coVerify(exactly = 1) { torii.transactionStatus(NexusNetworks.taira, hash) }
     }
 
     private fun unresolvedTransaction(
