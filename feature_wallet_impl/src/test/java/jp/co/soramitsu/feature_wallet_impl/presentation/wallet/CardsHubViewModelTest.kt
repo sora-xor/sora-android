@@ -59,6 +59,8 @@ import jp.co.soramitsu.feature_wallet_impl.domain.CardsHubInteractorImpl
 import jp.co.soramitsu.feature_wallet_impl.presentation.cardshub.CardsHubViewModel
 import jp.co.soramitsu.feature_wallet_impl.presentation.cardshub.NexusAssetPresentation
 import jp.co.soramitsu.feature_wallet_impl.presentation.cardshub.NexusRoutes
+import jp.co.soramitsu.feature_wallet_impl.presentation.cardshub.NexusSendStep
+import jp.co.soramitsu.feature_wallet_impl.presentation.cardshub.step
 import jp.co.soramitsu.common.base.theOnlyRoute
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import jp.co.soramitsu.test_data.PolkaswapTestData.POOL_DATA
@@ -671,6 +673,41 @@ class CardsHubViewModelTest {
         assertNull(cardsHubViewModel.nexusSend.value.prepared)
         cardsHubViewModel.editNexusSend(); cardsHubViewModel.prepareNexusSend(); cardsHubViewModel.confirmNexusSend()
         coVerify(exactly = 1) { nexusTransactionCoordinator.prepare(any()) }
+        coVerify(exactly = 1) { nexusTransactionCoordinator.submitAndTrack(any()) }
+    }
+    @Test fun `an expired unsent quote returns to the draft for a current fresh review`() = runTest {
+        val prepared = reviewNexusSend()
+        coEvery { nexusTransactionCoordinator.submitAndTrack(prepared) } throws
+            jp.co.soramitsu.feature_wallet_impl.data.nexus.NexusNotSubmittedException(
+                IllegalStateException("TAIRA_QUOTE_EXPIRED")
+            )
+        cardsHubViewModel.confirmNexusSend(); advanceUntilIdle()
+        val draft = cardsHubViewModel.nexusSend.value
+        assertEquals(NexusSendStep.FORM, draft.step())
+        assertTrue(draft.visible)
+        assertFalse(draft.submissionNeedsCheck)
+        assertFalse(draft.submitting)
+        assertNull(draft.prepared)
+        assertNull(draft.result)
+        assertEquals("TAIRA_QUOTE_EXPIRED", draft.errorCode)
+        assertEquals("recipient", draft.recipient)
+        assertEquals("0.25", draft.amount)
+        cardsHubViewModel.confirmNexusSend()
+        coVerify(exactly = 1) { nexusTransactionCoordinator.submitAndTrack(any()) }
+
+        val refreshed = nexusPortfolioFlow.value.single().copy(xorQuantity = "2")
+        nexusPortfolioFlow.value = listOf(refreshed); advanceUntilIdle()
+        cardsHubViewModel.prepareNexusSend(); advanceUntilIdle()
+        assertEquals(refreshed, cardsHubViewModel.nexusSend.value.network)
+        assertEquals(prepared, cardsHubViewModel.nexusSend.value.prepared)
+        assertNull(cardsHubViewModel.nexusSend.value.errorCode)
+        coVerify(exactly = 2) { nexusTransactionCoordinator.prepare(any()) }
+
+        // A wallet change still clears the recovered draft and its freshly reviewed quote.
+        selectedAccountFlow.value = secondAccount; advanceUntilIdle()
+        cardsHubViewModel.prepareNexusSend(); cardsHubViewModel.confirmNexusSend()
+        assertFalse(cardsHubViewModel.nexusSend.value.visible)
+        coVerify(exactly = 2) { nexusTransactionCoordinator.prepare(any()) }
         coVerify(exactly = 1) { nexusTransactionCoordinator.submitAndTrack(any()) }
     }
     @Test fun `a Nexus quote for another wallet or network is cleared before any submission`() = runTest {

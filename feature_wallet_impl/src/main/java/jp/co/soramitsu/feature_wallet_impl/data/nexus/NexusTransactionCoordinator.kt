@@ -22,6 +22,7 @@ import jp.co.soramitsu.core_db.model.PendingNetworkTransactionLocal
 import jp.co.soramitsu.core_db.model.WalletMigrationIds
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_blockexplorer_api.data.ProductionFeatureManager
+import kotlinx.coroutines.CancellationException
 
 data class NexusSendRequest(
     val walletId: String,
@@ -161,9 +162,28 @@ class NexusTransactionCoordinator @Inject constructor(
      * have reached Torii are recorded as ambiguous and are only resolved by hash lookup.
      */
     suspend fun submit(prepared: NexusPreparedSend): NexusSendResult {
+        // Reusing a confirmation can follow a completed handoff, so this check must stay
+        // outside the classification of a new attempt's failures.
         check(prepared.reserveSubmission()) {
             "NEXUS_CONFIRMATION_ALREADY_SUBMITTED"
         }
+        var handoffStarted = false
+        return try {
+            submitReserved(prepared) { handoffStarted = true }
+        } catch (error: CancellationException) {
+            throw error
+        } catch (error: Throwable) {
+            // Expired quotes and other preflight failures never submit a transaction. Return
+            // their draft for a fresh review instead of displaying an unknown submission.
+            if (!handoffStarted) throw NexusNotSubmittedException(error)
+            throw error
+        }
+    }
+
+    private suspend fun submitReserved(
+        prepared: NexusPreparedSend,
+        onHandoffStarted: () -> Unit,
+    ): NexusSendResult {
         val request = prepared.request
         val network = NexusNetworks.requireLive(requireNetwork(request.networkId))
         val state = featureManager.getStateForNetwork(request.networkId)
@@ -331,6 +351,7 @@ class NexusTransactionCoordinator @Inject constructor(
                     WalletRecoveryCapabilityGate.requireUserMutationAllowed()
                     requirePendingChainRecoveryClear()
                     transportStarted = true
+                    onHandoffStarted()
                     torii.submit(
                         network = network,
                         signedNorito = staged.signed.noritoBytes,
@@ -703,7 +724,7 @@ class NexusTransactionCoordinator @Inject constructor(
 }
 
 /** Evidence from the submit stage, never inferred from a later status-read error. */
-class NexusNotSubmittedException internal constructor(cause: NexusToriiException) : IllegalStateException(cause.message, cause)
+class NexusNotSubmittedException internal constructor(cause: Throwable) : IllegalStateException(cause.message, cause)
 
 internal suspend fun submitAndTrackNexus(
     submit: suspend () -> NexusSendResult,

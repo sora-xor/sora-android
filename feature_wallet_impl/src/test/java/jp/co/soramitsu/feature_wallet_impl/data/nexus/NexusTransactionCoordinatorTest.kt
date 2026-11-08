@@ -863,6 +863,7 @@ class NexusTransactionCoordinatorTest {
         val error = runCatching { coordinator.submit(prepared) }.exceptionOrNull()
 
         assertEquals("NEXUS_QUOTE_CHANGED", error?.message)
+        assertTrue(error is NexusNotSubmittedException)
         coVerify(exactly = 0) { signer.sign(any(), any()) }
         coVerify(exactly = 0) { dao.insertPendingTransaction(any()) }
         coVerify(exactly = 0) { torii.submit(any(), any(), any()) }
@@ -904,9 +905,43 @@ class NexusTransactionCoordinatorTest {
         val error = runCatching { coordinator.submit(prepared) }.exceptionOrNull()
 
         assertEquals("NEXUS_QUOTE_CHANGED", error?.message)
+        assertTrue(error is NexusNotSubmittedException)
         coVerify(exactly = 0) { signer.sign(any(), any()) }
         coVerify(exactly = 0) { dao.insertPendingTransaction(any()) }
         coVerify(exactly = 0) { torii.submit(any(), any(), any()) }
+    }
+
+    @Test
+    fun `an expired quote permits a fresh review without claiming an unknown submission`() = runTest {
+        val account = verifiedNetworkAccount(WalletNetworkId.TAIRA)
+        every { database.walletIdentityDao() } returns dao
+        stubVerifiedWallet(account)
+        coEvery { featureManager.getStateForNetwork(any()) } returns enabledFeatureState()
+        coEvery { torii.getXorBalance(NexusNetworks.taira, account.address) } returns
+            NexusAssetBalance(asset = XOR_DEFINITION_ID, quantity = "10")
+        coEvery { signer.quote(any()) } returns NexusTransferFeeQuote(
+            networkId = WalletNetworkId.TAIRA.wireId,
+            authority = account.address,
+            recipient = account.address,
+            assetDefinitionId = XOR_DEFINITION_ID,
+            amount = "1",
+            fee = "0.1",
+            quoteIdentity = "quote-before-expiry",
+            validUntilBlock = 20,
+        )
+        val prepared = coordinator.prepare(
+            NexusSendRequest(WALLET_ID, WalletNetworkId.TAIRA, account.address, "1")
+        )
+        coEvery { signer.quote(any()) } throws IllegalStateException("TAIRA_QUOTE_EXPIRED")
+
+        val error = runCatching { coordinator.submitAndTrack(prepared) }.exceptionOrNull()
+
+        assertTrue(error is NexusNotSubmittedException)
+        assertEquals("TAIRA_QUOTE_EXPIRED", error?.message)
+        coVerify(exactly = 0) { signer.sign(any(), any()) }
+        coVerify(exactly = 0) { dao.insertPendingTransaction(any()) }
+        coVerify(exactly = 0) { torii.submit(any(), any(), any()) }
+        coVerify(exactly = 0) { torii.transactionStatus(any(), any()) }
     }
 
     @Test
@@ -1158,6 +1193,7 @@ class NexusTransactionCoordinatorTest {
 
         assertEquals("SUBMITTED", result.state)
         assertEquals("NEXUS_CONFIRMATION_ALREADY_SUBMITTED", replayError?.message)
+        assertFalse(replayError is NexusNotSubmittedException)
         coVerifyOrder {
             signer.sign(any(), any())
             dao.insertPendingTransaction(any())
@@ -1226,6 +1262,7 @@ class NexusTransactionCoordinatorTest {
         val error = runCatching { coordinator.submit(prepared) }.exceptionOrNull()
 
         assertEquals("NEXUS_SEND_DISABLED", error?.message)
+        assertTrue(error is NexusNotSubmittedException)
         assertEquals("REJECTED", persisted?.state)
         assertFalse(persisted?.submissionIsAmbiguous ?: true)
         assertTrue(signedBytes.all { it == 0.toByte() })
@@ -1291,6 +1328,7 @@ class NexusTransactionCoordinatorTest {
         val replayError = runCatching { coordinator.submit(prepared) }.exceptionOrNull()
 
         assertTrue(submissionError is NexusToriiException)
+        assertFalse(submissionError is NexusNotSubmittedException)
         assertEquals("UNKNOWN", persisted?.state)
         assertTrue(persisted?.submissionIsAmbiguous == true)
         assertEquals(hash, persisted?.transactionHash)
