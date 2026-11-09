@@ -55,4 +55,14 @@ class PinCodeVerifierTest {
         assertTrue(runCatching { verifier.verify("123456") }.isFailure)
         coVerify(exactly = 0) { repository.resetTriesUsed() }
     }
+
+    @Test fun `with no stored PIN an entry is refused without counting or locking`() = runTest {
+        val verifier = WalletPinVerifier(repository)
+        coEvery { repository.retrievePin() } returns ""
+        repeat(5) { assertFalse(verifier.verify("123456")) }
+        assertEquals(0, tries)
+        assertEquals(0L, started)
+        coVerify(exactly = 0) { repository.savePinTriesUsed(any()) }
+        coVerify(exactly = 0) { repository.saveTimerStartedTimestamp(any()) }
+    }
 }
