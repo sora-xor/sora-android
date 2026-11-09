@@ -119,6 +119,10 @@
     <string name="wallet_connect_session_closed">Сеанс IrohaConnect закрыт</string>
     <string name="wallet_connect_background_closed">Сеанс закрыт, когда кошелёк перестал быть на переднем плане</string>
     <string name="wallet_connect_pin_unavailable">PIN-код вашего кошелька недоступен. Откройте SORA, чтобы разблокировать кошелёк, и повторите попытку.</string>
+    <string name="biometric_enrollment_changed_title">Биометрия на этом телефоне изменилась</string>
+    <string name="biometric_enrollment_changed_message">С тех пор как SORA в последний раз разблокировали по биометрии, на этом телефоне добавили или удалили отпечаток пальца или лицо. Любой, чей отпечаток или лицо есть на этом телефоне, может разблокировать ваш кошелёк. Если это сделали не вы, отключите биометрию.</string>
+    <string name="biometric_enrollment_changed_keep">Оставить биометрию</string>
+    <string name="biometric_enrollment_changed_turn_off">Отключить</string>
     <string name="wallet_connect_relay_ready">Зашифрованный ретранслятор готов. Ожидание идентификации приложения…</string>
     <string name="wallet_connect_invalid_message">Приложение отправило некорректное или повторно воспроизведённое сообщение IrohaConnect</string>
     <string name="wallet_connect_app_closed">Приложение закрыло зашифрованный сеанс</string>

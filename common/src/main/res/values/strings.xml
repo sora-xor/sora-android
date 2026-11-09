@@ -628,6 +628,10 @@
     <string name="wallet_connect_session_closed">IrohaConnect session closed</string>
     <string name="wallet_connect_background_closed">Session closed when the wallet left the foreground</string>
     <string name="wallet_connect_pin_unavailable">Your wallet PIN is unavailable. Open SORA to unlock your wallet, then try again.</string>
+    <string name="biometric_enrollment_changed_title">Biometrics changed on this phone</string>
+    <string name="biometric_enrollment_changed_message">A fingerprint or face was added or removed on this phone since biometrics last unlocked SORA. Anyone whose fingerprint or face is on this phone can unlock your wallet. If you didn\'t make this change, turn biometrics off.</string>
+    <string name="biometric_enrollment_changed_keep">Keep biometrics</string>
+    <string name="biometric_enrollment_changed_turn_off">Turn off</string>
     <string name="wallet_connect_relay_ready">Encrypted relay ready. Waiting for the application identity…</string>
     <string name="wallet_connect_invalid_message">The application sent an invalid or replayed IrohaConnect message</string>
     <string name="wallet_connect_app_closed">The application closed the encrypted session</string>

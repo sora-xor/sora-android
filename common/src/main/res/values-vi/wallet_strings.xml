@@ -119,6 +119,10 @@
     <string name="wallet_connect_session_closed">Đã đóng phiên IrohaConnect</string>
     <string name="wallet_connect_background_closed">Phiên đã đóng khi ví rời khỏi tiền cảnh</string>
     <string name="wallet_connect_pin_unavailable">Mã PIN ví của bạn hiện không khả dụng. Mở SORA để mở khóa ví, rồi thử lại.</string>
+    <string name="biometric_enrollment_changed_title">Sinh trắc học trên điện thoại này đã thay đổi</string>
+    <string name="biometric_enrollment_changed_message">Một vân tay hoặc khuôn mặt đã được thêm vào hoặc xóa khỏi điện thoại này kể từ lần cuối sinh trắc học mở khóa SORA. Bất kỳ ai có vân tay hoặc khuôn mặt trên điện thoại này đều có thể mở khóa ví của bạn. Nếu bạn không thực hiện thay đổi này, hãy tắt sinh trắc học.</string>
+    <string name="biometric_enrollment_changed_keep">Giữ sinh trắc học</string>
+    <string name="biometric_enrollment_changed_turn_off">Tắt</string>
     <string name="wallet_connect_relay_ready">Bộ chuyển tiếp mã hóa đã sẵn sàng. Đang chờ danh tính ứng dụng…</string>
     <string name="wallet_connect_invalid_message">Ứng dụng đã gửi tin nhắn IrohaConnect không hợp lệ hoặc bị phát lại</string>
     <string name="wallet_connect_app_closed">Ứng dụng đã đóng phiên mã hóa</string>

@@ -121,6 +121,10 @@
     <string name="wallet_connect_session_closed">Sesión IrohaConnect cerrada</string>
     <string name="wallet_connect_background_closed">La sesión se cerró cuando la cartera dejó de estar en primer plano</string>
     <string name="wallet_connect_pin_unavailable">El PIN de tu cartera no está disponible. Abre SORA para desbloquear tu cartera y vuelve a intentarlo.</string>
+    <string name="biometric_enrollment_changed_title">La biometría de este teléfono ha cambiado</string>
+    <string name="biometric_enrollment_changed_message">Se ha añadido o eliminado una huella o un rostro en este teléfono desde la última vez que la biometría desbloqueó SORA. Cualquier persona cuya huella o rostro esté en este teléfono puede desbloquear tu cartera. Si no has hecho este cambio, desactiva la biometría.</string>
+    <string name="biometric_enrollment_changed_keep">Mantener la biometría</string>
+    <string name="biometric_enrollment_changed_turn_off">Desactivar</string>
     <string name="wallet_connect_relay_ready">Canal cifrado listo. Esperando la identidad de la aplicación…</string>
     <string name="wallet_connect_invalid_message">La aplicación envió un mensaje IrohaConnect no válido o repetido</string>
     <string name="wallet_connect_app_closed">La aplicación cerró la sesión cifrada</string>

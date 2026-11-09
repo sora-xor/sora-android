@@ -119,6 +119,10 @@
     <string name="wallet_connect_session_closed">Session IrohaConnect fermée</string>
     <string name="wallet_connect_background_closed">Session fermée lorsque le portefeuille a quitté le premier plan</string>
     <string name="wallet_connect_pin_unavailable">Le code PIN de votre portefeuille est indisponible. Ouvrez SORA pour déverrouiller votre portefeuille, puis réessayez.</string>
+    <string name="biometric_enrollment_changed_title">La biométrie de ce téléphone a changé</string>
+    <string name="biometric_enrollment_changed_message">Une empreinte ou un visage a été ajouté ou supprimé sur ce téléphone depuis le dernier déverrouillage de SORA par biométrie. Toute personne dont l\'empreinte ou le visage se trouve sur ce téléphone peut déverrouiller votre portefeuille. Si vous n\'êtes pas à l\'origine de ce changement, désactivez la biométrie.</string>
+    <string name="biometric_enrollment_changed_keep">Garder la biométrie</string>
+    <string name="biometric_enrollment_changed_turn_off">Désactiver</string>
     <string name="wallet_connect_relay_ready">Relais chiffré prêt. En attente de l’identité de l’application…</string>
     <string name="wallet_connect_invalid_message">L’application a envoyé un message IrohaConnect invalide ou déjà utilisé</string>
     <string name="wallet_connect_app_closed">L’application a fermé la session chiffrée</string>

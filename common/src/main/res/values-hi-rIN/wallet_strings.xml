@@ -121,6 +121,10 @@
     <string name="wallet_connect_session_closed">IrohaConnect सत्र बंद हो गया</string>
     <string name="wallet_connect_background_closed">वॉलेट के अग्रभूमि से हटने पर सत्र बंद हो गया</string>
     <string name="wallet_connect_pin_unavailable">आपके वॉलेट का PIN उपलब्ध नहीं है। अपना वॉलेट अनलॉक करने के लिए SORA खोलें, फिर दोबारा कोशिश करें।</string>
+    <string name="biometric_enrollment_changed_title">इस फ़ोन का बायोमेट्रिक बदल गया है</string>
+    <string name="biometric_enrollment_changed_message">पिछली बार बायोमेट्रिक से SORA अनलॉक होने के बाद इस फ़ोन में कोई फ़िंगरप्रिंट या चेहरा जोड़ा या हटाया गया है। जिस किसी का फ़िंगरप्रिंट या चेहरा इस फ़ोन में है, वह आपका वॉलेट अनलॉक कर सकता है। अगर यह बदलाव आपने नहीं किया, तो बायोमेट्रिक बंद कर दें।</string>
+    <string name="biometric_enrollment_changed_keep">बायोमेट्रिक रखें</string>
+    <string name="biometric_enrollment_changed_turn_off">बंद करें</string>
     <string name="wallet_connect_relay_ready">एन्क्रिप्ट किया गया रिले तैयार है। ऐप की पहचान की प्रतीक्षा में…</string>
     <string name="wallet_connect_invalid_message">ऐप ने अमान्य या दोबारा चलाया गया IrohaConnect संदेश भेजा</string>
     <string name="wallet_connect_app_closed">ऐप ने एन्क्रिप्ट किया गया सत्र बंद कर दिया</string>

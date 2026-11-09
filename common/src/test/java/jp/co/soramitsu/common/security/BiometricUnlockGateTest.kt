@@ -8,8 +8,19 @@ import org.junit.Test
 class BiometricUnlockGateTest {
     private class Key : BiometricUnlockGate.EnrollmentKey {
         var approved = false
+        var exists = false
+        var approvals = 0
+        var keystoreUnreadable = false
         var failOperation = false
-        override fun approveAfterPin() { approved = true }
+        override fun exists(): Boolean {
+            check(!keystoreUnreadable)
+            return exists
+        }
+        override fun approveAfterPin() {
+            approved = true
+            exists = true
+            approvals++
+        }
         override fun cipher(): Cipher {
             check(approved)
             return Cipher.getInstance("AES/GCM/NoPadding").apply {
@@ -29,6 +40,48 @@ class BiometricUnlockGateTest {
         key.approved = false // enrollment invalidates the Keystore key
         assertNull(gate.prepare())
         assertFalse(key.approved)
+    }
+
+    @Test fun `the first typed PIN approves an enrollment and later ones leave it alone`() {
+        val key = Key()
+        val gate = BiometricUnlockGate(key)
+        assertFalse(gate.enrollmentChanged())
+        gate.approveFirstEnrollmentAfterPin()
+        assertTrue(gate.isAvailable())
+        assertEquals(1, key.approvals)
+        assertFalse(gate.enrollmentChanged())
+        gate.approveFirstEnrollmentAfterPin()
+        assertEquals(1, key.approvals)
+    }
+
+    @Test fun `a typed PIN does not approve a changed enrollment`() {
+        val key = Key()
+        val gate = BiometricUnlockGate(key)
+        gate.approveEnrollmentAfterPin()
+        key.approved = false // a fingerprint added since: the alias stays, the key no longer works
+        assertTrue(gate.enrollmentChanged())
+        gate.approveFirstEnrollmentAfterPin()
+        assertFalse(gate.isAvailable())
+        assertEquals(1, key.approvals)
+        assertTrue(gate.enrollmentChanged())
+    }
+
+    @Test fun `the owner's yes approves a changed enrollment`() {
+        val key = Key()
+        val gate = BiometricUnlockGate(key)
+        gate.approveEnrollmentAfterPin()
+        key.approved = false
+        gate.approveEnrollmentAfterPin()
+        assertTrue(gate.isAvailable())
+        assertFalse(gate.enrollmentChanged())
+    }
+
+    @Test fun `an unreadable Keystore approves nothing and asks nothing`() {
+        val key = Key().apply { keystoreUnreadable = true }
+        val gate = BiometricUnlockGate(key)
+        assertFalse(gate.enrollmentChanged())
+        gate.approveFirstEnrollmentAfterPin()
+        assertEquals(0, key.approvals)
     }
 
     @Test fun `only the pending cipher is accepted and proof is consumed exactly once`() {

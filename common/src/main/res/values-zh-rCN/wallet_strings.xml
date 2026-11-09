@@ -120,6 +120,10 @@
     <string name="wallet_connect_session_closed">IrohaConnect会话已关闭</string>
     <string name="wallet_connect_background_closed">钱包离开前台时，会话已关闭</string>
     <string name="wallet_connect_pin_unavailable">钱包 PIN 码不可用。请打开 SORA 解锁钱包，然后重试。</string>
+    <string name="biometric_enrollment_changed_title">此手机的生物识别信息已更改</string>
+    <string name="biometric_enrollment_changed_message">自上次使用生物识别解锁 SORA 以来，此手机上添加或移除了指纹或面容。只要指纹或面容录入在此手机上，任何人都可以解锁您的钱包。如果这不是您本人所为，请关闭生物识别。</string>
+    <string name="biometric_enrollment_changed_keep">继续使用生物识别</string>
+    <string name="biometric_enrollment_changed_turn_off">关闭</string>
     <string name="wallet_connect_relay_ready">加密中继已就绪。正在等待应用身份…</string>
     <string name="wallet_connect_invalid_message">应用发送了无效或重放的IrohaConnect消息</string>
     <string name="wallet_connect_app_closed">应用已关闭加密会话</string>

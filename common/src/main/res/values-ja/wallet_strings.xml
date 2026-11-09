@@ -120,6 +120,10 @@
     <string name="wallet_connect_session_closed">IrohaConnectセッションを終了しました</string>
     <string name="wallet_connect_background_closed">ウォレットがフォアグラウンドを離れたため、セッションを終了しました</string>
     <string name="wallet_connect_pin_unavailable">ウォレットのPINを利用できません。SORAを開いてウォレットのロックを解除し、もう一度お試しください。</string>
+    <string name="biometric_enrollment_changed_title">このスマートフォンの生体認証が変更されました</string>
+    <string name="biometric_enrollment_changed_message">前回生体認証で SORA のロックを解除した後に、このスマートフォンで指紋または顔が追加または削除されました。このスマートフォンに指紋または顔が登録されている人は誰でもウォレットのロックを解除できます。心当たりがない場合は、生体認証をオフにしてください。</string>
+    <string name="biometric_enrollment_changed_keep">生体認証を使い続ける</string>
+    <string name="biometric_enrollment_changed_turn_off">オフにする</string>
     <string name="wallet_connect_relay_ready">暗号化リレーの準備ができました。アプリの識別情報を待機中…</string>
     <string name="wallet_connect_invalid_message">アプリが無効な、または再送攻撃に該当するIrohaConnectメッセージを送信しました</string>
     <string name="wallet_connect_app_closed">アプリが暗号化されたセッションを終了しました</string>

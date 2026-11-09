@@ -119,6 +119,10 @@
     <string name="wallet_connect_session_closed">הפעלת IrohaConnect נסגרה</string>
     <string name="wallet_connect_background_closed">ההפעלה נסגרה כשהארנק יצא מהחזית</string>
     <string name="wallet_connect_pin_unavailable">קוד ה-PIN של הארנק שלך אינו זמין. יש לפתוח את SORA כדי לבטל את נעילת הארנק, ואז לנסות שוב.</string>
+    <string name="biometric_enrollment_changed_title">הביומטריה בטלפון הזה השתנתה</string>
+    <string name="biometric_enrollment_changed_message">טביעת אצבע או פנים נוספו לטלפון הזה או הוסרו ממנו מאז הפעם האחרונה שבה הביומטריה פתחה את SORA. כל מי שטביעת האצבע או הפנים שלו נמצאות בטלפון הזה יכול לבטל את נעילת הארנק. אם השינוי לא נעשה על ידך, יש לכבות את הביומטריה.</string>
+    <string name="biometric_enrollment_changed_keep">להשאיר את הביומטריה</string>
+    <string name="biometric_enrollment_changed_turn_off">כיבוי</string>
     <string name="wallet_connect_relay_ready">הממסר המוצפן מוכן. ממתין לזהות האפליקציה…</string>
     <string name="wallet_connect_invalid_message">האפליקציה שלחה הודעת IrohaConnect לא תקינה או משוחזרת</string>
     <string name="wallet_connect_app_closed">האפליקציה סגרה את ההפעלה המוצפנת</string>

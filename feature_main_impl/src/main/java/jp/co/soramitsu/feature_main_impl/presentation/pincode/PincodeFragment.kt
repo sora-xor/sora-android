@@ -78,6 +78,7 @@ class PincodeFragment : SoraBaseFragment<PinCodeViewModel>() {
 
     private lateinit var fingerprintDialog: BottomSheetDialog
     private lateinit var progressDialog: SoraProgressDialog
+    private var enrollmentChangeDialog: AlertDialog? = null
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -121,6 +122,20 @@ class PincodeFragment : SoraBaseFragment<PinCodeViewModel>() {
                 .setPositiveButton(android.R.string.ok) { _, _ -> viewModel.biometryDialogYesClicked() }
                 .setNegativeButton(android.R.string.cancel) { _, _ -> viewModel.biometryDialogNoClicked() }
                 .show()
+        }
+        viewModel.enrollmentChangeQuestion.observe { asked ->
+            enrollmentChangeDialog?.dismiss()
+            enrollmentChangeDialog = if (asked) {
+                AlertDialog.Builder(requireActivity())
+                    .setTitle(R.string.biometric_enrollment_changed_title)
+                    .setMessage(R.string.biometric_enrollment_changed_message)
+                    .setCancelable(false)
+                    .setPositiveButton(R.string.biometric_enrollment_changed_keep) { _, _ -> viewModel.onEnrollmentChangeKept() }
+                    .setNegativeButton(R.string.biometric_enrollment_changed_turn_off) { _, _ -> viewModel.onEnrollmentChangeRefused() }
+                    .show()
+            } else {
+                null
+            }
         }
         viewModel.resetApplicationEvent.observe {
             runDelayed(DATA_CLEAR_DELAY) {
@@ -190,6 +205,13 @@ class PincodeFragment : SoraBaseFragment<PinCodeViewModel>() {
     override fun onResume() {
         super.onResume()
         viewModel.onResume()
+    }
+
+    override fun onDestroyView() {
+        // The question is asked again when the view comes back.
+        enrollmentChangeDialog?.dismiss()
+        enrollmentChangeDialog = null
+        super.onDestroyView()
     }
 
     override fun NavGraphBuilder.content(

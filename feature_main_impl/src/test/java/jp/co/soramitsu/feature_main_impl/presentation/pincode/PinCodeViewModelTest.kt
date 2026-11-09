@@ -1323,16 +1323,138 @@ class PinCodeViewModelTest {
         verifyNoInteractions(mainRouter)
     }
 
-    @Test fun `only a correct typed PIN approves the current enrollment`() = runTest {
+    @Test fun `only a correct typed PIN approves a first enrollment`() = runTest {
         given(interactor.checkPin("654321")).willReturn(false)
         pinCodeViewModel.startAuth(PinCodeAction.OPEN_JSON)
         advanceUntilIdle()
         pinCodeViewModel.pinCodeNumberClicked("654321")
         advanceUntilIdle()
-        verify(biometricGate, never()).approveEnrollmentAfterPin()
+        verify(biometricGate, never()).approveFirstEnrollmentAfterPin()
         enterCorrectPin()
         advanceUntilIdle()
+        verify(biometricGate).approveFirstEnrollmentAfterPin()
+        verify(biometricGate, never()).approveEnrollmentAfterPin()
+    }
+
+    private suspend fun TestScope.typePinOnChangedEnrollment() {
+        given(biometricGate.enrollmentChanged()).willReturn(true)
+        given(interactor.isBiometryAvailable()).willReturn(true)
+        pinCodeViewModel.addresses = listOf("address")
+        pinCodeViewModel.startAuth(PinCodeAction.OPEN_JSON)
+        advanceUntilIdle()
+        enterCorrectPin()
+        advanceUntilIdle()
+    }
+
+    @Test fun `a changed enrollment waits for the owner and the typed PIN approves nothing`() = runTest {
+        typePinOnChangedEnrollment()
+
+        assertEquals(true, pinCodeViewModel.enrollmentChangeQuestion.value)
+        verify(biometricGate, never()).approveEnrollmentAfterPin()
+        verify(biometricGate, never()).approveFirstEnrollmentAfterPin()
+        verify(mainRouter, never()).showBackupJson(listOf("address"))
+    }
+
+    @Test fun `keeping changed biometrics approves them and goes on`() = runTest {
+        typePinOnChangedEnrollment()
+
+        pinCodeViewModel.onEnrollmentChangeKept()
+        advanceUntilIdle()
+
+        assertEquals(false, pinCodeViewModel.enrollmentChangeQuestion.value)
         verify(biometricGate).approveEnrollmentAfterPin()
+        verify(interactor, never()).setBiometryEnabled(false)
+        verify(mainRouter).showBackupJson(listOf("address"))
+    }
+
+    @Test fun `refusing changed biometrics turns them off and goes on without approving`() = runTest {
+        typePinOnChangedEnrollment()
+
+        pinCodeViewModel.onEnrollmentChangeRefused()
+        advanceUntilIdle()
+
+        assertEquals(false, pinCodeViewModel.enrollmentChangeQuestion.value)
+        verify(interactor).setBiometryEnabled(false)
+        verify(biometricGate, never()).approveEnrollmentAfterPin()
+        verify(mainRouter).showBackupJson(listOf("address"))
+    }
+
+    @Test fun `an answer nobody was asked for does nothing`() = runTest {
+        pinCodeViewModel.addresses = listOf("address")
+        pinCodeViewModel.startAuth(PinCodeAction.OPEN_JSON)
+        advanceUntilIdle()
+
+        pinCodeViewModel.onEnrollmentChangeKept()
+        pinCodeViewModel.onEnrollmentChangeRefused()
+        advanceUntilIdle()
+
+        verify(biometricGate, never()).approveEnrollmentAfterPin()
+        verify(interactor, never()).setBiometryEnabled(false)
+        verify(mainRouter, never()).showBackupJson(listOf("address"))
+    }
+
+    @Test fun `with biometrics off a changed key is neither approved nor asked about`() = runTest {
+        given(biometricGate.enrollmentChanged()).willReturn(true)
+        given(interactor.isBiometryEnabled()).willReturn(false)
+        pinCodeViewModel.addresses = listOf("address")
+        pinCodeViewModel.startAuth(PinCodeAction.OPEN_JSON)
+        advanceUntilIdle()
+        enterCorrectPin()
+        advanceUntilIdle()
+
+        assertEquals(false, pinCodeViewModel.enrollmentChangeQuestion.value)
+        verify(biometricGate, never()).approveEnrollmentAfterPin()
+        verify(biometricGate, never()).approveFirstEnrollmentAfterPin()
+        verify(mainRouter).showBackupJson(listOf("address"))
+    }
+
+    @Test fun `with none enrolled now a changed key is neither approved nor asked about`() = runTest {
+        given(biometricGate.enrollmentChanged()).willReturn(true)
+        given(interactor.isBiometryAvailable()).willReturn(false)
+        pinCodeViewModel.addresses = listOf("address")
+        pinCodeViewModel.startAuth(PinCodeAction.OPEN_JSON)
+        advanceUntilIdle()
+        enterCorrectPin()
+        advanceUntilIdle()
+
+        assertEquals(false, pinCodeViewModel.enrollmentChangeQuestion.value)
+        verify(biometricGate, never()).approveEnrollmentAfterPin()
+        verify(biometricGate, never()).approveFirstEnrollmentAfterPin()
+        verify(mainRouter).showBackupJson(listOf("address"))
+    }
+
+    @Test fun `a new PIN after checking the current one approves no biometrics`() = runTest {
+        given(interactor.isPincodeUpdateNeeded()).willReturn(false)
+        given(interactor.checkPin("123456")).willReturn(true)
+        given(resourceManager.getString(R.string.pincode_enter_current_pin_code)).willReturn("Current PIN")
+        given(resourceManager.getString(R.string.pincode_enter_new_pin_code)).willReturn("New PIN")
+        given(resourceManager.getString(R.string.pincode_confirm_new_pin_code)).willReturn("Confirm new PIN")
+        pinCodeViewModel.startAuth(PinCodeAction.CHANGE_PIN_CODE)
+        advanceUntilIdle()
+        pinCodeViewModel.pinCodeNumberClicked("123456")
+        advanceUntilIdle()
+        pinCodeViewModel.pinCodeNumberClicked("654321")
+        advanceUntilIdle()
+        pinCodeViewModel.pinCodeNumberClicked("654321")
+        advanceUntilIdle()
+
+        verify(interactor).savePin("654321")
+        verify(biometricGate, never()).approveEnrollmentAfterPin()
+    }
+
+    @Test fun `a first PIN approves the biometrics the owner is asked about right after`() = runTest {
+        given(interactor.isCodeSet()).willReturn(false)
+        given(interactor.isBiometryAvailable()).willReturn(true)
+        pinCodeViewModel.startAuth(PinCodeAction.TIMEOUT_CHECK)
+        advanceUntilIdle()
+        pinCodeViewModel.pinCodeNumberClicked("123456")
+        advanceUntilIdle()
+        pinCodeViewModel.pinCodeNumberClicked("123456")
+        advanceUntilIdle()
+
+        verify(interactor).savePin("123456")
+        verify(biometricGate).approveEnrollmentAfterPin()
+        assertNotNull(pinCodeViewModel.biometryInitialDialogEvent.value)
     }
 
 }

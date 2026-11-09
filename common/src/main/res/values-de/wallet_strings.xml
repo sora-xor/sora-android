@@ -124,6 +124,10 @@
     <string name="wallet_connect_session_closed">IrohaConnect-Sitzung geschlossen</string>
     <string name="wallet_connect_background_closed">Die Sitzung wurde geschlossen, als die Wallet den Vordergrund verließ</string>
     <string name="wallet_connect_pin_unavailable">Die PIN deiner Wallet ist nicht verfügbar. Öffne SORA, um deine Wallet zu entsperren, und versuche es erneut.</string>
+    <string name="biometric_enrollment_changed_title">Biometrie auf diesem Telefon geändert</string>
+    <string name="biometric_enrollment_changed_message">Seit SORA zuletzt per Biometrie entsperrt wurde, wurde auf diesem Telefon ein Fingerabdruck oder Gesicht hinzugefügt oder entfernt. Alle, deren Fingerabdruck oder Gesicht auf diesem Telefon gespeichert ist, können deine Wallet entsperren. Wenn du das nicht warst, schalte die Biometrie aus.</string>
+    <string name="biometric_enrollment_changed_keep">Biometrie behalten</string>
+    <string name="biometric_enrollment_changed_turn_off">Ausschalten</string>
     <string name="wallet_connect_relay_ready">Verschlüsselter Relay-Kanal bereit. Warten auf die Identität der Anwendung…</string>
     <string name="wallet_connect_invalid_message">Die Anwendung hat eine ungültige oder erneut abgespielte IrohaConnect-Nachricht gesendet</string>
     <string name="wallet_connect_app_closed">Die Anwendung hat die verschlüsselte Sitzung geschlossen</string>

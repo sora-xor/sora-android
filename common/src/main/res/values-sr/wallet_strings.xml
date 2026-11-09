@@ -122,6 +122,10 @@
     <string name="wallet_connect_session_closed">IrohaConnect сесија је затворена</string>
     <string name="wallet_connect_background_closed">Сесија је затворена када је новчаник напустио први план</string>
     <string name="wallet_connect_pin_unavailable">PIN код вашег новчаника није доступан. Отворите SORA да бисте откључали новчаник, па покушајте поново.</string>
+    <string name="biometric_enrollment_changed_title">Биометрија на овом телефону је промењена</string>
+    <string name="biometric_enrollment_changed_message">Откад је биометрија последњи пут откључала SORA, на овом телефону је додат или уклоњен отисак прста или лице. Свако чији је отисак прста или лице на овом телефону може да откључа ваш новчаник. Ако ова промена није од вас, искључите биометрију.</string>
+    <string name="biometric_enrollment_changed_keep">Задржи биометрију</string>
+    <string name="biometric_enrollment_changed_turn_off">Искључи</string>
     <string name="wallet_connect_relay_ready">Шифровани релеј је спреман. Чекање идентитета апликације…</string>
     <string name="wallet_connect_invalid_message">Апликација је послала неисправну или поновљену IrohaConnect поруку</string>
     <string name="wallet_connect_app_closed">Апликација је затворила шифровану сесију</string>

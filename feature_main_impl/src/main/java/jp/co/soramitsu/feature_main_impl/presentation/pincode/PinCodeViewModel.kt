@@ -122,6 +122,14 @@ class PinCodeViewModel @Inject constructor(
     private val _biometryInitialDialogEvent = SingleLiveEvent<Unit>()
     val biometryInitialDialogEvent: LiveData<Unit> = _biometryInitialDialogEvent
 
+    /**
+     * True while the owner is asked about biometrics that changed since they last approved them.
+     * The typed PIN was right, and nothing goes on until they answer. A held value, not an event,
+     * so the question comes back if the screen is rebuilt.
+     */
+    private val _enrollmentChangeQuestion = MutableLiveData(false)
+    val enrollmentChangeQuestion: LiveData<Boolean> = _enrollmentChangeQuestion
+
     private val _resetApplicationEvent = SingleLiveEvent<Unit>()
     val resetApplicationEvent: LiveData<Unit> = _resetApplicationEvent
 
@@ -344,12 +352,14 @@ class PinCodeViewModel @Inject constructor(
         viewModelScope.launch {
             tryCatch {
                 interactor.savePin(inputedCode)
-                biometricGate.approveEnrollmentAfterPin()
                 if (isChanging) {
+                    // Checking the current PIN already settled the biometrics.
                     _pincodeChangedEvent.trigger()
                     WalletSessionState.markUnlocked()
                     mainRouter.popBackStack()
                 } else {
+                    // A first PIN: the owner is asked about biometrics right below.
+                    biometricGate.approveEnrollmentAfterPin()
                     val available = interactor.isBiometryAvailable()
                     if (available) {
                         pinSetupAwaitingBiometry = true
@@ -375,8 +385,11 @@ class PinCodeViewModel @Inject constructor(
         }
 
         if (result) {
-            biometricGate.approveEnrollmentAfterPin()
-            processSuccessfullAuth()
+            if (enrollmentChangeNeedsAnswer()) {
+                _enrollmentChangeQuestion.value = true
+            } else {
+                processSuccessfullAuth()
+            }
         } else {
             inputedCode = ""
             state = state.copy(
@@ -386,6 +399,40 @@ class PinCodeViewModel @Inject constructor(
             )
             deviceVibrator.makeShortVibration()
             proccessFailedAuthIdleTimer()
+        }
+    }
+
+    /**
+     * A typed PIN proves the owner is here, not that they know the phone's biometrics changed, so
+     * a changed enrollment waits for their answer. Only biometrics never approved on this install
+     * are approved by the PIN alone.
+     */
+    private suspend fun enrollmentChangeNeedsAnswer(): Boolean {
+        if (!biometricGate.enrollmentChanged()) {
+            biometricGate.approveFirstEnrollmentAfterPin()
+            return false
+        }
+        // With biometrics off, or none enrolled now, there is nothing to decide. The old key stays
+        // unusable, so the question comes when it matters.
+        return interactor.isBiometryEnabled() && interactor.isBiometryAvailable()
+    }
+
+    fun onEnrollmentChangeKept() {
+        if (_enrollmentChangeQuestion.value != true) return
+        _enrollmentChangeQuestion.value = false
+        biometricGate.approveEnrollmentAfterPin()
+        processSuccessfullAuth()
+    }
+
+    fun onEnrollmentChangeRefused() {
+        if (_enrollmentChangeQuestion.value != true) return
+        _enrollmentChangeQuestion.value = false
+        viewModelScope.launch {
+            tryCatch {
+                interactor.setBiometryEnabled(false)
+                isBiometryEnabled = false
+                processSuccessfullAuth()
+            }
         }
     }
 

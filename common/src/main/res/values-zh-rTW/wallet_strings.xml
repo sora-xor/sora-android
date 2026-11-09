@@ -123,6 +123,10 @@
     <string name="wallet_connect_session_closed">IrohaConnect工作階段已關閉</string>
     <string name="wallet_connect_background_closed">錢包離開前景時，工作階段已關閉</string>
     <string name="wallet_connect_pin_unavailable">錢包 PIN 碼無法使用。請開啟 SORA 解鎖錢包，然後再試一次。</string>
+    <string name="biometric_enrollment_changed_title">此手機的生物辨識資料已變更</string>
+    <string name="biometric_enrollment_changed_message">自上次使用生物辨識解鎖 SORA 以來，此手機上新增或移除了指紋或臉孔。只要指紋或臉孔登錄在此手機上，任何人都能解鎖您的錢包。如果這不是您本人所為，請關閉生物辨識。</string>
+    <string name="biometric_enrollment_changed_keep">繼續使用生物辨識</string>
+    <string name="biometric_enrollment_changed_turn_off">關閉</string>
     <string name="wallet_connect_relay_ready">加密中繼已就緒。正在等待應用程式身分…</string>
     <string name="wallet_connect_invalid_message">應用程式發送了無效或重播的IrohaConnect訊息</string>
     <string name="wallet_connect_app_closed">應用程式已關閉加密工作階段</string>

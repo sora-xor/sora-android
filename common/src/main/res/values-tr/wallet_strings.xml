@@ -122,6 +122,10 @@
     <string name="wallet_connect_session_closed">IrohaConnect oturumu kapatıldı</string>
     <string name="wallet_connect_background_closed">Cüzdan ön plandan ayrıldığında oturum kapatıldı</string>
     <string name="wallet_connect_pin_unavailable">Cüzdanınızın PIN kodu kullanılamıyor. Cüzdanınızın kilidini açmak için SORA uygulamasını açın ve tekrar deneyin.</string>
+    <string name="biometric_enrollment_changed_title">Bu telefondaki biyometrik veriler değişti</string>
+    <string name="biometric_enrollment_changed_message">SORA\'nın kilidi en son biyometriyle açıldığından beri bu telefona parmak izi veya yüz eklendi ya da kaldırıldı. Parmak izi veya yüzü bu telefonda kayıtlı olan herkes cüzdanınızın kilidini açabilir. Bu değişikliği siz yapmadıysanız biyometriyi kapatın.</string>
+    <string name="biometric_enrollment_changed_keep">Biyometriyi koru</string>
+    <string name="biometric_enrollment_changed_turn_off">Kapat</string>
     <string name="wallet_connect_relay_ready">Şifreli aktarıcı hazır. Uygulama kimliği bekleniyor…</string>
     <string name="wallet_connect_invalid_message">Uygulama geçersiz veya yeniden oynatılmış bir IrohaConnect mesajı gönderdi</string>
     <string name="wallet_connect_app_closed">Uygulama şifreli oturumu kapattı</string>
