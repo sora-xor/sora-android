@@ -26,6 +26,7 @@ import jp.co.soramitsu.androidfoundation.resource.ResourceManager
 import jp.co.soramitsu.androidfoundation.testing.MainCoroutineRule
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.interfaces.WithProgress
+import jp.co.soramitsu.common.presentation.compose.neon.safemode.WalletSessionState
 import jp.co.soramitsu.common.util.KeyMaterialUnavailableException
 import jp.co.soramitsu.common.vibration.DeviceVibrator
 import jp.co.soramitsu.feature_account_api.domain.model.WalletDeletionPreview
@@ -1455,6 +1456,33 @@ class PinCodeViewModelTest {
         verify(interactor).savePin("123456")
         verify(biometricGate).approveEnrollmentAfterPin()
         assertNotNull(pinCodeViewModel.biometryInitialDialogEvent.value)
+    }
+
+    @Test fun `coming back from the background closes the removal screen`() = runTest {
+        openRemovalScreen(briefing())
+        pinCodeViewModel.onRemovalRevealed()
+        assertNotNull(pinCodeViewModel.removal)
+
+        WalletSessionState.markReturnedFromBackground()
+        pinCodeViewModel.onResume()
+        advanceUntilIdle()
+
+        assertNull(pinCodeViewModel.removal)
+        verify(mainRouter).popBackStack()
+    }
+
+    @Test fun `coming back from the background leaves a running removal to finish`() = runTest {
+        openRemovalScreen(briefing())
+        pinCodeViewModel.onRemovalRevealed()
+        pinCodeViewModel.onRemovalWrittenDown(true)
+        pinCodeViewModel.onRemovalConfirmed()
+        assertTrue(requireNotNull(pinCodeViewModel.removal).working)
+
+        WalletSessionState.markReturnedFromBackground()
+        pinCodeViewModel.onResume()
+
+        assertTrue(requireNotNull(pinCodeViewModel.removal).working)
+        verify(mainRouter, never()).popBackStack()
     }
 
 }

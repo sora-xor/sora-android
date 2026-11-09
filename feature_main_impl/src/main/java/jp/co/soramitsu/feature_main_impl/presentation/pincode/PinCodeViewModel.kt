@@ -118,6 +118,7 @@ class PinCodeViewModel @Inject constructor(
      */
     internal var removal by mutableStateOf<AccountRemovalState?>(null)
         private set
+    private var removalOpenedAtReturn = 0
 
     private val _biometryInitialDialogEvent = SingleLiveEvent<Unit>()
     val biometryInitialDialogEvent: LiveData<Unit> = _biometryInitialDialogEvent
@@ -471,8 +472,12 @@ class PinCodeViewModel @Inject constructor(
     fun onResume() {
         // The removal screen is already behind the PIN: coming back to it from the JSON export
         // (whose Back returns here) does not ask for the PIN again. The phrase is veiled again
-        // whenever the screen was left ([onRemovalHidden]).
-        if (removal != null) return
+        // whenever the screen was left ([onRemovalHidden]). Coming back from the background closes
+        // it instead, so a phone left on this screen shows no phrase to whoever picks it up.
+        if (removal != null) {
+            if (WalletSessionState.returnsFromBackground != removalOpenedAtReturn) onRemovalCancelled()
+            return
+        }
         startFingerprintScannerEventLiveData.value = biometricAllowed
         if (state.migrating && state.isConnected) {
             viewModelScope.launch {
@@ -576,6 +581,7 @@ class PinCodeViewModel @Inject constructor(
      * The PIN is not asked for again to show it.
      */
     private fun logout() {
+        removalOpenedAtReturn = WalletSessionState.returnsFromBackground
         viewModelScope.launch {
             try {
                 check(this@PinCodeViewModel::addresses.isInitialized) {

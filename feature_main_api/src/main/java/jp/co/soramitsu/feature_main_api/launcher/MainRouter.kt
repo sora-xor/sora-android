@@ -71,6 +71,12 @@ interface MainRouter {
 
     fun currentDestinationIsPinCheckNeeded(): Boolean
 
+    /**
+     * Closes a phrase, seed or JSON export screen that is on top, with the screens that led to it.
+     * Opening one again takes the typed PIN, which a lock screen's fingerprint does not replace.
+     */
+    fun closeSecretScreensLeftOpen()
+
     fun showProfile()
 
     fun showClaim()

@@ -195,6 +195,25 @@ class NavigationArgumentsContractTest {
         every { controller.currentDestination } returns null
         assertFalse(subject.currentDestinationIsPinCheckNeeded()); assertFalse(subject.currentDestinationIsPincode()); assertFalse(subject.currentDestinationIsClaimFragment())
     }
+    private fun closeSecretScreensFrom(vararg screens: Int): List<Int> {
+        val stack = screens.toMutableList()
+        val destination = mockk<NavDestination>()
+        every { destination.id } answers { stack.last() }
+        every { controller.currentDestination } returns destination
+        every { controller.popBackStack() } answers { stack.removeAt(stack.lastIndex); stack.isNotEmpty() }
+        subject.closeSecretScreensLeftOpen()
+        return stack
+    }
+    @Test fun secretScreensCloseWithTheirWayInAndNothingElse() {
+        val details = R.id.accountDetailsFragment; val warning = R.id.exportProtectionFragment
+        assertEquals(listOf(details), closeSecretScreensFrom(details, warning, R.id.backupFragment))
+        assertEquals(listOf(details), closeSecretScreensFrom(details, warning, R.id.backupFragment, warning, R.id.backupJsonFragment))
+        // The JSON export of "Forget account" returns to that screen, which closes itself.
+        assertEquals(listOf(details, R.id.pincodeFragment), closeSecretScreensFrom(details, R.id.pincodeFragment, R.id.backupJsonFragment))
+        // Reading the warning, or anywhere else, stays where it is.
+        assertEquals(listOf(details, warning), closeSecretScreensFrom(details, warning))
+        assertEquals(listOf(R.id.cardsHubFragment), closeSecretScreensFrom(R.id.cardsHubFragment))
+    }
     @Test fun explicitBackActionsTargetOnlyTheirNamedScreens() {
         subject.returnToHubFragment(); subject.popBackStackToAccountDetails(); subject.popBackStack(); subject.popBackStackFragment(); subject.showAccountList()
         verify { controller.popBackStack(R.id.cardsHubFragment, false) }; verify { controller.popBackStack(R.id.accountDetailsFragment, false) }

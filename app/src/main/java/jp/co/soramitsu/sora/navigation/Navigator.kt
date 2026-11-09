@@ -319,6 +319,15 @@ class Navigator :
         return navController?.currentDestination != null && (navController?.currentDestination!!.id == R.id.backupFragment || navController?.currentDestination!!.id == R.id.backupJsonFragment)
     }
 
+    override fun closeSecretScreensLeftOpen() {
+        val controller = navController ?: return
+        if (!currentDestinationIsPinCheckNeeded()) return
+        val secretScreens = setOf(R.id.backupFragment, R.id.backupJsonFragment, R.id.exportProtectionFragment)
+        while (controller.currentDestination?.id in secretScreens) {
+            if (!controller.popBackStack()) return
+        }
+    }
+
     override fun showProfile() {
         navController?.navigate(R.id.profile_nav_graph)
     }
