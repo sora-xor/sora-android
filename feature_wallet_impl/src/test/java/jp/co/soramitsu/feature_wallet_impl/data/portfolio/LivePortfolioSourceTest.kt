@@ -452,8 +452,85 @@ class LivePortfolioSourceTest {
         mainNexus.value = listOf(nexusRow("cnMain", WalletNetworkId.TAIRA, null))
         val failed = source.observe().first { it.sync["cnMain"]!!.unreachable.isNotEmpty() }
         val kept = failed.holding("cnMain", WalletNetworkId.TAIRA, xorToken.id)!!
-        assertEquals(0, BigDecimal("5").compareTo(kept.total))
+        assertEquals(0, BigDecimal("2.5").compareTo(kept.total))
         assertFalse(kept.sendAvailable)
+    }
+
+    @Test
+    fun `a network failure after a successful zero never resurrects saved funds`() = runTest {
+        setUp()
+        coEvery { store.load() } returns SavedPortfolio(
+            wallets = mapOf("cnMain" to SavedWallet(readAtMillis = 900L, networks = listOf(SavedNetworkBalance("taira", "cnMain-taira", "5")))),
+        )
+        mainNexus.value = listOf(nexusRow("cnMain", WalletNetworkId.TAIRA, "0"))
+        val source = newSource()
+        source.observe().first { it.addresses["cnMain"].orEmpty().containsKey(WalletNetworkId.TAIRA) }
+        mainNexus.value = listOf(nexusRow("cnMain", WalletNetworkId.TAIRA, null))
+        val failed = source.observe().first { it.sync["cnMain"]!!.unreachable.isNotEmpty() }
+        assertNull(failed.holding("cnMain", WalletNetworkId.TAIRA, xorToken.id))
+    }
+
+    @Test
+    fun `spending the selected wallet's last funds never restores an older read`() = runTest {
+        setUp()
+        coEvery { store.load() } returns SavedPortfolio(
+            wallets = mapOf("cnMain" to SavedWallet(readAtMillis = 900L, sora2 = listOf(savedXor))),
+        )
+        mainNexus.value = emptyList()
+        val source = newSource()
+        val seen = mutableListOf<PortfolioSnapshot>()
+        val job = launch { source.observe().collect { seen += it } }
+        runCurrent()
+        assertEquals(BigDecimal("10"), seen.last().holding("cnMain", WalletNetworkId.SORA2, xorToken.id)!!.total)
+        mainAssets.value = listOf(asset(xorToken, total = "0"))
+        runCurrent()
+        val empty = seen.last()
+        assertTrue(empty.holdings.none { it.walletId == "cnMain" })
+        assertFalse(empty.sync.getValue("cnMain").unread)
+        assertTrue(empty.sync.getValue("cnMain").live)
+        advanceTimeBy(LivePortfolioSource.SAVE_DELAY_MS + 1)
+        coVerify { store.save(match { it.wallets["cnMain"]?.sora2?.isEmpty() == true }) }
+        job.cancel()
+        runCurrent()
+        seen.clear()
+        every { assetsRepository.subscribeAssetsOfWhitelist("cnMain") } returns flow { awaitCancellation() }
+        val restarted = launch { source.observe().collect { seen += it } }
+        runCurrent()
+        assertTrue(seen.isNotEmpty())
+        assertTrue(seen.all { snapshot -> snapshot.holdings.none { it.walletId == "cnMain" } })
+        assertFalse(seen.last().sync.getValue("cnMain").unread)
+        assertFalse(seen.last().sync.getValue("cnMain").live)
+        restarted.cancel()
+    }
+
+    @Test
+    fun `a row observation failure after spending cannot resurrect saved funds`() = runTest {
+        setUp()
+        coEvery { store.load() } returns SavedPortfolio(
+            wallets = mapOf("cnMain" to SavedWallet(readAtMillis = 900L, sora2 = listOf(savedXor))),
+        )
+        mainNexus.value = emptyList()
+        val spent = CompletableDeferred<Unit>()
+        val failed = CompletableDeferred<Unit>()
+        every { assetsRepository.subscribeAssetsOfWhitelist("cnMain") } returns flow {
+            emit(listOf(asset(xorToken, total = "10")))
+            spent.await()
+            emit(listOf(asset(xorToken, total = "0")))
+            failed.await()
+            throw IllegalStateException("database observation stopped")
+        }
+        val source = newSource()
+        val seen = mutableListOf<PortfolioSnapshot>()
+        val job = launch { source.observe().collect { seen += it } }
+        runCurrent()
+        spent.complete(Unit)
+        runCurrent()
+        failed.complete(Unit)
+        runCurrent()
+        assertNull(seen.last().holding("cnMain", WalletNetworkId.SORA2, xorToken.id))
+        assertTrue(WalletNetworkId.SORA2 in seen.last().sync.getValue("cnMain").unreachable)
+        assertFalse(seen.last().sync.getValue("cnMain").live)
+        job.cancel()
     }
 
     @Test
