@@ -11,6 +11,7 @@ import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.presentation.args.*
 import jp.co.soramitsu.common.presentation.compose.webview.title
 import jp.co.soramitsu.common.presentation.compose.webview.url
+import jp.co.soramitsu.feature_main_api.domain.model.PIN_CONFIRMED_ACTION_KEY
 import jp.co.soramitsu.feature_main_api.domain.model.PinCodeAction
 import jp.co.soramitsu.feature_main_impl.presentation.util.action
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.protection.ExportProtectionViewModel
@@ -164,6 +165,13 @@ class NavigationArgumentsContractTest {
         assertEquals(token, result.tokenFromNullable); assertNull(result.tokenToNullable)
         verify(exactly = 1) { controller.popBackStack() }
     }
+    @Test fun confirmedPinReturnsTheConfirmedActionToTheScreenBelow() {
+        val handle = SavedStateHandle(); val previous = mockk<NavBackStackEntry>()
+        every { previous.savedStateHandle } returns handle; every { controller.previousBackStackEntry } returns previous
+        subject.returnFromPinConfirmation(PinCodeAction.GOOGLE_BACKUP)
+        assertEquals(PinCodeAction.GOOGLE_BACKUP.name, handle.get<String>(PIN_CONFIRMED_ACTION_KEY))
+        verify(exactly = 1) { controller.popBackStack() }
+    }
     @Test fun completedPinCheckReturnsAnExplicitSuccessFlag() {
         val handle = SavedStateHandle(); val previous = mockk<NavBackStackEntry>()
         every { previous.savedStateHandle } returns handle; every { controller.previousBackStackEntry } returns previous
@@ -186,6 +194,25 @@ class NavigationArgumentsContractTest {
         }
         every { controller.currentDestination } returns null
         assertFalse(subject.currentDestinationIsPinCheckNeeded()); assertFalse(subject.currentDestinationIsPincode()); assertFalse(subject.currentDestinationIsClaimFragment())
+    }
+    private fun closeSecretScreensFrom(vararg screens: Int): List<Int> {
+        val stack = screens.toMutableList()
+        val destination = mockk<NavDestination>()
+        every { destination.id } answers { stack.last() }
+        every { controller.currentDestination } returns destination
+        every { controller.popBackStack() } answers { stack.removeAt(stack.lastIndex); stack.isNotEmpty() }
+        subject.closeSecretScreensLeftOpen()
+        return stack
+    }
+    @Test fun secretScreensCloseWithTheirWayInAndNothingElse() {
+        val details = R.id.accountDetailsFragment; val warning = R.id.exportProtectionFragment
+        assertEquals(listOf(details), closeSecretScreensFrom(details, warning, R.id.backupFragment))
+        assertEquals(listOf(details), closeSecretScreensFrom(details, warning, R.id.backupFragment, warning, R.id.backupJsonFragment))
+        // The JSON export of "Forget account" returns to that screen, which closes itself.
+        assertEquals(listOf(details, R.id.pincodeFragment), closeSecretScreensFrom(details, R.id.pincodeFragment, R.id.backupJsonFragment))
+        // Reading the warning, or anywhere else, stays where it is.
+        assertEquals(listOf(details, warning), closeSecretScreensFrom(details, warning))
+        assertEquals(listOf(R.id.cardsHubFragment), closeSecretScreensFrom(R.id.cardsHubFragment))
     }
     @Test fun explicitBackActionsTargetOnlyTheirNamedScreens() {
         subject.returnToHubFragment(); subject.popBackStackToAccountDetails(); subject.popBackStack(); subject.popBackStackFragment(); subject.showAccountList()

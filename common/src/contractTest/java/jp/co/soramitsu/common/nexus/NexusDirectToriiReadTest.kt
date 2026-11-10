@@ -86,6 +86,50 @@ class NexusDirectToriiReadTest {
     }
 
     @Test
+    fun committedBlockNarrowsBothHashProofsAndAWrongBlockFindsNothing() = runBlocking {
+        val requests = mutableListOf<URI>()
+        // As Taira answers: rows of the asked block only, on one page without a cursor.
+        val client = NexusToriiClient(json, NexusToriiReadTransport { url, requireFanout ->
+            val uri = URI(url)
+            requests += uri
+            assertTrue(requireFanout)
+            val filter = query(uri).getValue("filter")
+            val answer = if (filter.endsWith("tx_hash = \"$hash\" and block_height = 5")) history(transfer()) else history()
+            answer.toString().toByteArray()
+        })
+
+        assertTrue(client.hasAuthoritativeCommittedTransaction(network, account, definition, hash, committedBlockHeight = 5))
+        assertEquals(hash, client.committedXorTransfersForHash(network, account, definition, hash, committedBlockHeight = 5)
+            .single().transactionHash)
+        assertFalse(client.hasAuthoritativeCommittedTransaction(network, account, definition, hash, committedBlockHeight = 6))
+        assertTrue(client.committedXorTransfersForHash(network, account, definition, hash, committedBlockHeight = 6).isEmpty())
+
+        assertEquals(4, requests.size)
+        assertTrue(requests.all { query(it).getValue("filter").contains("tx_hash = \"$hash\" and block_height = ") })
+        assertTrue(requests.none { query(it).containsKey("cursor") })
+    }
+
+    @Test
+    fun narrowedHashProofRejectsARowFromAnotherBlock() {
+        var requests = 0
+        val client = NexusToriiClient(json, NexusToriiReadTransport { _, _ ->
+            requests++
+            history(JsonObject(transfer() + ("block_height" to JsonPrimitive(6)))).toString().toByteArray()
+        })
+        assertThrows(NexusToriiException::class.java) {
+            runBlocking { client.committedXorTransfersForHash(network, account, definition, hash, committedBlockHeight = 5) }
+        }
+        assertThrows(NexusToriiException::class.java) {
+            runBlocking { client.hasAuthoritativeCommittedTransaction(network, account, definition, hash, committedBlockHeight = 5) }
+        }
+        val failure = runCatching {
+            runBlocking { client.committedXorTransfersForHash(network, account, definition, hash, committedBlockHeight = 0) }
+        }.exceptionOrNull()
+        assertEquals("NEXUS_INVALID_BLOCK_HEIGHT", failure?.message)
+        assertEquals(2, requests)
+    }
+
+    @Test
     fun directHistoryRejectsMismatchedAccountAndAssetEvidence() {
         listOf("account_id" to JsonPrimitive(peer), "asset_definition_id" to JsonPrimitive("other"),
             "tx_hash" to JsonPrimitive("cd".repeat(32))).forEach { (field, value) ->

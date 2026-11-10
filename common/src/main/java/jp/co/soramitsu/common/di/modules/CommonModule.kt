@@ -273,7 +273,7 @@ class CommonModule {
     @Provides
     @Singleton
     fun provideCloudBackupProvider(@ApplicationContext context: Context): CloudBackupProvider =
-        CloudBackupProvider(BuildConfig.GOOGLE_API_TOKEN.isNotBlank()) {
-            BackupService.create(BuildConfig.GOOGLE_API_TOKEN, context)
+        CloudBackupProvider(BuildConfig.CLOUD_BACKUP_ENABLED) {
+            BackupService.create(context)
         }
 }

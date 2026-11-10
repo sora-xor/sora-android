@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
@@ -116,7 +117,7 @@ private fun WalletsSheet(model: PortfolioModel, format: PortfolioFormat, actions
                     leading = { AllWalletsAvatar(42.dp) },
                     title = stringResource(R.string.portfolio_all_wallets),
                     subtitle = stringResource(R.string.portfolio_wallets_together, model.wallets.size),
-                    trailingTop = format.fiat(model.allTotals.fiat),
+                    trailingTop = format.total(model.allTotals),
                     trailingBottom = changeText(format, model.allTotals.changeFraction),
                 )
             }
@@ -131,25 +132,45 @@ private fun WalletsSheet(model: PortfolioModel, format: PortfolioFormat, actions
                         stringResource(R.string.portfolio_selected).takeIf { wallet.selected },
                         summary.freshness?.let { freshnessLabel(it, model.nowMillis) },
                     ).joinToString(" · "),
-                    trailingTop = format.fiat(summary.totals.fiat),
+                    trailingTop = format.total(summary.totals),
                     trailingBottom = changeText(format, summary.totals.changeFraction),
                 )
             }
         }
-        PortfolioBanner(stringResource(R.string.portfolio_wallets_note)) {
-            Text(
-                stringResource(R.string.portfolio_refresh_all),
-                style = MaterialTheme.customTypography.textSBold,
-                color = n.link,
-                modifier = Modifier
-                    .padding(top = 6.dp)
-                    .clip(RoundedCornerShape(6.dp))
-                    .clickable(role = Role.Button, onClick = actions::onRefreshAll)
-                    .padding(vertical = 6.dp),
-            )
+        // With one wallet there is nothing to add up or to refresh in the background.
+        if (model.allWalletsAvailable) {
+            PortfolioBanner(stringResource(R.string.portfolio_wallets_note)) {
+                Text(
+                    stringResource(R.string.portfolio_refresh_all),
+                    style = MaterialTheme.customTypography.textSBold,
+                    color = n.link,
+                    modifier = Modifier
+                        .padding(top = 6.dp)
+                        .clip(RoundedCornerShape(6.dp))
+                        .clickable(role = Role.Button, onClick = actions::onRefreshAll)
+                        .padding(vertical = 6.dp),
+                )
+            }
         }
-        SecondaryAction(stringResource(R.string.portfolio_manage_wallets), actions::onManageWallets)
+        SheetLink(stringResource(R.string.portfolio_manage_wallets), actions::onManageWallets)
+        SheetLink(stringResource(R.string.portfolio_manage_assets), actions::onManageAssets)
     }
+}
+
+/** A link line at the end of a sheet. */
+@Composable
+private fun SheetLink(text: String, onClick: () -> Unit) {
+    Text(
+        text,
+        style = MaterialTheme.customTypography.textMBold,
+        color = MaterialTheme.neon.link,
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(6.dp))
+            .clickable(role = Role.Button, onClick = onClick)
+            .heightIn(min = 48.dp)
+            .wrapContentHeight(Alignment.CenterVertically),
+    )
 }
 
 @Composable
@@ -162,8 +183,8 @@ private fun HowWeCountSheet(model: PortfolioModel, format: PortfolioFormat, acti
             style = MaterialTheme.customTypography.paragraphM,
             color = n.textSecondary,
         )
-        PortfolioCard(radius = 18.dp) {
-            KeyValueRow(stringResource(R.string.portfolio_counted), format.fiat(totals.fiat))
+        SheetCard {
+            KeyValueRow(stringResource(R.string.portfolio_counted), format.total(totals))
             RowDivider()
             KeyValueRow(stringResource(R.string.portfolio_hidden_by_you), pluralStringResource(R.plurals.portfolio_assets_not_included, totals.hidden, totals.hidden))
             RowDivider()
@@ -197,6 +218,7 @@ private fun SyncSheet(model: PortfolioModel, actions: PortfolioSheetActions) {
                 freshness.unreachable.joinToString(", ") { networkName(it) },
             )
             FreshnessKind.SAVED -> stringResource(R.string.portfolio_sync_saved)
+            FreshnessKind.READING -> stringResource(R.string.portfolio_reading_balances)
             else -> stringResource(R.string.portfolio_sync_live)
         }
         Text(body, style = MaterialTheme.customTypography.paragraphM, color = n.textSecondary)
@@ -374,7 +396,7 @@ private fun MoveSheet(model: PortfolioModel, holdingKey: String?, format: Portfo
             onValueChange = { text -> if (isAmountInput(text)) amountText = text },
             onMax = { amountText = PortfolioReadiness.maxAmount(holding).stripTrailingZeros().toPlainString() },
         )
-        PortfolioCard(radius = 18.dp) {
+        SheetCard {
             KeyValueRow(stringResource(R.string.portfolio_network), network)
             RowDivider()
             KeyValueRow(stringResource(R.string.portfolio_route), stringResource(R.string.portfolio_route_same_network))
@@ -572,7 +594,7 @@ private fun PickWalletSheet(model: PortfolioModel, action: WalletAction, format:
                     leading = { WalletAvatar(wallet.name, model.colorOfWallet(wallet.id), 42.dp) },
                     title = wallet.name,
                     subtitle = if (wallet.selected) stringResource(R.string.portfolio_selected) else stringResource(R.string.portfolio_switch_first),
-                    trailingTop = format.fiat(summary.totals.fiat),
+                    trailingTop = format.total(summary.totals),
                 )
             }
         }

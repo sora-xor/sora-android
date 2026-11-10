@@ -51,6 +51,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.Lifecycle
 import kotlinx.coroutines.launch
+import jp.co.soramitsu.common.presentation.compose.neon.safemode.WalletSessionState
 import jp.co.soramitsu.common.presentation.compose.theme.neon.FxPolicy
 import jp.co.soramitsu.common.presentation.compose.theme.neon.FxTier
 import jp.co.soramitsu.common.presentation.compose.theme.neon.DeviceFxSignals
@@ -121,6 +122,7 @@ class MainActivity :
         }
 
         fun restartAfterLanguageChange(context: Context) {
+            TrustedMainRestart.grant(ACTION_CHANGE_LANGUAGE)
             val intent = Intent(context, MainActivity::class.java).apply {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                 action = ACTION_CHANGE_LANGUAGE
@@ -129,6 +131,7 @@ class MainActivity :
         }
 
         fun restartAfterAddAccount(context: Context) {
+            TrustedMainRestart.grant(ACTION_ACCOUNT_ADDED)
             val intent = Intent(context, MainActivity::class.java).apply {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                 action = ACTION_ACCOUNT_ADDED
@@ -163,7 +166,10 @@ class MainActivity :
 
     override fun layoutResource() = ActivityMainBinding.inflate(layoutInflater)
 
+    private var restoredFromSavedState = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
+        restoredFromSavedState = savedInstanceState != null
         super.onCreate(savedInstanceState)
 //        lifecycleScope.launch {
 //            inAppUpdateManager.start(this@MainActivity)
@@ -229,9 +235,14 @@ class MainActivity :
                 NavigationUI.setupWithNavController(binding.bottomNavigationView, it)
             }
 
-            when (intent.action) {
-                ACTION_CHANGE_LANGUAGE -> chooseBottomNavigationItem(R.id.profile_nav_graph)
-                ACTION_DARK_THEME_TOGGLED, ACTION_ACCOUNT_ADDED -> {}
+            // Restored after the process was killed: a secret screen does not come back with it.
+            if (restoredFromSavedState) mainRouter.closeSecretScreensLeftOpen()
+
+            val trustedRestart = TrustedMainRestart.consume(intent.action)
+            when {
+                trustedRestart && intent.action == ACTION_CHANGE_LANGUAGE ->
+                    chooseBottomNavigationItem(R.id.profile_nav_graph)
+                trustedRestart || intent.action == ACTION_DARK_THEME_TOGGLED -> {}
                 else -> viewModel.showPinFragment()
             }
         }
@@ -388,8 +399,12 @@ class MainActivity :
     }
 
     public override fun onResume() {
-        if (timeInBackground != null && (idleTimePassedFrom(timeInBackground!!) || mainRouter.currentDestinationIsPinCheckNeeded())) {
-            viewModel.showPinFragment()
+        timeInBackground?.let { hiddenAt ->
+            // A screen that shows a secret never comes back by itself. A lock screen here would
+            // reopen it with a fingerprint, where opening it takes the typed PIN.
+            WalletSessionState.markReturnedFromBackground()
+            mainRouter.closeSecretScreensLeftOpen()
+            if (idleTimePassedFrom(hiddenAt)) viewModel.showPinFragment()
         }
 
         timeInBackground = null

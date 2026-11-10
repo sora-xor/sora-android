@@ -751,7 +751,7 @@ class OnboardingActivity : SoraBaseActivity<OnboardingViewModel>() {
  * when the stored PIN cannot be read; Cancel leaves everything as it is.
  */
 @Composable
-private fun RepairAccountDialog(
+internal fun RepairAccountDialog(
     prompt: OnboardingViewModel.RepairPrompt,
     screenLockAvailable: Boolean,
     onConfirm: (String) -> Unit,

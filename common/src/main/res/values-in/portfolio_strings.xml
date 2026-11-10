@@ -15,9 +15,6 @@
     <string name="portfolio_all_wallets">Semua dompet</string>
     <string name="portfolio_wallets">Dompet</string>
     <string name="portfolio_scope_label">Cakupan: %1$s. Pilih dompet</string>
-    <string name="portfolio_lens_tokens">Token</string>
-    <string name="portfolio_lens_networks">Jaringan</string>
-    <string name="portfolio_lens_wallets">Dompet</string>
     <string name="portfolio_where_it_lives">Lokasi aset</string>
     <string name="portfolio_where_it_lives_title">%1$s · lokasi aset</string>
     <plurals name="portfolio_networks">
@@ -28,9 +25,6 @@
     </plurals>
     <plurals name="portfolio_holdings">
         <item quantity="other">%1$d kepemilikan</item>
-    </plurals>
-    <plurals name="portfolio_tokens">
-        <item quantity="other">%1$d token</item>
     </plurals>
     <plurals name="portfolio_assets_not_included">
         <item quantity="other">%1$d aset tidak disertakan</item>
@@ -50,10 +44,9 @@
     <string name="portfolio_route_none">Tidak ada rute dari %1$s dalam versi ini.</string>
     <string name="portfolio_route_test">Aset jaringan uji tidak memiliki nilai uang.</string>
     <string name="portfolio_route_ready">Di SORA2. Tukar di Polkaswap sekarang dengan akun SORA2 Anda di %1$s.</string>
-    <string name="portfolio_no_route">tidak ada rute</string>
     <string name="portfolio_receive_on_sora2">Terima di SORA2</string>
-    <string name="portfolio_send_on">Kirim di %1$s</string>
     <string name="portfolio_send_unavailable">Pengiriman di %1$s tidak tersedia dalam versi ini.</string>
+    <string name="portfolio_send_on">Kirim di %1$s</string>
     <string name="portfolio_move_no_other_wallet">Pemindahan memerlukan dompet lain milik Anda dengan akun di %1$s.</string>
     <string name="portfolio_move_needs_wallets">Pemindahan berlangsung antar dompet Anda sendiri. Tambahkan dompet lain untuk memindahkan dana di antaranya.</string>
     <string name="portfolio_nothing_to_move">Saat ini tidak ada aset yang dapat dipindahkan di sini.</string>
@@ -66,6 +59,7 @@
     <string name="portfolio_excluded_unpriced">Tanpa harga: %1$d</string>
     <string name="portfolio_excluded_testnet">Aset jaringan uji: %1$d</string>
     <string name="portfolio_excluded_caption">%1$s tidak disertakan</string>
+    <string name="portfolio_prices_as_of">Harga per %1$s</string>
     <string name="portfolio_counted">Dihitung</string>
     <string name="portfolio_hidden_by_you">Disembunyikan oleh Anda</string>
     <string name="portfolio_without_price">Tanpa harga</string>
@@ -80,6 +74,9 @@
     <string name="portfolio_state_saved">TERSIMPAN</string>
     <string name="portfolio_state_partial">SEBAGIAN</string>
     <string name="portfolio_state_offline">LURING</string>
+    <string name="portfolio_state_reading">MEMBACA</string>
+    <string name="portfolio_reading_balances">Membaca saldo…</string>
+    <string name="portfolio_excluded_unread">Dompet yang belum terbaca: %1$d</string>
     <string name="portfolio_age_seconds">%1$d dtk</string>
     <string name="portfolio_age_minutes">%1$d mnt</string>
     <string name="portfolio_age_hours">%1$d jam</string>
@@ -92,15 +89,14 @@
     <string name="portfolio_unreachable">%1$s tidak dapat dihubungi</string>
     <string name="portfolio_refresh_all">Perbarui semua dompet</string>
     <string name="portfolio_wallets_together">Dompet yang digabungkan: %1$d</string>
-    <string name="portfolio_wallets_note">Semua dompet menjumlahkan total tiap dompet. Dompet yang tidak dipilih menyimpan hasil sinkronisasi terakhir, sehingga daftar menunjukkan usia data masing-masing.</string>
+    <string name="portfolio_wallets_note">“Semua dompet” menjumlahkan total tiap dompet. Dompet yang tidak dipilih diperbarui sekitar sekali semenit saat Anda melihat, sehingga masing-masing menampilkan usia angkanya.</string>
     <string name="portfolio_manage_wallets">Kelola dompet</string>
+    <string name="portfolio_manage_assets">Kelola aset dompet yang dipilih</string>
     <string name="portfolio_selected">Dipilih</string>
-    <string name="portfolio_open_wallet_alone">Buka hanya %1$s</string>
     <string name="portfolio_other">Lainnya</string>
     <string name="portfolio_legend_description">%1$s, %2$s persen, %3$s</string>
-    <string name="portfolio_no_price">Tanpa harga</string>
-    <string name="portfolio_no_value">Tanpa nilai</string>
     <string name="portfolio_nothing_listed">Tidak ada aset untuk ditampilkan. Aset tersembunyi tidak ditampilkan di sini.</string>
+    <string name="portfolio_no_balance_yet">Belum ada saldo</string>
     <string name="portfolio_wallet_ready">Dompet Anda siap.</string>
     <string name="portfolio_wallet_ready_body">Terima token ke dompet ini. Token akan muncul di sini pada setiap jaringan yang didukung aplikasi.</string>
     <string name="portfolio_token_gone">Token ini tidak lagi ada dalam tampilan ini.</string>
@@ -132,8 +128,8 @@
     <string name="portfolio_you_pay">Anda membayar</string>
     <string name="portfolio_you_get">Anda menerima</string>
     <string name="portfolio_swap_note">Polkaswap menunjukkan harga, biaya, dan dampak harga sebelum Anda menandatangani. Di sini hanya memilih pasangan.</string>
-    <string name="portfolio_send_from">Kirim dari</string>
-    <string name="portfolio_receive_to">Terima ke</string>
+    <string name="portfolio_send_from">Kirim dari dompet mana?</string>
+    <string name="portfolio_receive_to">Terima ke dompet mana?</string>
     <string name="portfolio_sample_handoff_off">Portofolio contoh: alamatnya fiktif, sehingga layar Kirim tidak dibuka.</string>
     <string name="portfolio_nexus_send_unavailable">Pengiriman di jaringan ini belum tersedia untuk dompet ini.</string>
     <string name="asset_add_to_favorites">Tambahkan %1$s ke favorit</string>

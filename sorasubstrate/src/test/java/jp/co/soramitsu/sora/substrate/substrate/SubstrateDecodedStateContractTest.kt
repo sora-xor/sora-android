@@ -4,7 +4,7 @@ import com.google.gson.Gson
 import io.emeraldpay.polkaj.scale.ScaleCodecReader
 import io.emeraldpay.polkaj.scale.ScaleCodecWriter
 import io.mockk.*
-import jp.co.soramitsu.common.logger.FirebaseWrapper
+import jp.co.soramitsu.common.logger.WalletDiagnostics
 import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
 import jp.co.soramitsu.sora.substrate.testing.TestRuntimeSnapshots
 import jp.co.soramitsu.xsubstrate.runtime.RuntimeSnapshot
@@ -108,13 +108,13 @@ class SubstrateDecodedStateContractTest {
     }
     @Test fun unavailableEventsRecordOnlyPrivacySafeCategory() = runTest {
         decoded("System", "Events", emptyList<Any>())
-        mockkObject(FirebaseWrapper)
+        mockkObject(WalletDiagnostics)
         try {
-            every { FirebaseWrapper.recordErrorClass(any()) } just Runs
+            every { WalletDiagnostics.recordErrorClass(any()) } just Runs
             response = { throw IllegalStateException("sensitive fixture server error") }
             assertTrue(subject.checkEvents(block).isEmpty())
-            verify(exactly = 1) { FirebaseWrapper.recordErrorClass(FirebaseWrapper.PrivacySafeErrorClass.FINALIZED_EVENT_READ) }
-        } finally { unmockkObject(FirebaseWrapper) }
+            verify(exactly = 1) { WalletDiagnostics.recordErrorClass(WalletDiagnostics.PrivacySafeErrorClass.FINALIZED_EVENT_READ) }
+        } finally { unmockkObject(WalletDiagnostics) }
     }
     @Test fun legacyDualReferenceFlagPreservesFalseAndTrue() = runTest {
         decoded("System", "UpgradedToDualRefCount", true)

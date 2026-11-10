@@ -8,12 +8,11 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.biometric.BiometricManager
-import androidx.biometric.BiometricPrompt
 import androidx.compose.runtime.getValue
-import androidx.core.content.ContextCompat
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
 import androidx.core.view.WindowCompat
-import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
@@ -23,53 +22,9 @@ import jp.co.soramitsu.common.util.ReleaseSurfacePolicy
 
 @AndroidEntryPoint
 class IrohaConnectActivity : AppCompatActivity() {
-    private enum class Authorization {
-        PAIR,
-        SIGN,
-    }
-
     @Inject lateinit var darkThemeManager: DarkThemeManager
 
     private val viewModel: IrohaConnectViewModel by viewModels()
-    private var authorizationInProgress = false
-    private var pendingAuthorization: Authorization? = null
-
-    private val biometricPrompt by lazy {
-        BiometricPrompt(
-            this,
-            ContextCompat.getMainExecutor(this),
-            object : BiometricPrompt.AuthenticationCallback() {
-                override fun onAuthenticationSucceeded(
-                    result: BiometricPrompt.AuthenticationResult,
-                ) {
-                    super.onAuthenticationSucceeded(result)
-                    authorizationInProgress = false
-                    val authorization = pendingAuthorization.also { pendingAuthorization = null }
-                    if (!lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) {
-                        viewModel.onAppBackgrounded()
-                        return
-                    }
-                    when (authorization) {
-                        Authorization.PAIR -> viewModel.approvePairingAfterAuthentication()
-                        Authorization.SIGN -> viewModel.approveSigningAfterAuthentication()
-                        null -> Unit
-                    }
-                }
-
-                override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
-                    super.onAuthenticationError(errorCode, errString)
-                    authorizationInProgress = false
-                    pendingAuthorization = null
-                    if (errorCode in terminalAuthenticationErrors) {
-                        viewModel.authorizationUnavailable()
-                    } else if (!lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) {
-                        viewModel.onAppBackgrounded()
-                    }
-                }
-            },
-        )
-    }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         if (!ReleaseSurfacePolicy.irohaConnectAllowed) {
@@ -95,12 +50,14 @@ class IrohaConnectActivity : AppCompatActivity() {
                 isAppearanceLightStatusBars = !darkTheme
                 isAppearanceLightNavigationBars = !darkTheme
             }
+            val approvalToken = state.pairing?.sessionFingerprint ?: state.signing?.requestToken
+            var confirmPin by remember(approvalToken, state.phase) { mutableStateOf(false) }
             SoraAppTheme(darkTheme = darkTheme) {
             IrohaConnectScreen(
                 state = state,
-                onApprovePairing = { authenticate(Authorization.PAIR) },
+                onApprovePairing = { confirmPin = true },
                 onRejectPairing = viewModel::rejectPairing,
-                onApproveSigning = { authenticate(Authorization.SIGN) },
+                onApproveSigning = { confirmPin = true },
                 onRejectSigning = viewModel::rejectSigning,
                 onClose = {
                     if (
@@ -113,6 +70,19 @@ class IrohaConnectActivity : AppCompatActivity() {
                     }
                 },
             )
+            if (confirmPin && approvalToken != null) {
+                IrohaConnectPinDialog(
+                    error = state.authorizationError,
+                    onCancel = { confirmPin = false },
+                    onConfirm = { pin ->
+                        when (state.phase) {
+                            IrohaConnectUiPhase.PAIRING -> viewModel.approvePairing(pin, approvalToken)
+                            IrohaConnectUiPhase.SIGNING -> viewModel.approveSigning(pin, approvalToken)
+                            else -> confirmPin = false
+                        }
+                    },
+                )
+            }
             }
         }
 
@@ -127,58 +97,15 @@ class IrohaConnectActivity : AppCompatActivity() {
             finish()
             return
         }
-        if (authorizationInProgress) biometricPrompt.cancelAuthentication()
         setIntent(intent)
-        authorizationInProgress = false
-        pendingAuthorization = null
         viewModel.start(consumeDeepLink(intent))
     }
 
     override fun onStop() {
-        if (!isChangingConfigurations && !isFinishing && !authorizationInProgress) {
+        if (!isChangingConfigurations && !isFinishing) {
             viewModel.onAppBackgrounded()
         }
         super.onStop()
-    }
-
-    private fun authenticate(authorization: Authorization) {
-        if (authorizationInProgress) return
-        val expectedPhase = when (authorization) {
-            Authorization.PAIR -> IrohaConnectUiPhase.PAIRING
-            Authorization.SIGN -> IrohaConnectUiPhase.SIGNING
-        }
-        if (viewModel.state.value.phase != expectedPhase) return
-
-        val authenticators =
-            BiometricManager.Authenticators.BIOMETRIC_STRONG or
-                BiometricManager.Authenticators.DEVICE_CREDENTIAL
-        if (BiometricManager.from(this).canAuthenticate(authenticators) !=
-            BiometricManager.BIOMETRIC_SUCCESS
-        ) {
-            viewModel.authorizationUnavailable()
-            return
-        }
-
-        authorizationInProgress = true
-        pendingAuthorization = authorization
-        val prompt = BiometricPrompt.PromptInfo.Builder()
-            .setTitle(
-                when (authorization) {
-                    Authorization.PAIR -> "Approve encrypted pairing"
-                    Authorization.SIGN -> "Approve this signature"
-                },
-            )
-            .setSubtitle("SORA 3 • IrohaConnect")
-            .setDescription(
-                when (authorization) {
-                    Authorization.PAIR -> "Confirm the application and selected account"
-                    Authorization.SIGN -> "Confirm this one request; pairing never signs automatically"
-                },
-            )
-            .setAllowedAuthenticators(authenticators)
-            .setConfirmationRequired(true)
-            .build()
-        biometricPrompt.authenticate(prompt)
     }
 
     private fun consumeDeepLink(source: Intent): String? {
@@ -187,15 +114,4 @@ class IrohaConnectActivity : AppCompatActivity() {
         return value
     }
 
-    private companion object {
-        val terminalAuthenticationErrors = setOf(
-            BiometricPrompt.ERROR_HW_NOT_PRESENT,
-            BiometricPrompt.ERROR_HW_UNAVAILABLE,
-            BiometricPrompt.ERROR_NO_BIOMETRICS,
-            BiometricPrompt.ERROR_NO_DEVICE_CREDENTIAL,
-            BiometricPrompt.ERROR_LOCKOUT,
-            BiometricPrompt.ERROR_LOCKOUT_PERMANENT,
-            BiometricPrompt.ERROR_SECURITY_UPDATE_REQUIRED,
-        )
-    }
 }

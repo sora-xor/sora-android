@@ -32,7 +32,7 @@ import jp.co.soramitsu.common.base.theOnlyRoute
 import jp.co.soramitsu.common.domain.NetworkFeeUnavailable
 import jp.co.soramitsu.common.domain.SoraException
 import jp.co.soramitsu.common.domain.TransactionOutcome
-import jp.co.soramitsu.common.logger.FirebaseWrapper
+import jp.co.soramitsu.common.logger.WalletDiagnostics
 import jp.co.soramitsu.common.presentation.compose.SnackBarState
 import jp.co.soramitsu.common.presentation.transaction.TransactionOutcomeTexts
 import jp.co.soramitsu.ui_core.component.toolbar.Action
@@ -149,7 +149,7 @@ open class BaseViewModel : ViewModel() {
 
     private fun report(throwable: Throwable, explainEverything: Boolean) {
         if (throwable is CancellationException) return
-        FirebaseWrapper.recordException(throwable)
+        WalletDiagnostics.recordException(throwable)
         if (explainEverything) onErrorResetProgress()
 
         if (throwable !is SoraException) {
@@ -276,7 +276,7 @@ open class BaseViewModel : ViewModel() {
             onError(error)
             return
         }
-        FirebaseWrapper.recordException(error)
+        WalletDiagnostics.recordException(error)
         val text = TransactionOutcomeTexts.notSent(resourceManager, error)
         alertDialogLiveData.setValue(text.title to text.message)
     }

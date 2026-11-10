@@ -20,8 +20,8 @@ import jp.co.soramitsu.common.util.KeyMaterialUnavailableException
 import jp.co.soramitsu.common.account.WalletRecoveryCapabilityGate
 import jp.co.soramitsu.common.data.WalletPreferenceIntegrity
 import jp.co.soramitsu.common.data.WalletPreferenceKeys
-import jp.co.soramitsu.common.logger.FirebaseWrapper
-import jp.co.soramitsu.common.logger.FirebaseWrapper.WalletRecoveryEvent
+import jp.co.soramitsu.common.logger.WalletDiagnostics
+import jp.co.soramitsu.common.logger.WalletDiagnostics.WalletRecoveryEvent
 import jp.co.soramitsu.core_db.model.NetworkAccountLocal
 import jp.co.soramitsu.core_db.model.SoraAccountLocal
 import jp.co.soramitsu.core_db.model.WalletDeletionContract
@@ -89,6 +89,11 @@ object WalletUpgradeBackup {
     private const val CORRUPT_DATABASE_COPY_PREFIX = "wallet-corrupt-quarantine-"
     private const val AUTO_RETRY_STATE_FILE = "wallet-migration-auto-retry"
     private const val STARTUP_FAILURE_STATE_FILE = "wallet-startup-failure-count"
+    private const val DATABASE_REPAIR_MARKER = "wallet-database-repair.json"
+    private const val DATABASE_REPAIR_PREFIX = "wallet-database-repair-"
+    private const val DATABASE_REPAIR_EXPLICIT_CHOICE = "wallet-database-repair-explicit-choice"
+    @VisibleForTesting
+    var afterDatabaseRepairCopyForTest: (() -> Unit)? = null
     private var consecutiveStartupFailureCode: String? = null
     private var consecutiveStartupFailures = 0
     private const val MAX_AUTOMATIC_MIGRATION_RETRIES = 3
@@ -305,13 +310,36 @@ object WalletUpgradeBackup {
             // Only the first preparation of a process may set wallet files aside: nothing has
             // opened the DataStore or Room yet, so no open handle can write the old data back.
             val applicationContext = context.applicationContext ?: context
-            val setUpAgain = runCatching { performPendingSetUpAgain(applicationContext) }
+            val hadExplicitRequest = isSetUpAgainRequested(applicationContext)
+            val setUpAgain = runCatching {
+                if (hadExplicitRequest) {
+                    // Finish an already-started database rename before applying an explicit
+                    // reset/return. Otherwise its surviving plan could later resurrect the
+                    // generation the user just chose to set aside.
+                    withPublicationLock(applicationContext.noBackupFilesDir, BACKUP_PUBLICATION_LOCK,
+                        "DATABASE_REPAIR_INCOMPLETE") {
+                        val pendingRepair = File(applicationContext.noBackupFilesDir, DATABASE_REPAIR_MARKER)
+                        if (pendingRepair.existsNoFollowOrThrow("DATABASE_REPAIR_INCOMPLETE")) {
+                            finishDatabaseRepair(applicationContext, pendingRepair)
+                        }
+                    }
+                    val choice = File(applicationContext.noBackupFilesDir, DATABASE_REPAIR_EXPLICIT_CHOICE)
+                    if (!choice.existsNoFollowOrThrow("SET_UP_AGAIN_INCOMPLETE")) {
+                        writeDurably(choice, "chosen")
+                        fsyncDirectory(applicationContext.noBackupFilesDir)
+                    }
+                }
+                performPendingSetUpAgain(applicationContext)
+                // An explicit reset/return must never be reversed by automatic recovery.
+                if (!hadExplicitRequest) repairLostDatabaseFromMatchingBackup(applicationContext)
+            }
             setUpAgain.exceptionOrNull()?.let { error ->
                 preparedAdmission = null
                 migrationRecoverySnapshot = null
-                blockingFailure = Failure("SET_UP_AGAIN_INCOMPLETE")
+                blockingFailure = Failure(if (hadExplicitRequest) "SET_UP_AGAIN_INCOMPLETE" else error.safeCode())
                 recoveryFacts = RecoveryFacts(hasWalletFiles = true)
                 WalletRecoveryCapabilityGate.enterBlocked()
+                rememberStartupFailure(applicationContext, blockingFailure?.code)
                 return Result.failure(error)
             }
         }
@@ -743,7 +771,7 @@ object WalletUpgradeBackup {
         migrationRecoverySnapshot = recovery
         blockingFailure = failure
         if (failure != null) {
-            FirebaseWrapper.recordWalletRecovery(when (failure.code) {
+            WalletDiagnostics.recordWalletRecovery(when (failure.code) {
                 "STORAGE_FULL", "INSUFFICIENT_BACKUP_STORAGE" -> WalletRecoveryEvent.GATE_STORAGE_FULL
                 "DATABASE_LOCKED" -> WalletRecoveryEvent.GATE_DATABASE_LOCKED
                 "DATABASE_IO" -> WalletRecoveryEvent.GATE_DATABASE_IO
@@ -807,7 +835,7 @@ object WalletUpgradeBackup {
         }
         migrationRecoverySnapshot = current
         WalletRecoveryCapabilityGate.enterLegacyReadOnly()
-        FirebaseWrapper.recordWalletRecovery(WalletRecoveryEvent.READ_ONLY_ENTERED)
+        WalletDiagnostics.recordWalletRecovery(WalletRecoveryEvent.READ_ONLY_ENTERED)
         keepCodeForRecoveryScreen()
         blockingFailure = null
     }
@@ -1004,7 +1032,7 @@ object WalletUpgradeBackup {
             WalletRecoveryCapabilityGate.enterBlocked()
         }
         WalletRecoveryCapabilityGate.enterLegacyReadOnly()
-        FirebaseWrapper.recordWalletRecovery(WalletRecoveryEvent.READ_ONLY_ENTERED)
+        WalletDiagnostics.recordWalletRecovery(WalletRecoveryEvent.READ_ONLY_ENTERED)
         keepCodeForRecoveryScreen()
         blockingFailure = null
         SafeReadOnlyRoute.ROOM_READ_ONLY
@@ -1956,6 +1984,231 @@ object WalletUpgradeBackup {
                 inventory = inventory,
             )
         }
+    }
+
+    /**
+     * An in-place update can lose its database while the encrypted wallet and PIN are intact.
+     * The newest verified no-backup generation may restore the database automatically, but
+     * only when every current credential/preference file is byte-identical to that generation.
+     * It never imports keys, rolls credentials back, or substitutes an older matching backup.
+     * A durable plan precedes every rename; the original database and companions remain aside.
+     */
+    private fun repairLostDatabaseFromMatchingBackup(context: Context) {
+        val noBackup = context.noBackupFilesDir
+        val marker = File(noBackup, DATABASE_REPAIR_MARKER)
+        // A healthy installation needs no repair writes or publication lock. Optional backup
+        // maintenance must remain nonblocking on full storage, as it was before this repair.
+        val healthyWithoutPlan = runCatching {
+            val database = context.getDatabasePath(DATABASE_NAME)
+            !marker.existsNoFollowOrThrow("DATABASE_REPAIR_INCOMPLETE") &&
+                !File(noBackup, DATABASE_REPAIR_EXPLICIT_CHOICE).existsNoFollowOrThrow("DATABASE_REPAIR_INCOMPLETE") &&
+                database.isRegularFileNoFollow() && !hasRollbackJournalHeader(database) &&
+                readVersion(database).let { version ->
+                    version in 1..CURRENT_DATABASE_VERSION &&
+                        readWalletDatabaseInventory(database, minOf(version, CURRENT_DATABASE_VERSION - 1)).accounts.isNotEmpty()
+                }
+        }.getOrDefault(false)
+        if (healthyWithoutPlan) return
+        withPublicationLock(noBackup, BACKUP_PUBLICATION_LOCK, "DATABASE_REPAIR_INCOMPLETE") {
+            // Keep an intentional empty installation empty on every subsequent start too.
+            // A newly created wallet has new preferences, so a later genuine repair can be
+            // enabled when that nonempty database has been observed.
+            val choice = File(noBackup, DATABASE_REPAIR_EXPLICIT_CHOICE)
+            if (choice.existsNoFollowOrThrow("DATABASE_REPAIR_INCOMPLETE")) {
+                val live = context.getDatabasePath(DATABASE_NAME)
+                val hasNewWallet = runCatching {
+                    live.isRegularFileNoFollow() && readWalletDatabaseInventory(live, readVersion(live)).accounts.isNotEmpty()
+                }.getOrDefault(false)
+                if (hasNewWallet && !marker.existsNoFollowOrThrow("DATABASE_REPAIR_INCOMPLETE")) {
+                    Os.remove(choice.path)
+                    fsyncDirectory(noBackup)
+                }
+                return@withPublicationLock
+            }
+            if (marker.existsNoFollowOrThrow("DATABASE_REPAIR_INCOMPLETE")) {
+                finishDatabaseRepair(context, marker)
+                return@withPublicationLock
+            }
+            val database = context.getDatabasePath(DATABASE_NAME)
+            // Do not bypass the normal gate for inaccessible, unsupported, busy, or hot-journal
+            // storage. In particular a hot journal must be replayed by its existing safe path.
+            val lost = if (!database.existsNoFollowOrThrow("DATABASE_PATH_UNREADABLE")) {
+                true
+            } else {
+                if (!database.isRegularFileNoFollow() || hasRollbackJournalHeader(database)) return@withPublicationLock
+                try {
+                    val version = readVersion(database)
+                    if (version == 0 && database.length() == 0L) true else {
+                        if (version !in 1..CURRENT_DATABASE_VERSION) return@withPublicationLock
+                        val inventory = readWalletDatabaseInventory(database, version)
+                        if (inventory.deletionOperations.isNotEmpty() || inventory.deletionTargets.isNotEmpty() ||
+                            inventory.identities.isNotEmpty() || inventory.networkAccounts.isNotEmpty() ||
+                            inventory.pendingWalletIds.isNotEmpty() || inventory.migrationJournals.isNotEmpty()) {
+                            return@withPublicationLock
+                        }
+                        if (version == CURRENT_DATABASE_VERSION) {
+                            val hasPendingSubmission = SQLiteDatabase.openDatabase(database.path, null,
+                                SQLiteDatabase.OPEN_READONLY, FAIL_CLOSED_DATABASE_ERROR_HANDLER).use { sqlite ->
+                                sqlite.rawQuery("SELECT 1 FROM sora2PendingSubmissions LIMIT 1", null).use { it.moveToFirst() }
+                            }
+                            if (hasPendingSubmission) return@withPublicationLock
+                        }
+                        inventory.accounts.isEmpty()
+                    }
+                } catch (error: Throwable) {
+                    if (error is android.database.sqlite.SQLiteDatabaseCorruptException ||
+                        (error as? WalletUpgradeBackupException)?.code == "DATABASE_CORRUPT") {
+                        // A damaged auxiliary table does not make the account inventory lost.
+                        // Its readable accounts can be newer than the snapshot even when the
+                        // encrypted preferences are unchanged. An empty table may also be an
+                        // interrupted deletion whose auxiliary journal is now unreadable.
+                        val readableAccounts = runCatching {
+                            readWalletDatabaseInventory(database, CURRENT_DATABASE_VERSION - 1).accounts
+                        }.getOrNull()
+                        if (readableAccounts != null) return@withPublicationLock
+                        true
+                    } else throw error
+                }
+            }
+            if (!lost) return@withPublicationLock
+            val newest = runCatching {
+                verifiedBackupNamespace(context, "DATABASE_REPAIR_BACKUP_INVALID", "DATABASE_REPAIR_BACKUP_INVALID")
+            }.getOrNull()
+                ?.maxByOrNull(VerifiedBackupCandidate::generation) ?: return@withPublicationLock
+            val manifest = JSONObject(File(newest.directory, "manifest.json")
+                .readBoundedUtf8NoFollow(1, MAX_MANIFEST_BYTES, "DATABASE_REPAIR_BACKUP_INVALID"))
+            val backupFiles = manifest.getJSONArray("files")
+            val records = generationRecords(backupFiles)
+            val databaseRecords = records.filter { it.first.startsWith("databases/") }
+            val credentialRecords = records.filterNot { it.first.startsWith("databases/") }
+            if (databaseRecords.none { it.first == REQUIRED_DATABASE_BACKUP } ||
+                manifest.getInt("legacyAccountCount") == 0 || credentialRecords.isEmpty()) return@withPublicationLock
+            val credentials = JSONArray().also { array -> credentialRecords.forEach { (name, fingerprint) ->
+                array.put(JSONObject().put("name", name).put("size", fingerprint.size).put("sha256", fingerprint.sha256))
+            } }
+            if (!databaseRepairCredentialsMatch(context, credentials)) return@withPublicationLock
+            requireBackupCapacity(noBackup, databaseRecords.map { File(newest.directory, it.first) })
+            val originalFiles = setAsideInventory(context, SetUpAgainScope.DATABASE_ONLY)
+
+            val id = UUID.randomUUID().toString()
+            val root = File(noBackup, "$DATABASE_REPAIR_PREFIX$id")
+            val parentIdentity = noBackup.directoryInodeIdentityNoFollow("DATABASE_REPAIR_INCOMPLETE")
+            createDirectoryExclusive(root, "DATABASE_REPAIR_INCOMPLETE")
+            val rootIdentity = root.directoryInodeIdentityNoFollow("DATABASE_REPAIR_INCOMPLETE")
+            var planPublished = false
+            try {
+                val staged = File(root, "replacement")
+                createDirectoryExclusive(staged, "DATABASE_REPAIR_INCOMPLETE")
+                databaseRecords.forEach { (name, fingerprint) ->
+                    val target = File(staged, name)
+                    ensureDirectoryTreeExclusive(staged, requireNotNull(target.parentFile), "DATABASE_REPAIR_INCOMPLETE")
+                    copyDurably(File(newest.directory, name), target)
+                    afterDatabaseRepairCopyForTest?.invoke()
+                    if (target.inspectRegularNoFollow("DATABASE_REPAIR_INCOMPLETE") != fingerprint) {
+                        throw WalletUpgradeBackupException("DATABASE_REPAIR_INCOMPLETE")
+                    }
+                }
+                fsyncDirectoryTreeBottomUp(root)
+                // Validate the staged database itself, including committed WAL pages, before any
+                // live path moves. Replaying occurs in this private copy, never in the backup.
+                val stagedDatabase = File(staged, REQUIRED_DATABASE_BACKUP)
+                if (hasRollbackJournalHeader(stagedDatabase)) replayRollbackJournal(stagedDatabase)
+                if (!stagedDatabase.passesSqliteIntegrityCheck()) throw WalletUpgradeBackupException("DATABASE_REPAIR_INCOMPLETE")
+                val inventory = readWalletDatabaseInventory(stagedDatabase, readVersion(stagedDatabase))
+                val ids = inventory.accounts.map(SoraAccountLocal::substrateAddress).toSet()
+                if (inventory.accounts.size != manifest.getInt("legacyAccountCount") ||
+                    sha256Text(ids.sorted().joinToString("\n")) != manifest.getString("legacyWalletIdsSha256")) {
+                    throw WalletUpgradeBackupException("DATABASE_REPAIR_INCOMPLETE")
+                }
+                // SQLite may have replayed the staged WAL/journal; journal its finalized bytes.
+                val finalized = JSONArray()
+                listOf("", "-wal", "-shm", "-journal").forEach { suffix ->
+                    val name = "$REQUIRED_DATABASE_BACKUP$suffix"
+                    val file = File(staged, name)
+                    if (file.existsNoFollowOrThrow("DATABASE_REPAIR_INCOMPLETE")) {
+                        val fingerprint = file.inspectRegularNoFollow("DATABASE_REPAIR_INCOMPLETE")
+                        finalized.put(JSONObject().put("name", name).put("size", fingerprint.size).put("sha256", fingerprint.sha256))
+                    }
+                }
+                if (!databaseRepairCredentialsMatch(context, credentials)) throw WalletUpgradeBackupException("SOURCE_CHANGED")
+                if (generationRecords(setAsideInventory(context, SetUpAgainScope.DATABASE_ONLY)) != generationRecords(originalFiles)) {
+                    throw WalletUpgradeBackupException("SOURCE_CHANGED")
+                }
+                val operation = JSONObject().put("id", id).put("phase", "PRESERVING")
+                    .put("original", originalFiles)
+                    .put("replacement", finalized).put("credentials", credentials)
+                fsyncBackupTreeFiles(root)
+                fsyncDirectoryTreeBottomUp(root)
+                writeDatabaseRepair(marker, operation)
+                planPublished = true
+                finishDatabaseRepair(context, marker)
+            } finally {
+                // Only this attempt's disposable copy is removable, and only before the plan
+                // is published. A failed fsync after marker rename is already resumable.
+                if (!planPublished && !marker.existsNoFollowOrThrow("DATABASE_REPAIR_INCOMPLETE")) {
+                    val copied = captureExactBackupTree(root, allowEmptyDirectories = true)
+                    if (noBackup.directoryInodeIdentityNoFollow("DATABASE_REPAIR_INCOMPLETE") != parentIdentity ||
+                        copied.directories.singleOrNull { it.relativeName.isEmpty() }?.identity != rootIdentity ||
+                        copied.directories.any { it.relativeName !in setOf("", "replacement", "replacement/databases") } ||
+                        copied.files.any { !it.relativeName.matches(Regex("replacement/databases/app\\.db(?:-wal|-shm|-journal)?")) }) {
+                        throw WalletUpgradeBackupException("DATABASE_REPAIR_INCOMPLETE")
+                    }
+                    removeExactOwnedBackupTree(root, copied, allowEmptyDirectories = true)
+                    fsyncDirectory(noBackup)
+                }
+            }
+        }
+    }
+
+    private fun databaseRepairCredentialsMatch(context: Context, expected: JSONArray): Boolean {
+        val records = generationRecords(expected)
+        if (records.any { it.first.startsWith("databases/") }) return false
+        val database = context.getDatabasePath(DATABASE_NAME)
+        val current = knownWalletFiles(context, database).filterNot { it.isDatabaseFile(database) }
+            .filter { it.existsNoFollowOrThrow("DATABASE_REPAIR_INCOMPLETE") }
+            .associate { it.backupName(context).replace(File.separatorChar, '/') to
+                it.inspectRegularNoFollow("DATABASE_REPAIR_INCOMPLETE") }
+        return current == records.toMap()
+    }
+
+    private fun writeDatabaseRepair(marker: File, operation: JSONObject) {
+        val staged = File(marker.parentFile, ".${marker.name}.tmp")
+        if (staged.existsNoFollowOrThrow("DATABASE_REPAIR_INCOMPLETE")) Os.remove(staged.path)
+        writeDurably(staged, operation.toString())
+        Os.rename(staged.path, marker.path)
+        fsyncDirectory(requireNotNull(marker.parentFile))
+    }
+
+    private fun finishDatabaseRepair(context: Context, marker: File) {
+        val operation = JSONObject(marker.readBoundedUtf8NoFollow(1, MAX_MANIFEST_BYTES, "DATABASE_REPAIR_INCOMPLETE"))
+        val id = operation.getString("id")
+        if (!DELETION_OPERATION_ID.matches(id)) throw WalletUpgradeBackupException("DATABASE_REPAIR_INCOMPLETE")
+        if (!databaseRepairCredentialsMatch(context, operation.getJSONArray("credentials"))) {
+            throw WalletUpgradeBackupException("DATABASE_REPAIR_CREDENTIALS_CHANGED")
+        }
+        val root = File(context.noBackupFilesDir, "$DATABASE_REPAIR_PREFIX$id")
+        root.directoryIdentityNoFollow("DATABASE_REPAIR_INCOMPLETE")
+        val preserved = File(root, "original")
+        val original = operation.getJSONArray("original")
+        val replacement = operation.getJSONArray("replacement")
+        if ((generationRecords(original) + generationRecords(replacement)).any { !it.first.startsWith("databases/") }) {
+            throw WalletUpgradeBackupException("DATABASE_REPAIR_INCOMPLETE")
+        }
+        if (operation.getString("phase") == "PRESERVING") {
+            verifyGeneration(File(root, "replacement"), replacement)
+            if (!preserved.existsNoFollowOrThrow("DATABASE_REPAIR_INCOMPLETE")) {
+                createDirectoryExclusive(preserved, "DATABASE_REPAIR_INCOMPLETE")
+            }
+            moveGenerationFiles(File(context.applicationInfo.dataDir), preserved, original)
+            operation.put("phase", "RESTORING")
+            writeDatabaseRepair(marker, operation)
+        }
+        if (operation.getString("phase") != "RESTORING") throw WalletUpgradeBackupException("DATABASE_REPAIR_INCOMPLETE")
+        verifyGeneration(preserved, original)
+        moveGenerationFiles(File(root, "replacement"), File(context.applicationInfo.dataDir), replacement)
+        verifyGeneration(File(context.applicationInfo.dataDir), replacement)
+        Os.remove(marker.path)
+        fsyncDirectory(context.noBackupFilesDir)
     }
 
     /**
@@ -4649,7 +4902,7 @@ object WalletUpgradeBackup {
                 throw WalletUpgradeBackupException("DATABASE_RECOVERY_FAILED")
             }
             nonBlockingWarnings = nonBlockingWarnings + "DATABASE_JOURNAL_RECOVERED"
-            FirebaseWrapper.recordWalletRecovery(WalletRecoveryEvent.JOURNAL_RECOVERED)
+            WalletDiagnostics.recordWalletRecovery(WalletRecoveryEvent.JOURNAL_RECOVERED)
         } finally {
             removeExactValidationTree(directory, identity, parentIdentity)
         }

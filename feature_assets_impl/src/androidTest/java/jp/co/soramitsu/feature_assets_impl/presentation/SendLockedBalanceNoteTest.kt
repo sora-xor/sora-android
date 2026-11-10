@@ -35,7 +35,7 @@ import jp.co.soramitsu.common.presentation.compose.components.NetworkFeeUnavaila
 import jp.co.soramitsu.common.presentation.compose.components.previewAssetAmountInputState
 import jp.co.soramitsu.common.presentation.compose.theme.SoraAppTheme
 import jp.co.soramitsu.common.util.AppStoreListing
-import jp.co.soramitsu.feature_assets_impl.presentation.components.compose.send.SendScreen
+import jp.co.soramitsu.common_wallet.presentation.compose.send.SendScreen
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test

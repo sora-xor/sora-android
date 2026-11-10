@@ -11,6 +11,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
@@ -32,7 +33,6 @@ import jp.co.soramitsu.common.presentation.compose.neon.safemode.AccountReadOnly
 import jp.co.soramitsu.common.presentation.compose.neon.safemode.LocalSelectedAccountReadOnly
 import jp.co.soramitsu.common_wallet.presentation.compose.states.CardsState
 import jp.co.soramitsu.feature_wallet_impl.data.nexus.NexusPortfolioBalance
-import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.PortfolioLens
 import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.PortfolioScope
 import jp.co.soramitsu.feature_wallet_impl.presentation.portfolio.PortfolioEffect
 import jp.co.soramitsu.feature_wallet_impl.presentation.portfolio.PortfolioHomeActions
@@ -50,29 +50,9 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withTimeoutOrNull
 
 /**
- * What the home's Send or Receive does with the selected wallet's network choices: the
- * dashboard's own flow when only SORA2 can be used, the one other network straight away, or the
- * question which network.
- */
-internal sealed interface NetworkStart {
-    data object Dashboard : NetworkStart
-    data class Open(val choice: WalletNetworkChoice) : NetworkStart
-    data class Ask(val choices: List<WalletNetworkChoice>) : NetworkStart
-}
-
-internal fun networkStart(choices: List<WalletNetworkChoice>): NetworkStart {
-    val only = WalletNetworkChoices.onlyChoice(choices)
-    return when {
-        choices.isEmpty() || only?.id == WalletNetworkId.SORA2 -> NetworkStart.Dashboard
-        only != null -> NetworkStart.Open(only)
-        else -> NetworkStart.Ask(choices)
-    }
-}
-
-/**
- * The Wallet tab's home: the Portfolio view (portfolio-view SPEC §2). The dashboard
+ * The Wallet tab's home with the Portfolio view on (portfolio-view SPEC §2). The dashboard
  * ([PortfolioViewModel]) only reads balances and picks parameters; everything that acts goes
- * through the home's own view model and routers.
+ * through the home's own view model and routers, as with the Portfolio view off.
  */
 @Composable
 internal fun PortfolioHomeHost(
@@ -84,67 +64,61 @@ internal fun PortfolioHomeHost(
     sora2Portfolio: Sora2PortfolioBalance?,
     nexusPortfolio: List<NexusPortfolioBalance>,
 ) {
-    PortfolioEffects(portfolio, hub, navController)
     val model by portfolio.model.collectAsStateWithLifecycle()
     val sheet by portfolio.sheet.collectAsStateWithLifecycle()
     val busy by portfolio.busy.collectAsStateWithLifecycle()
     val pinned by portfolio.pinnedTilt.collectAsStateWithLifecycle()
     val inFront = navController.isCurrent(theOnlyRoute)
-    // Send and Receive ask which network only when the wallet has a real choice ([networkStart]).
-    // All wallets keeps the dashboard's own order: first which wallet, then SORA2.
-    val networkSheets = rememberNetworkSheetsState(sora2Portfolio?.address)
-    val latestSheets by rememberUpdatedState(networkSheets)
+    // Send and Receive ask which network only when the wallet has a real choice, as on the
+    // classic home. All wallets first asks which wallet, then the same question for that wallet.
     val latestModel by rememberUpdatedState(model)
-    var networkPick by remember(sora2Portfolio?.address) { mutableStateOf<Pair<WalletNetworkAction, List<WalletNetworkChoice>>?>(null) }
-    val openNetwork: (WalletNetworkAction, WalletNetworkChoice) -> Unit = remember(portfolio, hub) {
+    var networkPick by remember(sora2Portfolio?.address) { mutableStateOf<WalletNetworkAction?>(null) }
+    val openNetwork: (WalletNetworkAction, WalletNetworkChoice) -> Unit = remember(portfolio, hub, navController) {
         { action, choice ->
             if (choice.id == WalletNetworkId.SORA2) {
-                if (action == WalletNetworkAction.SEND) portfolio.onQuickSend() else portfolio.onQuickReceive()
+                portfolio.openSora2Action(if (action == WalletNetworkAction.SEND) WalletAction.SEND else WalletAction.RECEIVE)
             } else {
                 hub.nexusPortfolio.value.firstOrNull {
                     it.networkId == choice.id && it.address == choice.address && hub.isCurrentNexusBalance(it)
                 }?.let { balance ->
                     if (action == WalletNetworkAction.SEND) hub.openNexusSend(balance)
-                    else latestSheets.openReceive(balance)
+                    else navController.openNexusReceive(balance)
                 }
             }
         }
     }
-    val startNetworkAction: (WalletNetworkAction) -> Boolean = remember(hub, openNetwork, sora2Portfolio?.address) {
-        start@{ action ->
-            if (latestModel?.scope == PortfolioScope.ALL) return@start false
-            when (val start = networkStart(hub.networkChoices(action))) {
-                NetworkStart.Dashboard -> false
-                is NetworkStart.Open -> {
-                    openNetwork(action, start.choice)
+    val chooseNetwork: (WalletNetworkAction) -> Boolean = remember(hub, openNetwork, sora2Portfolio?.address) {
+        { action ->
+            val choices = hub.networkChoices(action)
+            val only = WalletNetworkChoices.onlyChoice(choices)
+            when {
+                choices.isEmpty() || only?.id == WalletNetworkId.SORA2 -> false
+                only != null -> {
+                    openNetwork(action, only)
                     true
                 }
-                is NetworkStart.Ask -> {
-                    networkPick = action to start.choices
+                else -> {
+                    networkPick = action
                     true
                 }
             }
         }
     }
+    val startNetworkAction: (WalletNetworkAction) -> Boolean = remember(chooseNetwork) {
+        { action -> latestModel?.scope != PortfolioScope.ALL && chooseNetwork(action) }
+    }
+    PortfolioEffects(portfolio, hub, navController, sora2Portfolio?.address, chooseNetwork)
     if (inFront) {
-        NetworkSheets(
-            state = networkSheets,
-            balances = nexusPortfolio.filter { it.walletId == sora2Portfolio?.address },
-            isNexusBalanceCurrent = hub::isCurrentNexusBalance,
-            onSend = hub::openNexusSend,
-            onRecovery = hub::onBackupBannerClick,
-            onRefresh = hub::refreshNexusPortfolio,
-            onLoadMore = hub::loadMoreNexusHistory,
-        )
-        networkPick?.let { (action, choices) ->
+        networkPick?.let { action ->
             NetworkPickerSheet(
                 action = action,
-                choices = choices,
+                choices = hub.networkChoices(action),
                 onPick = { choice ->
                     networkPick = null
                     openNetwork(action, choice)
                 },
                 onClose = { networkPick = null },
+                xorIcon = sora2Portfolio?.xorIcon,
             )
         }
     }
@@ -181,25 +155,27 @@ internal fun PortfolioHomeHost(
                 onReferralClose = hub::onRemoveReferralCard,
                 onBackupBannerClick = hub::onBackupBannerClick,
                 onEdit = hub::onEditViewClick,
-                onNexusSend = hub::openNexusSend,
-                onNexusRefresh = hub::refreshNexusPortfolio,
-                onNexusLoadMore = hub::loadMoreNexusHistory,
+                onNexusOpen = navController::openNexusAsset,
                 isNexusBalanceCurrent = hub::isCurrentNexusBalance,
+                selectedWalletName = model?.takeIf { it.scope == PortfolioScope.ALL }?.selectedWallet?.name,
             )
         },
     )
 }
 
-/** "Where it lives" for [tokenId], pushed inside the Wallet tab (portfolio-view SPEC §5). */
+/**
+ * "Where it lives" for [tokenId], pushed inside the Wallet tab (portfolio-view SPEC §5). A Move
+ * or Send on SORA Nexus or Taira opens the home's Send page ([FollowNexusSend]).
+ */
 @Composable
 internal fun PortfolioWhereItLivesHost(
     tokenId: String,
     navController: NavHostController,
     portfolio: PortfolioViewModel,
     hub: CardsHubViewModel,
-    onScanNexusRecipient: () -> Unit,
+    holdingKey: String? = null,
 ) {
-    PortfolioEffects(portfolio, hub, navController)
+    PortfolioEffects(portfolio, hub, navController, homeWalletId = null, chooseNetwork = { false })
     val model by portfolio.model.collectAsStateWithLifecycle()
     val sheet by portfolio.sheet.collectAsStateWithLifecycle()
     val busy by portfolio.busy.collectAsStateWithLifecycle()
@@ -207,21 +183,6 @@ internal fun PortfolioWhereItLivesHost(
     val inFront = navController.isCurrent(PortfolioRoutes.TOKEN)
     val actions = remember(portfolio, navController) { WhereActions(portfolio, navController) }
     val sheetActions = remember(portfolio) { SheetActions(portfolio) }
-    // A Move or Send on Minamoto or Taira hands off to the home's existing Nexus send.
-    val nexusSend by hub.nexusSend.collectAsStateWithLifecycle()
-    if (inFront) {
-        NexusSendDialog(
-            state = nexusSend,
-            onDismiss = hub::closeNexusSend,
-            onRecipient = hub::setNexusRecipient,
-            onAmount = hub::setNexusAmount,
-            onPrepare = hub::prepareNexusSend,
-            onConfirm = hub::confirmNexusSend,
-            onEdit = hub::editNexusSend,
-            onRecovery = hub::onBackupBannerClick,
-            onScan = onScanNexusRecipient,
-        )
-    }
     PortfolioWhereItLivesRoute(
         model = model,
         tokenId = tokenId,
@@ -230,6 +191,7 @@ internal fun PortfolioWhereItLivesHost(
         pinned = pinned,
         actions = actions,
         sheetActions = sheetActions,
+        holdingKey = holdingKey,
     )
 }
 
@@ -242,10 +204,18 @@ private fun NavHostController.isCurrent(route: String): Boolean =
  * not in front is below STARTED, so only one of them collects).
  */
 @Composable
-private fun PortfolioEffects(portfolio: PortfolioViewModel, hub: CardsHubViewModel, navController: NavHostController) {
+private fun PortfolioEffects(
+    portfolio: PortfolioViewModel,
+    hub: CardsHubViewModel,
+    navController: NavHostController,
+    homeWalletId: String?,
+    chooseNetwork: (WalletNetworkAction) -> Boolean,
+) {
     val context = LocalContext.current
     val resources = LocalResources.current
     val lifecycleOwner = LocalLifecycleOwner.current
+    val latestChooseNetwork by rememberUpdatedState(chooseNetwork)
+    val latestWalletId by rememberUpdatedState(homeWalletId)
     LaunchedEffect(portfolio, hub, navController, lifecycleOwner) {
         lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
             portfolio.effects.collect { effect ->
@@ -254,6 +224,25 @@ private fun PortfolioEffects(portfolio: PortfolioViewModel, hub: CardsHubViewMod
                         navController.navigate(PortfolioRoutes.token(effect.tokenId)) { launchSingleTop = true }
 
                     is PortfolioEffect.OpenNexusSend -> openNexusSend(context, hub, effect)
+
+                    is PortfolioEffect.OpenNexusPage -> openNexusPage(context, hub, navController, effect)
+
+                    is PortfolioEffect.ContinueAction -> {
+                        // The home's view model follows the selected account on its own, and its
+                        // network rows for this wallet show after a moment, not always together.
+                        // A wallet with no other network has nothing to wait for.
+                        val networks = portfolio.model.value?.snapshot?.addresses
+                            ?.get(effect.walletId).orEmpty().keys - WalletNetworkId.SORA2
+                        withTimeoutOrNull(NEXUS_SEND_WAIT_MS) {
+                            hub.nexusPortfolio.first { rows ->
+                                rows.filter { it.walletId == effect.walletId }.map { it.networkId }.containsAll(networks)
+                            }
+                            // The choices are this composition's, so it must have seen the wallet.
+                            snapshotFlow { latestWalletId }.first { it == effect.walletId }
+                        }
+                        val action = if (effect.action == WalletAction.SEND) WalletNetworkAction.SEND else WalletNetworkAction.RECEIVE
+                        if (!latestChooseNetwork(action)) portfolio.openSora2Action(effect.action)
+                    }
 
                     is PortfolioEffect.Message -> {
                         val text = effect.argument?.let {
@@ -293,7 +282,32 @@ private suspend fun openNexusSend(context: Context, hub: CardsHubViewModel, effe
     effect.amount?.let(hub::setNexusAmount)
 }
 
-private const val NEXUS_SEND_WAIT_MS = 5_000L
+/** Opens a network's XOR page once the home's view model shows the selected wallet's row. */
+private suspend fun openNexusPage(
+    context: Context,
+    hub: CardsHubViewModel,
+    navController: NavHostController,
+    effect: PortfolioEffect.OpenNexusPage,
+) {
+    val balance = withTimeoutOrNull(NEXUS_SEND_WAIT_MS) {
+        combine(hub.nexusPortfolio, hub.sora2Portfolio) { balances, _ ->
+            balances.firstOrNull {
+                it.walletId == effect.walletId &&
+                    it.networkId == effect.network &&
+                    it.address == effect.address &&
+                    hub.isCurrentNexusBalance(it)
+            }
+        }.filterNotNull().first()
+    }
+    if (balance == null) {
+        Toast.makeText(context, R.string.balance_unavailable, Toast.LENGTH_SHORT).show()
+        return
+    }
+    navController.openNexusAsset(balance)
+}
+
+/** How long a hand-off waits for a just-selected wallet's network rows. */
+private const val NEXUS_SEND_WAIT_MS = 15_000L
 
 private class HomeActions(
     private val portfolio: PortfolioViewModel,
@@ -315,12 +329,10 @@ private class HomeActions(
     }
     override fun onMove() = portfolio.onQuickMove()
     override fun onSwap() = portfolio.onQuickSwap()
-    override fun onLens(lens: PortfolioLens) = portfolio.selectLens(lens)
     override fun onToggleRow(key: String) = portfolio.toggleRow(key)
-    override fun onOpenToken(tokenId: String) {
-        navController.navigate(PortfolioRoutes.token(tokenId)) { launchSingleTop = true }
+    override fun onOpenToken(tokenId: String, holdingKey: String?) {
+        navController.navigate(PortfolioRoutes.token(tokenId, holdingKey)) { launchSingleTop = true }
     }
-    override fun onOpenWalletAlone(walletId: String) = portfolio.selectWallet(walletId)
     override fun onMoveHolding(holdingKey: String) = portfolio.openSheet(PortfolioSheet.Move(holdingKey))
     override fun onSwapHolding(holdingKey: String) = portfolio.openSheet(PortfolioSheet.Swap(holdingKey))
 }

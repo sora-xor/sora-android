@@ -1,11 +1,15 @@
 @file:Suppress("INVISIBLE_MEMBER", "INVISIBLE_REFERENCE")
 package jp.co.soramitsu.sora.settings
 
+import android.os.Handler
+import android.os.Looper
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
+import androidx.fragment.app.FragmentHostCallback
 import androidx.navigation.compose.*
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.mockk.*
@@ -86,11 +90,21 @@ class HistoryAndMarketDestinationTest {
 
     @Test fun diagnosticsDestinationShowsDeviceValuesAndRoutesExplicitActions() {
         val vm = mockk<DebugMenuViewModel>(relaxed = true) { every { state } returns DebugMenuScreenState(emptyList()) }
-        val activity = mockk<FragmentActivity> {
-            every { resources } returns compose.activity.resources
-            every { packageManager } returns compose.activity.packageManager
+        // A plain activity and a real host, because the screen reads its activity's metrics. Mocking an
+        // Activity, or stubbing getActivity() (MockK mocks the return type to record it), rewrites
+        // Context for the rest of the shared test process: every Context call then runs reflection,
+        // and later tests take minutes to create an activity.
+        val activity: FragmentActivity = compose.runOnUiThread {
+            object : FragmentActivity() {
+                override fun getResources() = compose.activity.resources
+                override fun getPackageManager() = compose.activity.packageManager
+            }
         }
-        val fragment = spyk(DebugMenuFragment()) { every { getActivity() } returns activity }
+        val fragment = DebugMenuFragment()
+        val host = object : FragmentHostCallback<FragmentActivity>(activity, Handler(Looper.getMainLooper()), 0) {
+            override fun onGetHost() = activity
+        }
+        Fragment::class.java.getDeclaredField("mHost").apply { isAccessible = true }.set(fragment, host)
         show(fragment, vm)
         compose.onNodeWithText("Density", substring = true).assertIsDisplayed()
         compose.onNodeWithText("Reset runtime").performClick()

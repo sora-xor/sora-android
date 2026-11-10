@@ -57,6 +57,7 @@ import org.mockito.Mock
 import org.mockito.junit.MockitoJUnitRunner
 import org.mockito.kotlin.any
 import org.mockito.kotlin.given
+import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 
@@ -324,6 +325,19 @@ class NodeDetailsViewModelTest {
         assertEquals("error", viewModel.state.value.addressState.descriptionText)
         assertTrue(viewModel.state.value.addressState.error)
         assertFalse(viewModel.state.value.submitButtonEnabled)
+    }
+
+    @Test
+    fun `pin code checked on a form lost with the process EXPECT nothing saved`() = runTest {
+        addNodeViewModel()
+        advanceUntilIdle()
+
+        viewModel.onPinCodeChecked(checked = true)
+        advanceUntilIdle()
+
+        verify(interactor, never()).addCustomNode(any())
+        verify(nodeManager, never()).tryToConnect(any())
+        verify(mainRouter, never()).popBackStack()
     }
 
     @Test

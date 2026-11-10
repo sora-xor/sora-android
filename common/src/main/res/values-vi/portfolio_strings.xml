@@ -15,9 +15,6 @@
     <string name="portfolio_all_wallets">Tất cả ví</string>
     <string name="portfolio_wallets">Ví</string>
     <string name="portfolio_scope_label">Phạm vi: %1$s. Chọn ví</string>
-    <string name="portfolio_lens_tokens">Token</string>
-    <string name="portfolio_lens_networks">Mạng</string>
-    <string name="portfolio_lens_wallets">Ví</string>
     <string name="portfolio_where_it_lives">Nơi lưu giữ tài sản</string>
     <string name="portfolio_where_it_lives_title">%1$s · nơi lưu giữ</string>
     <plurals name="portfolio_networks">
@@ -28,9 +25,6 @@
     </plurals>
     <plurals name="portfolio_holdings">
         <item quantity="other">%1$d khoản nắm giữ</item>
-    </plurals>
-    <plurals name="portfolio_tokens">
-        <item quantity="other">%1$d token</item>
     </plurals>
     <plurals name="portfolio_assets_not_included">
         <item quantity="other">%1$d tài sản không được tính</item>
@@ -50,10 +44,9 @@
     <string name="portfolio_route_none">Phiên bản này không có tuyến từ %1$s.</string>
     <string name="portfolio_route_test">Tài sản trên mạng thử nghiệm không có giá trị tiền tệ.</string>
     <string name="portfolio_route_ready">Trên SORA2. Hoán đổi ngay trên Polkaswap bằng tài khoản SORA2 của bạn trong %1$s.</string>
-    <string name="portfolio_no_route">không có tuyến</string>
     <string name="portfolio_receive_on_sora2">Nhận trên SORA2</string>
-    <string name="portfolio_send_on">Gửi trên %1$s</string>
     <string name="portfolio_send_unavailable">Phiên bản này chưa hỗ trợ gửi trên %1$s.</string>
+    <string name="portfolio_send_on">Gửi trên %1$s</string>
     <string name="portfolio_move_no_other_wallet">Để chuyển, bạn cần một ví khác của mình có tài khoản trên %1$s.</string>
     <string name="portfolio_move_needs_wallets">Chuyển tiền giữa các ví của chính bạn. Thêm một ví khác để chuyển tiền giữa chúng.</string>
     <string name="portfolio_nothing_to_move">Hiện không có tài sản nào ở đây có thể chuyển.</string>
@@ -66,6 +59,7 @@
     <string name="portfolio_excluded_unpriced">Chưa có giá: %1$d</string>
     <string name="portfolio_excluded_testnet">Tài sản mạng thử nghiệm: %1$d</string>
     <string name="portfolio_excluded_caption">%1$s không được tính</string>
+    <string name="portfolio_prices_as_of">Giá tính đến %1$s</string>
     <string name="portfolio_counted">Được tính</string>
     <string name="portfolio_hidden_by_you">Do bạn ẩn</string>
     <string name="portfolio_without_price">Chưa có giá</string>
@@ -80,6 +74,9 @@
     <string name="portfolio_state_saved">ĐÃ LƯU</string>
     <string name="portfolio_state_partial">MỘT PHẦN</string>
     <string name="portfolio_state_offline">NGOẠI TUYẾN</string>
+    <string name="portfolio_state_reading">ĐANG ĐỌC</string>
+    <string name="portfolio_reading_balances">Đang đọc số dư…</string>
+    <string name="portfolio_excluded_unread">Ví chưa đọc: %1$d</string>
     <string name="portfolio_age_seconds">%1$d giây</string>
     <string name="portfolio_age_minutes">%1$d phút</string>
     <string name="portfolio_age_hours">%1$d giờ</string>
@@ -92,15 +89,14 @@
     <string name="portfolio_unreachable">Không thể kết nối với %1$s</string>
     <string name="portfolio_refresh_all">Làm mới tất cả ví</string>
     <string name="portfolio_wallets_together">Số ví được gộp: %1$d</string>
-    <string name="portfolio_wallets_note">Tất cả ví cộng tổng của từng ví. Ví không được chọn giữ dữ liệu đồng bộ gần nhất, nên danh sách cho biết dữ liệu mỗi ví đã cũ bao lâu.</string>
+    <string name="portfolio_wallets_note">\"Tất cả ví\" cộng tổng của từng ví. Các ví chưa chọn được làm mới khoảng mỗi phút một lần khi bạn xem, nên mỗi ví cho biết số liệu đã cũ bao lâu.</string>
     <string name="portfolio_manage_wallets">Quản lý ví</string>
+    <string name="portfolio_manage_assets">Quản lý tài sản của ví đã chọn</string>
     <string name="portfolio_selected">Đã chọn</string>
-    <string name="portfolio_open_wallet_alone">Chỉ mở %1$s</string>
     <string name="portfolio_other">Khác</string>
     <string name="portfolio_legend_description">%1$s, %2$s phần trăm, %3$s</string>
-    <string name="portfolio_no_price">Chưa có giá</string>
-    <string name="portfolio_no_value">Không có giá trị</string>
     <string name="portfolio_nothing_listed">Không có tài sản để liệt kê. Tài sản bị ẩn không hiển thị ở đây.</string>
+    <string name="portfolio_no_balance_yet">Chưa có số dư</string>
     <string name="portfolio_wallet_ready">Ví của bạn đã sẵn sàng.</string>
     <string name="portfolio_wallet_ready_body">Nhận token vào ví này. Token trên mọi mạng được ứng dụng hỗ trợ sẽ hiển thị ở đây.</string>
     <string name="portfolio_token_gone">Token này không còn trong chế độ xem này.</string>
@@ -132,8 +128,8 @@
     <string name="portfolio_you_pay">Bạn trả</string>
     <string name="portfolio_you_get">Bạn nhận</string>
     <string name="portfolio_swap_note">Polkaswap hiển thị giá, phí và tác động giá trước khi bạn ký. Ở đây chỉ chọn cặp giao dịch.</string>
-    <string name="portfolio_send_from">Gửi từ</string>
-    <string name="portfolio_receive_to">Nhận vào</string>
+    <string name="portfolio_send_from">Gửi từ ví nào?</string>
+    <string name="portfolio_receive_to">Nhận vào ví nào?</string>
     <string name="portfolio_sample_handoff_off">Danh mục mẫu: địa chỉ là giả định nên không mở màn hình Gửi.</string>
     <string name="portfolio_nexus_send_unavailable">Ví này hiện chưa thể gửi trên mạng này.</string>
     <string name="asset_add_to_favorites">Thêm %1$s vào mục yêu thích</string>

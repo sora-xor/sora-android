@@ -88,6 +88,19 @@ class NetworkActivityRepositoryTest {
     }
 
     @Test
+    fun `activity takes a read once its history is read, not the rows shown before it`() = runTest {
+        val loading = balance().copy(historyLoading = true)
+        val read = balance().copy(confirmedTransfers = listOf(transfer("a", 10)))
+        every { portfolio.observeCurrentWallet() } returns flowOf(emptyList(), listOf(loading), listOf(read))
+
+        val results = repository.observeCurrentWallet().toList()
+
+        assertEquals(2, results.size)
+        assertTrue(results.first().isEmpty())
+        assertEquals(read.confirmedTransfers, results.last().single().confirmedTransfers)
+    }
+
+    @Test
     fun `refresh and pagination delegate to the qualified portfolio reader`() {
         every { portfolio.refresh() } returns Unit
         every { portfolio.loadMoreHistory("wallet", WalletNetworkId.TAIRA) } returns Unit

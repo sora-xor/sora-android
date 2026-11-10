@@ -15,9 +15,6 @@
     <string name="portfolio_all_wallets">Сви новчаници</string>
     <string name="portfolio_wallets">Новчаници</string>
     <string name="portfolio_scope_label">Обухват: %1$s. Изаберите новчаник</string>
-    <string name="portfolio_lens_tokens">Токени</string>
-    <string name="portfolio_lens_networks">Мреже</string>
-    <string name="portfolio_lens_wallets">Новчаници</string>
     <string name="portfolio_where_it_lives">Где се средства налазе</string>
     <string name="portfolio_where_it_lives_title">%1$s · место чувања</string>
     <plurals name="portfolio_networks">
@@ -34,11 +31,6 @@
         <item quantity="one">%1$d позиција</item>
         <item quantity="few">%1$d позиције</item>
         <item quantity="other">%1$d позиција</item>
-    </plurals>
-    <plurals name="portfolio_tokens">
-        <item quantity="one">%1$d токен</item>
-        <item quantity="few">%1$d токена</item>
-        <item quantity="other">%1$d токена</item>
     </plurals>
     <plurals name="portfolio_assets_not_included">
         <item quantity="one">%1$d средство није укључено</item>
@@ -60,10 +52,9 @@
     <string name="portfolio_route_none">У овој верзији не постоји путања из %1$s.</string>
     <string name="portfolio_route_test">Средства тестне мреже немају новчану вредност.</string>
     <string name="portfolio_route_ready">На SORA2. Замените сада на Polkaswap-у помоћу свог SORA2 налога у %1$s.</string>
-    <string name="portfolio_no_route">нема путање</string>
     <string name="portfolio_receive_on_sora2">Прими на SORA2</string>
-    <string name="portfolio_send_on">Пошаљи на %1$s</string>
     <string name="portfolio_send_unavailable">Слање на %1$s није доступно у овој верзији.</string>
+    <string name="portfolio_send_on">Пошаљи на %1$s</string>
     <string name="portfolio_move_no_other_wallet">За премештање је потребан још један ваш новчаник са налогом на %1$s.</string>
     <string name="portfolio_move_needs_wallets">Премештање се обавља између ваших новчаника. Додајте још један новчаник да бисте премештали средства између њих.</string>
     <string name="portfolio_nothing_to_move">Овде тренутно нема средстава која могу да се преместе.</string>
@@ -76,6 +67,7 @@
     <string name="portfolio_excluded_unpriced">Без цене: %1$d</string>
     <string name="portfolio_excluded_testnet">Средства тестне мреже: %1$d</string>
     <string name="portfolio_excluded_caption">%1$s није укључено</string>
+    <string name="portfolio_prices_as_of">Цене од %1$s</string>
     <string name="portfolio_counted">Урачунато</string>
     <string name="portfolio_hidden_by_you">Ви сте сакрили</string>
     <string name="portfolio_without_price">Нема цене</string>
@@ -90,6 +82,9 @@
     <string name="portfolio_state_saved">САЧУВАНО</string>
     <string name="portfolio_state_partial">ДЕЛИМИЧНО</string>
     <string name="portfolio_state_offline">ВАН МРЕЖЕ</string>
+    <string name="portfolio_state_reading">ЧИТАЊЕ</string>
+    <string name="portfolio_reading_balances">Читање стања…</string>
+    <string name="portfolio_excluded_unread">Још непрочитани новчаници: %1$d</string>
     <string name="portfolio_age_seconds">%1$d сек</string>
     <string name="portfolio_age_minutes">%1$d мин</string>
     <string name="portfolio_age_hours">%1$d ч</string>
@@ -102,15 +97,14 @@
     <string name="portfolio_unreachable">%1$s није доступан</string>
     <string name="portfolio_refresh_all">Освежи све новчанике</string>
     <string name="portfolio_wallets_together">Новчаници заједно: %1$d</string>
-    <string name="portfolio_wallets_note">Сви новчаници сабирају збир сваког новчаника. Неизабрани новчаници задржавају податке последње синхронизације, па листа приказује старост података сваког од њих.</string>
+    <string name="portfolio_wallets_note">„Сви новчаници“ сабира укупне вредности сваког новчаника. Неизабрани новчаници се освежавају отприлике једном у минуту док гледате, па сваки показује колико су стари његови бројеви.</string>
     <string name="portfolio_manage_wallets">Управљај новчаницима</string>
+    <string name="portfolio_manage_assets">Управљај средствима изабраног новчаника</string>
     <string name="portfolio_selected">Изабрано</string>
-    <string name="portfolio_open_wallet_alone">Отвори само %1$s</string>
     <string name="portfolio_other">Остало</string>
     <string name="portfolio_legend_description">%1$s, %2$s одсто, %3$s</string>
-    <string name="portfolio_no_price">Нема цене</string>
-    <string name="portfolio_no_value">Нема вредности</string>
     <string name="portfolio_nothing_listed">Нема средстава за приказ. Скривена средства се овде не приказују.</string>
+    <string name="portfolio_no_balance_yet">Још нема стања</string>
     <string name="portfolio_wallet_ready">Ваш новчаник је спреман.</string>
     <string name="portfolio_wallet_ready_body">Примите токене у овај новчаник. Овде ће се приказати на свакој мрежи коју апликација подржава.</string>
     <string name="portfolio_token_gone">Овај токен више није у овом приказу.</string>
@@ -142,8 +136,8 @@
     <string name="portfolio_you_pay">Плаћате</string>
     <string name="portfolio_you_get">Добијате</string>
     <string name="portfolio_swap_note">Polkaswap приказује цену, накнаду и утицај на цену пре потписивања. Овде се бира само пар.</string>
-    <string name="portfolio_send_from">Пошаљи из</string>
-    <string name="portfolio_receive_to">Прими у</string>
+    <string name="portfolio_send_from">Послати из ког новчаника?</string>
+    <string name="portfolio_receive_to">Примити у који новчаник?</string>
     <string name="portfolio_sample_handoff_off">Пример портфолија: адресе су измишљене, па се екран Слање не отвара.</string>
     <string name="portfolio_nexus_send_unavailable">Слање на овој мрежи тренутно није доступно за овај новчаник.</string>
     <string name="asset_add_to_favorites">Додај %1$s у омиљене</string>

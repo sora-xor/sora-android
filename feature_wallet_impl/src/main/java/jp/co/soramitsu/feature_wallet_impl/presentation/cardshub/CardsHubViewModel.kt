@@ -19,36 +19,53 @@ limitations under the License.
 
 package jp.co.soramitsu.feature_wallet_impl.presentation.cardshub
 
+import android.net.Uri
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import jp.co.soramitsu.androidfoundation.coroutine.CoroutineManager
+import jp.co.soramitsu.androidfoundation.fragment.SingleLiveEvent
+import jp.co.soramitsu.androidfoundation.fragment.trigger
 import jp.co.soramitsu.androidfoundation.format.safeCast
+import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.CardHub
 import jp.co.soramitsu.common.domain.CardHubType
+import jp.co.soramitsu.common.domain.fiatSum
+import jp.co.soramitsu.common.domain.fiatSymbol
 import jp.co.soramitsu.common.domain.formatFiatAmount
 import jp.co.soramitsu.common.domain.iconUri
+import jp.co.soramitsu.common.nexus.NexusNetworks
 import jp.co.soramitsu.common.nexus.NexusQuantityContract
 import jp.co.soramitsu.common.nexus.WalletNetworkAction
 import jp.co.soramitsu.common.nexus.WalletNetworkChoice
 import jp.co.soramitsu.common.nexus.WalletNetworkChoices
 import jp.co.soramitsu.common.nexus.WalletNetworkId
+import jp.co.soramitsu.common.presentation.WalletIssue
+import jp.co.soramitsu.common.presentation.compose.components.initNoToolbar
+import jp.co.soramitsu.common.presentation.compose.components.initSmallTitle2
+import jp.co.soramitsu.common.presentation.compose.uikit.tokens.ScreenStatus
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
+import jp.co.soramitsu.common.presentation.walletIssue
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.StringPair
 import jp.co.soramitsu.common_wallet.domain.model.CommonUserPoolData
 import jp.co.soramitsu.common_wallet.domain.model.fiatSymbol
+import jp.co.soramitsu.common_wallet.presentation.compose.receive.ReceiveTokenByQrScreenState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.AssetCardState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.BackupWalletState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.CardState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.CardsState
+import jp.co.soramitsu.common_wallet.presentation.compose.states.FavoriteAssetsCardState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.FavoritePoolsCardState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.ReferralState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.TitledAmountCardState
+import jp.co.soramitsu.common_wallet.presentation.compose.states.mapAssetsToCardState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.mapPoolsData
 import jp.co.soramitsu.demeter.domain.DemeterFarmingInteractor
 import jp.co.soramitsu.demeter.domain.DemeterFarmingPool
 import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
+import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsInteractor
 import jp.co.soramitsu.feature_polkaswap_api.launcher.PolkaswapRouter
@@ -61,7 +78,11 @@ import jp.co.soramitsu.feature_wallet_impl.data.nexus.NexusSendRequest
 import jp.co.soramitsu.feature_wallet_impl.data.nexus.NexusSendResult
 import jp.co.soramitsu.feature_wallet_impl.data.nexus.NexusTransactionCoordinator
 import jp.co.soramitsu.feature_wallet_impl.domain.CardsHubInteractorImpl
+import jp.co.soramitsu.feature_wallet_impl.presentation.portfolio.PortfolioFormat
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
+import jp.co.soramitsu.ui_core.component.toolbar.BasicToolbarState
+import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarState
+import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarType
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -74,8 +95,10 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.transformLatest
 import kotlinx.coroutines.flow.withIndex
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 data class NexusSendUiState(
     val visible: Boolean = false,
@@ -97,6 +120,42 @@ internal fun NexusSendUiState.editableDraft(): NexusSendUiState? =
 
 internal fun NexusSendUiState.canConfirmSend(): Boolean =
     visible && !preparing && !submitting && result == null && !submissionNeedsCheck && prepared != null
+
+/**
+ * The network has not said how the transfer ended, or an earlier transfer is still being checked:
+ * nothing more can be sent from this draft until Activity shows the outcome.
+ */
+internal fun NexusSendUiState.needsStatusCheck(): Boolean =
+    submissionNeedsCheck || errorCode?.let { walletIssue(it) == WalletIssue.RECOVERY } == true
+
+/**
+ * Which step of Send is on screen: the form, its review, or what became of the transfer. An
+ * earlier transfer that is still being checked keeps the form, with its notice and no Review.
+ */
+internal enum class NexusSendStep { FORM, REVIEW, OUTCOME }
+
+internal fun NexusSendUiState.step(): NexusSendStep = when {
+    result != null || submissionNeedsCheck -> NexusSendStep.OUTCOME
+    prepared != null -> NexusSendStep.REVIEW
+    else -> NexusSendStep.FORM
+}
+
+/** The receive page of one network's address, built off the main thread like SORA2's. */
+data class NexusReceiveUiState(
+    val walletId: String = "",
+    val networkId: WalletNetworkId? = null,
+    val address: String = "",
+    val screen: ReceiveTokenByQrScreenState = ReceiveTokenByQrScreenState(
+        screenStatus = ScreenStatus.LOADING,
+        untransformedQrBitmap = null,
+        untransformedUserName = null,
+        untransformedAvatarDrawable = null,
+        untransformedUserAddress = null,
+    ),
+) {
+    fun isFor(balance: NexusPortfolioBalance): Boolean =
+        walletId == balance.walletId && networkId == balance.networkId && address == balance.address
+}
 
 internal fun NexusSendUiState.afterSubmissionFailure(error: Throwable): NexusSendUiState = copy(
     submitting = false, prepared = null, result = null,
@@ -129,14 +188,23 @@ class CardsHubViewModel @Inject constructor(
     private val numbersFormatter: NumbersFormatter,
     private val router: WalletRouter,
     private val mainRouter: MainRouter,
+    private val assetsRouter: AssetsRouter,
     private val referralRouter: ReferralRouter,
     private val polkaswapRouter: PolkaswapRouter,
     private val coroutineManager: CoroutineManager,
     private val nexusPortfolioRepository: NexusPortfolioRepository,
     private val nexusTransactionCoordinator: NexusTransactionCoordinator,
+    private val nexusPresentation: NexusAssetPresentation,
 ) : BaseViewModel() {
 
-    private val _state = MutableStateFlow(CardsState(accountAddress = ""))
+    private val _state = MutableStateFlow(
+        CardsState(
+            loading = true,
+            cards = emptyList(),
+            curAccount = "",
+            accountAddress = "",
+        )
+    )
     val state = _state.asStateFlow()
 
     private val _nexusPortfolio = MutableStateFlow<List<NexusPortfolioBalance>>(emptyList())
@@ -148,12 +216,25 @@ class CardsHubViewModel @Inject constructor(
     private val _nexusSend = MutableStateFlow(NexusSendUiState())
     val nexusSend = _nexusSend.asStateFlow()
 
+    private val _nexusReceive = MutableStateFlow(NexusReceiveUiState())
+    val nexusReceive = _nexusReceive.asStateFlow()
+    private var nexusReceiveLoad: Job? = null
+
+    private val _nexusShare = SingleLiveEvent<Pair<Uri, String>>()
+
+    /** The QR code file and message to share, as SORA2's Receive shares them. */
+    val nexusShare: LiveData<Pair<Uri, String>> = _nexusShare
+
     private var nexusSendOperation: Job? = null
     private var nexusSendGeneration = 0L
     private var recipientScan: NexusRecipientScan? = null
     private var selectedPortfolioWalletId: String? = null
 
     init {
+        viewModelScope.launch {
+            // Send's title follows its step: the form, its review, then the outcome page.
+            _nexusSend.collect { if (currentDestination == NexusRoutes.SEND) updateToolbar() }
+        }
         viewModelScope.launch {
             // For the upgrade-complete sheet: it only ticks accounts that can really sign.
             runCatching {
@@ -178,6 +259,9 @@ class CardsHubViewModel @Inject constructor(
                     // the durable transaction coordinator still owns any
                     // already-staged status reconciliation.
                     resetNexusSend()
+                    // The previous wallet's receive page (QR code, address) is not kept.
+                    nexusReceiveLoad?.cancel()
+                    _nexusReceive.value = NexusReceiveUiState()
                     assetsInteractor.subscribeAssetOfAccount(
                         account,
                         SubstrateOptionsProvider.feeAssetId,
@@ -240,11 +324,21 @@ class CardsHubViewModel @Inject constructor(
                 .withIndex()
                 .flatMapLatest { indexed ->
                     val data = indexed.value
-                    _state.value = _state.value.copy(accountAddress = data.first.substrateAddress)
-                    // The Portfolio view draws the account's assets: there is no Assets card.
-                    val flows = data.second.filter { it.visibility }.mapNotNull { cardHub ->
+                    _state.value = _state.value.copy(
+                        accountAddress = data.first.substrateAddress,
+                        curAccount = data.first.accountTitle(),
+                    )
+                    val flows = data.second.filter { it.visibility }.map { cardHub ->
                         when (cardHub.cardType) {
-                            CardHubType.ASSETS -> null
+                            CardHubType.ASSETS -> {
+                                assetsInteractor.subscribeAssetsFavoriteOfAccount(data.first)
+                                    .onStart {
+                                        if (indexed.index == 0) this.emit(emptyList())
+                                    }
+                                    .map {
+                                        cardHub to it
+                                    }
+                            }
 
                             CardHubType.POOLS -> {
                                 val poolsFlow =
@@ -258,10 +352,16 @@ class CardsHubViewModel @Inject constructor(
                                             this.emit("")
                                         }
                                 poolsFlow.combine(demeterFlow) { f1, _ -> f1 }
-                                    .map { list ->
+                                    .transformLatest<List<CommonUserPoolData>, Pair<CardHub, Any>> { list ->
+                                        val favorites = list.filter { it.user.favorite }
+                                        // Farm rewards are read from the chain. The cached pools
+                                        // show at once and get their reward icons when the node
+                                        // answers, so a slow or unreachable node cannot hold back
+                                        // every card on the home.
+                                        emit(cardHub to (favorites to emptyList<DemeterFarmingPool>()))
                                         val farms =
                                             demeterFarmingInteractor.getFarmedPools() ?: emptyList()
-                                        cardHub to ((list.filter { it.user.favorite }) to farms)
+                                        emit(cardHub to (favorites to farms))
                                     }
                             }
 
@@ -276,24 +376,25 @@ class CardsHubViewModel @Inject constructor(
                             }
                         }
                     }
-                    // combine() of no flows never emits: with every card hidden, there are none.
-                    if (flows.isEmpty()) flowOf(emptyList<Pair<CardHub, Any>>()) else combine(flows) { it.toList() }
+                    combine(flows) { it.toList() }
                 }
                 .catch { error ->
                     if (error is CancellationException) throw error
-                    // A failed pool read must not crash the host or leave another wallet's
-                    // holdings visible. Network rows independently show availability.
-                    jp.co.soramitsu.common.logger.FirebaseWrapper.recordException(error)
-                    _state.value = _state.value.copy(cards = emptyList())
+                    // A failed balance/pool read must not crash the host or leave another
+                    // wallet's holdings visible. Network rows independently show availability.
+                    jp.co.soramitsu.common.logger.WalletDiagnostics.recordException(error)
+                    _state.value = _state.value.copy(loading = false, cards = emptyList())
                 }
                 .distinctUntilChanged()
                 .collectLatest { cards ->
-                    // A pools card without favorite pools is not shown.
                     val usableCards = cards.filterNot {
-                        (it.second.safeCast<List<*>>()?.size == 0) ||
-                            (it.second.safeCast<Pair<*, *>>()?.first?.safeCast<List<*>>())?.size == 0
+                        (it.first.cardType != CardHubType.ASSETS) &&
+                            ((it.second.safeCast<List<*>>()?.size == 0) || (it.second.safeCast<Pair<*, *>>()?.first?.safeCast<List<*>>())?.size == 0)
                     }
-                    _state.value = _state.value.copy(cards = mapCardsState(usableCards))
+                    _state.value = _state.value.copy(
+                        loading = false,
+                        cards = mapCardsState(usableCards)
+                    )
                 }
         }
     }
@@ -455,7 +556,13 @@ class CardsHubViewModel @Inject constructor(
         _nexusSend.value = current.copy(network = network, submitting = true, errorCode = null)
         nexusSendOperation = viewModelScope.launch {
             try {
-                val result = nexusTransactionCoordinator.submitAndTrack(prepared)
+                val result = nexusTransactionCoordinator.submitAndTrack(prepared) { submitted ->
+                    // Torii has the transfer: its outcome is on screen from now on, and shows
+                    // how it ends below. Closing it leaves that to the recovery worker.
+                    if (nexusSendOperationIsCurrent(generation, network)) {
+                        _nexusSend.value = _nexusSend.value.copy(submitting = false, result = submitted)
+                    }
+                }
                 if (!nexusSendOperationIsCurrent(generation, network)) return@launch
                 _nexusSend.value = _nexusSend.value.copy(
                     submitting = false,
@@ -472,12 +579,142 @@ class CardsHubViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Back on Send, from the system or the toolbar: the review goes back to its form, as on
+     * SORA2; the form and the outcome close Send. Nothing happens while a review is prepared or
+     * a transfer is sent.
+     */
+    fun nexusSendBack() {
+        val current = _nexusSend.value
+        when {
+            !current.visible -> Unit
+            current.preparing || current.submitting -> Unit
+            current.step() == NexusSendStep.REVIEW -> editNexusSend()
+            else -> closeNexusSend()
+        }
+    }
+
+    override fun onNavIcon() {
+        if (sendInFront()) nexusSendBack() else super.onNavIcon()
+    }
+
+    override fun onBackPressed() {
+        if (sendInFront()) nexusSendBack() else super.onBackPressed()
+    }
+
+    private fun sendInFront(): Boolean =
+        currentDestination == NexusRoutes.SEND && _nexusSend.value.visible
+
+    override fun onCurrentDestinationChanged(curDest: String) = updateToolbar()
+
+    /** The toolbar of each page, as on the SORA2 page it matches; the home has none. */
+    private fun updateToolbar() {
+        _toolbarState.value = when (currentDestination) {
+            NexusRoutes.ASSET -> initSmallTitle2(title = "")
+            // As SORA2's Receive. SORA Nexus before its launch only has an address to copy.
+            NexusRoutes.RECEIVE -> SoramitsuToolbarState(
+                type = SoramitsuToolbarType.SmallCentered(),
+                basic = BasicToolbarState(
+                    title = if (_nexusReceive.value.networkId?.let { it in NexusNetworks.liveIds } == false) {
+                        jp.co.soramitsu.common.R.string.nexus_production_address
+                    } else {
+                        jp.co.soramitsu.common.R.string.wallet_receive_xor
+                    },
+                    navIcon = jp.co.soramitsu.ui_core.R.drawable.ic_cross,
+                ),
+            )
+            NexusRoutes.SEND -> when (_nexusSend.value.step()) {
+                NexusSendStep.FORM -> initSmallTitle2(title = jp.co.soramitsu.common.R.string.wallet_send_xor)
+                NexusSendStep.REVIEW -> initSmallTitle2(title = jp.co.soramitsu.common.R.string.confirm_sending)
+                // The outcome is a transaction page, which has its own Close, as on SORA2.
+                NexusSendStep.OUTCOME -> initNoToolbar()
+            }
+            else -> initNoToolbar()
+        }
+    }
+
+    /** Builds the receive page of [balance]: its QR code and avatar, off the main thread. */
+    fun loadNexusReceive(balance: NexusPortfolioBalance) {
+        val current = currentNexusBalance(balance) ?: return
+        val loaded = _nexusReceive.value
+        if (loaded.isFor(current) && loaded.screen.screenStatus != ScreenStatus.ERROR) return
+        nexusReceiveLoad?.cancel()
+        _nexusReceive.value = NexusReceiveUiState(current.walletId, current.networkId, current.address)
+        if (currentDestination == NexusRoutes.RECEIVE) updateToolbar()
+        val accountName = _state.value.curAccount.ifBlank { current.networkName }
+        nexusReceiveLoad = viewModelScope.launch {
+            try {
+                val (qrCode, avatar) = withContext(coroutineManager.io) {
+                    nexusPresentation.qrCode(current.address) to
+                        nexusPresentation.avatar(current.networkId, current.address)
+                }
+                if (!_nexusReceive.value.isFor(current)) return@launch
+                _nexusReceive.value = _nexusReceive.value.copy(
+                    screen = ReceiveTokenByQrScreenState(
+                        screenStatus = ScreenStatus.READY_TO_RENDER,
+                        untransformedQrBitmap = qrCode,
+                        untransformedUserName = accountName,
+                        untransformedAvatarDrawable = avatar,
+                        untransformedUserAddress = current.address,
+                    ),
+                )
+            } catch (error: CancellationException) {
+                throw error
+            } catch (error: Exception) {
+                jp.co.soramitsu.common.logger.WalletDiagnostics.recordException(error)
+                if (_nexusReceive.value.isFor(current)) {
+                    _nexusReceive.value = _nexusReceive.value.copy(
+                        screen = _nexusReceive.value.screen.copy(screenStatus = ScreenStatus.ERROR),
+                    )
+                }
+            }
+        }
+    }
+
+    /** Copies the address of the selected wallet's row; [announce] shows "Copied" as SORA2 does. */
+    fun copyNexusAddress(balance: NexusPortfolioBalance, announce: Boolean = true) {
+        val current = currentNexusBalance(balance) ?: return
+        nexusPresentation.copy(current.address)
+        if (announce) copiedToast.trigger()
+    }
+
+    /** Copies a value of a transfer page or review (a hash or an address). */
+    fun copyNexusValue(value: String) {
+        if (value.isBlank()) return
+        nexusPresentation.copy(value)
+        copiedToast.trigger()
+    }
+
+    /** Shares the receive page's QR code with its message, once the page is built. */
+    fun shareNexusAddress(balance: NexusPortfolioBalance) {
+        val current = currentNexusBalance(balance) ?: return
+        val receive = _nexusReceive.value
+        val qrCode = receive.screen.untransformedQrBitmap
+        if (!receive.isFor(current) || receive.screen.screenStatus != ScreenStatus.READY_TO_RENDER || qrCode == null) return
+        _nexusShare.value = nexusPresentation.shareFile(qrCode) to
+            nexusPresentation.shareMessage(current.networkName, current.address)
+    }
+
+    /** The avatar of an address on [network], for the review's recipient. */
+    fun nexusAvatar(network: WalletNetworkId, address: String) = nexusPresentation.avatar(network, address)
+
+    /** A date in the format of the SORA2 transaction page. */
+    fun nexusDateTime(timestampMillis: Long): String = nexusPresentation.dateTime(timestampMillis)
+
     fun isCurrentNexusBalance(balance: NexusPortfolioBalance): Boolean =
         currentNexusBalance(balance) != null
 
-    private fun isCurrentSora2Wallet(walletId: String): Boolean =
+    fun isCurrentSora2Wallet(walletId: String): Boolean =
         walletId == selectedPortfolioWalletId &&
             walletId == _sora2Portfolio.value?.address
+
+    fun openSora2Receive(walletId: String) {
+        if (isCurrentSora2Wallet(walletId)) router.openQrCodeFlow()
+    }
+
+    fun openSora2Send(walletId: String) {
+        if (isCurrentSora2Wallet(walletId)) assetsRouter.showContacts(SubstrateOptionsProvider.feeAssetId)
+    }
 
     /**
      * What Send or Receive can offer for the selected wallet, main network first. Only that
@@ -494,6 +731,12 @@ class CardsHubViewModel @Inject constructor(
         }
         val sendable = nexus.filter { it.sendAvailable }.mapTo(mutableSetOf(WalletNetworkId.SORA2)) { it.networkId }
         return WalletNetworkChoices.make(action, addresses, balances, canSend = { it in sendable })
+    }
+
+    fun openSora2Xor(walletId: String) {
+        if (isCurrentSora2Wallet(walletId)) {
+            assetsRouter.showAssetDetails(SubstrateOptionsProvider.feeAssetId)
+        }
     }
 
     private fun currentNexusBalance(
@@ -539,8 +782,16 @@ class CardsHubViewModel @Inject constructor(
         router.openQrCodeFlow()
     }
 
+    fun onAssetClick(tokenId: String) {
+        assetsRouter.showAssetDetails(tokenId)
+    }
+
     fun onPoolClick(poolId: StringPair) {
         polkaswapRouter.showPoolDetails(poolId)
+    }
+
+    fun onAccountClick() {
+        mainRouter.showAccountList()
     }
 
     fun onEditViewClick() {
@@ -549,9 +800,9 @@ class CardsHubViewModel @Inject constructor(
 
     @Suppress("UNCHECKED_CAST")
     private fun mapCardsState(data: List<Pair<CardHub, Any>>): List<CardState> {
-        return data.mapNotNull {
+        return data.map {
             when (it.first.cardType) {
-                CardHubType.ASSETS -> null
+                CardHubType.ASSETS -> mapAssetsCard(it.first.collapsed, it.second as List<Asset>)
                 CardHubType.POOLS -> mapPoolsCard(
                     it.first.collapsed,
                     it.second as Pair<List<CommonUserPoolData>, List<DemeterFarmingPool>>
@@ -561,6 +812,17 @@ class CardsHubViewModel @Inject constructor(
                 CardHubType.REFERRAL_SYSTEM -> (it.second as ReferralState)
             }
         }
+    }
+
+    private fun mapAssetsCard(collapsed: Boolean, assets: List<Asset>): CardState {
+        return TitledAmountCardState(
+            amount = formatFiatAmount(assets.fiatSum(), assets.fiatSymbol(), numbersFormatter),
+            title = CardHubType.ASSETS.userName,
+            state = FavoriteAssetsCardState(mapAssetsToCardState(assets, numbersFormatter)),
+            collapsedState = collapsed,
+            onCollapseClick = { collapseCardToggle(CardHubType.ASSETS.hubName, !collapsed) },
+            loading = false,
+        )
     }
 
     private fun mapPoolsCard(
@@ -577,7 +839,12 @@ class CardsHubViewModel @Inject constructor(
 
         val data = mapPoolsData(pools.first, numbersFormatter, rewardTokensList)
         return TitledAmountCardState(
-            amount = formatFiatAmount(data.second, pools.first.fiatSymbol, numbersFormatter),
+            // A sum over pools without a price is no value, not a zero.
+            amount = if (pools.first.any { it.printFiat() != null }) {
+                formatFiatAmount(data.second, pools.first.fiatSymbol, numbersFormatter)
+            } else {
+                PortfolioFormat.NO_VALUE
+            },
             title = CardHubType.POOLS.userName,
             state = FavoritePoolsCardState(
                 state = data.first
@@ -599,7 +866,13 @@ class CardsHubViewModel @Inject constructor(
 
     fun onOpenFullCard(state: AssetCardState) {
         when (state) {
-            is FavoritePoolsCardState -> polkaswapRouter.showPoolSettings()
+            is FavoriteAssetsCardState -> {
+                router.showAssetSettings()
+            }
+
+            is FavoritePoolsCardState -> {
+                polkaswapRouter.showPoolSettings()
+            }
         }
     }
 

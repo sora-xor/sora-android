@@ -22,6 +22,7 @@ package jp.co.soramitsu.feature_assets_impl.presentation.components.compose.asse
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import jp.co.soramitsu.common.R
+import jp.co.soramitsu.common_wallet.presentation.compose.assetdetails.AssetDetailsCard
 
 @Composable
 internal fun AssetDetailsStakedCard() {

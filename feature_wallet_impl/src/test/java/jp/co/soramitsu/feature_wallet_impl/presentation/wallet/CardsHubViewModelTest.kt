@@ -41,11 +41,12 @@ import jp.co.soramitsu.common.interfaces.WithProgress
 import jp.co.soramitsu.common.nexus.WalletNetworkAction
 import jp.co.soramitsu.common.nexus.WalletNetworkId
 import jp.co.soramitsu.common.util.NumbersFormatter
+import jp.co.soramitsu.common_wallet.presentation.compose.states.FavoriteAssetsCardState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.FavoritePoolsCardState
-import jp.co.soramitsu.common_wallet.presentation.compose.states.ReferralState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.TitledAmountCardState
 import jp.co.soramitsu.demeter.domain.DemeterFarmingInteractor
 import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
+import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsInteractor
 import jp.co.soramitsu.feature_polkaswap_api.launcher.PolkaswapRouter
@@ -56,6 +57,11 @@ import jp.co.soramitsu.feature_wallet_impl.data.nexus.NexusPortfolioRepository
 import jp.co.soramitsu.feature_wallet_impl.data.nexus.NexusTransactionCoordinator
 import jp.co.soramitsu.feature_wallet_impl.domain.CardsHubInteractorImpl
 import jp.co.soramitsu.feature_wallet_impl.presentation.cardshub.CardsHubViewModel
+import jp.co.soramitsu.feature_wallet_impl.presentation.cardshub.NexusAssetPresentation
+import jp.co.soramitsu.feature_wallet_impl.presentation.cardshub.NexusRoutes
+import jp.co.soramitsu.feature_wallet_impl.presentation.cardshub.NexusSendStep
+import jp.co.soramitsu.feature_wallet_impl.presentation.cardshub.step
+import jp.co.soramitsu.common.base.theOnlyRoute
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import jp.co.soramitsu.test_data.PolkaswapTestData.POOL_DATA
 import jp.co.soramitsu.test_data.TestAssets
@@ -107,6 +113,9 @@ class CardsHubViewModelTest {
     private lateinit var progress: WithProgress
 
     @MockK
+    private lateinit var assetsRouter: AssetsRouter
+
+    @MockK
     private lateinit var referralRouter: ReferralRouter
 
     @MockK
@@ -130,8 +139,11 @@ class CardsHubViewModelTest {
     @MockK
     private lateinit var nexusTransactionCoordinator: NexusTransactionCoordinator
 
+    @MockK(relaxed = true)
+    private lateinit var nexusPresentation: NexusAssetPresentation
+
     private lateinit var cardsHubViewModel: CardsHubViewModel
-    private lateinit var poolsReadFailure: MutableStateFlow<Throwable?>
+    private lateinit var favoriteReadFailure: MutableStateFlow<Throwable?>
 
     private val account = SoraAccount("address", "name")
     private val secondAccount = SoraAccount("second-address", "second-name")
@@ -139,7 +151,6 @@ class CardsHubViewModelTest {
     private lateinit var firstXorFlow: MutableStateFlow<Asset?>
     private lateinit var secondXorFlow: MutableStateFlow<Asset?>
     private lateinit var nexusPortfolioFlow: MutableStateFlow<List<NexusPortfolioBalance>>
-    private lateinit var cardsHubFlow: MutableStateFlow<Pair<SoraAccount, List<CardHub>>>
 
     @OptIn(ExperimentalStdlibApi::class)
     @Before
@@ -166,26 +177,51 @@ class CardsHubViewModelTest {
                 SubstrateOptionsProvider.feeAssetId,
             )
         } returns secondXorFlow
-        poolsReadFailure = MutableStateFlow(null)
-        every { poolsInteractor.subscribePoolsCacheOfAccount(account) } returns
-            poolsReadFailure.map { failure ->
+        favoriteReadFailure = MutableStateFlow(null)
+        every { assetsInteractor.subscribeAssetsFavoriteOfAccount(account) } returns
+            favoriteReadFailure.map { failure ->
                 failure?.let { throw it }
-                listOf(POOL_DATA)
+                // XOR remains deliberately not favorite.
+                listOf(TestAssets.valAsset())
+            }
+        every { poolsInteractor.subscribePoolsCacheOfAccount(account) } returns
+            flow {
+                emit(listOf(POOL_DATA))
             }
         coEvery { cardsHubInteractorImpl.updateCardVisibilityOnCardHub(any(), any()) } returns Unit
         // Three accounts on this phone, one of them read-only.
         coEvery { cardsHubInteractorImpl.accountSigningCounts() } returns (3 to 2)
         coEvery { demeterFarmingInteractor.getFarmedPools() } returns emptyList()
         every { demeterFarmingInteractor.subscribeFarms(any()) } returns flow { emit("") }
-        cardsHubFlow = MutableStateFlow(
-            account to listOf(
-                CardHub(CardHubType.ASSETS, visibility = true, sortOrder = 0, collapsed = false),
-                CardHub(CardHubType.POOLS, visibility = true, sortOrder = 1, collapsed = false),
-                CardHub(CardHubType.REFERRAL_SYSTEM, visibility = true, sortOrder = 2, collapsed = false),
-            ),
-        )
-        every { cardsHubInteractorImpl.subscribeVisibleCardsHubList() } returns cardsHubFlow
+        every { cardsHubInteractorImpl.subscribeVisibleCardsHubList() } returns
+            flow {
+                emit(
+                    account to listOf(
+                        CardHub(
+                            CardHubType.ASSETS,
+                            true,
+                            0,
+                            false
+                        ),
+                        CardHub(
+                            CardHubType.POOLS,
+                            true,
+                            1,
+                            false
+                        ),
+                        CardHub(
+                            CardHubType.REFERRAL_SYSTEM,
+                            visibility = true,
+                            sortOrder = 2,
+                            collapsed = false
+                        )
+                    )
+                )
+            }
         every { coroutineManager.io } returns this.coroutineContext[CoroutineDispatcher]!!
+        every { assetsRouter.showAssetDetails(any()) } returns Unit
+        every { assetsRouter.showContacts(any()) } returns Unit
+        every { router.openQrCodeFlow() } returns Unit
         cardsHubViewModel = CardsHubViewModel(
             assetsInteractor,
             poolsInteractor,
@@ -194,11 +230,13 @@ class CardsHubViewModelTest {
             numbersFormatter,
             router,
             mainRouter,
+            assetsRouter,
             referralRouter,
             polkaswapRouter,
             coroutineManager,
             nexusPortfolioRepository,
             nexusTransactionCoordinator,
+            nexusPresentation,
         )
     }
 
@@ -210,53 +248,31 @@ class CardsHubViewModelTest {
     }
 
     @Test
-    fun `the home builds no Assets card, only the cards around the portfolio`() = runTest {
-        advanceUntilIdle()
-        val cards = cardsHubViewModel.state.value.cards
-        assertEquals(2, cards.size)
-        assertTrue((cards[0] as TitledAmountCardState).state is FavoritePoolsCardState)
-        assertEquals(ReferralState, cards[1])
-    }
-
-    @Test
-    fun `hiding every optional card clears the old cards even with a saved Assets preference`() = runTest {
-        advanceUntilIdle()
-        assertTrue(cardsHubViewModel.state.value.cards.isNotEmpty())
-
-        cardsHubFlow.value = account to cardsHubFlow.value.second.map {
-            it.copy(visibility = it.cardType == CardHubType.ASSETS)
-        }
-        advanceUntilIdle()
-
-        assertTrue(cardsHubViewModel.state.value.cards.isEmpty())
-        assertEquals(account.substrateAddress, cardsHubViewModel.state.value.accountAddress)
-    }
-
-    @Test
     fun `failed downstream holdings read clears previous cards without crashing`() = runTest {
         advanceUntilIdle()
         assertTrue(cardsHubViewModel.state.value.cards.isNotEmpty())
-        io.mockk.mockkObject(jp.co.soramitsu.common.logger.FirebaseWrapper)
-        every { jp.co.soramitsu.common.logger.FirebaseWrapper.recordException(any()) } just Runs
+        io.mockk.mockkObject(jp.co.soramitsu.common.logger.WalletDiagnostics)
+        every { jp.co.soramitsu.common.logger.WalletDiagnostics.recordException(any()) } just Runs
         try {
-            poolsReadFailure.value = IllegalStateException("PI_INDEXER_GRAPHQL_ERROR")
+            favoriteReadFailure.value = IllegalStateException("PI_INDEXER_GRAPHQL_ERROR")
             advanceUntilIdle()
             assertTrue(cardsHubViewModel.state.value.cards.isEmpty())
-        } finally { io.mockk.unmockkObject(jp.co.soramitsu.common.logger.FirebaseWrapper) }
+            assertFalse(cardsHubViewModel.state.value.loading)
+        } finally { io.mockk.unmockkObject(jp.co.soramitsu.common.logger.WalletDiagnostics) }
     }
 
     @Test
     fun `cancelled downstream holdings read is not converted to unavailable state`() = runTest {
         advanceUntilIdle()
         val before = cardsHubViewModel.state.value
-        io.mockk.mockkObject(jp.co.soramitsu.common.logger.FirebaseWrapper)
-        every { jp.co.soramitsu.common.logger.FirebaseWrapper.recordException(any()) } just Runs
+        io.mockk.mockkObject(jp.co.soramitsu.common.logger.WalletDiagnostics)
+        every { jp.co.soramitsu.common.logger.WalletDiagnostics.recordException(any()) } just Runs
         try {
-            poolsReadFailure.value = kotlinx.coroutines.CancellationException("stop display subscription")
+            favoriteReadFailure.value = kotlinx.coroutines.CancellationException("stop display subscription")
             advanceUntilIdle()
             assertEquals(before, cardsHubViewModel.state.value)
-            io.mockk.verify(exactly = 0) { jp.co.soramitsu.common.logger.FirebaseWrapper.recordException(any()) }
-        } finally { io.mockk.unmockkObject(jp.co.soramitsu.common.logger.FirebaseWrapper) }
+            io.mockk.verify(exactly = 0) { jp.co.soramitsu.common.logger.WalletDiagnostics.recordException(any()) }
+        } finally { io.mockk.unmockkObject(jp.co.soramitsu.common.logger.WalletDiagnostics) }
     }
 
     @Test
@@ -453,6 +469,28 @@ class CardsHubViewModelTest {
     }
 
     @Test
+    fun `SORA2 actions reject a stale wallet row at tap time`() = runTest {
+        advanceUntilIdle()
+        selectedAccountFlow.value = secondAccount
+        advanceUntilIdle()
+
+        assertFalse(cardsHubViewModel.isCurrentSora2Wallet(account.substrateAddress))
+        cardsHubViewModel.openSora2Receive(account.substrateAddress)
+        cardsHubViewModel.openSora2Xor(account.substrateAddress)
+        verify(exactly = 0) { router.openQrCodeFlow() }
+        verify(exactly = 0) {
+            assetsRouter.showAssetDetails(SubstrateOptionsProvider.feeAssetId)
+        }
+
+        cardsHubViewModel.openSora2Receive(secondAccount.substrateAddress)
+        cardsHubViewModel.openSora2Xor(secondAccount.substrateAddress)
+        verify(exactly = 1) { router.openQrCodeFlow() }
+        verify(exactly = 1) {
+            assetsRouter.showAssetDetails(SubstrateOptionsProvider.feeAssetId)
+        }
+    }
+
+    @Test
     fun `network choices list only the selected wallet main network first`() = runTest {
         advanceUntilIdle()
         val taira = nexusBalance(account.substrateAddress, WalletNetworkId.TAIRA)
@@ -478,6 +516,15 @@ class CardsHubViewModelTest {
         selectedAccountFlow.value = secondAccount
         advanceUntilIdle()
         assertTrue(cardsHubViewModel.networkChoices(WalletNetworkAction.RECEIVE).none { it.address == taira.address })
+    }
+
+    @Test
+    fun `SORA2 send opens the existing send flow only for the selected wallet`() = runTest {
+        advanceUntilIdle()
+        cardsHubViewModel.openSora2Send(secondAccount.substrateAddress)
+        verify(exactly = 0) { assetsRouter.showContacts(SubstrateOptionsProvider.feeAssetId) }
+        cardsHubViewModel.openSora2Send(account.substrateAddress)
+        verify(exactly = 1) { assetsRouter.showContacts(SubstrateOptionsProvider.feeAssetId) }
     }
 
     @Test
@@ -532,10 +579,47 @@ class CardsHubViewModelTest {
             polkaswapRouter.showPoolSettings(); referralRouter.showReferrals(); mainRouter.showAccountDetails(account.substrateAddress)
         }
     }
+    @Test fun `the home shows its cards while the farm rewards are still loading`() = runTest {
+        // A slow or unreachable node never answers the farm read; the home must not wait for it.
+        coEvery { demeterFarmingInteractor.getFarmedPools() } coAnswers { awaitCancellation() }
+        val viewModel = CardsHubViewModel(
+            assetsInteractor, poolsInteractor, cardsHubInteractorImpl, demeterFarmingInteractor, numbersFormatter,
+            router, mainRouter, assetsRouter, referralRouter, polkaswapRouter, coroutineManager,
+            nexusPortfolioRepository, nexusTransactionCoordinator, nexusPresentation,
+        )
+        advanceUntilIdle()
+        assertFalse(viewModel.state.value.loading)
+        val cards = viewModel.state.value.cards.filterIsInstance<TitledAmountCardState>()
+        assertTrue(cards.any { it.state is FavoriteAssetsCardState })
+        assertTrue(cards.any { it.state is FavoritePoolsCardState })
+    }
+    @Test fun `classic home asset, account and full card taps open their screens`() = runTest {
+        advanceUntilIdle()
+        every { mainRouter.showAccountList() } returns Unit
+        every { router.showAssetSettings() } returns Unit
+        cardsHubViewModel.onAssetClick("token-id"); cardsHubViewModel.onAccountClick()
+        cardsHubViewModel.onOpenFullCard(FavoriteAssetsCardState(emptyList()))
+        io.mockk.verify(exactly = 1) {
+            assetsRouter.showAssetDetails("token-id"); mainRouter.showAccountList(); router.showAssetSettings()
+        }
+    }
+    @Test fun `a failing XOR balance read leaves the SORA2 row without a balance, not another wallet's`() = runTest {
+        every { assetsInteractor.subscribeAssetOfAccount(account, SubstrateOptionsProvider.feeAssetId) } returns
+            flow { throw java.io.IOException("node unreachable") }
+        val viewModel = CardsHubViewModel(
+            assetsInteractor, poolsInteractor, cardsHubInteractorImpl, demeterFarmingInteractor, numbersFormatter,
+            router, mainRouter, assetsRouter, referralRouter, polkaswapRouter, coroutineManager,
+            nexusPortfolioRepository, nexusTransactionCoordinator, nexusPresentation,
+        )
+        advanceUntilIdle()
+        assertEquals(account.substrateAddress, viewModel.sora2Portfolio.value?.address)
+        assertNull(viewModel.sora2Portfolio.value?.xorQuantity)
+    }
     @Test fun `collapsing the pool card persists the requested collapsed state`() = runTest {
         coEvery { cardsHubInteractorImpl.updateCardCollapsedStateOnCardHub(any(), any()) } returns Unit
         advanceUntilIdle()
-        val card = cardsHubViewModel.state.value.cards.filterIsInstance<TitledAmountCardState>().first()
+        val card = cardsHubViewModel.state.value.cards.filterIsInstance<TitledAmountCardState>()
+            .first { it.state is FavoritePoolsCardState }
         card.onCollapseClick(); advanceUntilIdle()
         coVerify(exactly = 1) { cardsHubInteractorImpl.updateCardCollapsedStateOnCardHub(CardHubType.POOLS.hubName, true) }
     }
@@ -561,14 +645,14 @@ class CardsHubViewModelTest {
     @Test fun `Nexus review confirms exactly once and keeps the final result immutable`() = runTest {
         val prepared = reviewNexusSend()
         val result = jp.co.soramitsu.feature_wallet_impl.data.nexus.NexusSendResult("local", "0x" + "12".repeat(32), "CONFIRMED")
-        coEvery { nexusTransactionCoordinator.submitAndTrack(prepared) } returns result
+        coEvery { nexusTransactionCoordinator.submitAndTrack(prepared, any()) } returns result
         cardsHubViewModel.confirmNexusSend(); advanceUntilIdle()
         assertEquals(result, cardsHubViewModel.nexusSend.value.result)
         assertFalse(cardsHubViewModel.nexusSend.value.submitting)
         cardsHubViewModel.confirmNexusSend(); cardsHubViewModel.setNexusRecipient("changed"); cardsHubViewModel.setNexusAmount("0.5"); cardsHubViewModel.editNexusSend()
         assertEquals("recipient", cardsHubViewModel.nexusSend.value.recipient)
         assertEquals("0.25", cardsHubViewModel.nexusSend.value.amount)
-        coVerify(exactly = 1) { nexusTransactionCoordinator.submitAndTrack(prepared) }
+        coVerify(exactly = 1) { nexusTransactionCoordinator.submitAndTrack(prepared, any()) }
         cardsHubViewModel.closeNexusSend(); assertFalse(cardsHubViewModel.nexusSend.value.visible)
     }
     @Test fun `editing a Nexus review discards its quote and allows fresh input`() = runTest {
@@ -578,18 +662,53 @@ class CardsHubViewModelTest {
         assertNull(cardsHubViewModel.nexusSend.value.prepared)
         cardsHubViewModel.setNexusAmount("0.5"); assertEquals("0.5", cardsHubViewModel.nexusSend.value.amount)
         cardsHubViewModel.confirmNexusSend()
-        coVerify(exactly = 0) { nexusTransactionCoordinator.submitAndTrack(any()) }
+        coVerify(exactly = 0) { nexusTransactionCoordinator.submitAndTrack(any(), any()) }
     }
     @Test fun `Nexus submission ambiguity stays locked against a second submission`() = runTest {
         val prepared = reviewNexusSend()
-        coEvery { nexusTransactionCoordinator.submitAndTrack(prepared) } throws IllegalStateException("transport lost")
+        coEvery { nexusTransactionCoordinator.submitAndTrack(prepared, any()) } throws IllegalStateException("transport lost")
         cardsHubViewModel.confirmNexusSend(); advanceUntilIdle()
         assertTrue(cardsHubViewModel.nexusSend.value.submissionNeedsCheck)
         assertEquals("transport lost", cardsHubViewModel.nexusSend.value.errorCode)
         assertNull(cardsHubViewModel.nexusSend.value.prepared)
         cardsHubViewModel.editNexusSend(); cardsHubViewModel.prepareNexusSend(); cardsHubViewModel.confirmNexusSend()
         coVerify(exactly = 1) { nexusTransactionCoordinator.prepare(any()) }
-        coVerify(exactly = 1) { nexusTransactionCoordinator.submitAndTrack(any()) }
+        coVerify(exactly = 1) { nexusTransactionCoordinator.submitAndTrack(any(), any()) }
+    }
+    @Test fun `an expired unsent quote returns to the draft for a current fresh review`() = runTest {
+        val prepared = reviewNexusSend()
+        coEvery { nexusTransactionCoordinator.submitAndTrack(prepared, any()) } throws
+            jp.co.soramitsu.feature_wallet_impl.data.nexus.NexusNotSubmittedException(
+                IllegalStateException("TAIRA_QUOTE_EXPIRED")
+            )
+        cardsHubViewModel.confirmNexusSend(); advanceUntilIdle()
+        val draft = cardsHubViewModel.nexusSend.value
+        assertEquals(NexusSendStep.FORM, draft.step())
+        assertTrue(draft.visible)
+        assertFalse(draft.submissionNeedsCheck)
+        assertFalse(draft.submitting)
+        assertNull(draft.prepared)
+        assertNull(draft.result)
+        assertEquals("TAIRA_QUOTE_EXPIRED", draft.errorCode)
+        assertEquals("recipient", draft.recipient)
+        assertEquals("0.25", draft.amount)
+        cardsHubViewModel.confirmNexusSend()
+        coVerify(exactly = 1) { nexusTransactionCoordinator.submitAndTrack(any(), any()) }
+
+        val refreshed = nexusPortfolioFlow.value.single().copy(xorQuantity = "2")
+        nexusPortfolioFlow.value = listOf(refreshed); advanceUntilIdle()
+        cardsHubViewModel.prepareNexusSend(); advanceUntilIdle()
+        assertEquals(refreshed, cardsHubViewModel.nexusSend.value.network)
+        assertEquals(prepared, cardsHubViewModel.nexusSend.value.prepared)
+        assertNull(cardsHubViewModel.nexusSend.value.errorCode)
+        coVerify(exactly = 2) { nexusTransactionCoordinator.prepare(any()) }
+
+        // A wallet change still clears the recovered draft and its freshly reviewed quote.
+        selectedAccountFlow.value = secondAccount; advanceUntilIdle()
+        cardsHubViewModel.prepareNexusSend(); cardsHubViewModel.confirmNexusSend()
+        assertFalse(cardsHubViewModel.nexusSend.value.visible)
+        coVerify(exactly = 2) { nexusTransactionCoordinator.prepare(any()) }
+        coVerify(exactly = 1) { nexusTransactionCoordinator.submitAndTrack(any(), any()) }
     }
     @Test fun `a Nexus quote for another wallet or network is cleared before any submission`() = runTest {
         for ((wallet, network) in listOf(secondAccount.substrateAddress to WalletNetworkId.TAIRA, account.substrateAddress to WalletNetworkId.MINAMOTO)) {
@@ -598,25 +717,25 @@ class CardsHubViewModelTest {
             assertFalse(cardsHubViewModel.nexusSend.value.visible)
             assertNull(cardsHubViewModel.nexusSend.value.prepared)
         }
-        coVerify(exactly = 0) { nexusTransactionCoordinator.submitAndTrack(any()) }
+        coVerify(exactly = 0) { nexusTransactionCoordinator.submitAndTrack(any(), any()) }
     }
     @Test fun `Nexus confirmation cannot be closed edited or repeated while transport runs`() = runTest {
         val prepared = reviewNexusSend()
         val completion = CompletableDeferred<jp.co.soramitsu.feature_wallet_impl.data.nexus.NexusSendResult>()
-        coEvery { nexusTransactionCoordinator.submitAndTrack(prepared) } coAnswers { completion.await() }
+        coEvery { nexusTransactionCoordinator.submitAndTrack(prepared, any()) } coAnswers { completion.await() }
         cardsHubViewModel.confirmNexusSend(); runCurrent()
         assertTrue(cardsHubViewModel.nexusSend.value.submitting)
         cardsHubViewModel.confirmNexusSend(); cardsHubViewModel.closeNexusSend(); cardsHubViewModel.editNexusSend()
         assertTrue(cardsHubViewModel.nexusSend.value.visible)
         assertEquals(prepared, cardsHubViewModel.nexusSend.value.prepared)
         completion.complete(jp.co.soramitsu.feature_wallet_impl.data.nexus.NexusSendResult("id", "hash", "PENDING")); advanceUntilIdle()
-        coVerify(exactly = 1) { nexusTransactionCoordinator.submitAndTrack(any()) }
+        coVerify(exactly = 1) { nexusTransactionCoordinator.submitAndTrack(any(), any()) }
         assertEquals("PENDING", cardsHubViewModel.nexusSend.value.result!!.state)
     }
     @Test fun `a selected wallet change cancels Nexus transport display without publishing a stale result`() = runTest {
         val prepared = reviewNexusSend()
         var cancelled = false
-        coEvery { nexusTransactionCoordinator.submitAndTrack(prepared) } coAnswers {
+        coEvery { nexusTransactionCoordinator.submitAndTrack(prepared, any()) } coAnswers {
             try { awaitCancellation() } finally { cancelled = true }
         }
         cardsHubViewModel.confirmNexusSend(); runCurrent()
@@ -635,4 +754,192 @@ class CardsHubViewModelTest {
         verify(exactly = 1) { nexusPortfolioRepository.loadMoreHistory(account.substrateAddress, WalletNetworkId.TAIRA) }
     }
 
+
+    private fun toolbarTitle(): Any? = cardsHubViewModel.toolbarState.value?.basic?.title
+    private fun toolbarShown(): Boolean = cardsHubViewModel.toolbarState.value?.basic?.visibility == true
+
+    @Test fun `each Nexus page gets the toolbar of the SORA2 page it matches and the home none`() = runTest {
+        advanceUntilIdle()
+        cardsHubViewModel.setCurDestination(theOnlyRoute)
+        assertFalse(toolbarShown())
+        cardsHubViewModel.setCurDestination(NexusRoutes.ASSET)
+        assertTrue(toolbarShown()); assertEquals("", toolbarTitle())
+        cardsHubViewModel.setCurDestination(NexusRoutes.RECEIVE)
+        assertTrue(toolbarShown()); assertEquals(jp.co.soramitsu.common.R.string.wallet_receive_xor, toolbarTitle())
+        cardsHubViewModel.setCurDestination(NexusRoutes.TRANSFER)
+        assertFalse(toolbarShown())
+        cardsHubViewModel.setCurDestination(NexusRoutes.SEND)
+        assertEquals(jp.co.soramitsu.common.R.string.wallet_send_xor, toolbarTitle())
+    }
+
+    @Test fun `the receive page of a network that is not live is titled as its address`() = runTest {
+        advanceUntilIdle()
+        val production = nexusBalance(account.substrateAddress, WalletNetworkId.MINAMOTO)
+            .copy(networkLive = false, sendAvailable = false, xorQuantity = null)
+        nexusPortfolioFlow.value = listOf(production); advanceUntilIdle()
+        every { coroutineManager.io } returns kotlinx.coroutines.Dispatchers.Main
+        cardsHubViewModel.setCurDestination(NexusRoutes.RECEIVE)
+        cardsHubViewModel.loadNexusReceive(production); advanceUntilIdle()
+        assertEquals(jp.co.soramitsu.common.R.string.nexus_production_address, toolbarTitle())
+    }
+
+    @Test fun `Send's toolbar follows its form, its review and the transfer's page`() = runTest {
+        val prepared = reviewNexusSend()
+        cardsHubViewModel.setCurDestination(NexusRoutes.SEND)
+        assertEquals(jp.co.soramitsu.common.R.string.confirm_sending, toolbarTitle())
+        cardsHubViewModel.editNexusSend(); runCurrent()
+        assertEquals(jp.co.soramitsu.common.R.string.wallet_send_xor, toolbarTitle())
+        cardsHubViewModel.prepareNexusSend(); advanceUntilIdle()
+        coEvery { nexusTransactionCoordinator.submitAndTrack(prepared, any()) } returns
+            jp.co.soramitsu.feature_wallet_impl.data.nexus.NexusSendResult("local", "ab".repeat(32), "PENDING")
+        cardsHubViewModel.confirmNexusSend(); advanceUntilIdle()
+        assertFalse(toolbarShown())
+    }
+
+    @Test fun `back on Send goes from the review to its form, then closes Send`() = runTest {
+        reviewNexusSend()
+        cardsHubViewModel.setCurDestination(NexusRoutes.SEND)
+        cardsHubViewModel.onBackPressed()
+        assertTrue(cardsHubViewModel.nexusSend.value.visible)
+        assertNull(cardsHubViewModel.nexusSend.value.prepared)
+        assertEquals("recipient", cardsHubViewModel.nexusSend.value.recipient)
+        cardsHubViewModel.onNavIcon()
+        assertFalse(cardsHubViewModel.nexusSend.value.visible)
+        // Send closed: back is the page's own again.
+        cardsHubViewModel.onNavIcon()
+        assertNotNull(cardsHubViewModel.navigationPop.value)
+    }
+
+    @Test fun `back on Send does nothing while the transfer is sent, and closes its outcome`() = runTest {
+        val prepared = reviewNexusSend()
+        val completion = CompletableDeferred<jp.co.soramitsu.feature_wallet_impl.data.nexus.NexusSendResult>()
+        coEvery { nexusTransactionCoordinator.submitAndTrack(prepared, any()) } coAnswers { completion.await() }
+        cardsHubViewModel.setCurDestination(NexusRoutes.SEND)
+        cardsHubViewModel.confirmNexusSend(); runCurrent()
+        cardsHubViewModel.nexusSendBack(); cardsHubViewModel.onBackPressed()
+        assertTrue(cardsHubViewModel.nexusSend.value.submitting)
+        assertEquals(prepared, cardsHubViewModel.nexusSend.value.prepared)
+        completion.complete(jp.co.soramitsu.feature_wallet_impl.data.nexus.NexusSendResult("id", "hash", "CONFIRMED")); advanceUntilIdle()
+        cardsHubViewModel.nexusSendBack()
+        assertFalse(cardsHubViewModel.nexusSend.value.visible)
+        cardsHubViewModel.nexusSendBack()
+        assertFalse(cardsHubViewModel.nexusSend.value.visible)
+    }
+
+    @Test fun `a transfer Torii took shows its outcome at once, then how it ended`() = runTest {
+        val prepared = reviewNexusSend()
+        val submitted = jp.co.soramitsu.feature_wallet_impl.data.nexus.NexusSendResult("id", "hash", "SUBMITTED")
+        val finalized = jp.co.soramitsu.feature_wallet_impl.data.nexus.NexusSendResult("id", "hash", "FINALIZED")
+        val tracking = CompletableDeferred<jp.co.soramitsu.feature_wallet_impl.data.nexus.NexusSendResult>()
+        coEvery { nexusTransactionCoordinator.submitAndTrack(prepared, any()) } coAnswers {
+            secondArg<(jp.co.soramitsu.feature_wallet_impl.data.nexus.NexusSendResult) -> Unit>().invoke(submitted)
+            tracking.await()
+        }
+        cardsHubViewModel.confirmNexusSend(); runCurrent()
+        val shown = cardsHubViewModel.nexusSend.value
+        assertFalse(shown.submitting)
+        assertFalse(shown.submissionNeedsCheck)
+        assertEquals(submitted, shown.result)
+        assertEquals(NexusSendStep.OUTCOME, shown.step())
+        tracking.complete(finalized); advanceUntilIdle()
+        assertEquals(finalized, cardsHubViewModel.nexusSend.value.result)
+        cardsHubViewModel.confirmNexusSend()
+        coVerify(exactly = 1) { nexusTransactionCoordinator.submitAndTrack(any(), any()) }
+    }
+
+    @Test fun `closing the outcome while it is followed does not reopen it`() = runTest {
+        val prepared = reviewNexusSend()
+        val tracking = CompletableDeferred<jp.co.soramitsu.feature_wallet_impl.data.nexus.NexusSendResult>()
+        coEvery { nexusTransactionCoordinator.submitAndTrack(prepared, any()) } coAnswers {
+            secondArg<(jp.co.soramitsu.feature_wallet_impl.data.nexus.NexusSendResult) -> Unit>()
+                .invoke(jp.co.soramitsu.feature_wallet_impl.data.nexus.NexusSendResult("id", "hash", "SUBMITTED"))
+            tracking.await()
+        }
+        cardsHubViewModel.setCurDestination(NexusRoutes.SEND)
+        cardsHubViewModel.confirmNexusSend(); runCurrent()
+        cardsHubViewModel.nexusSendBack()
+        assertFalse(cardsHubViewModel.nexusSend.value.visible)
+        tracking.complete(jp.co.soramitsu.feature_wallet_impl.data.nexus.NexusSendResult("id", "hash", "FINALIZED")); advanceUntilIdle()
+        assertFalse(cardsHubViewModel.nexusSend.value.visible)
+        assertNull(cardsHubViewModel.nexusSend.value.result)
+    }
+
+    @Test fun `the receive page is built for the selected wallet's address and shared from it`() = runTest {
+        advanceUntilIdle()
+        every { coroutineManager.io } returns kotlinx.coroutines.Dispatchers.Main
+        val balance = nexusBalance(account.substrateAddress, WalletNetworkId.TAIRA)
+        nexusPortfolioFlow.value = listOf(balance); advanceUntilIdle()
+        val qrCode = io.mockk.mockk<android.graphics.Bitmap>()
+        val avatar = io.mockk.mockk<android.graphics.drawable.Drawable>()
+        val file = io.mockk.mockk<android.net.Uri>()
+        every { nexusPresentation.qrCode(balance.address) } returns qrCode
+        every { nexusPresentation.avatar(WalletNetworkId.TAIRA, balance.address) } returns avatar
+        every { nexusPresentation.shareFile(qrCode) } returns file
+        every { nexusPresentation.shareMessage("Taira Testnet", balance.address) } returns "share message"
+
+        // Nothing is shared before the page is built, and another wallet's row builds nothing.
+        cardsHubViewModel.shareNexusAddress(balance)
+        cardsHubViewModel.loadNexusReceive(balance.copy(walletId = "other-wallet")); advanceUntilIdle()
+        assertNull(cardsHubViewModel.nexusShare.value)
+        assertFalse(cardsHubViewModel.nexusReceive.value.isFor(balance))
+
+        cardsHubViewModel.loadNexusReceive(balance); advanceUntilIdle()
+        val receive = cardsHubViewModel.nexusReceive.value
+        assertTrue(receive.isFor(balance))
+        assertEquals(jp.co.soramitsu.common.presentation.compose.uikit.tokens.ScreenStatus.READY_TO_RENDER, receive.screen.screenStatus)
+        assertEquals(qrCode, receive.screen.untransformedQrBitmap)
+        assertEquals(avatar, receive.screen.untransformedAvatarDrawable)
+        assertEquals(balance.address, receive.screen.untransformedUserAddress)
+        assertTrue(receive.screen.isShareQRCodeEnabled)
+        // A built page is not built again.
+        cardsHubViewModel.loadNexusReceive(balance); advanceUntilIdle()
+        verify(exactly = 1) { nexusPresentation.qrCode(balance.address) }
+
+        cardsHubViewModel.shareNexusAddress(balance)
+        assertEquals(file to "share message", cardsHubViewModel.nexusShare.value)
+
+        // Account selection is a privacy boundary: the page is dropped with the wallet.
+        selectedAccountFlow.value = secondAccount; advanceUntilIdle()
+        assertEquals(jp.co.soramitsu.feature_wallet_impl.presentation.cardshub.NexusReceiveUiState(), cardsHubViewModel.nexusReceive.value)
+    }
+
+    @Test fun `a receive page that cannot be built says so and can be built again`() = runTest {
+        advanceUntilIdle()
+        every { coroutineManager.io } returns kotlinx.coroutines.Dispatchers.Main
+        io.mockk.mockkObject(jp.co.soramitsu.common.logger.WalletDiagnostics)
+        every { jp.co.soramitsu.common.logger.WalletDiagnostics.recordException(any()) } just Runs
+        try {
+            val balance = nexusBalance(account.substrateAddress, WalletNetworkId.TAIRA)
+            nexusPortfolioFlow.value = listOf(balance); advanceUntilIdle()
+            every { nexusPresentation.qrCode(any()) } throws IllegalStateException("QR_ENCODER_FAILED")
+            cardsHubViewModel.loadNexusReceive(balance); advanceUntilIdle()
+            assertEquals(jp.co.soramitsu.common.presentation.compose.uikit.tokens.ScreenStatus.ERROR,
+                cardsHubViewModel.nexusReceive.value.screen.screenStatus)
+            every { nexusPresentation.qrCode(any()) } returns io.mockk.mockk()
+            cardsHubViewModel.loadNexusReceive(balance); advanceUntilIdle()
+            assertEquals(jp.co.soramitsu.common.presentation.compose.uikit.tokens.ScreenStatus.READY_TO_RENDER,
+                cardsHubViewModel.nexusReceive.value.screen.screenStatus)
+        } finally { io.mockk.unmockkObject(jp.co.soramitsu.common.logger.WalletDiagnostics) }
+    }
+
+    @Test fun `copying an address or a value announces it, and only for the selected wallet`() = runTest {
+        advanceUntilIdle()
+        val balance = nexusBalance(account.substrateAddress, WalletNetworkId.TAIRA)
+        nexusPortfolioFlow.value = listOf(balance); advanceUntilIdle()
+        cardsHubViewModel.copyNexusAddress(balance.copy(walletId = "other-wallet"))
+        cardsHubViewModel.copyNexusValue(" ")
+        verify(exactly = 0) { nexusPresentation.copy(any()) }
+        assertNull(cardsHubViewModel.copiedToast.value)
+        cardsHubViewModel.copyNexusAddress(balance, announce = false)
+        assertNull(cardsHubViewModel.copiedToast.value)
+        cardsHubViewModel.copyNexusAddress(balance)
+        cardsHubViewModel.copyNexusValue("hash")
+        verify(exactly = 2) { nexusPresentation.copy(balance.address) }
+        verify(exactly = 1) { nexusPresentation.copy("hash") }
+        assertNotNull(cardsHubViewModel.copiedToast.value)
+        every { nexusPresentation.dateTime(1L) } returns "01 Jan. 1970, 00:00"
+        assertEquals("01 Jan. 1970, 00:00", cardsHubViewModel.nexusDateTime(1L))
+        cardsHubViewModel.nexusAvatar(WalletNetworkId.TAIRA, "recipient")
+        verify(exactly = 1) { nexusPresentation.avatar(WalletNetworkId.TAIRA, "recipient") }
+    }
 }

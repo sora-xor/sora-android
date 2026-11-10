@@ -33,19 +33,20 @@ class EditCardsHubViewModelTest {
         return vm
     }
 
-    @Test fun `assets are absent while mandatory backup and optional cards have distinct editability`() = runTest {
+    @Test fun `the classic assets card is listed and fixed while optional cards can be toggled`() = runTest {
         val vm = subject()
-        assertEquals(listOf(POOLS_HUB_NAME, BACKUP_WALLET_HUB_NAME), vm.state.value.enabledCards.map { it.hubName })
+        assertEquals(listOf(ASSETS_HUB_NAME, POOLS_HUB_NAME, BACKUP_WALLET_HUB_NAME), vm.state.value.enabledCards.map { it.hubName })
         assertEquals(listOf(REFERRAL_SYSTEM_HUB_NAME), vm.state.value.disabledCards.map { it.hubName })
         val enabled = vm.state.value.enabledCards
-        assertEquals(HubCardVisibility.VISIBLE_AND_ENABLED, enabled[0].visibility)
-        assertEquals(HubCardVisibility.VISIBLE_AND_DISABLED, enabled[1].visibility)
+        assertEquals(HubCardVisibility.VISIBLE_AND_DISABLED, enabled[0].visibility)
+        assertEquals(HubCardVisibility.VISIBLE_AND_ENABLED, enabled[1].visibility)
+        assertEquals(HubCardVisibility.VISIBLE_AND_DISABLED, enabled[2].visibility)
         assertEquals(HubCardVisibility.NOT_VISIBLE_ENABLED, vm.state.value.disabledCards[0].visibility)
     }
 
     @Test fun `visibility actions wait for animation and write only the selected card`() = runTest {
         val vm = subject()
-        vm.onEnabledCardItemClick(0)
+        vm.onEnabledCardItemClick(1)
         advanceTimeBy(499)
         coVerify(exactly = 0) { interactor.updateCardVisibilityOnCardHub(any(), any()) }
         advanceTimeBy(1); runCurrent()
@@ -74,7 +75,7 @@ class EditCardsHubViewModelTest {
         runCurrent()
         assertEquals(listOf(REFERRAL_SYSTEM_HUB_NAME), vm.state.value.enabledCards.map { it.hubName })
         assertEquals(HubCardVisibility.VISIBLE_AND_ENABLED, vm.state.value.enabledCards[0].visibility)
-        assertEquals(listOf(POOLS_HUB_NAME, BACKUP_WALLET_HUB_NAME), vm.state.value.disabledCards.map { it.hubName })
+        assertEquals(listOf(POOLS_HUB_NAME, BACKUP_WALLET_HUB_NAME, ASSETS_HUB_NAME), vm.state.value.disabledCards.map { it.hubName })
         assertEquals(HubCardVisibility.NOT_VISIBLE_DISABLED, vm.state.value.disabledCards[1].visibility)
     }
 }

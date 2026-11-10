@@ -16,10 +16,6 @@
     <item quantity="one">%1$d network</item>
     <item quantity="other">%1$d networks</item>
   </plurals>
-    <plurals name="portfolio_tokens">
-    <item quantity="one">%1$d token</item>
-    <item quantity="other">%1$d tokens</item>
-  </plurals>
     <plurals name="portfolio_wallets">
     <item quantity="one">%1$d wallet</item>
     <item quantity="other">%1$d wallets</item>
@@ -92,8 +88,6 @@
     <string name="account_storage_conflict_description">This phone already holds different keys for this wallet, so nothing was changed. Your funds are safe on the blockchain. Please contact support.</string>
     <string name="account_switching">Switching account…</string>
     <string name="activity_received_transfers_note">Transfers you received may not be listed here yet. Your balance is not affected.</string>
-    <string name="appearance_reduce_effects">Reduce effects</string>
-    <string name="appearance_reduce_effects_description">Turns off glow, glass and motion effects. Useful on older phones or to save battery.</string>
     <string name="asset_frozen_amount_suffix">· %1$s frozen</string>
     <string name="asset_move_down">Move down</string>
     <string name="asset_move_up">Move up</string>
@@ -143,11 +137,9 @@
     <string name="network_tag_coming_soon">Coming soon</string>
     <string name="network_tag_main">Main</string>
     <string name="network_tag_testnet">Testnet</string>
-    <string name="nexus_copy_production_address">Copy production address</string>
     <string name="nexus_history_load_more">Load older transfers</string>
     <string name="nexus_production_address">Production address</string>
     <string name="nexus_production_address_notice">Your SORA Nexus production address is ready to copy. The production network has not launched yet; balances, history and transfers will be available after launch.</string>
-    <string name="nexus_production_not_live">Not live yet</string>
     <string name="nexus_send_not_available">Sending is currently unavailable for this account. You can view your balance, copy your address and receive testnet XOR.</string>
     <string name="onboarding_enter_json">Import backup file</string>
     <string name="onboarding_found_wallets_body">SORA found wallet keys on this phone that no account uses, for example after this device was set up again. Enter the PIN you used in SORA on this phone to restore these wallets. Nothing is deleted or changed if you leave this screen.</string>
@@ -175,6 +167,7 @@
     <string name="portfolio_choose_holding">Choose a holding</string>
     <string name="portfolio_counted">Counted</string>
     <string name="portfolio_excluded_caption">%1$s not included</string>
+    <string name="portfolio_prices_as_of">Prices as of %1$s</string>
     <string name="portfolio_excluded_hidden">Hidden: %1$d</string>
     <string name="portfolio_excluded_testnet">Testnet assets: %1$d</string>
     <string name="portfolio_excluded_unpriced">Without a price: %1$d</string>
@@ -184,9 +177,6 @@
     <string name="portfolio_how_we_count">How we count your balance</string>
     <string name="portfolio_how_we_count_body">The total adds the full balance of every visible asset that has a price, on mainnet networks. Hidden, unpriced and testnet holdings are left out and named, never dropped silently.</string>
     <string name="portfolio_legend_description">%1$s, %2$s percent, %3$s</string>
-    <string name="portfolio_lens_networks">Networks</string>
-    <string name="portfolio_lens_tokens">Tokens</string>
-    <string name="portfolio_lens_wallets">Wallets</string>
     <string name="portfolio_locked">Locked</string>
     <string name="portfolio_manage_hidden">Manage hidden assets</string>
     <string name="portfolio_manage_wallets">Manage wallets</string>
@@ -199,21 +189,18 @@
     <string name="portfolio_network">Network</string>
     <string name="portfolio_never_counted">Never counted</string>
     <string name="portfolio_nexus_send_unavailable">Sending on this network is not available for this wallet right now.</string>
-    <string name="portfolio_no_price">No price</string>
-    <string name="portfolio_no_route">no route</string>
-    <string name="portfolio_no_value">No value</string>
     <string name="portfolio_not_included">Not included</string>
     <string name="portfolio_nothing_listed">Nothing to list. Hidden assets are not shown here.</string>
+    <string name="portfolio_no_balance_yet">No balance yet</string>
     <string name="portfolio_nothing_to_move">Nothing here can be moved right now.</string>
     <string name="portfolio_nothing_to_swap">Nothing on SORA2 to swap yet.</string>
     <string name="portfolio_nothing_transferable">Nothing is transferable right now.</string>
     <string name="portfolio_open_polkaswap">Open Polkaswap</string>
-    <string name="portfolio_open_wallet_alone">Open %1$s alone</string>
     <string name="portfolio_other">Other</string>
     <string name="portfolio_polkaswap_body">The SORA DEX. Swaps happen on SORA2, so the token has to be there.</string>
     <string name="portfolio_pool_stakes">Pool stakes</string>
     <string name="portfolio_receive_on_sora2">Receive on SORA2</string>
-    <string name="portfolio_receive_to">Receive to</string>
+    <string name="portfolio_receive_to">Receive to which wallet?</string>
     <string name="portfolio_refresh_all">Refresh all wallets</string>
     <string name="portfolio_review_in_send">Review in Send</string>
     <string name="portfolio_route">Route</string>
@@ -225,15 +212,19 @@
     <string name="portfolio_sample_handoff_off">Sample portfolio: addresses are invented, so this does not open Send.</string>
     <string name="portfolio_scope_label">Scope: %1$s. Choose a wallet</string>
     <string name="portfolio_selected">Selected</string>
-    <string name="portfolio_send_from">Send from</string>
-    <string name="portfolio_send_on">Send on %1$s</string>
+    <string name="portfolio_send_from">Send from which wallet?</string>
     <string name="portfolio_send_unavailable">Sending on %1$s is not available in this version.</string>
+    <string name="portfolio_send_on">Send on %1$s</string>
     <string name="portfolio_share_of_all">%1$s of all wallets</string>
     <string name="portfolio_share_of_wallet">%1$s of %2$s</string>
     <string name="portfolio_state_live">LIVE</string>
     <string name="portfolio_state_offline">OFFLINE</string>
     <string name="portfolio_state_partial">PARTIAL</string>
     <string name="portfolio_state_saved">SAVED</string>
+    <string name="portfolio_manage_assets">Manage selected wallet\'s assets</string>
+    <string name="portfolio_excluded_unread">Wallets not read yet: %1$d</string>
+    <string name="portfolio_reading_balances">Reading balances…</string>
+    <string name="portfolio_state_reading">READING</string>
     <string name="portfolio_swap">Swap</string>
     <string name="portfolio_swap_note">Polkaswap shows price, fee and impact before you sign. This only picks the pair.</string>
     <string name="portfolio_swap_on_polkaswap">Swap on Polkaswap</string>
@@ -260,11 +251,11 @@
     <string name="portfolio_wallet_ready">Your wallet is ready.</string>
     <string name="portfolio_wallet_ready_body">Receive tokens to this wallet. They show up here, on every network this app supports.</string>
     <string name="portfolio_wallets">Wallets</string>
-    <string name="portfolio_wallets_note">All wallets adds each wallet’s own total. Wallets that are not selected keep their last sync, so the list says how old each one is.</string>
+    <string name="portfolio_wallets_note">All wallets adds each wallet’s own total. Wallets that are not selected refresh about once a minute while you look, so each one shows how old its numbers are.</string>
     <string name="portfolio_wallets_together">Wallets together: %1$d</string>
     <string name="portfolio_where_it_lives">Where it lives</string>
     <string name="portfolio_where_it_lives_title">%1$s · where it lives</string>
-    <string name="portfolio_without_price">No price</string>
+    <string name="portfolio_without_price">Without a price</string>
     <string name="portfolio_you_get">You get</string>
     <string name="portfolio_you_pay">You pay</string>
     <string name="recovery_enter_json_title">Restore an account from a backup file you previously saved. Choose the JSON file below, or paste its contents.</string>
@@ -411,4 +402,12 @@
     <string name="asset_not_favorite_state">Not a favorite</string>
     <string name="asset_visible_state">Visible</string>
     <string name="asset_hidden_state">Hidden</string>
+    <string name="hide_zero_balances">Hide zero balances</string>
+    <string name="show_zero_balances">Show zero balances</string>
+    <string name="global_results">Global results</string>
+    <string name="wallet_connect_pin_unavailable">Your wallet PIN is unavailable. Open SORA to unlock your wallet, then try again.</string>
+    <string name="biometric_enrollment_changed_title">Biometrics changed on this phone</string>
+    <string name="biometric_enrollment_changed_message">A fingerprint or face was added or removed on this phone since biometrics last unlocked SORA. Anyone whose fingerprint or face is on this phone can unlock your wallet. If you didn\'t make this change, turn biometrics off.</string>
+    <string name="biometric_enrollment_changed_keep">Keep biometrics</string>
+    <string name="biometric_enrollment_changed_turn_off">Turn off</string>
 </resources>

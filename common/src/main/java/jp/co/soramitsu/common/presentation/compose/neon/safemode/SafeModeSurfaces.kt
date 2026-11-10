@@ -110,24 +110,30 @@ object WalletSessionState {
     fun markLocked() {
         unlockedState.value = false
     }
+
+    /**
+     * How many times the app came back from the background in this process, counted on the main
+     * thread. A screen that stays open past the PIN notes this and closes once it has changed.
+     */
+    var returnsFromBackground = 0
+        private set
+
+    fun markReturnedFromBackground() {
+        returnsFromBackground++
+    }
 }
 
 /**
- * The upgrade-complete sheet (U11) is shown once per install, only to people who updated from an
- * earlier version. Kept in its own small preferences file, never in the wallet preferences.
+ * Compatibility gate for the former automatic upgrade-complete sheet. A successful update
+ * now opens the wallet immediately after its normal PIN unlock, without an acknowledgement.
+ * Explicit safety-surface previews and the legacy UI marker remain available.
  */
 object UpgradeWelcome {
     private const val FILE = "sora_upgrade_welcome"
     private const val KEY_DONE = "upgrade_welcome_3_9_done"
 
-    /** True when this install was updated from an earlier version and the sheet was not shown. */
-    fun isPending(context: Context): Boolean = runCatching {
-        val prefs = context.getSharedPreferences(FILE, Context.MODE_PRIVATE)
-        if (prefs.getBoolean(KEY_DONE, false)) return@runCatching false
-        val info = context.packageManager.getPackageInfo(context.packageName, 0)
-        // A fresh install has equal times; an update from an earlier version does not.
-        info.firstInstallTime != info.lastUpdateTime
-    }.getOrDefault(false)
+    /** Existing home routes must never turn an app update into a confirmation step. */
+    fun isPending(@Suppress("UNUSED_PARAMETER") context: Context): Boolean = false
 
     /** Shown, or not needed (a new wallet set up on this version). */
     fun markDone(context: Context) {

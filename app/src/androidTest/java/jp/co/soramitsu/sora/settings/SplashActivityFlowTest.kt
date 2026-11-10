@@ -42,6 +42,7 @@ class SplashActivityFlowTest {
     private val application = ApplicationProvider.getApplicationContext<Application>()
     private val splashModel = mockk<SplashViewModel>(relaxed = true)
     private val safeModel = mockk<SafeModeViewModel>(relaxed = true)
+    private var afterActivityCreated: ((SplashActivity) -> Unit)? = null
     private val lifecycle = object : Application.ActivityLifecycleCallbacks {
         override fun onActivityPreCreated(activity: Activity, savedInstanceState: Bundle?) {
             if (activity !is SplashActivity) return
@@ -50,7 +51,9 @@ class SplashActivityFlowTest {
             SplashActivity::class.java.getDeclaredField("safeModeViewModel\$delegate").apply { isAccessible = true }
                 .set(activity, lazyOf(safeModel))
         }
-        override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) = Unit
+        override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {
+            if (activity is SplashActivity) afterActivityCreated?.invoke(activity)
+        }
         override fun onActivityStarted(activity: Activity) = Unit
         override fun onActivityResumed(activity: Activity) = Unit
         override fun onActivityPaused(activity: Activity) = Unit
@@ -148,14 +151,17 @@ class SplashActivityFlowTest {
 
     @Test fun systemSplashDoesNotPlayASecondAnimationOrWaitForItsRenderer() {
         Assume.assumeTrue(Build.VERSION.SDK_INT >= Build.VERSION_CODES.S)
+        // Observe readiness before yielding the main loop: a slow instrumented launch may
+        // legitimately outlast the renderer's four-second fallback before launch() returns.
+        afterActivityCreated = {
+            verify(exactly = 0) { splashModel.nextScreen() }
+            runtimeReady.value = true
+        }
         launch().onMainActivity { activity ->
             val animation = activity.findViewById<com.airbnb.lottie.LottieAnimationView>(R.id.animation_view)
             assertEquals(View.GONE, animation.visibility)
             assertFalse(animation.isAnimating)
         }
-        verify(exactly = 0) { splashModel.nextScreen() }
-        instrumentation.runOnMainSync { runtimeReady.value = true }
-        drainMainQueue()
         verify(exactly = 1) { splashModel.nextScreen() }
         instrumentation.runOnMainSync { runtimeReady.value = true }
         drainMainQueue()

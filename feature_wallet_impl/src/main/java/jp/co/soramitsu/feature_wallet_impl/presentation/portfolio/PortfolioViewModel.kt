@@ -20,7 +20,9 @@ import jp.co.soramitsu.feature_wallet_impl.data.portfolio.PinnedTilt
 import jp.co.soramitsu.feature_wallet_impl.data.portfolio.PortfolioDebugHooks
 import jp.co.soramitsu.feature_wallet_impl.data.portfolio.PortfolioPreferences
 import jp.co.soramitsu.feature_wallet_impl.data.portfolio.PortfolioSource
+import jp.co.soramitsu.feature_wallet_impl.data.portfolio.SavedPicture
 import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.FanSlice
+import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.FreshnessKind
 import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.PortfolioCalculator
 import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.PortfolioFreshness
 import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.PortfolioGroup
@@ -57,6 +59,9 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 
+/** Why the total is a dash. */
+enum class NoTotal { PRICE, TESTNET, READING, FAILED }
+
 /** Everything the dashboard draws, computed from one [PortfolioSnapshot]. */
 data class PortfolioModel(
     val snapshot: PortfolioSnapshot,
@@ -64,34 +69,66 @@ data class PortfolioModel(
     val nowMillis: Long,
     val scope: PortfolioScope,
     val walletIds: List<String>,
-    val lens: PortfolioLens,
-    val lenses: List<PortfolioLens>,
     val totals: PortfolioTotals,
     val freshness: WalletFreshness?,
+    /** One group per token held in scope, largest counted value first. */
     val groups: List<PortfolioGroup>,
     val fan: List<FanSlice>,
-    /** Slot per entity key for the active scope and lens. */
+    /** Slot per token for the active scope. */
     val slots: Map<String, Int>,
-    /** Slot per wallet id: a wallet's colour everywhere (dots, avatars, the Wallets lens). */
+    /** Slot per wallet id: a wallet's colour everywhere. */
     val walletSlots: Map<String, Int>,
     val wallets: List<WalletSummary>,
     val allTotals: PortfolioTotals,
     val allFreshness: WalletFreshness?,
+    /** The token picked on the ring or its legend, if any. */
     val highlighted: String?,
+    /** The list's rows opened to their holdings. */
     val expanded: Set<String>,
     val swapDisclaimerPending: Boolean,
 ) {
     val selectedWallet get() = snapshot.selectedWallet
     val allWalletsAvailable: Boolean get() = snapshot.wallets.size >= 2
 
-    /** No holdings at all in scope: the empty state (sky without the fan, "Your wallet is ready"). */
-    val empty: Boolean get() = snapshot.holdings.none { it.walletId in walletIds }
+    /** Set while the total is valued with old prices: the time of the "Prices as of" note. */
+    val pricesAsOf: Long?
+        get() = snapshot.pricesReadAtMillis?.takeIf {
+            totals.known && PortfolioFreshness.pricesAreOld(it, nowMillis)
+        }
+
+    /**
+     * Every wallet in scope was read and really holds nothing: "Your wallet is ready". A wallet
+     * that has not been read yet, or a network that could not be reached, is not empty.
+     */
+    val empty: Boolean
+        get() = !holdsAnything &&
+            walletIds.all { id -> snapshot.sync[id]?.let { !it.unread && it.unreachable.isEmpty() } ?: true }
+
+    /** Something is held in scope, hidden or not. */
+    val holdsAnything: Boolean
+        get() = snapshot.holdings.any { it.walletId in walletIds }
+
+    /**
+     * Why there is no total to show: never a zero. A wallet that could not be read says so first,
+     * since its balance is unknown; while it is still being read the list says that instead.
+     */
+    val noTotal: NoTotal?
+        get() {
+            val failed = freshness?.kind == FreshnessKind.OFFLINE || freshness?.unreachable?.isNotEmpty() == true
+            return when {
+                totals.known -> null
+                failed && (totals.unread > 0 || !holdsAnything) -> NoTotal.FAILED
+                totals.unpriced > 0 -> NoTotal.PRICE
+                totals.testnet > 0 -> NoTotal.TESTNET
+                totals.unread > 0 -> NoTotal.READING
+                // Everything held is hidden, which the caption says; or the empty state shows.
+                else -> null
+            }
+        }
 
     fun holding(key: String): PortfolioHolding? = snapshot.holdings.firstOrNull { it.key == key }
 
     fun wallet(id: String) = snapshot.wallet(id)
-
-    fun walletSummary(id: String): WalletSummary? = wallets.firstOrNull { it.wallet.id == id }
 }
 
 /** Sheets of the dashboard (portfolio-view SPEC §3.2, §3.3, §7). */
@@ -119,6 +156,16 @@ sealed interface PortfolioEffect {
         val recipient: String?,
         val amount: String?,
     ) : PortfolioEffect
+
+    /** Opens a network's XOR page for the wallet the dashboard just selected. */
+    data class OpenNexusPage(
+        val walletId: String,
+        val network: WalletNetworkId,
+        val address: String,
+    ) : PortfolioEffect
+
+    /** Send or Receive after the wallet was picked: which network, if the wallet has a choice. */
+    data class ContinueAction(val action: WalletAction, val walletId: String) : PortfolioEffect
 
     data class Message(@param:StringRes val text: Int, val argument: String? = null) : PortfolioEffect
 }
@@ -150,20 +197,23 @@ class PortfolioViewModel @Inject constructor(
     /** Debug builds only: a deflection pinned for screenshots. Always null in production. */
     val pinnedTilt: StateFlow<PinnedTilt?> = hooks?.pinnedTilt ?: MutableStateFlow(null)
 
+    /** The last saved picture: there for the very first frame, before anything has answered. */
+    private val savedPicture: SavedPicture? = if (hooks?.sampleSource?.value == null) liveSource.savedPicture() else null
+
     private val snapshot: StateFlow<PortfolioSnapshot?> = source
         .flatMapLatest { it.observe() }
         // Each wallet's reads already fall back on their own; this is the account list itself.
-        // It is recorded and read again a little later, and the hero keeps its loading state.
+        // It is recorded and read again a little later; the saved picture stays meanwhile.
         .retryWhen { error, attempt ->
             if (error is CancellationException) return@retryWhen false
             onBackgroundError(error)
             delay(minOf(RETRY_MAX_MS, RETRY_BASE_MS shl attempt.coerceAtMost(4L).toInt()))
             true
         }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), null)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), savedPicture?.snapshot)
 
-    private val scopeRequest = MutableStateFlow<PortfolioScope?>(null)
-    private val lensRequest = MutableStateFlow<PortfolioLens?>(null)
+    /** The stored scope; the outer null means it has not been read yet. */
+    private val scopeRequest = MutableStateFlow(savedPicture?.let { Optional.ofNullable(it.scope) })
     private val slotMaps = MutableStateFlow<Map<String, Map<String, Int>>?>(null)
     private val highlight = MutableStateFlow<String?>(null)
     private val expandedRows = MutableStateFlow<Set<String>>(emptySet())
@@ -186,23 +236,26 @@ class PortfolioViewModel @Inject constructor(
     val busy: StateFlow<Boolean> = _busy.asStateFlow()
 
     private data class Request(
-        val scope: PortfolioScope?,
-        val lens: PortfolioLens?,
+        val scope: Optional<PortfolioScope>?,
         val slots: Map<String, Map<String, Int>>?,
+        val highlight: String?,
+        val expanded: Set<String>,
     )
-
-    private data class Selection(val highlight: String?, val expanded: Set<String>)
 
     private data class Built(val model: PortfolioModel, val slotUpdates: Map<String, Map<String, Int>>)
 
     val model: StateFlow<PortfolioModel?> = combine(
         combine(snapshot, source) { snapshot, source -> snapshot?.let { it to source.isSample } },
-        combine(scopeRequest, lensRequest, slotMaps, ::Request),
-        combine(highlight, expandedRows, ::Selection),
+        combine(scopeRequest, slotMaps, highlight, expandedRows, ::Request),
         clock,
         disclaimerPending,
-    ) { data, request, selection, now, disclaimer ->
-        if (data == null || request.slots == null) null else build(data.first, data.second, request, selection, now, disclaimer)
+    ) { data, request, now, disclaimer ->
+        // Without stored slot maps the seed applies: the saved balances never wait for them.
+        if (data == null || request.scope == null) {
+            null
+        } else {
+            build(data.first, data.second, request, now, disclaimer)
+        }
     }
         // The debug sample never writes the device's slot maps.
         .onEach { built ->
@@ -210,22 +263,32 @@ class PortfolioViewModel @Inject constructor(
             if (built != null && !built.model.sample && updates.isNotEmpty()) storeSlots(updates)
         }
         .map { it?.model }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), null)
+        .stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS),
+            savedPicture?.let { picture ->
+                val request = Request(Optional.ofNullable(picture.scope), null, null, emptySet())
+                build(picture.snapshot, false, request, clock.value, disclaimer = true).model
+            },
+        )
 
     init {
         viewModelScope.launch {
-            scopeRequest.value = preferences.scope()
-            lensRequest.value = preferences.lens()
-            slotMaps.value = preferences.slotMaps()
+            val stored = preferences.scope()
+            scopeRequest.value = Optional.ofNullable(stored)
+            liveSource.rememberScope(stored)
         }
+        viewModelScope.launch { slotMaps.value = preferences.slotMaps() }
         viewModelScope.launch {
             // While the dashboard is visible: tick the freshness ages and re-read wallets that are
-            // due (each wallet at most once a minute). Nothing runs while it is hidden.
+            // due (each wallet at most once a minute), starting as soon as there is a picture to
+            // refresh. Nothing runs while it is hidden.
             visible.collectLatest { shown ->
                 if (!shown) {
                     refreshJob?.cancel()
                     return@collectLatest
                 }
+                snapshot.first { it != null && !it.saved }
                 while (true) {
                     clock.value = System.currentTimeMillis()
                     // A read that hangs never holds the clock back: the ages keep counting.
@@ -234,24 +297,33 @@ class PortfolioViewModel @Inject constructor(
                 }
             }
         }
+        viewModelScope.launch {
+            // For as long as the home exists, also behind other screens: a wallet that is removed
+            // takes its saved balances with it at once.
+            try {
+                liveSource.pruneRemovedWallets()
+            } catch (error: CancellationException) {
+                throw error
+            } catch (error: Exception) {
+                onBackgroundError(error)
+            }
+        }
     }
 
     private fun build(
         snapshot: PortfolioSnapshot,
         sample: Boolean,
         request: Request,
-        selection: Selection,
         now: Long,
         disclaimer: Boolean,
     ): Built {
         val maps = request.slots.orEmpty()
-        val scope = PortfolioCalculator.effectiveScope(request.scope, snapshot.wallets.size)
+        val scope = PortfolioCalculator.effectiveScope(request.scope?.orElse(null), snapshot.wallets.size)
         val walletIds = PortfolioCalculator.scopeWalletIds(snapshot, scope)
-        val lens = PortfolioCalculator.effectiveLens(request.lens, scope)
-        val groups = PortfolioCalculator.groups(snapshot, walletIds, lens)
+        val groups = PortfolioCalculator.groups(snapshot, walletIds, PortfolioLens.TOKENS)
         val updates = mutableMapOf<String, Map<String, Int>>()
 
-        // A wallet's colour: one map over every wallet (All wallets · Wallets), largest first.
+        // A wallet's colour: one map over every wallet, largest first.
         val walletKey = PortfolioSlots.mapKey(PortfolioScope.ALL, null, PortfolioLens.WALLETS)
         val allIds = snapshot.wallets.map { it.id }
         val walletRanking = PortfolioCalculator
@@ -261,14 +333,10 @@ class PortfolioViewModel @Inject constructor(
         val walletSlots = PortfolioSlots.assign(maps[walletKey], walletRanking, walletSeed)
         if (snapshot.wallets.isNotEmpty() && walletSlots != maps[walletKey]) updates[walletKey] = walletSlots
 
-        val slots = if (lens == PortfolioLens.WALLETS) {
-            walletSlots
-        } else {
-            val key = PortfolioSlots.mapKey(scope, snapshot.selectedWallet?.id, lens)
-            val ranked = groups.filter { it.countedFiat > 0.0 }.map { it.key }
-            PortfolioSlots.assign(maps[key], ranked, PortfolioSlots.seed(lens)).also {
-                if (ranked.isNotEmpty() && it != maps[key]) updates[key] = it
-            }
+        val key = PortfolioSlots.mapKey(scope, snapshot.selectedWallet?.id, PortfolioLens.TOKENS)
+        val ranked = groups.filter { it.countedFiat > 0.0 }.map { it.key }
+        val slots = PortfolioSlots.assign(maps[key], ranked, PortfolioSlots.seed(PortfolioLens.TOKENS)).also {
+            if (ranked.isNotEmpty() && it != maps[key]) updates[key] = it
         }
         val model = PortfolioModel(
             snapshot = snapshot,
@@ -276,8 +344,6 @@ class PortfolioViewModel @Inject constructor(
             nowMillis = now,
             scope = scope,
             walletIds = walletIds,
-            lens = lens,
-            lenses = PortfolioCalculator.availableLenses(scope),
             totals = PortfolioCalculator.scopeTotals(snapshot, walletIds),
             freshness = PortfolioCalculator.worstFreshness(snapshot, walletIds, now),
             groups = groups,
@@ -287,11 +353,12 @@ class PortfolioViewModel @Inject constructor(
             wallets = PortfolioCalculator.walletSummaries(snapshot, now),
             allTotals = PortfolioCalculator.scopeTotals(snapshot, allIds),
             allFreshness = PortfolioCalculator.worstFreshness(snapshot, allIds, now),
-            highlighted = selection.highlight?.takeIf { key -> groups.any { it.key == key } },
-            expanded = selection.expanded,
+            highlighted = request.highlight?.takeIf { key -> groups.any { it.key == key } },
+            expanded = request.expanded,
             swapDisclaimerPending = disclaimer,
         )
-        return Built(model, updates)
+        // The stored colours have not been read yet: nothing to change in them, or to overwrite.
+        return Built(model, if (request.slots == null) emptyMap() else updates)
     }
 
     private fun storeSlots(updates: Map<String, Map<String, Int>>) {
@@ -308,7 +375,7 @@ class PortfolioViewModel @Inject constructor(
     private suspend fun refreshDue(force: Boolean) {
         val current = source.value
         val snap = snapshot.value ?: return
-        val scope = model.value?.scope ?: PortfolioScope.SELECTED
+        val scope = PortfolioCalculator.effectiveScope(scopeRequest.value?.orElse(null), snap.wallets.size)
         val wanted = if (scope == PortfolioScope.ALL || _sheet.value == PortfolioSheet.Wallets) {
             snap.wallets.map { it.id }
         } else {
@@ -327,7 +394,7 @@ class PortfolioViewModel @Inject constructor(
         }
     }
 
-    // ── Scope, lens, legend, rows ─────────────────────────────────────────────────────────────
+    // ── Scope and legend ──────────────────────────────────────────────────────────────────────
 
     fun openSheet(sheet: PortfolioSheet) {
         _sheet.value = sheet
@@ -338,43 +405,38 @@ class PortfolioViewModel @Inject constructor(
     }
 
     fun selectAllWallets() {
-        scopeRequest.value = PortfolioScope.ALL
+        scopeRequest.value = Optional.of(PortfolioScope.ALL)
         highlight.value = null
         closeSheet()
-        viewModelScope.launch { preferences.setScope(PortfolioScope.ALL) }
+        viewModelScope.launch {
+            preferences.setScope(PortfolioScope.ALL)
+            liveSource.rememberScope(PortfolioScope.ALL)
+        }
     }
 
     /** Picking one wallet shows it alone; a wallet that is not selected is switched to first. */
     fun selectWallet(walletId: String) {
         viewModelScope.launch {
             if (!ensureSelected(walletId)) return@launch
-            scopeRequest.value = PortfolioScope.SELECTED
             highlight.value = null
             closeSheet()
+            // With one wallet there is nothing to choose: a second wallet still opens All wallets.
+            if ((snapshot.value?.wallets?.size ?: 0) < 2) return@launch
+            scopeRequest.value = Optional.of(PortfolioScope.SELECTED)
             preferences.setScope(PortfolioScope.SELECTED)
+            liveSource.rememberScope(PortfolioScope.SELECTED)
         }
     }
 
-    fun selectLens(lens: PortfolioLens) {
-        lensRequest.value = lens
-        highlight.value = null
-        viewModelScope.launch { preferences.setLens(lens) }
-    }
-
-    /** First tap highlights a group; a second tap on a token group opens its "Where it lives". */
-    fun onLegendTap(key: String?) {
-        val current = model.value ?: return
-        if (key == null) {
-            highlight.value = null
-            return
-        }
-        if (highlight.value == key) {
-            if (current.lens == PortfolioLens.TOKENS) {
+    /** The first tap picks a token on the ring; a second tap opens its "Where it lives". */
+    fun onLegendTap(key: String) {
+        when {
+            key == OTHER_KEY -> highlight.value = null
+            highlight.value == key -> {
+                highlight.value = null
                 _effects.trySend(PortfolioEffect.OpenWhereItLives(key))
             }
-            highlight.value = null
-        } else {
-            highlight.value = key
+            else -> highlight.value = key
         }
     }
 
@@ -422,10 +484,15 @@ class PortfolioViewModel @Inject constructor(
         viewModelScope.launch {
             if (!ensureSelected(walletId)) return@launch
             closeSheet()
-            when (action) {
-                WalletAction.SEND -> assetsRouter.showContacts(AssetHolder.XOR_ASSET_ID)
-                WalletAction.RECEIVE -> walletRouter.openQrCodeFlow()
-            }
+            _effects.send(PortfolioEffect.ContinueAction(action, walletId))
+        }
+    }
+
+    /** SORA2's own Send or Receive for the selected wallet. */
+    fun openSora2Action(action: WalletAction) {
+        when (action) {
+            WalletAction.SEND -> assetsRouter.showContacts(AssetHolder.XOR_ASSET_ID)
+            WalletAction.RECEIVE -> walletRouter.openQrCodeFlow()
         }
     }
 
@@ -530,12 +597,17 @@ class PortfolioViewModel @Inject constructor(
         }
     }
 
+    /** The holding's full page: SORA2's asset page, or that network's XOR page. */
     fun openAssetDetails(holdingKey: String) {
         viewModelScope.launch {
             val holding = model.value?.holding(holdingKey) ?: return@launch
-            if (holding.network != WalletNetworkId.SORA2) return@launch
             if (!ensureSelected(holding.walletId)) return@launch
-            assetsRouter.showAssetDetails(holding.token.id)
+            when (holding.network) {
+                WalletNetworkId.SORA2 -> assetsRouter.showAssetDetails(holding.token.id)
+                WalletNetworkId.MINAMOTO, WalletNetworkId.TAIRA -> _effects.send(
+                    PortfolioEffect.OpenNexusPage(holding.walletId, holding.network, holding.address)
+                )
+            }
         }
     }
 
@@ -544,7 +616,10 @@ class PortfolioViewModel @Inject constructor(
      * existing account switch. Returns false (and says why) when the switch did not happen.
      */
     private suspend fun ensureSelected(walletId: String): Boolean {
-        val current = snapshot.value ?: return false
+        // The saved picture only shows: acting needs what the app says is selected now.
+        val current = withTimeoutOrNull(SWITCH_TIMEOUT_MS) {
+            snapshot.first { it != null && !it.saved }
+        } ?: return false
         if (current.selectedWallet?.id == walletId) return true
         if (_busy.value) return false
         _busy.value = true

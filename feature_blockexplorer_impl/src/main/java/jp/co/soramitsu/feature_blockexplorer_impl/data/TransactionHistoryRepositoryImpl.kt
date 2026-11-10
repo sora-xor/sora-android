@@ -27,7 +27,7 @@ import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.domain.Market
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.domain.TransactionNodeRefusal
-import jp.co.soramitsu.common.logger.FirebaseWrapper
+import jp.co.soramitsu.common.logger.WalletDiagnostics
 import jp.co.soramitsu.core_db.AppDatabase
 import jp.co.soramitsu.core_db.model.Sora2PendingSubmissionLocal
 import jp.co.soramitsu.feature_blockexplorer_api.data.IndexerHistoryElement
@@ -150,8 +150,8 @@ class TransactionHistoryRepositoryImpl @Inject constructor(
             }
         }.getOrElse {
             if (it is CancellationException) throw it
-            FirebaseWrapper.recordErrorClass(
-                FirebaseWrapper.PrivacySafeErrorClass.PI_TRANSACTION_PEERS
+            WalletDiagnostics.recordErrorClass(
+                WalletDiagnostics.PrivacySafeErrorClass.PI_TRANSACTION_PEERS
             )
             return emptySet()
         }
@@ -188,8 +188,8 @@ class TransactionHistoryRepositoryImpl @Inject constructor(
             )
         }.getOrElse {
             if (it is CancellationException) throw it
-            FirebaseWrapper.recordErrorClass(
-                FirebaseWrapper.PrivacySafeErrorClass.PI_TRANSACTION_HISTORY
+            WalletDiagnostics.recordErrorClass(
+                WalletDiagnostics.PrivacySafeErrorClass.PI_TRANSACTION_HISTORY
             )
             emptyList()
         }.filter {
@@ -227,8 +227,8 @@ class TransactionHistoryRepositoryImpl @Inject constructor(
             )
         }.getOrElse {
             if (it is CancellationException) throw it
-            FirebaseWrapper.recordErrorClass(
-                FirebaseWrapper.PrivacySafeErrorClass.PI_TRANSACTION_DETAIL
+            WalletDiagnostics.recordErrorClass(
+                WalletDiagnostics.PrivacySafeErrorClass.PI_TRANSACTION_DETAIL
             )
             emptyList()
         }
@@ -264,8 +264,8 @@ class TransactionHistoryRepositoryImpl @Inject constructor(
             )
         }.getOrElse {
             if (it is CancellationException) throw it
-            FirebaseWrapper.recordErrorClass(
-                FirebaseWrapper.PrivacySafeErrorClass.PI_TRANSACTION_HISTORY
+            WalletDiagnostics.recordErrorClass(
+                WalletDiagnostics.PrivacySafeErrorClass.PI_TRANSACTION_HISTORY
             )
             return TransactionsInfo(
                 buildList {

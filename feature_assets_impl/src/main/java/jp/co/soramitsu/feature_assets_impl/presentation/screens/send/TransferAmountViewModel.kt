@@ -46,7 +46,7 @@ import jp.co.soramitsu.common.domain.lockedFree
 import jp.co.soramitsu.common.domain.payableAsFee
 import jp.co.soramitsu.common.domain.printFiat
 import jp.co.soramitsu.common.domain.subtractFee
-import jp.co.soramitsu.common.logger.FirebaseWrapper
+import jp.co.soramitsu.common.logger.WalletDiagnostics
 import jp.co.soramitsu.common.presentation.compose.components.initSmallTitle2
 import jp.co.soramitsu.common.presentation.transaction.TransactionOutcomeTexts
 import jp.co.soramitsu.common.presentation.transaction.TransactionResultBadge
@@ -54,6 +54,7 @@ import jp.co.soramitsu.common.presentation.transaction.badge
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.view.ViewHelper
+import jp.co.soramitsu.common_wallet.presentation.compose.util.AmountFormat
 import jp.co.soramitsu.common_wallet.presentation.compose.util.PolkaswapFormulas
 import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
 import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
@@ -360,14 +361,8 @@ class TransferAmountViewModel @AssistedInject constructor(
         )
     }
 
-    private fun getAssetBalanceText(asset: Asset) = "%s (%s)".format(
-        asset.printBalance(
-            numbersFormatter,
-            withSymbol = false,
-            precision = AssetHolder.ROUNDING
-        ),
-        asset.printFiat(numbersFormatter)
-    )
+    private fun getAssetBalanceText(asset: Asset) =
+        AmountFormat.getAssetBalanceText(asset, numbersFormatter, AssetHolder.ROUNDING)
 
     private suspend fun calcTransactionFee(feeAsset: Asset, amount: BigDecimal) {
         val token = curAsset?.token ?: return
@@ -444,7 +439,7 @@ class TransferAmountViewModel @AssistedInject constructor(
         if (error is SoraException && error.kind == SoraException.Kind.BUSINESS) {
             onError(error)
         } else {
-            FirebaseWrapper.recordException(error)
+            WalletDiagnostics.recordException(error)
         }
     }
 
@@ -621,7 +616,7 @@ class TransferAmountViewModel @AssistedInject constructor(
             } catch (error: Throwable) {
                 // The dialog was shown. A balance that cannot be read now is read again by the
                 // app's own refresh; Confirm keeps checking against the network either way.
-                FirebaseWrapper.recordException(error)
+                WalletDiagnostics.recordException(error)
             }
         }
     }

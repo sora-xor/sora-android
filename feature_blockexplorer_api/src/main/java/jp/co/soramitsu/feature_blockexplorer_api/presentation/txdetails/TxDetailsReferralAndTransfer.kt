@@ -27,14 +27,20 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.domain.DEFAULT_ICON_URI
 import jp.co.soramitsu.common.presentation.compose.TokenIcon
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
 
+/**
+ * The page of a transfer or a referral transaction. SORA2 transfers and the XOR transfers of the
+ * other networks are shown on this one page; the last three parameters default to SORA2's.
+ */
 @Composable
 fun TxDetailsReferralOrTransferScreen(
     modifier: Modifier,
@@ -45,6 +51,9 @@ fun TxDetailsReferralOrTransferScreen(
     onCloseClick: () -> Unit,
     onCopyClick: (String) -> Unit,
     onOpenExplorerClick: (String) -> Unit,
+    showBlockId: Boolean = true,
+    showTxHash: Boolean = true,
+    explorerText: String = stringResource(id = R.string.tx_details_view_on_explorer),
 ) {
     BasicTxDetails(
         modifier = modifier,
@@ -69,6 +78,9 @@ fun TxDetailsReferralOrTransferScreen(
         onCloseClick = onCloseClick,
         onCopy = onCopyClick,
         onOpenExplorer = onOpenExplorerClick,
+        showBlockId = showBlockId,
+        showTxHash = showTxHash,
+        explorerText = explorerText,
     )
 }
 

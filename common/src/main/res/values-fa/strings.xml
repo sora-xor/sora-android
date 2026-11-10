@@ -33,8 +33,6 @@
   <string name="address_not_found_1">دریافت کننده پیدا نشد</string>
   <string name="amount_error_no_funds">متأسفیم ، بودجه کافی برای انتقال مبلغ مشخص شده ندارید.</string>
   <string name="appearance_title">Appearance</string>
-  <string name="appearance_reduce_effects">Reduce effects</string>
-  <string name="appearance_reduce_effects_description">Turns off glow, glass and motion effects. Useful on older phones or to save battery.</string>
   <string name="apr_description">APR in farming denotes the annualized return on investment for participating in DeFi liquidity provision or staking activities.</string>
   <string name="ask_biometry_message">آیا می‌خواهید از بیومتری برای احراز هویت استفاده کنید؟</string>
   <string name="asset_details_asset_id">Asset ID</string>
@@ -253,16 +251,16 @@
   <string name="export_json_input_label">Set password for JSON file</string>
   <string name="export_protection_json_1">If I lose my JSON, my funds will be lost forever.</string>
   <string name="export_protection_json_2">If I expose or share my JSON to anybody, my funds can get stolen.</string>
-  <string name="export_protection_json_3">It is my full reponsibility to keep my JSON secure.</string>
+  <string name="export_protection_json_3">It is my full responsibility to keep my JSON secure.</string>
   <string name="export_protection_json_description">In the next step you will be able to download a JSON file that allow you to recover your accounts.</string>
   <string name="export_protection_json_title">Export JSON</string>
   <string name="export_protection_passphrase_1">If I lose my passphrase, my funds will be lost forever.</string>
   <string name="export_protection_passphrase_2">If I expose or share my passphrase to anybody, my funds can get stolen.</string>
-  <string name="export_protection_passphrase_3">It is my full reponsibility to keep my passphrase secure.</string>
+  <string name="export_protection_passphrase_3">It is my full responsibility to keep my passphrase secure.</string>
   <string name="export_protection_passphrase_description">In the next step you will see the 24-word passphrase that allows you to recover the account.</string>
   <string name="export_protection_seed_1">If I lose my raw seed, my funds will be lost forever.</string>
   <string name="export_protection_seed_2">If I expose or share my raw seed to anybody, my funds can get stolen.</string>
-  <string name="export_protection_seed_3">It is my full reponsibility to keep my raw seed secure.</string>
+  <string name="export_protection_seed_3">It is my full responsibility to keep my raw seed secure.</string>
   <string name="export_protection_seed_description">In the next step you will see Raw Seed (a long hash) that allow you to recover an account.</string>
   <string name="export_select_account">Select account for batch export</string>
   <string name="faq_title">سوالات متداول</string>
@@ -273,7 +271,7 @@
   <string name="history_referrer">Referrer</string>
   <string name="import_account_not_backed_up">Not backed up!</string>
   <string name="import_account_not_backed_up_alert_action_title">I will risk it</string>
-  <string name="import_account_not_backed_up_alert_description">If your device gets lost or stolen, you will loose your wallet and all your funds forever.</string>
+  <string name="import_account_not_backed_up_alert_description">If your device gets lost or stolen, you will lose your wallet and all your funds forever.</string>
   <string name="import_more_title">Import more</string>
   <string name="imported_account_title">Account imported</string>
   <string name="invite_code_applied_body">کد با موفقیت اعمال شد</string>
@@ -505,7 +503,6 @@
   <string name="wallet_unbonded">Unbonded</string>
   <string name="wallet_unbonding">جدا سازی</string>
   <string name="your_pooled">Your %s pooled</string>
-  <string name="wallet_network_activity">فعالیت</string>
   <string name="wallet_keys_unavailable">This phone can\'t unlock the saved wallet data</string>
   <string name="wallet_keys_unavailable_description">The wallet data on this phone can\'t be unlocked here, for example because it was copied from another phone. Nothing was changed, and your funds are safe on the blockchain. Close and reopen the app to see your recovery options, or contact support.</string>
   <string name="safe_mode_technical_details">Technical details</string>
@@ -749,11 +746,12 @@
   <string name="neon_theme_light">Light</string>
   <!-- English fallback for new Nexus and recovery copy pending translation. -->
   <string name="nexus_production_address">Production address</string>
-  <string name="nexus_copy_production_address">Copy production address</string>
-  <string name="nexus_production_not_live">Not live yet</string>
   <string name="nexus_production_address_notice">Your SORA Nexus production address is ready to copy. The production network has not launched yet; balances, history and transfers will be available after launch.</string>
   <string name="nexus_send_not_available">Sending is currently unavailable for this account. You can view your balance, copy your address and receive testnet XOR.</string>
   <string name="nexus_history_load_more">Load older transfers</string>
   <string name="recovery_json_password_help">Enter the password you set when saving this backup. This is not your app PIN.</string>
   <string name="account_switching">Switching account…</string>
+  <string name="hide_zero_balances">Hide zero balances</string>
+  <string name="show_zero_balances">Show zero balances</string>
+  <string name="global_results">Global results</string>
 </resources>

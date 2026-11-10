@@ -34,7 +34,7 @@ import jp.co.soramitsu.common.domain.DEFAULT_ICON_URI
 import jp.co.soramitsu.common.presentation.compose.theme.SoraAppTheme
 import jp.co.soramitsu.common_wallet.presentation.compose.components.AssetItem
 import jp.co.soramitsu.common_wallet.presentation.compose.states.AssetItemCardState
-import jp.co.soramitsu.feature_assets_impl.presentation.components.compose.assetdetails.AssetDetailsBalanceCard
+import jp.co.soramitsu.common_wallet.presentation.compose.assetdetails.AssetDetailsBalanceCard
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test

@@ -61,17 +61,20 @@ data class FxPolicy(
     val opaqueGlass: Boolean,
     val highContrast: Boolean,
 ) {
-    /** Coloured glow layers. Off under high contrast (borders carry the state instead). */
-    val glows: Boolean get() = !highContrast
+    // The classic SORA design draws every surface solid, with no glow, live blur, pulse or
+    // ambient texture, whatever the tier.
+
+    /** Coloured glow layers. */
+    val glows: Boolean get() = false
 
     /** Cross-window blur behind dialogs and sheets. */
-    val realBlur: Boolean get() = tier == FxTier.FULL && !opaqueGlass && !highContrast
+    val realBlur: Boolean get() = false
 
     /** Finite CTA pulse and Safe Mode breathing. */
-    val pulses: Boolean get() = tier == FxTier.FULL && !reduceMotion
+    val pulses: Boolean get() = false
 
     /** Grain and grid textures. */
-    val ambientDetail: Boolean get() = tier != FxTier.MINIMAL
+    val ambientDetail: Boolean get() = false
 
     /** Neumorphic shadows and the light-theme card shadow. */
     val shadows: Boolean get() = tier != FxTier.MINIMAL
@@ -81,7 +84,7 @@ data class FxPolicy(
 
     companion object {
         /** Safe default used before a device has been measured (and in previews). */
-        val Default = FxPolicy(FxTier.REDUCED, reduceMotion = false, opaqueGlass = false, highContrast = false)
+        val Default = FxPolicy(FxTier.REDUCED, reduceMotion = false, opaqueGlass = true, highContrast = false)
 
         fun from(signals: DeviceFxSignals, reduceEffects: Boolean): FxPolicy {
             val tier = resolveFxTier(
@@ -94,7 +97,7 @@ data class FxPolicy(
             return FxPolicy(
                 tier = tier,
                 reduceMotion = reduceEffects || !signals.animatorsEnabled,
-                opaqueGlass = tier == FxTier.MINIMAL,
+                opaqueGlass = true,
                 highContrast = signals.highContrast,
             )
         }

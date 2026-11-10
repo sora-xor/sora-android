@@ -47,13 +47,19 @@ internal object NexusHistoryCursorCollector {
 /** Current public account movement projection; no private keys or Norito decoder are needed. */
 internal object NexusAccountHistoryParser {
     fun page(result: JsonObject, network: NexusNetwork, account: String, assetDefinitionId: String,
-             maximum: Int, expectedHash: String? = null): NexusTransferHistorySlice {
+             maximum: Int, expectedHash: String? = null,
+             expectedBlockHeight: Long? = null): NexusTransferHistorySlice {
         return pageBody(result["body"] as? JsonObject ?: invalid(), network, account,
-            assetDefinitionId, maximum, expectedHash)
+            assetDefinitionId, maximum, expectedHash, expectedBlockHeight)
     }
 
+    /**
+     * [expectedBlockHeight] is the block a narrowed lookup asked for: a row from any other block
+     * means the server did not apply the filter, and the whole page is rejected.
+     */
     fun pageBody(body: JsonObject, network: NexusNetwork, account: String, assetDefinitionId: String,
-                 maximum: Int, expectedHash: String? = null): NexusTransferHistorySlice {
+                 maximum: Int, expectedHash: String? = null,
+                 expectedBlockHeight: Long? = null): NexusTransferHistorySlice {
         val source = body["items"] as? JsonArray ?: invalid()
         if (source.size > maximum) invalid()
         val nextCursor = cursor(body["next_cursor"])
@@ -76,7 +82,8 @@ internal object NexusAccountHistoryParser {
             val amount = text("amount")
             if (!NexusQuantityContract.isWireQuantity(amount) || BigDecimal(amount).signum() <= 0 ||
                 (network.id == WalletNetworkId.TAIRA && !NexusQuantityContract.isTairaXorQuantity(amount))) invalid()
-            positive("block_height")
+            val blockHeight = positive("block_height")
+            if (expectedBlockHeight != null && blockHeight != expectedBlockHeight) invalid()
             val direction = text("direction")
             val counterparty = if (direction == "self") account else
                 IrohaAddressCodec.parse(text("counterparty_account_id"), network.chainDiscriminant).address

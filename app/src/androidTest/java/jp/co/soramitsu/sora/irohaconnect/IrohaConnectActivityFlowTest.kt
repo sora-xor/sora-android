@@ -6,7 +6,6 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.view.WindowManager
-import androidx.biometric.BiometricManager
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createEmptyComposeRule
 import androidx.lifecycle.Lifecycle
@@ -53,18 +52,13 @@ class IrohaConnectActivityFlowTest {
         override fun onActivityDestroyed(activity: Activity) = Unit
     }
     @Before fun setup() { app.registerActivityLifecycleCallbacks(callbacks) }
-    @After fun cleanup() { scenario?.close(); app.unregisterActivityLifecycleCallbacks(callbacks); unmockkStatic(BiometricManager::class) }
+    @After fun cleanup() { scenario?.close(); app.unregisterActivityLifecycleCallbacks(callbacks) }
     private fun launch(link: String? = "iroha-connect://public-fixture") {
         launchLink = link
         scenario = ActivityScenario.launch(Intent(app, IrohaConnectActivity::class.java))
         compose.waitForIdle()
     }
     private fun phase(value: IrohaConnectUiPhase) = compose.runOnUiThread { screenState.value = screenState.value.copy(phase = value) }
-    private fun unavailableAuthentication() {
-        mockkStatic(BiometricManager::class)
-        val manager = mockk<BiometricManager> { every { canAuthenticate(any()) } returns BiometricManager.BIOMETRIC_ERROR_NO_HARDWARE }
-        every { BiometricManager.from(any()) } returns manager
-    }
     private fun pairing() { screenState.value = screenState.value.copy(phase = IrohaConnectUiPhase.PAIRING,
         pairing = IrohaConnectPairingReview("Fixture app", "https://fixture.invalid", "Taira", "taira",
             IrohaConnectPermissions(listOf("sign_raw"), emptyList(), emptyList()), "abcd1234", Long.MAX_VALUE)) }
@@ -110,19 +104,27 @@ class IrohaConnectActivityFlowTest {
     }
     @Test fun rejectingPairingUsesOnlyPairingRejection() {
         pairing(); launch(); compose.onNodeWithText(app.getString(R.string.wallet_connect_action_decline)).performScrollTo().performClick()
-        verify(exactly = 1) { vm.rejectPairing() }; verify(exactly = 0) { vm.approvePairingAfterAuthentication(); vm.approveSigningAfterAuthentication() }
+        verify(exactly = 1) { vm.rejectPairing() }; verify(exactly = 0) { vm.approvePairing(any(), any()); vm.approveSigning(any(), any()) }
     }
     @Test fun rejectingSigningUsesOnlySigningRejection() {
         signing(); launch(); compose.onNodeWithTag("reject_signing").performScrollTo().performClick()
-        verify(exactly = 1) { vm.rejectSigning() }; verify(exactly = 0) { vm.approveSigningAfterAuthentication() }
+        verify(exactly = 1) { vm.rejectSigning() }; verify(exactly = 0) { vm.approveSigning(any(), any()) }
     }
-    @Test fun pairingCannotApproveWhenDeviceAuthenticationIsUnavailable() {
-        unavailableAuthentication(); pairing(); launch(); compose.onNodeWithTag("approve_pairing").performScrollTo().performClick()
-        verify(exactly = 1) { vm.authorizationUnavailable() }; verify(exactly = 0) { vm.approvePairingAfterAuthentication() }
+    @Test fun pairingRequiresTheWalletPinAndBindsItToTheReviewedSession() {
+        pairing(); launch(); compose.onNodeWithTag("approve_pairing").performScrollTo().performClick()
+        verify(exactly = 0) { vm.approvePairing(any(), any()) }
+        "123456".forEach { compose.onNodeWithText(it.toString(), useUnmergedTree = true).performClick() }
+        compose.onNodeWithText(app.getString(R.string.common_confirm)).performClick()
+        verify(exactly = 1) { vm.approvePairing("123456", "abcd1234") }
     }
-    @Test fun signingCannotApproveWhenDeviceAuthenticationIsUnavailable() {
-        unavailableAuthentication(); signing(); launch(); compose.onNodeWithTag("approve_signing").performScrollTo().performClick()
-        verify(exactly = 1) { vm.authorizationUnavailable() }; verify(exactly = 0) { vm.approveSigningAfterAuthentication() }
+    @Test fun cancelingSignaturePinNeverApprovesAndChangingReviewClosesPrompt() {
+        signing(); launch(); compose.onNodeWithTag("approve_signing").performScrollTo().performClick()
+        compose.onNodeWithText(app.getString(R.string.common_cancel)).performClick()
+        verify(exactly = 0) { vm.approveSigning(any(), any()) }
+        compose.onNodeWithTag("approve_signing").performScrollTo().performClick()
+        phase(IrohaConnectUiPhase.CONNECTED)
+        compose.onNodeWithText(app.getString(R.string.account_repair_pin_label)).assertDoesNotExist()
+        verify(exactly = 0) { vm.approveSigning(any(), any()) }
     }
     @Test fun newIntentConsumesReplacementLinkAndStartsNewAttempt() {
         launch(); val next = Intent(app, IrohaConnectActivity::class.java).setData(Uri.parse("iroha-connect://replacement-fixture"))

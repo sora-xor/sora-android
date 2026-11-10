@@ -39,7 +39,7 @@ import jp.co.soramitsu.common.domain.formatFiatChange
 import jp.co.soramitsu.common.domain.formatFiatOrEmpty
 import jp.co.soramitsu.common.domain.iconUri
 import jp.co.soramitsu.common.domain.printFiat
-import jp.co.soramitsu.common.logger.FirebaseWrapper
+import jp.co.soramitsu.common.logger.WalletDiagnostics
 import jp.co.soramitsu.common.presentation.compose.components.initSmallTitle2
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.util.NumbersFormatter
@@ -215,7 +215,7 @@ class AssetDetailsViewModel @AssistedInject constructor(
         } catch (cancellation: CancellationException) {
             throw cancellation
         } catch (error: Throwable) {
-            FirebaseWrapper.recordException(error)
+            WalletDiagnostics.recordException(error)
             null
         }
         return live ?: BalanceWrapper.mapStoredXorBalance(asset.balance)

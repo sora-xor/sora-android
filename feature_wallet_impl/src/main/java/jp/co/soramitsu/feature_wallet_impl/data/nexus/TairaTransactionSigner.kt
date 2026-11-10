@@ -92,7 +92,10 @@ class TairaTransactionSigner(
     }
 }
 
-/** Taira deliberately uses node-reported HTTPS applied checkpoints; production remains unavailable. */
+/**
+ * Taira deliberately uses node-reported HTTPS applied checkpoints (TairaSigningClient.checkpoint);
+ * production remains unavailable.
+ */
 class TairaHttpsConfirmationReader(private val client: TairaSigningClient = TairaSigningClient()) : NexusFinalityReader {
     override fun isQualifiedFor(network: NexusNetwork): Boolean = network == NexusNetworks.taira
     override suspend fun finalizedCheckpoint(network: NexusNetwork): NexusFinalityCheckpoint {

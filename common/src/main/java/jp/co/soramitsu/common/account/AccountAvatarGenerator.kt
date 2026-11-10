@@ -39,4 +39,11 @@ class AccountAvatarGenerator(
 
     fun createAvatar(address: String, sizeInDp: Int): PictureDrawable =
         createAvatarFromKey(publicKey = address.toAccountId().toHexString(false), sizeInDp = sizeInDp)
+
+    /**
+     * The avatar of an account on a network whose addresses are not SS58 (SORA Nexus, Taira):
+     * drawn from its public key, as [createAvatar] draws a SORA2 account from its account ID.
+     */
+    fun createAvatarFromPublicKey(publicKeyHex: String, sizeInDp: Int): PictureDrawable =
+        createAvatarFromKey(publicKey = publicKeyHex.lowercase(), sizeInDp = sizeInDp)
 }

@@ -20,6 +20,7 @@ limitations under the License.
 package jp.co.soramitsu.feature_main_impl.domain
 
 import javax.inject.Inject
+import jp.co.soramitsu.feature_account_api.domain.WalletPinVerifier
 import jp.co.soramitsu.common.account.RecoveryPhrase
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsRepository
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
@@ -68,7 +69,8 @@ class WalletRemovalBriefing(
 class PinCodeInteractor @Inject constructor(
     private val userRepository: UserRepository,
     private val credentialsRepository: CredentialsRepository,
-    private val walletRepository: WalletRepository
+    private val walletRepository: WalletRepository,
+    private val pinVerifier: WalletPinVerifier = WalletPinVerifier(userRepository),
 ) {
 
     companion object {
@@ -81,7 +83,7 @@ class PinCodeInteractor @Inject constructor(
         return userRepository.savePin(pin)
     }
 
-    suspend fun checkPin(code: String) = userRepository.retrievePin() == code
+    suspend fun checkPin(code: String) = pinVerifier.verify(code)
 
     suspend fun isCodeSet(): Boolean {
         return userRepository.retrievePin().isNotEmpty()

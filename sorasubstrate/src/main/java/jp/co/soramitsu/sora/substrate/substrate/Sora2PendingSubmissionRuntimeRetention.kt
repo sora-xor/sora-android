@@ -3,7 +3,7 @@ package jp.co.soramitsu.sora.substrate.substrate
 import dagger.Lazy
 import javax.inject.Inject
 import javax.inject.Singleton
-import jp.co.soramitsu.common.logger.FirebaseWrapper
+import jp.co.soramitsu.common.logger.WalletDiagnostics
 import jp.co.soramitsu.core_db.AppDatabase
 import jp.co.soramitsu.core_db.WalletUpgradeBackup
 import jp.co.soramitsu.sora.substrate.runtime.Sora2RecoveryRuntimeIdentity
@@ -37,7 +37,7 @@ class Sora2PendingSubmissionRuntimeRetention @Inject constructor(
         } catch (error: CancellationException) {
             throw error
         } catch (error: Exception) {
-            FirebaseWrapper.recordException(error)
+            WalletDiagnostics.recordException(error)
             null
         }
     }

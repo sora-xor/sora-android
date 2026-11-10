@@ -85,8 +85,8 @@ dependencies {
 
     implementation(libs.timberDep)
 
-    implementation(libs.xcryptoDep)
-    implementation(libs.xsubstrateDep)
+    implementation(project(":xcrypto"))
+    implementation(project(":xsubstrate"))
 
     implementation(libs.appcompatDep)
     implementation(libs.materialDep)
@@ -96,7 +96,7 @@ dependencies {
     implementation(libs.coroutineDep)
     implementation(libs.viewmodelKtxDep)
 
-    implementation(libs.uiCoreDep)
+    implementation(project(":ui-core"))
     implementation(libs.soramitsu.android.foundation)
 
     implementation(libs.coilDep)
@@ -107,7 +107,7 @@ dependencies {
     implementation(libs.navigationFragmentDep)
     implementation(libs.navigationUiDep)
 
-    implementation(libs.uiCoreDep)
+    implementation(project(":ui-core"))
 
     implementation(platform(libs.compose.bom))
     implementation(libs.composeUiDep)
@@ -121,7 +121,7 @@ dependencies {
     implementation(libs.composeLiveDataDep)
     implementation(libs.navigationComposeDep)
 
-    implementation(libs.xbackupDep)
+    implementation(project(":xbackup"))
     // The phone's screen lock confirms a repair when the stored PIN cannot be read (already
     // used by :app and :feature_main_impl).
     implementation(libs.biometricDep)

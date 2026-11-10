@@ -48,7 +48,6 @@ class PortfolioHostFlowTest {
 
     private fun model(
         scope: PortfolioScope = PortfolioScope.ALL,
-        lens: PortfolioLens = PortfolioLens.TOKENS,
         holdings: List<PortfolioHolding> = listOf(source, secondary, testnet,
             source.copy(token = valToken, total = BigDecimal("4")),
             source.copy(token = unpriced), source.copy(token = valToken.copy(id = "hidden", symbol = "HIDDEN"), hidden = true)),
@@ -59,8 +58,8 @@ class PortfolioHostFlowTest {
             wallets.associate { it.id to WalletSync(now, live = it.selected) }, true,
             wallets.associate { wallet -> wallet.id to WalletNetworkId.entries.associateWith { "${wallet.id}-${it.wireId}" } }, "$")
         val ids = PortfolioCalculator.scopeWalletIds(snapshot, scope)
-        val groups = PortfolioCalculator.groups(snapshot, ids, lens)
-        return PortfolioModel(snapshot, false, now, scope, ids, lens, PortfolioCalculator.availableLenses(scope),
+        val groups = PortfolioCalculator.groups(snapshot, ids, PortfolioLens.TOKENS)
+        return PortfolioModel(snapshot, false, now, scope, ids,
             PortfolioCalculator.scopeTotals(snapshot, ids), PortfolioCalculator.worstFreshness(snapshot, ids, now), groups,
             PortfolioCalculator.fan(groups), groups.mapIndexed { index, group -> group.key to index }.toMap(),
             mapOf("main" to 0, "savings" to 1), PortfolioCalculator.walletSummaries(snapshot, now),
@@ -107,7 +106,7 @@ class PortfolioHostFlowTest {
             ids.associateWith { if (it == WalletNetworkId.SORA2) "main-sora2" else "main-${it.wireId}" },
             emptyMap(), { true }, directory = WalletNetworkDirectory { true })
     }
-    private fun show(startToken: String? = null) {
+    private fun show(startToken: String? = null, cards: CardsState = CardsState("main", curAccount = "main")) {
         compose.setContent {
             val soraValue by sora.collectAsState()
             val nexus by balances.collectAsState()
@@ -117,11 +116,17 @@ class PortfolioHostFlowTest {
                     NavHost(nav, startDestination = theOnlyRoute) {
                         composable(theOnlyRoute) {
                             PortfolioHomeHost(rememberScrollState(), nav, portfolio, hub,
-                                CardsState("main"), soraValue, nexus)
+                                cards, soraValue, nexus)
                         }
-                        composable(PortfolioRoutes.TOKEN) { entry ->
+                        composable(PortfolioRoutes.TOKEN, PortfolioRoutes.tokenArguments) { entry ->
                             PortfolioWhereItLivesHost(entry.arguments?.getString(PortfolioRoutes.TOKEN_ARG).orEmpty(),
-                                nav, portfolio, hub, {})
+                                nav, portfolio, hub, entry.arguments?.getString(PortfolioRoutes.HOLDING_ARG))
+                        }
+                        // The network pages themselves are NexusXorPagesTest's; here only which one opens.
+                        for (route in listOf(NexusRoutes.ASSET, NexusRoutes.RECEIVE)) {
+                            composable(route) { entry ->
+                                androidx.compose.material.Text("$route:${entry.arguments?.getString(NexusRoutes.NETWORK_ARG)}")
+                            }
                         }
                     }
                 }
@@ -140,6 +145,32 @@ class PortfolioHostFlowTest {
                         address: String = "main-minamoto", recipient: String? = "destination", amount: String? = "1.25") =
         PortfolioEffect.OpenNexusSend(wallet, network, address, recipient, amount)
 
+    @Test fun beforeTheFirstModelNothingSpinsAndTheCardsAreStillThere() {
+        current.value = null
+        show(cards = CardsState("main", curAccount = "Main wallet", cards = listOf(jp.co.soramitsu.common_wallet.presentation.compose.states.ReferralState)))
+        compose.onNodeWithText(compose.activity.getString(R.string.referral_start_inviting)).performScrollTo().assertExists()
+        compose.onAllNodes(SemanticsMatcher.keyIsDefined(androidx.compose.ui.semantics.SemanticsProperties.ProgressBarRangeInfo))
+            .assertCountEquals(0)
+    }
+    @Test fun hubCardsListPoolsBeforeBannersAndRouteTheirTaps() {
+        val pool = jp.co.soramitsu.common_wallet.presentation.compose.states.PoolsListItemState(
+            "", "", "XOR", "VAL", "2 XOR - 5 VAL", "$14.00", "+1%", "xor" to "val", emptyList())
+        val cards = listOf(
+            jp.co.soramitsu.common_wallet.presentation.compose.states.ReferralState,
+            jp.co.soramitsu.common_wallet.presentation.compose.states.BackupWalletState,
+            jp.co.soramitsu.common_wallet.presentation.compose.states.TitledAmountCardState(
+                "$14.00", jp.co.soramitsu.common.domain.CardHubType.POOLS.userName,
+                jp.co.soramitsu.common_wallet.presentation.compose.states.FavoritePoolsCardState(
+                    jp.co.soramitsu.common_wallet.presentation.compose.states.PoolsListState(listOf(pool))),
+                onCollapseClick = {}, loading = false),
+        )
+        show(cards = CardsState("main", curAccount = "main", cards = cards))
+        compose.onNodeWithText("2 XOR - 5 VAL").performScrollTo().performClick()
+        click(R.string.referral_start_inviting); click(R.string.backup_now); click(R.string.edit_view)
+        compose.runOnIdle {
+            verify(exactly = 1) { hub.onPoolClick("xor" to "val"); hub.onStartReferral(); hub.onBackupBannerClick(); hub.onEditViewClick() }
+        }
+    }
     @Test fun soraOnlySendUsesExistingPortfolioFlow() {
         choose(WalletNetworkId.SORA2); show(); click(R.string.common_send)
         compose.runOnIdle { verify(exactly = 1) { portfolio.onQuickSend() }; verify(exactly = 0) { hub.openNexusSend(any()) } }
@@ -152,20 +183,34 @@ class PortfolioHostFlowTest {
         choose(WalletNetworkId.MINAMOTO); show(); click(R.string.common_send)
         compose.runOnIdle { verify(exactly = 1) { hub.openNexusSend(balances.value.single()) }; verify(exactly = 0) { portfolio.onQuickSend() } }
     }
-    @Test fun singleNexusReceiveShowsCurrentAddress() {
+    @Test fun singleNexusReceiveOpensThatNetworksReceivePage() {
         choose(WalletNetworkId.MINAMOTO); show(); click(R.string.common_receive)
-        compose.onNodeWithText("main-minamoto").assertIsDisplayed()
+        compose.onNodeWithText("${NexusRoutes.RECEIVE}:minamoto").assertIsDisplayed()
         compose.runOnIdle { verify(exactly = 0) { hub.openNexusSend(any()) } }
     }
     @Test fun multiNetworkPickerSoraChoiceReturnsToDashboard() {
         choose(WalletNetworkId.SORA2, WalletNetworkId.MINAMOTO); show(); click(R.string.common_send)
         compose.onNodeWithTag("NetworkChoicesora2").performClick()
-        compose.runOnIdle { verify(exactly = 1) { portfolio.onQuickSend() } }
+        compose.runOnIdle { verify(exactly = 1) { portfolio.openSora2Action(WalletAction.SEND) } }
         compose.onNodeWithTag("NetworkChoiceminamoto").assertDoesNotExist()
     }
     @Test fun multiNetworkPickerNexusChoiceSelectsExactNetwork() {
         choose(WalletNetworkId.SORA2, WalletNetworkId.MINAMOTO); show(); click(R.string.common_send)
         compose.onNodeWithTag("NetworkChoiceminamoto").performClick()
+        compose.runOnIdle { verify(exactly = 1) { hub.openNexusSend(balances.value.single()) } }
+    }
+    @Test fun pausedLiveNetworkStaysInPickerAndBecomesAvailableWhenItsReadRecovers() {
+        choose(WalletNetworkId.SORA2, WalletNetworkId.TAIRA)
+        choices = choices.map { if (it.id == WalletNetworkId.TAIRA) it.copy(unavailable = WalletNetworkUnavailable.PAUSED) else it }
+        balances.value = listOf(balance(network = WalletNetworkId.TAIRA, address = "main-taira", available = false))
+        show(); click(R.string.common_send)
+        compose.onNodeWithTag("NetworkChoicetaira").assertIsNotEnabled()
+        compose.runOnIdle {
+            verify(exactly = 0) { portfolio.onQuickSend(); portfolio.openSora2Action(any()) }
+            choose(WalletNetworkId.SORA2, WalletNetworkId.TAIRA)
+            balances.value = listOf(balance(network = WalletNetworkId.TAIRA, address = "main-taira"))
+        }
+        compose.onNodeWithTag("NetworkChoicetaira").assertIsEnabled().performClick()
         compose.runOnIdle { verify(exactly = 1) { hub.openNexusSend(balances.value.single()) } }
     }
     @Test fun allWalletScopeKeepsWalletChoiceBeforeNetworkChoice() {
@@ -211,6 +256,35 @@ class PortfolioHostFlowTest {
         compose.onNodeWithContentDescription(compose.activity.getString(R.string.common_back)).performClick()
         compose.runOnIdle { assertEquals(theOnlyRoute, nav.currentDestination?.route) }
     }
+    /** The rows of every network the wallet has in this class's model. */
+    private fun everyNetworkRow() = listOf(balance(), balance(network = WalletNetworkId.TAIRA, address = "main-taira"))
+    @Test fun afterPickingAWalletSendAsksWhichNetworkWhenItHasAChoice() {
+        choose(WalletNetworkId.SORA2, WalletNetworkId.MINAMOTO); balances.value = everyNetworkRow(); show()
+        emit(PortfolioEffect.ContinueAction(WalletAction.SEND, "main"))
+        compose.onNodeWithTag("NetworkChoiceminamoto").performClick()
+        compose.runOnIdle { verify(exactly = 1) { hub.openNexusSend(balance()) }; verify(exactly = 0) { portfolio.openSora2Action(any()) } }
+    }
+    @Test fun afterPickingAWalletWithOnlySora2ItsOwnFlowOpens() {
+        choose(WalletNetworkId.SORA2); balances.value = everyNetworkRow(); show()
+        emit(PortfolioEffect.ContinueAction(WalletAction.RECEIVE, "main"))
+        compose.runOnIdle { verify(exactly = 1) { portfolio.openSora2Action(WalletAction.RECEIVE) } }
+    }
+    @Test fun afterPickingAWalletTheChoiceWaitsForAllItsNetworks() {
+        choose(WalletNetworkId.SORA2, WalletNetworkId.MINAMOTO); balances.value = listOf(balance()); show()
+        emit(PortfolioEffect.ContinueAction(WalletAction.RECEIVE, "main"))
+        compose.onNodeWithTag("NetworkChoiceminamoto").assertDoesNotExist()
+        compose.runOnIdle {
+            verify(exactly = 0) { portfolio.openSora2Action(any()) }
+            balances.value = everyNetworkRow()
+        }
+        compose.onNodeWithTag("NetworkChoiceminamoto").assertExists()
+    }
+    @Test fun aNetworkPageEffectOpensItOnceTheHomeShowsThatWallet() {
+        balances.value = emptyList(); show()
+        emit(PortfolioEffect.OpenNexusPage("main", WalletNetworkId.MINAMOTO, "main-minamoto"))
+        compose.runOnIdle { assertEquals(theOnlyRoute, nav.currentDestination?.route); balances.value = listOf(balance()) }
+        compose.onNodeWithText("${NexusRoutes.ASSET}:minamoto").assertIsDisplayed()
+    }
     @Test fun sendEffectFillsExactRecipientAndAmountAfterOpeningCurrentBalance() {
         show(); emit(request())
         compose.runOnIdle { verifyOrder { hub.openNexusSend(balances.value.single()); hub.setNexusRecipient("destination"); hub.setNexusAmount("1.25") } }
@@ -248,16 +322,42 @@ class PortfolioHostFlowTest {
         show(); emit(PortfolioEffect.OpenWhereItLives(xor.id)); emit(PortfolioEffect.OpenWhereItLives(valToken.id))
         compose.runOnIdle { assertEquals(valToken.id, nav.currentBackStackEntry?.arguments?.getString(PortfolioRoutes.TOKEN_ARG)) }
     }
+    @Test fun aTappedHoldingOpensThePageOnThatHolding() {
+        current.value = model(holdings = listOf(source, secondary))
+        show()
+        // The savings holding is the larger, so the page would open on it if the tap were lost.
+        compose.onAllNodesWithText("Main wallet").onFirst().performScrollTo().performClick()
+        compose.runOnIdle {
+            assertEquals(xor.id, nav.currentBackStackEntry?.arguments?.getString(PortfolioRoutes.TOKEN_ARG))
+            assertEquals(source.key, nav.currentBackStackEntry?.arguments?.getString(PortfolioRoutes.HOLDING_ARG))
+        }
+        click(R.string.portfolio_asset_details)
+        compose.runOnIdle { verify(exactly = 1) { portfolio.openAssetDetails(source.key) } }
+    }
     @Test fun whereItLivesAssetRowOpensExactHolding() {
         show(xor.id)
         compose.onNode(hasText("SORA2") and hasText("Main wallet") and hasClickAction()).performScrollTo().performClick()
         click(R.string.portfolio_asset_details)
         compose.runOnIdle { verify(exactly = 1) { portfolio.openAssetDetails(source.key) } }
     }
+    @Test fun whereItLivesHoldingActionsReachTheViewModel() {
+        show(xor.id)
+        click(R.string.common_send); click(R.string.portfolio_move); click(R.string.portfolio_swap_on_polkaswap)
+        compose.runOnIdle {
+            verify(exactly = 1) { portfolio.send(source.key) }
+            verify { portfolio.openSheet(PortfolioSheet.Move(source.key)); portfolio.openSheet(PortfolioSheet.Swap(source.key)) }
+        }
+    }
+    @Test fun aRowWithSeveralHoldingsOpensUnderItself() {
+        current.value = model(scope = PortfolioScope.ALL); show()
+        compose.onNodeWithText("SORA").performScrollTo().performClick()
+        compose.runOnIdle { verify(exactly = 1) { portfolio.toggleRow(xor.id) } }
+    }
     @Test fun walletSheetCallsSelectedWalletAndManageActions() {
         sheets.value = PortfolioSheet.Wallets; show()
-        compose.onNodeWithText("Savings wallet").performClick(); click(R.string.portfolio_manage_wallets)
-        compose.runOnIdle { verify { portfolio.selectWallet("savings"); portfolio.manageWallets() } }
+        compose.onNodeWithText("Savings wallet").performClick()
+        click(R.string.portfolio_manage_wallets); click(R.string.portfolio_manage_assets)
+        compose.runOnIdle { verify { portfolio.selectWallet("savings"); portfolio.manageWallets(); portfolio.manageAssets() } }
     }
     @Test fun syncSheetRefreshesAllWallets() {
         sheets.value = PortfolioSheet.Sync; show(); click(R.string.portfolio_refresh_all)

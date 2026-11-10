@@ -67,6 +67,12 @@ import jp.co.soramitsu.ui_core.theme.borderRadius
 import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
 
+/**
+ * The amount of a token, with its icon, symbol and balance.
+ *
+ * @param tokenSelectable false when the amount can only be of this token: the symbol has no
+ * chevron and tapping it chooses nothing.
+ */
 @Composable
 fun AssetAmountInput(
     modifier: Modifier,
@@ -75,6 +81,7 @@ fun AssetAmountInput(
     onAmountChange: (BigDecimal) -> Unit,
     onSelectToken: () -> Unit,
     onFocusChange: (Boolean) -> Unit,
+    tokenSelectable: Boolean = true,
 ) {
     val shape = RoundedCornerShape(MaterialTheme.borderRadius.xl)
     val focusedInput = remember { mutableStateOf(false) }
@@ -101,7 +108,7 @@ fun AssetAmountInput(
             size = Size.Small,
             modifier = Modifier
                 .testTagAsId("TokenIcon")
-                .clickable(onClick = onSelectToken)
+                .clickable(enabled = tokenSelectable, onClick = onSelectToken)
         )
         Column(
             modifier = Modifier
@@ -119,14 +126,14 @@ fun AssetAmountInput(
                     modifier = Modifier
                         .testTagAsId("SelectToken" + (state?.token?.symbol ?: ""))
                         .wrapContentSize()
-                        .clickable(onClick = onSelectToken),
+                        .clickable(enabled = tokenSelectable, onClick = onSelectToken),
                     text = state?.token?.symbol ?: stringResource(id = R.string.choose_token),
                     style = MaterialTheme.customTypography.displayS,
                     color = MaterialTheme.customColors.fgPrimary,
                     maxLines = 1,
                     overflow = TextOverflow.Clip,
                 )
-                if (state?.readOnly != true) {
+                if (state?.readOnly != true && tokenSelectable) {
                     Icon(
                         modifier = Modifier
                             .padding(horizontal = Dimens.x1)

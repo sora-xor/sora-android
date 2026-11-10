@@ -24,7 +24,7 @@ import java.util.Base64
 import javax.inject.Inject
 import javax.inject.Singleton
 import jp.co.soramitsu.common.io.FileManager
-import jp.co.soramitsu.common.logger.FirebaseWrapper
+import jp.co.soramitsu.common.logger.WalletDiagnostics
 import jp.co.soramitsu.xnetworking.lib.engines.rest.api.RestClient
 import jp.co.soramitsu.xnetworking.lib.engines.utils.JsonGetRequest
 import jp.co.soramitsu.xnetworking.lib.engines.utils.fieldOrNull
@@ -54,6 +54,10 @@ class WhitelistTokensManager @Inject constructor(
         private const val WHITELIST_FILE_NAME = "whitelist_tokens.json"
         private val ASSET_ID = Regex("0x[0-9a-fA-F]{64}")
         private val ICON_TYPES = setOf("", "svg", "png")
+
+        // Data URI parameters, compared in lower case. The live list sends XOR's and
+        // PSWAP's SVGs as "charset=utf8"; rejecting it hid both tokens from the app.
+        private val ICON_PARAMETERS = setOf("base64", "utf8", "charset=utf8", "charset=utf-8")
     }
 
     var whitelistIds: List<String> = emptyList()
@@ -78,7 +82,7 @@ class WhitelistTokensManager @Inject constructor(
             throw cancelled
         } catch (error: Exception) {
             // This is a rebuildable catalog cache; a damaged entry must not block startup.
-            FirebaseWrapper.recordException(error)
+            WalletDiagnostics.recordException(error)
         }
     }
 
@@ -106,10 +110,10 @@ class WhitelistTokensManager @Inject constructor(
                 val address = dto.fieldOrNull("address") ?: return@forEach
                 if (!ASSET_ID.matches(address)) return@forEach
                 val iconField = dto.fieldOrNull("icon") ?: return@forEach
-                val metadata = iconField.substringBefore(",").split(";")
+                val metadata = iconField.substringBefore(",").split(";").map { it.trim().lowercase() }
                 val iconRaw = iconField.substringAfter(",", "")
                 if (iconRaw.isEmpty()) return@forEach
-                if (metadata.drop(1).any { it !in setOf("base64", "utf8", "charset=utf-8") }) return@forEach
+                if (metadata.drop(1).any { it !in ICON_PARAMETERS }) return@forEach
                 val base64 = "base64" in metadata
                 val type = when (metadata.first()) {
                     "data:image/svg+xml" -> "svg"
@@ -121,7 +125,7 @@ class WhitelistTokensManager @Inject constructor(
                 val content = try {
                     if (base64) Base64.getDecoder().decode(iconRaw) else iconRaw.decodeURLPart().toByteArray()
                 } catch (error: IllegalArgumentException) {
-                    FirebaseWrapper.recordException(error)
+                    WalletDiagnostics.recordException(error)
                     return@forEach
                 }
                 currentCoroutineContext().ensureActive()
@@ -139,7 +143,7 @@ class WhitelistTokensManager @Inject constructor(
         } catch (cancelled: CancellationException) {
             throw cancelled
         } catch (error: Exception) {
-            FirebaseWrapper.recordException(error)
+            WalletDiagnostics.recordException(error)
         }
     }
 }

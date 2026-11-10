@@ -19,7 +19,6 @@ limitations under the License.
 
 package jp.co.soramitsu.feature_multiaccount_impl.presentation.import_account_list.import_account_password
 
-import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
@@ -42,6 +41,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.core.graphics.drawable.toDrawable
 import androidx.compose.ui.unit.dp
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.presentation.compose.AccountIcon
@@ -203,7 +203,7 @@ fun PreviewEnterPassphraseScreen() {
     ImportAccountPasswordScreen(
         ImportAccountPasswordState(
             selectedAccount = BackupAccountMetaWithIcon(
-                BackupAccountMeta("aa", "add"), ColorDrawable(android.graphics.Color.TRANSPARENT)
+                BackupAccountMeta("aa", "add"), android.graphics.Color.TRANSPARENT.toDrawable()
             )
         ),
         {},

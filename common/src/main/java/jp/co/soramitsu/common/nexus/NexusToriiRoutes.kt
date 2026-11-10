@@ -90,7 +90,16 @@ object NexusToriiRoutes {
         return "${account(network, accountId)}/assets?${query.joinToString("&")}"
     }
 
-    /** Torii serves account movements newest first, continuing until next_cursor is null. */
+    /**
+     * Torii serves account movements newest first, continuing until next_cursor is null.
+     *
+     * Taira scans an account's history in block ranges and answers most ranges with no rows and a
+     * cursor, and a tx_hash filter is applied after that scan: on 2026-11-08 a lookup of one
+     * faucet transfer walked all 28 ranges (72 s) although its row was on the fifth. With
+     * [committedBlockHeight], the block the pipeline status reported for that hash, Torii answers
+     * from that block alone on one page. The height can only remove rows, so a wrong height finds
+     * nothing and the send stays pending; it is accepted only together with a hash.
+     */
     fun accountHistory(
         network: NexusNetwork,
         accountId: String,
@@ -98,9 +107,13 @@ object NexusToriiRoutes {
         limit: Int = DEFAULT_PAGE_SIZE,
         cursor: String? = null,
         transactionHash: String? = null,
+        committedBlockHeight: Long? = null,
     ): String {
         requireTairaAsset(network, assetDefinitionId)
         require(limit in 1..100) { "NEXUS_INVALID_PAGE_SIZE" }
+        require(
+            committedBlockHeight == null || (committedBlockHeight > 0 && transactionHash != null)
+        ) { "NEXUS_INVALID_BLOCK_HEIGHT" }
         val filters = mutableListOf(
             "asset_definition_id = \"$assetDefinitionId\"",
             "source = \"transaction\"",
@@ -109,6 +122,7 @@ object NexusToriiRoutes {
             "result_ok = true",
         )
         transactionHash?.let { filters += "tx_hash = \"${canonicalHash(it)}\"" }
+        committedBlockHeight?.let { filters += "block_height = $it" }
         val query = mutableListOf(
             "filter=${queryValue(filters.joinToString(" and "))}",
             "limit=$limit",

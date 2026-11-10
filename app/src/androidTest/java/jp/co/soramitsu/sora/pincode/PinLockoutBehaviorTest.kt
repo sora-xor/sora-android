@@ -56,8 +56,7 @@ class PinLockoutBehaviorTest {
                 await { vm.state.toolbarTitleString == "Locked" }
                 main { vm.pinCodeNumberClicked("1"); assertEquals(0, vm.state.checkedDotsCount) }
                 await { vm.state.toolbarTitleString == instrumentation.targetContext.getString(R.string.pincode_enter_pin_code) }
-                main { vm.pinCodeNumberClicked("1"); assertEquals(1, vm.state.checkedDotsCount); assertEquals(true, vm.showFingerPrintEventLiveData.value) }
-                coVerify(atLeast = 1) { interactor.resetTimerStartedTimestamp() }
+                main { vm.pinCodeNumberClicked("1"); assertEquals(1, vm.state.checkedDotsCount); assertEquals(false, vm.showFingerPrintEventLiveData.value) }
             } finally { main { store.clear() } }
         }
     }
@@ -71,7 +70,7 @@ class PinLockoutBehaviorTest {
         try {
             await { vm.state.toolbarTitleString == instrumentation.targetContext.getString(R.string.pincode_enter_pin_code) }
             main { vm.pinCodeNumberClicked("1"); assertEquals(1, vm.state.checkedDotsCount) }
-            coVerify(atLeast = 1) { interactor.resetTimerStartedTimestamp() }
+            coVerify(exactly = 0) { interactor.resetTimerStartedTimestamp() }
         } finally { main { store.clear() } }
     }
 }

@@ -37,6 +37,8 @@ interface WalletRouter {
 
     fun showContactsFilled(tokenId: String, address: String)
 
+    fun showAssetSettings()
+
     fun returnToAddLiquidity(tokenFrom: Token? = null, tokenTo: Token? = null)
 
     fun openQrCodeFlow(shouldNavigateToScannerDirectly: Boolean = false)

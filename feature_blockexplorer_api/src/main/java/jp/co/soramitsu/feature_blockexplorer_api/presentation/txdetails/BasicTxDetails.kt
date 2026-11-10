@@ -57,6 +57,14 @@ import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
 
+/**
+ * A transaction's page: what it was, its status, date and fee, its identifiers and parties, and
+ * the explorer. The parameters after [onOpenExplorer] default to the SORA2 transaction page.
+ *
+ * @param showBlockId false leaves out the block hash, for a network whose history has none.
+ * @param showTxHash false leaves out the transaction hash while the network has not given one.
+ * @param explorerText the explorer button's label.
+ */
 @Composable
 fun BasicTxDetails(
     modifier: Modifier,
@@ -66,6 +74,9 @@ fun BasicTxDetails(
     onCloseClick: () -> Unit,
     onCopy: (String) -> Unit,
     onOpenExplorer: (String) -> Unit,
+    showBlockId: Boolean = true,
+    showTxHash: Boolean = true,
+    explorerText: String = stringResource(id = R.string.tx_details_view_on_explorer),
 ) {
     Column(
         modifier = modifier.padding(vertical = Dimens.x1_5, horizontal = Dimens.x2),
@@ -197,18 +208,22 @@ fun BasicTxDetails(
                     .fillMaxWidth()
                     .wrapContentHeight()
             ) {
-                DetailInfoItem(
-                    modifier = Modifier.padding(bottom = Dimens.x3),
-                    title = stringResource(id = R.string.transaction_id),
-                    info = state.txHash,
-                    onItemClick = { onCopy.invoke(state.txHash) },
-                )
-                DetailInfoItem(
-                    modifier = Modifier.padding(bottom = Dimens.x3),
-                    title = stringResource(id = R.string.block_id),
-                    info = state.blockHash.orEmpty(),
-                    onItemClick = { state.blockHash?.let { onCopy.invoke(state.blockHash) } },
-                )
+                if (showTxHash) {
+                    DetailInfoItem(
+                        modifier = Modifier.padding(bottom = Dimens.x3),
+                        title = stringResource(id = R.string.transaction_id),
+                        info = state.txHash,
+                        onItemClick = { onCopy.invoke(state.txHash) },
+                    )
+                }
+                if (showBlockId) {
+                    DetailInfoItem(
+                        modifier = Modifier.padding(bottom = Dimens.x3),
+                        title = stringResource(id = R.string.block_id),
+                        info = state.blockHash.orEmpty(),
+                        onItemClick = { state.blockHash?.let { onCopy.invoke(state.blockHash) } },
+                    )
+                }
                 state.infos.forEach {
                     DetailInfoItem(
                         modifier = Modifier.padding(bottom = Dimens.x3),
@@ -232,7 +247,7 @@ fun BasicTxDetails(
                     .fillMaxWidth()
                     .padding(bottom = Dimens.x1),
                 order = Order.SECONDARY,
-                text = stringResource(id = R.string.tx_details_view_on_explorer),
+                text = explorerText,
                 onClick = { onOpenExplorer(explorerUrl) },
             )
         }

@@ -73,6 +73,15 @@ class IrohaConnectViewModelTest {
             listeners += secondArg<IrohaConnectTransportListener>()
             Relay().also { relays += it }
         }
+        var tries = 0
+        var timer = 0L
+        coEvery { user.retrievePin() } returns "123456"
+        coEvery { user.retrievePinTriesUsed() } answers { tries }
+        coEvery { user.retrieveTimerStartedTimestamp() } answers { timer }
+        coEvery { user.savePinTriesUsed(any()) } coAnswers { tries = firstArg() }
+        coEvery { user.saveTimerStartedTimestamp(any()) } coAnswers { timer = firstArg() }
+        coEvery { user.resetTriesUsed() } coAnswers { tries = 0 }
+        coEvery { user.resetTimerStartedTimestamp() } coAnswers { timer = 0L }
         vm = withContext(main) { IrohaConnectViewModel(user, credentials, db, factory, resources).also { store.put("connect", it) } }
     }
     @After fun tearDown() = runBlocking {
@@ -96,7 +105,7 @@ class IrohaConnectViewModelTest {
     }
     private suspend fun connect(): IrohaConnectDirectionKeys {
         pair()
-        withContext(main) { vm.approvePairingAfterAuthentication() }
+        withContext(main) { vm.approvePairing("123456", vm.state.value.pairing?.sessionFingerprint.orEmpty()) }
         phase(IrohaConnectUiPhase.CONNECTED)
         val approval = (IrohaConnectWire.decodeFrame(relays.last().frames.single()) as IrohaConnectFrame.Control).control as IrohaConnectControl.Approve
         assertEquals(derived.address, approval.accountId)
@@ -106,6 +115,63 @@ class IrohaConnectViewModelTest {
         val bytes = IrohaConnectCrypto.encrypt(keys.appToWallet, sequence,
             IrohaConnectWire.associatedData(launch.sid, IrohaConnectDirection.APP_TO_WALLET, sequence), IrohaConnectEnvelopeWire.encode(sequence, payload))
         listeners.last().onBinaryMessage(IrohaConnectWire.encodeCiphertext(launch.sid, sequence, bytes, IrohaConnectDirection.APP_TO_WALLET))
+    }
+
+    @Test fun `wrong wallet PIN cannot pair and a stale review cannot consume authentication`() = runBlocking {
+        pair()
+        val token = vm.state.value.pairing!!.sessionFingerprint
+        withContext(main) { vm.approvePairing("123456", "stale-review"); yield() }
+        coVerify(exactly = 0) { user.retrievePin() }
+        withContext(main) { vm.approvePairing("654321", token) }
+        withTimeout(10_000) { while (vm.state.value.authorizationError == null) delay(5) }
+        assertEquals(IrohaConnectUiPhase.PAIRING, vm.state.value.phase)
+        assertTrue(relays.last().frames.isEmpty())
+        coVerify(exactly = 0) { credentials.retrieveMnemonic(any()) }
+        coVerify { user.savePinTriesUsed(1) }
+    }
+
+    @Test fun `backgrounding during PIN verification cancels approval before key access`() = runBlocking {
+        pair()
+        val checking = CompletableDeferred<Unit>()
+        val pin = CompletableDeferred<String>()
+        coEvery { user.retrievePin() } coAnswers { checking.complete(Unit); pin.await() }
+        withContext(main) { vm.approvePairing("123456", vm.state.value.pairing!!.sessionFingerprint) }
+        checking.await()
+        withContext(main) { vm.onAppBackgrounded() }
+        pin.complete("123456")
+        phase(IrohaConnectUiPhase.CLOSED)
+        coVerify(exactly = 0) { credentials.retrieveMnemonic(any()) }
+        assertTrue(relays.last().closed)
+    }
+
+    @Test fun `existing wallet lockout prevents even a correct PIN from pairing`() = runBlocking {
+        pair()
+        coEvery { user.retrievePinTriesUsed() } returns 3
+        coEvery { user.retrieveTimerStartedTimestamp() } returns System.currentTimeMillis()
+        withContext(main) { vm.approvePairing("123456", vm.state.value.pairing!!.sessionFingerprint) }
+        withTimeout(10_000) { while (vm.state.value.authorizationError == null) delay(5) }
+        coVerify(exactly = 0) { user.retrievePin() }
+        coVerify(exactly = 0) { credentials.retrieveMnemonic(any()) }
+        assertTrue(relays.last().frames.isEmpty())
+    }
+
+    @Test fun `signature requires its own correct wallet PIN and matching request token`() = runBlocking {
+        val keys = connect()
+        try {
+            request(keys, IrohaConnectEnvelopePayload.SignRaw(domain, "A reviewed message".toByteArray()))
+            phase(IrohaConnectUiPhase.SIGNING)
+            val token = vm.state.value.signing!!.requestToken
+            val sent = relays.last().frames.size
+            coEvery { user.retrievePin() } returns "654321"
+            withContext(main) { vm.approveSigning("654321", "stale-request"); yield() }
+            withContext(main) { vm.approveSigning("123456", token) }
+            withTimeout(10_000) { while (vm.state.value.authorizationError == null) delay(5) }
+            assertEquals(IrohaConnectUiPhase.SIGNING, vm.state.value.phase)
+            assertEquals(sent, relays.last().frames.size)
+            withContext(main) { vm.approveSigning("654321", token) }
+            phase(IrohaConnectUiPhase.CONNECTED)
+            assertEquals(sent + 1, relays.last().frames.size)
+        } finally { keys.destroy() }
     }
 
     @Test fun `empty launch fails without reading credentials or opening a relay`() = runBlocking {
@@ -166,13 +232,13 @@ class IrohaConnectViewModelTest {
     }
     @Test fun `watch only wallet cannot approve pairing`() = runBlocking {
         pair(); coEvery { credentials.isExplicitWatchOnly(wallet) } returns true
-        withContext(main) { vm.approvePairingAfterAuthentication() }; phase(IrohaConnectUiPhase.ERROR)
+        withContext(main) { vm.approvePairing("123456", vm.state.value.pairing?.sessionFingerprint.orEmpty()) }; phase(IrohaConnectUiPhase.ERROR)
         assertTrue(relays.last().closed)
         coVerify(exactly = 0) { credentials.retrieveMnemonic(any()) }
     }
     @Test fun `account record changes during authorization invalidate approval`() = runBlocking {
         pair(); coEvery { dao.getNetworkAccount(any(), any()) } returns networkAccount.copy(enabled = false)
-        withContext(main) { vm.approvePairingAfterAuthentication() }; phase(IrohaConnectUiPhase.ERROR)
+        withContext(main) { vm.approvePairing("123456", vm.state.value.pairing?.sessionFingerprint.orEmpty()) }; phase(IrohaConnectUiPhase.ERROR)
         assertTrue(relays.last().frames.isEmpty())
         coVerify(exactly = 0) { credentials.retrieveMnemonic(any()) }
     }
@@ -187,7 +253,7 @@ class IrohaConnectViewModelTest {
             phase(IrohaConnectUiPhase.SIGNING)
             assertEquals("Approve this message", vm.state.value.signing?.readableMessage)
             assertEquals(1, relays.last().frames.size)
-            withContext(main) { vm.approveSigningAfterAuthentication() }; phase(IrohaConnectUiPhase.CONNECTED)
+            withContext(main) { vm.approveSigning("123456", vm.state.value.signing?.requestToken.orEmpty()) }; phase(IrohaConnectUiPhase.CONNECTED)
             assertNull(vm.state.value.signing)
             assertEquals(2, relays.last().frames.size)
             val response = IrohaConnectWire.decodeFrame(relays.last().frames.last()) as IrohaConnectFrame.Ciphertext
@@ -212,7 +278,7 @@ class IrohaConnectViewModelTest {
             request(keys, IrohaConnectEnvelopePayload.SignRaw(domain, byteArrayOf(1, 2, 3))); phase(IrohaConnectUiPhase.SIGNING)
             assertNull(vm.state.value.signing?.readableMessage)
             clearMocks(credentials, answers = false)
-            withContext(main) { vm.approveSigningAfterAuthentication(); yield() }
+            withContext(main) { vm.approveSigning("123456", vm.state.value.signing?.requestToken.orEmpty()); yield() }
             assertEquals(IrohaConnectUiPhase.SIGNING, vm.state.value.phase)
             assertEquals(1, relays.last().frames.size)
             coVerify(exactly = 0) { credentials.retrieveMnemonic(any()) }
@@ -268,7 +334,7 @@ class IrohaConnectViewModelTest {
     }
     @Test fun `relay refusing pairing approval cannot leave an authorized session open`() = runBlocking {
         pair(); relays.last().sendFailure = true
-        withContext(main) { vm.approvePairingAfterAuthentication() }; phase(IrohaConnectUiPhase.ERROR)
+        withContext(main) { vm.approvePairing("123456", vm.state.value.pairing?.sessionFingerprint.orEmpty()) }; phase(IrohaConnectUiPhase.ERROR)
         assertNull(vm.state.value.pairing); assertTrue(relays.last().closed); assertTrue(relays.last().frames.isEmpty())
     }
     @Test fun `relay refusing declined signature closes and clears the review`() = runBlocking {
@@ -285,7 +351,7 @@ class IrohaConnectViewModelTest {
         try {
             request(keys, IrohaConnectEnvelopePayload.SignRaw(domain, "Public fixture".toByteArray())); phase(IrohaConnectUiPhase.SIGNING)
             relays.last().sendFailure = true
-            withContext(main) { vm.approveSigningAfterAuthentication() }; phase(IrohaConnectUiPhase.ERROR)
+            withContext(main) { vm.approveSigning("123456", vm.state.value.signing?.requestToken.orEmpty()) }; phase(IrohaConnectUiPhase.ERROR)
             assertNull(vm.state.value.signing); assertTrue(relays.last().closed)
         } finally { keys.destroy() }
     }
@@ -294,7 +360,7 @@ class IrohaConnectViewModelTest {
         try {
             request(keys, IrohaConnectEnvelopePayload.SignRaw(domain, "Public fixture".toByteArray())); phase(IrohaConnectUiPhase.SIGNING)
             coEvery { credentials.retrieveMnemonic(wallet) } returns "legal winner thank year wave sausage worth useful legal winner thank yellow"
-            withContext(main) { vm.approveSigningAfterAuthentication() }; phase(IrohaConnectUiPhase.ERROR)
+            withContext(main) { vm.approveSigning("123456", vm.state.value.signing?.requestToken.orEmpty()) }; phase(IrohaConnectUiPhase.ERROR)
             assertNull(vm.state.value.signing); assertTrue(relays.last().closed)
             val responses = relays.last().frames.drop(1).mapNotNull { IrohaConnectWire.decodeFrame(it) as? IrohaConnectFrame.Ciphertext }
             assertTrue(responses.none { IrohaConnectEnvelopeWire.decrypt(keys.walletToApp, launch.sid, IrohaConnectDirection.WALLET_TO_APP, it.sequence, it.aead).payload is IrohaConnectEnvelopePayload.SignResultOk })
@@ -305,7 +371,7 @@ class IrohaConnectViewModelTest {
         coEvery { user.withWalletMutationLocked<Any?>(any()) } coAnswers {
             firstArg<suspend (WalletMutationSnapshot) -> Any?>().invoke(WalletMutationSnapshot(wallet.copy(substrateAddress = "other"), OnboardingState.REGISTRATION_FINISHED))
         }
-        withContext(main) { vm.approvePairingAfterAuthentication() }; phase(IrohaConnectUiPhase.ERROR)
+        withContext(main) { vm.approvePairing("123456", vm.state.value.pairing?.sessionFingerprint.orEmpty()) }; phase(IrohaConnectUiPhase.ERROR)
         coVerify(exactly = 0) { credentials.retrieveMnemonic(any()) }; assertTrue(relays.last().closed)
     }
     @Test fun `missing selected wallet under authorization lock prevents pairing`() = runBlocking {
@@ -313,12 +379,12 @@ class IrohaConnectViewModelTest {
         coEvery { user.withWalletMutationLocked<Any?>(any()) } coAnswers {
             firstArg<suspend (WalletMutationSnapshot) -> Any?>().invoke(WalletMutationSnapshot(null, OnboardingState.REGISTRATION_FINISHED))
         }
-        withContext(main) { vm.approvePairingAfterAuthentication() }; phase(IrohaConnectUiPhase.ERROR)
+        withContext(main) { vm.approvePairing("123456", vm.state.value.pairing?.sessionFingerprint.orEmpty()) }; phase(IrohaConnectUiPhase.ERROR)
         coVerify(exactly = 0) { credentials.retrieveMnemonic(any()) }; assertTrue(relays.last().closed)
     }
     @Test fun `network record replacement during review prevents even an otherwise valid derivation`() = runBlocking {
         pair(); coEvery { dao.getNetworkAccount(any(), any()) } returns networkAccount.copy(publicKey = "0x" + networkAccount.publicKey)
-        withContext(main) { vm.approvePairingAfterAuthentication() }; phase(IrohaConnectUiPhase.ERROR)
+        withContext(main) { vm.approvePairing("123456", vm.state.value.pairing?.sessionFingerprint.orEmpty()) }; phase(IrohaConnectUiPhase.ERROR)
         coVerify(exactly = 0) { credentials.retrieveMnemonic(any()) }; assertTrue(relays.last().closed)
     }
     @Test fun `missing persisted identity or network account never opens a relay`() = runBlocking {
@@ -332,7 +398,7 @@ class IrohaConnectViewModelTest {
     }
     @Test fun `authentication callbacks outside a pending review have no signing side effects`() = runBlocking {
         start()
-        withContext(main) { vm.approvePairingAfterAuthentication(); vm.approveSigningAfterAuthentication(); vm.authorizationUnavailable(); vm.rejectSigning(); yield() }
+        withContext(main) { vm.approvePairing("123456", vm.state.value.pairing?.sessionFingerprint.orEmpty()); vm.approveSigning("123456", vm.state.value.signing?.requestToken.orEmpty()); vm.authorizationUnavailable(); vm.rejectSigning(); yield() }
         assertEquals(IrohaConnectUiPhase.CONNECTING, vm.state.value.phase)
         coVerify(exactly = 0) { credentials.retrieveMnemonic(any()) }; assertFalse(relays.last().closed)
     }

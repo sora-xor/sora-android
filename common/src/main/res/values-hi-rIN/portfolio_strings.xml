@@ -15,9 +15,6 @@
     <string name="portfolio_all_wallets">सभी वॉलेट</string>
     <string name="portfolio_wallets">वॉलेट</string>
     <string name="portfolio_scope_label">दायरा: %1$s। वॉलेट चुनें</string>
-    <string name="portfolio_lens_tokens">टोकन</string>
-    <string name="portfolio_lens_networks">नेटवर्क</string>
-    <string name="portfolio_lens_wallets">वॉलेट</string>
     <string name="portfolio_where_it_lives">संपत्ति का स्थान</string>
     <string name="portfolio_where_it_lives_title">%1$s · संपत्ति का स्थान</string>
     <plurals name="portfolio_networks">
@@ -31,10 +28,6 @@
     <plurals name="portfolio_holdings">
         <item quantity="one">%1$d होल्डिंग</item>
         <item quantity="other">%1$d होल्डिंग</item>
-    </plurals>
-    <plurals name="portfolio_tokens">
-        <item quantity="one">%1$d टोकन</item>
-        <item quantity="other">%1$d टोकन</item>
     </plurals>
     <plurals name="portfolio_assets_not_included">
         <item quantity="one">%1$d संपत्ति शामिल नहीं है</item>
@@ -55,10 +48,9 @@
     <string name="portfolio_route_none">इस संस्करण में %1$s से कोई मार्ग नहीं है।</string>
     <string name="portfolio_route_test">परीक्षण नेटवर्क की संपत्तियों का कोई मौद्रिक मूल्य नहीं है।</string>
     <string name="portfolio_route_ready">SORA2 पर है। %1$s में अपने SORA2 खाते से अभी Polkaswap पर स्वैप करें।</string>
-    <string name="portfolio_no_route">कोई मार्ग नहीं</string>
     <string name="portfolio_receive_on_sora2">SORA2 पर प्राप्त करें</string>
-    <string name="portfolio_send_on">%1$s पर भेजें</string>
     <string name="portfolio_send_unavailable">इस संस्करण में %1$s पर भेजना उपलब्ध नहीं है।</string>
+    <string name="portfolio_send_on">%1$s पर भेजें</string>
     <string name="portfolio_move_no_other_wallet">स्थानांतरण के लिए आपके एक और वॉलेट में %1$s पर खाता होना चाहिए।</string>
     <string name="portfolio_move_needs_wallets">स्थानांतरण आपके अपने वॉलेट के बीच होता है। उनके बीच धन भेजने के लिए एक और वॉलेट जोड़ें।</string>
     <string name="portfolio_nothing_to_move">यहाँ अभी कोई संपत्ति स्थानांतरित नहीं की जा सकती।</string>
@@ -71,6 +63,7 @@
     <string name="portfolio_excluded_unpriced">बिना कीमत: %1$d</string>
     <string name="portfolio_excluded_testnet">परीक्षण नेटवर्क की संपत्तियाँ: %1$d</string>
     <string name="portfolio_excluded_caption">%1$s शामिल नहीं</string>
+    <string name="portfolio_prices_as_of">%1$s तक की कीमतें</string>
     <string name="portfolio_counted">गणना में शामिल</string>
     <string name="portfolio_hidden_by_you">आपने छिपाई हैं</string>
     <string name="portfolio_without_price">कीमत नहीं है</string>
@@ -85,6 +78,9 @@
     <string name="portfolio_state_saved">सहेजी गई</string>
     <string name="portfolio_state_partial">आंशिक</string>
     <string name="portfolio_state_offline">ऑफ़लाइन</string>
+    <string name="portfolio_state_reading">पढ़ा जा रहा है</string>
+    <string name="portfolio_reading_balances">बैलेंस पढ़े जा रहे हैं…</string>
+    <string name="portfolio_excluded_unread">अभी तक न पढ़े गए वॉलेट: %1$d</string>
     <string name="portfolio_age_seconds">%1$d सेकंड</string>
     <string name="portfolio_age_minutes">%1$d मिनट</string>
     <string name="portfolio_age_hours">%1$d घंटे</string>
@@ -97,15 +93,14 @@
     <string name="portfolio_unreachable">%1$s से संपर्क नहीं हो रहा</string>
     <string name="portfolio_refresh_all">सभी वॉलेट रीफ़्रेश करें</string>
     <string name="portfolio_wallets_together">साथ जोड़े गए वॉलेट: %1$d</string>
-    <string name="portfolio_wallets_note">सभी वॉलेट दृश्य हर वॉलेट की कुल राशि जोड़ता है। जो वॉलेट चुने नहीं गए हैं, वे अंतिम सिंक का डेटा रखते हैं, इसलिए सूची हर वॉलेट के डेटा की उम्र दिखाती है।</string>
+    <string name="portfolio_wallets_note">“सभी वॉलेट” हर वॉलेट का अपना कुल जोड़ता है। जो वॉलेट चुने नहीं गए, वे आपके देखते समय लगभग हर मिनट रिफ्रेश होते हैं, इसलिए हर वॉलेट अपने आँकड़ों की उम्र दिखाता है।</string>
     <string name="portfolio_manage_wallets">वॉलेट प्रबंधित करें</string>
+    <string name="portfolio_manage_assets">चुने हुए वॉलेट की संपत्ति प्रबंधित करें</string>
     <string name="portfolio_selected">चुना गया</string>
-    <string name="portfolio_open_wallet_alone">केवल %1$s खोलें</string>
     <string name="portfolio_other">अन्य</string>
     <string name="portfolio_legend_description">%1$s, %2$s प्रतिशत, %3$s</string>
-    <string name="portfolio_no_price">कीमत नहीं है</string>
-    <string name="portfolio_no_value">मूल्य नहीं है</string>
     <string name="portfolio_nothing_listed">सूची में दिखाने के लिए कोई संपत्ति नहीं है। छिपी संपत्तियाँ यहाँ नहीं दिखतीं।</string>
+    <string name="portfolio_no_balance_yet">अभी कोई बैलेंस नहीं</string>
     <string name="portfolio_wallet_ready">आपका वॉलेट तैयार है।</string>
     <string name="portfolio_wallet_ready_body">इस वॉलेट में टोकन प्राप्त करें। इस ऐप द्वारा समर्थित हर नेटवर्क के टोकन यहाँ दिखाई देंगे।</string>
     <string name="portfolio_token_gone">यह टोकन अब इस दृश्य में नहीं है।</string>
@@ -137,8 +132,8 @@
     <string name="portfolio_you_pay">आप देंगे</string>
     <string name="portfolio_you_get">आप पाएँगे</string>
     <string name="portfolio_swap_note">Polkaswap हस्ताक्षर से पहले कीमत, शुल्क और कीमत पर प्रभाव दिखाता है। यहाँ केवल जोड़ी चुनी जाती है।</string>
-    <string name="portfolio_send_from">यहाँ से भेजें</string>
-    <string name="portfolio_receive_to">यहाँ प्राप्त करें</string>
+    <string name="portfolio_send_from">किस वॉलेट से भेजें?</string>
+    <string name="portfolio_receive_to">किस वॉलेट में प्राप्त करें?</string>
     <string name="portfolio_sample_handoff_off">नमूना पोर्टफोलियो: पते काल्पनिक हैं, इसलिए भेजें स्क्रीन नहीं खुलेगी।</string>
     <string name="portfolio_nexus_send_unavailable">इस वॉलेट के लिए इस नेटवर्क पर भेजना अभी उपलब्ध नहीं है।</string>
     <string name="asset_add_to_favorites">%1$s को पसंदीदा में जोड़ें</string>

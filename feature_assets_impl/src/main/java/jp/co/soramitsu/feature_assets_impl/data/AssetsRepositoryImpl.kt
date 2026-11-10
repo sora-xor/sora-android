@@ -23,6 +23,7 @@ import androidx.room.withTransaction
 import java.io.IOException
 import java.math.BigDecimal
 import java.math.BigInteger
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import jp.co.soramitsu.androidfoundation.coroutine.CoroutineManager
 import jp.co.soramitsu.common.account.SoraAccount
@@ -95,7 +96,7 @@ class AssetsRepositoryImpl @Inject constructor(
                 // Catalog availability must not terminate the wallet host. Consumers still fail
                 // closed; no unverified runtime, token catalog or balance is substituted.
                 tokensDeferred.completeExceptionally(error)
-                jp.co.soramitsu.common.logger.FirebaseWrapper.recordException(error)
+                jp.co.soramitsu.common.logger.WalletDiagnostics.recordException(error)
             }
         }
     }
@@ -311,6 +312,30 @@ class AssetsRepositoryImpl @Inject constructor(
         emitAll(f)
     }
 
+    override fun subscribeAssetsOfWhitelist(address: String): Flow<List<Asset>> = flow {
+        val selectedCurrency = soraConfigManager.getSelectedCurrency()
+        val f = db.assetDao().subscribeAssetsOfWhitelist(address, selectedCurrency.code).map {
+            it.mapNotNull { l -> assetLocalToAssetMapper.map(l) }
+        }
+        emitAll(f)
+    }
+
+    override fun subscribeAssetsFavorite(address: String): Flow<List<Asset>> = flow {
+        val selectedCurrency = soraConfigManager.getSelectedCurrency()
+        val f = db.assetDao().subscribeAssetsFavorite(address, selectedCurrency.code).map {
+            it.mapNotNull { l -> assetLocalToAssetMapper.map(l) }
+        }
+        emitAll(f)
+    }
+
+    override fun subscribeAssetsVisible(address: String): Flow<List<Asset>> = flow {
+        val selectedCurrency = soraConfigManager.getSelectedCurrency()
+        val f = db.assetDao().subscribeAssetsVisible(address, selectedCurrency.code).map {
+            it.mapNotNull { l -> assetLocalToAssetMapper.map(l) }
+        }
+        emitAll(f)
+    }
+
     override suspend fun toggleVisibilityOfToken(
         tokenId: String,
         visibility: Boolean,
@@ -335,6 +360,14 @@ class AssetsRepositoryImpl @Inject constructor(
             }
         }
         emitAll(tokens)
+    }
+
+    override fun subscribeNewestPriceMillis(): Flow<Long?> = flow {
+        val selectedCurrency = soraConfigManager.getSelectedCurrency()
+        emitAll(
+            db.assetDao().subscribeNewestFiatPriceTime(selectedCurrency.code)
+                .map { seconds -> seconds?.takeIf { it > 0 }?.let(TimeUnit.SECONDS::toMillis) }
+        )
     }
 
     private suspend fun updateTokens() {

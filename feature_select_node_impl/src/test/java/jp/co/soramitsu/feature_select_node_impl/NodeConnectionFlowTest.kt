@@ -5,6 +5,8 @@ import jp.co.soramitsu.androidfoundation.coroutine.CoroutineManager
 import jp.co.soramitsu.common.account.WalletMutationCoordinator
 import jp.co.soramitsu.common.domain.ChainNode
 import jp.co.soramitsu.common.domain.FlavorOptionsProvider
+import jp.co.soramitsu.common.util.BuildUtils
+import jp.co.soramitsu.common.util.Flavor
 import jp.co.soramitsu.core_db.AppDatabase
 import jp.co.soramitsu.core_db.dao.NodeDao
 import jp.co.soramitsu.core_db.model.NodeLocal
@@ -160,10 +162,13 @@ class NodeConnectionFlowTest {
         assertEquals(listOf(url, a.address), f.switches)
         coVerify(exactly = 0) { f.repository.selectNode(any()) }
     }
-    @Test fun wrongGenesisIsRejectedAndPreviousNodeRestored() = runTest {
+    @Test fun differentGenesisFollowsBuildPolicyAndPreviousNodeIsRestored() = runTest {
         val f = fixture(); coEvery { f.repository.getBlockHash() } returns "0xccdd"
         val url = "wss://new.example.test/"; f.check(url); f.connected(url)
-        assertFalse((f.events.single() as NodeManagerEvent.GenesisValidated).result)
+        assertEquals(
+            BuildUtils.isFlavors(Flavor.DEVELOP, Flavor.SORALUTION),
+            (f.events.single() as NodeManagerEvent.GenesisValidated).result,
+        )
         assertEquals(a.address, f.switches.last())
     }
     @Test fun genesisRpcFailureRejectsCandidateWithoutPersisting() = runTest {

@@ -1,11 +1,16 @@
 package jp.co.soramitsu.feature_wallet_impl.domain.portfolio
 
 import java.math.BigDecimal
+import jp.co.soramitsu.common.domain.AssetHolder
 import jp.co.soramitsu.common.nexus.WalletNetworkId
 
 /**
  * Counted value of a set of holdings (portfolio-view SPEC §6). Only visible, priced, mainnet
  * holdings are counted; the others are named by kind so the caption can say what is left out.
+ *
+ * [priced] is how many holdings the value counts and [unread] how many wallets could not be read
+ * yet. A sum over nothing is not a value: while [known] is false the total is shown as unknown,
+ * never as zero.
  */
 data class PortfolioTotals(
     val fiat: Double,
@@ -14,7 +19,13 @@ data class PortfolioTotals(
     val hidden: Int,
     val unpriced: Int,
     val testnet: Int,
+    val priced: Int = 0,
+    val unread: Int = 0,
 ) {
+    /** At least one holding has a value: [fiat] is a real amount, not the sum of nothing. */
+    val known: Boolean
+        get() = priced > 0
+
     /** 24 h change as a fraction of the value 24 h ago; null when no counted holding has a change. */
     val changeFraction: Double?
         get() {
@@ -23,7 +34,7 @@ data class PortfolioTotals(
         }
 
     val excluded: Int
-        get() = hidden + unpriced + testnet
+        get() = hidden + unpriced + testnet + unread
 
     operator fun plus(other: PortfolioTotals): PortfolioTotals = PortfolioTotals(
         fiat = fiat + other.fiat,
@@ -32,6 +43,8 @@ data class PortfolioTotals(
         hidden = hidden + other.hidden,
         unpriced = unpriced + other.unpriced,
         testnet = testnet + other.testnet,
+        priced = priced + other.priced,
+        unread = unread + other.unread,
     )
 
     companion object {
@@ -115,12 +128,14 @@ object PortfolioCalculator {
         var hidden = 0
         var unpriced = 0
         var testnet = 0
+        var priced = 0
         holdings.forEach { holding ->
             when (exclusion(holding)) {
                 Exclusion.HIDDEN -> hidden++
                 Exclusion.UNPRICED -> unpriced++
                 Exclusion.TESTNET -> testnet++
                 null -> {
+                    priced++
                     fiat += countedFiat(holding) ?: 0.0
                     countedChange(holding)?.let {
                         change += it
@@ -129,13 +144,18 @@ object PortfolioCalculator {
                 }
             }
         }
-        return PortfolioTotals(fiat, change, changeKnown, hidden, unpriced, testnet)
+        return PortfolioTotals(fiat, change, changeKnown, hidden, unpriced, testnet, priced)
     }
+
+    /** One wallet's totals; a wallet that could not be read yet is named, so it never reads as zero. */
+    fun walletTotals(snapshot: PortfolioSnapshot, walletId: String): PortfolioTotals =
+        totals(snapshot.holdings.filter { it.walletId == walletId })
+            .copy(unread = if (snapshot.sync[walletId]?.unread == true) 1 else 0)
 
     /** All wallets total = Σ each wallet's own total; the exclusions are summed too. */
     fun scopeTotals(snapshot: PortfolioSnapshot, walletIds: Collection<String>): PortfolioTotals =
         walletIds.distinct()
-            .map { id -> totals(snapshot.holdings.filter { it.walletId == id }) }
+            .map { id -> walletTotals(snapshot, id) }
             .fold(PortfolioTotals.ZERO, PortfolioTotals::plus)
 
     /** All wallets appears only with two or more wallets and is their default. */
@@ -201,6 +221,8 @@ object PortfolioCalculator {
             compareByDescending<PortfolioGroup> { it.countedFiat }
                 .thenBy { it.testnetOnly }
                 .thenBy { if (lens == PortfolioLens.WALLETS) walletOrder[it.key] ?: Int.MAX_VALUE else 0 }
+                // Without prices: the app's own order of the known tokens (XOR first), then by name.
+                .thenBy { group -> AssetHolder.position(group.holdings.firstOrNull()?.token?.id.orEmpty()) }
                 .thenBy { group -> group.holdings.firstOrNull()?.token?.symbol ?: group.key }
                 .thenBy { it.key }
         )
@@ -236,7 +258,7 @@ object PortfolioCalculator {
             val holdings = snapshot.holdings.filter { it.walletId == wallet.id }
             WalletSummary(
                 wallet = wallet,
-                totals = totals(holdings),
+                totals = walletTotals(snapshot, wallet.id),
                 freshness = PortfolioFreshness.of(snapshot.sync[wallet.id], snapshot.connected, nowMillis),
                 networks = PORTFOLIO_NETWORKS.filter { network ->
                     holdings.any { it.network == network && !it.hidden }
@@ -245,7 +267,7 @@ object PortfolioCalculator {
         }
 
     /**
-     * The scope's freshness is its worst wallet's: offline, then partial, then saved, then live.
+     * The scope's freshness is its worst wallet's: offline, partial, reading, saved, then live.
      * Among equals the oldest sync wins, and every unreachable network is named.
      */
     fun worstFreshness(
@@ -325,6 +347,13 @@ object PortfolioFreshness {
     const val REFRESH_INTERVAL_MS = 60_000L
     const val LIVE_WINDOW_MS = 2 * REFRESH_INTERVAL_MS
 
+    /** The app reads prices every 20 s while it is open; this long without one, the service is gone. */
+    const val PRICES_OLD_AFTER_MS = 10 * REFRESH_INTERVAL_MS
+
+    /** These prices are the last the service gave, not current ones. */
+    fun pricesAreOld(readAtMillis: Long?, nowMillis: Long): Boolean =
+        readAtMillis != null && nowMillis - readAtMillis > PRICES_OLD_AFTER_MS
+
     /**
      * A read that finishes just after the dashboard's clock ticked is stamped a moment "later" than
      * that tick. Up to this much is the same moment; beyond it the device clock went back.
@@ -337,6 +366,7 @@ object PortfolioFreshness {
         val kind = when {
             !connected -> FreshnessKind.OFFLINE
             unreachable.isNotEmpty() -> FreshnessKind.PARTIAL
+            sync?.unread == true -> FreshnessKind.READING
             sync?.live == true -> FreshnessKind.LIVE
             updatedAt != null && isRecent(updatedAt, nowMillis) -> FreshnessKind.LIVE
             else -> FreshnessKind.SAVED

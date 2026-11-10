@@ -33,8 +33,6 @@
   <string name="address_not_found_1">Получатели не найдены</string>
   <string name="amount_error_no_funds">Извините, у вас недостаточно средств для осуществления перевода.</string>
   <string name="appearance_title">Внешний вид</string>
-  <string name="appearance_reduce_effects">Уменьшить эффекты</string>
-  <string name="appearance_reduce_effects_description">Отключает свечение, эффекты стекла и движения. Полезно на старых телефонах и для экономии заряда батареи.</string>
   <string name="apr_description">APR в фарминге обозначает годовую доходность инвестиций за участие в предоставлении ликвидности DeFi или стейкинге.</string>
   <string name="ask_biometry_message">Хотите ли Вы использовать биометрию для входа в приложение?</string>
   <string name="asset_details_asset_id">Asset ID</string>
@@ -508,7 +506,6 @@
   <string name="wallet_bonded">В обеспечении</string>
   <string name="wallet_connect_account">Аккаунт</string>
   <string name="wallet_connect_done">Выполнено</string>
-  <string name="wallet_network_activity">Активность</string>
   <string name="wallet_qr_share_message_empty_template_v2" formatted="false">Отсканируйте этот QR, чтобы отправить мне %s. Мой идентификатор в %s:\n%s</string>
   <string name="wallet_receive_xor">Получить XOR</string>
   <string name="wallet_redeemable">Можно забрать</string>
@@ -764,11 +761,12 @@
   <string name="neon_theme_light">Светлая</string>
   <!-- English fallback for new Nexus and recovery copy pending translation. -->
   <string name="nexus_production_address">Production address</string>
-  <string name="nexus_copy_production_address">Copy production address</string>
-  <string name="nexus_production_not_live">Not live yet</string>
   <string name="nexus_production_address_notice">Your SORA Nexus production address is ready to copy. The production network has not launched yet; balances, history and transfers will be available after launch.</string>
   <string name="nexus_send_not_available">Sending is currently unavailable for this account. You can view your balance, copy your address and receive testnet XOR.</string>
   <string name="nexus_history_load_more">Load older transfers</string>
   <string name="recovery_json_password_help">Enter the password you set when saving this backup. This is not your app PIN.</string>
   <string name="account_switching">Switching account…</string>
+  <string name="hide_zero_balances">Скрыть нулевые балансы</string>
+  <string name="show_zero_balances">Показать нулевые балансы</string>
+  <string name="global_results">Глобальные результаты</string>
 </resources>

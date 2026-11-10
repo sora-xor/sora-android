@@ -84,13 +84,13 @@ dependencies {
     implementation(libs.coroutineAndroidDep)
     implementation(libs.coroutineDep)
 
-    implementation(libs.uiCoreDep)
+    implementation(project(":ui-core"))
     implementation(libs.soramitsu.android.foundation)
 
     implementation(libs.coilSvgDep)
 
     implementation(libs.webSocketLibDep)
-    implementation(libs.uiCoreDep)
+    implementation(project(":ui-core"))
 
     implementation(libs.lifecycleProcessDep)
 
@@ -109,8 +109,6 @@ dependencies {
 
     implementation(libs.datastoreDep)
 
-    implementation(platform(libs.googleFirebaseBomDep))
-    implementation(libs.googleCrashlyticsDep)
 
     implementation(libs.coilDep)
     implementation(libs.coilComposeDep)

@@ -28,15 +28,13 @@ import androidx.work.Configuration
 import coil.ImageLoader
 import coil.ImageLoaderFactory
 import coil.decode.SvgDecoder
-import com.google.firebase.FirebaseApp
-import com.google.firebase.analytics.FirebaseAnalytics
 import dagger.hilt.android.HiltAndroidApp
 import javax.inject.Inject
 import jp.co.soramitsu.androidfoundation.resource.ResourceManager
 import jp.co.soramitsu.common.domain.DarkThemeManager
 import jp.co.soramitsu.common.domain.OptionsProvider
 import jp.co.soramitsu.common.io.FileManager
-import jp.co.soramitsu.common.logger.FirebaseWrapper
+import jp.co.soramitsu.common.logger.WalletDiagnostics
 import jp.co.soramitsu.common.util.BuildType
 import jp.co.soramitsu.common.util.BuildUtils
 import jp.co.soramitsu.common.util.Flavor
@@ -72,7 +70,6 @@ open class SoraApp : Application(), Configuration.Provider, ImageLoaderFactory {
     override fun attachBaseContext(base: Context) {
         super.attachBaseContext(base)
         StartupTimeTrace.begin()
-        DarkThemeManager.captureNewInstallDefault(this)
         // Hilt injects eager singletons before this class's onCreate body. Prepare the immutable
         // wallet backup first so no injected database consumer can race the upgrade gate.
         WalletUpgradeBackup.prepare(this)
@@ -103,14 +100,6 @@ open class SoraApp : Application(), Configuration.Provider, ImageLoaderFactory {
 
         registerActivityLifecycleCallbacks(resourceManager)
         registerActivityLifecycleCallbacks(StartNodeManagerWhenWalletReady())
-        val firebaseApp = runCatching { FirebaseApp.initializeApp(this) }
-            .onFailure { Timber.e(it) }
-            .getOrNull()
-        if (firebaseApp != null) {
-            runCatching { FirebaseAnalyticsPolicy.apply(FirebaseAnalytics.getInstance(this)) }
-                .onFailure { Timber.w("Firebase Analytics policy could not be applied") }
-        }
-        FirebaseWrapper.setCrashlyticsEnabled(firebaseApp != null)
 
         OptionsProvider.CURRENT_VERSION_CODE = BuildConfig.VERSION_CODE
         OptionsProvider.CURRENT_VERSION_NAME = BuildConfig.VERSION_NAME

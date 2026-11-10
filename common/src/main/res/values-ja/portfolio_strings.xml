@@ -4,9 +4,6 @@
     <string name="portfolio_all_wallets">すべてのウォレット</string>
     <string name="portfolio_wallets">ウォレット</string>
     <string name="portfolio_scope_label">表示範囲：%1$s。ウォレットを選択</string>
-    <string name="portfolio_lens_tokens">トークン</string>
-    <string name="portfolio_lens_networks">ネットワーク</string>
-    <string name="portfolio_lens_wallets">ウォレット</string>
     <string name="portfolio_where_it_lives">保有場所</string>
     <string name="portfolio_where_it_lives_title">%1$s · 保有場所</string>
     <plurals name="portfolio_networks">
@@ -17,9 +14,6 @@
     </plurals>
     <plurals name="portfolio_holdings">
         <item quantity="other">%1$d件の保有資産</item>
-    </plurals>
-    <plurals name="portfolio_tokens">
-        <item quantity="other">%1$dトークン</item>
     </plurals>
     <plurals name="portfolio_assets_not_included">
         <item quantity="other">%1$d件の資産を集計対象外にしています</item>
@@ -39,10 +33,9 @@
     <string name="portfolio_route_none">このバージョンでは%1$sからのルートはありません。</string>
     <string name="portfolio_route_test">テストネットの資産に金銭的価値はありません。</string>
     <string name="portfolio_route_ready">SORA2上の資産です。%1$s内のSORA2アカウントを使って、Polkaswapでスワップできます。</string>
-    <string name="portfolio_no_route">ルートなし</string>
     <string name="portfolio_receive_on_sora2">SORA2で受け取る</string>
-    <string name="portfolio_send_on">%1$sで送信</string>
     <string name="portfolio_send_unavailable">このバージョンでは%1$sでの送信は利用できません。</string>
+    <string name="portfolio_send_on">%1$sで送信</string>
     <string name="portfolio_move_no_other_wallet">移動には、%1$sのアカウントを持つ別の自分のウォレットが必要です。</string>
     <string name="portfolio_move_needs_wallets">移動は自分のウォレット間で行います。別のウォレットを追加すると、資金を移動できます。</string>
     <string name="portfolio_nothing_to_move">現在、移動できる資産はありません。</string>
@@ -55,6 +48,7 @@
     <string name="portfolio_excluded_unpriced">価格不明：%1$d</string>
     <string name="portfolio_excluded_testnet">テストネット資産：%1$d</string>
     <string name="portfolio_excluded_caption">%1$sは集計対象外</string>
+    <string name="portfolio_prices_as_of">%1$s 時点の価格</string>
     <string name="portfolio_counted">集計対象</string>
     <string name="portfolio_hidden_by_you">自分で非表示にした資産</string>
     <string name="portfolio_without_price">価格不明</string>
@@ -69,6 +63,9 @@
     <string name="portfolio_state_saved">保存済み</string>
     <string name="portfolio_state_partial">一部のみ</string>
     <string name="portfolio_state_offline">オフライン</string>
+    <string name="portfolio_state_reading">読み込み中</string>
+    <string name="portfolio_reading_balances">残高を読み込んでいます…</string>
+    <string name="portfolio_excluded_unread">未読み込みのウォレット：%1$d</string>
     <string name="portfolio_age_seconds">%1$d秒</string>
     <string name="portfolio_age_minutes">%1$d分</string>
     <string name="portfolio_age_hours">%1$d時間</string>
@@ -81,15 +78,14 @@
     <string name="portfolio_unreachable">%1$sに接続できません</string>
     <string name="portfolio_refresh_all">すべてのウォレットを更新</string>
     <string name="portfolio_wallets_together">集計するウォレット：%1$d</string>
-    <string name="portfolio_wallets_note">「すべてのウォレット」では各ウォレットの合計を足し合わせます。選択していないウォレットは最後に同期した情報を保持し、一覧にそれぞれの経過時間を表示します。</string>
+    <string name="portfolio_wallets_note">「すべてのウォレット」は各ウォレットの合計を足したものです。選択していないウォレットは表示中に約1分ごとに更新されるため、それぞれの数値がいつのものかを表示します。</string>
     <string name="portfolio_manage_wallets">ウォレットを管理</string>
+    <string name="portfolio_manage_assets">選択中のウォレットの資産を管理</string>
     <string name="portfolio_selected">選択中</string>
-    <string name="portfolio_open_wallet_alone">%1$sだけを開く</string>
     <string name="portfolio_other">その他</string>
     <string name="portfolio_legend_description">%1$s、%2$sパーセント、%3$s</string>
-    <string name="portfolio_no_price">価格不明</string>
-    <string name="portfolio_no_value">価値なし</string>
     <string name="portfolio_nothing_listed">表示する資産はありません。非表示の資産はここには表示されません。</string>
+    <string name="portfolio_no_balance_yet">まだ残高がありません</string>
     <string name="portfolio_wallet_ready">ウォレットの準備ができました。</string>
     <string name="portfolio_wallet_ready_body">このウォレットでトークンを受け取ってください。アプリが対応する各ネットワークの資産がここに表示されます。</string>
     <string name="portfolio_token_gone">このトークンはこの表示には含まれなくなりました。</string>
@@ -121,8 +117,8 @@
     <string name="portfolio_you_pay">支払う数量</string>
     <string name="portfolio_you_get">受け取る数量</string>
     <string name="portfolio_swap_note">Polkaswapは署名前に価格、手数料、価格への影響を表示します。ここではペアだけを選びます。</string>
-    <string name="portfolio_send_from">送信元</string>
-    <string name="portfolio_receive_to">受取先</string>
+    <string name="portfolio_send_from">どのウォレットから送信しますか？</string>
+    <string name="portfolio_receive_to">どのウォレットで受け取りますか？</string>
     <string name="portfolio_sample_handoff_off">サンプルのポートフォリオ：アドレスは架空のため、送信画面は開きません。</string>
     <string name="portfolio_nexus_send_unavailable">このウォレットでは、現在このネットワークで送信できません。</string>
     <string name="asset_add_to_favorites">%1$sをお気に入りに追加</string>

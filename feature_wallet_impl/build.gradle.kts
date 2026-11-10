@@ -87,8 +87,8 @@ dependencies {
     implementation(project(":feature_polkaswap_api"))
     implementation(project(":feature_referral_api"))
 
-    implementation(libs.xsubstrateDep)
-    implementation(libs.xcryptoDep)
+    implementation(project(":xsubstrate"))
+    implementation(project(":xcrypto"))
     implementation(libs.soramitsu.android.foundation)
 
     implementation(libs.appcompatDep)
@@ -125,7 +125,7 @@ dependencies {
     implementation(libs.roomDep)
     implementation(libs.roomKtxDep)
 
-    implementation(libs.uiCoreDep)
+    implementation(project(":ui-core"))
 
     implementation(platform(libs.compose.bom))
     implementation(libs.composeUiDep)

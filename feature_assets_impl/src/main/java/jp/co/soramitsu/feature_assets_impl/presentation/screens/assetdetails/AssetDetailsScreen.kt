@@ -36,11 +36,11 @@ import jp.co.soramitsu.common.domain.DEFAULT_ICON_URI
 import jp.co.soramitsu.common.util.StringPair
 import jp.co.soramitsu.common_wallet.presentation.compose.states.PoolsListItemState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.PoolsListState
-import jp.co.soramitsu.feature_assets_impl.presentation.components.compose.assetdetails.AssetDetailsBalanceCard
+import jp.co.soramitsu.common_wallet.presentation.compose.assetdetails.AssetDetailsBalanceCard
 import jp.co.soramitsu.feature_assets_impl.presentation.components.compose.assetdetails.AssetDetailsPooledCard
-import jp.co.soramitsu.feature_assets_impl.presentation.components.compose.assetdetails.AssetDetailsRecentActivityCard
-import jp.co.soramitsu.feature_assets_impl.presentation.components.compose.assetdetails.AssetDetailsTokenPriceCard
-import jp.co.soramitsu.feature_assets_impl.presentation.components.compose.assetdetails.AssetIdCard
+import jp.co.soramitsu.common_wallet.presentation.compose.assetdetails.AssetDetailsRecentActivityCard
+import jp.co.soramitsu.common_wallet.presentation.compose.assetdetails.AssetDetailsTokenPriceCard
+import jp.co.soramitsu.common_wallet.presentation.compose.assetdetails.AssetIdCard
 import jp.co.soramitsu.feature_assets_impl.presentation.states.AssetCardStateData
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.EventUiModel
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionStatus

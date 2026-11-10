@@ -45,6 +45,8 @@ import jp.co.soramitsu.test_data.TestAssets
 import jp.co.soramitsu.test_data.TestTokens
 import jp.co.soramitsu.xsubstrate.encrypt.keypair.substrate.Sr25519Keypair
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert
 import org.junit.Before
@@ -54,6 +56,7 @@ import org.junit.rules.TestRule
 import org.junit.runner.RunWith
 import org.mockito.BDDMockito
 import org.mockito.Mock
+import org.mockito.Mockito
 import org.mockito.junit.MockitoJUnitRunner
 import org.mockito.kotlin.any
 
@@ -190,6 +193,39 @@ class AssetsRepositoryTest {
     @Test
     fun `hide assets`() = runTest {
         assetsRepository.hideAssets(listOf(), soraAccount)
+    }
+
+    @Test
+    fun `the full asset list's visible assets come from the database in its order`() = runTest {
+        BDDMockito.given(
+            assetDao.subscribeAssetsVisible(
+                BDDMockito.anyString(),
+                BDDMockito.anyString(),
+                BDDMockito.anyString()
+            )
+        ).willReturn(flowOf(assetTokenList()))
+
+        val assets = assetsRepository.subscribeAssetsVisible("address").first()
+
+        Assert.assertEquals(assetTokenList().map { it.token.id }, assets.map { it.token.id })
+    }
+
+    @Test
+    fun `a test balance is only added on Soralution`() = runTest {
+        assetsRepository.addFakeBalance(
+            Sr25519Keypair(byteArrayOf(1), byteArrayOf(2), byteArrayOf(3)),
+            soraAccount,
+            listOf("token_id"),
+        )
+
+        Mockito.verifyNoInteractions(extrinsicManager)
+    }
+
+    @Test
+    fun `visibility toggles go to the database for the account`() = runTest {
+        assetsRepository.toggleVisibilityOfToken("token_id", true, soraAccount)
+
+        Mockito.verify(assetDao).toggleVisibilityOfToken("token_id", true, soraAccount.substrateAddress)
     }
 
     private fun assetTokenList() = listOf(

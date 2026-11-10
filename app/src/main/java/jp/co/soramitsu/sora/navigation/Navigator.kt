@@ -46,6 +46,7 @@ import jp.co.soramitsu.feature_ecosystem_impl.presentation.claimdemeter.ClaimDem
 import jp.co.soramitsu.feature_ecosystem_impl.presentation.editfarm.EditFarmFragment
 import jp.co.soramitsu.feature_ecosystem_impl.presentation.farmdetails.FarmDetailsFragment
 import jp.co.soramitsu.common.account.AccountOptionsRouter
+import jp.co.soramitsu.feature_main_api.domain.model.PIN_CONFIRMED_ACTION_KEY
 import jp.co.soramitsu.feature_main_api.domain.model.PinCodeAction
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_main_impl.presentation.util.action
@@ -114,6 +115,14 @@ class Navigator :
         )
     }
 
+    override fun returnFromPinConfirmation(action: PinCodeAction) {
+        navController?.previousBackStackEntry?.savedStateHandle?.set(
+            PIN_CONFIRMED_ACTION_KEY,
+            action.name,
+        )
+        navController?.popBackStack()
+    }
+
     override fun showFlexibleUpdateScreen() {
         navController?.navigate(R.id.updateFlexibleFragment)
     }
@@ -174,6 +183,10 @@ class Navigator :
 
     override fun showFullPoolsSettings() {
         navController?.navigate(R.id.fullPoolListSettingsFragment)
+    }
+
+    override fun showAssetSettings() {
+        navController?.navigate(R.id.navAction_to_FullAssetListFragment)
     }
 
     override fun showFullAssetsSettings() {
@@ -304,6 +317,15 @@ class Navigator :
 
     override fun currentDestinationIsPinCheckNeeded(): Boolean {
         return navController?.currentDestination != null && (navController?.currentDestination!!.id == R.id.backupFragment || navController?.currentDestination!!.id == R.id.backupJsonFragment)
+    }
+
+    override fun closeSecretScreensLeftOpen() {
+        val controller = navController ?: return
+        if (!currentDestinationIsPinCheckNeeded()) return
+        val secretScreens = setOf(R.id.backupFragment, R.id.backupJsonFragment, R.id.exportProtectionFragment)
+        while (controller.currentDestination?.id in secretScreens) {
+            if (!controller.popBackStack()) return
+        }
     }
 
     override fun showProfile() {

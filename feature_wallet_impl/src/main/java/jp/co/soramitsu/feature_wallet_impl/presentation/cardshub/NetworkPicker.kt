@@ -11,10 +11,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Divider
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -24,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.nexus.WalletNetworkAction
 import jp.co.soramitsu.common.nexus.WalletNetworkChoice
+import jp.co.soramitsu.common.nexus.WalletNetworkChoices
 import jp.co.soramitsu.common.nexus.WalletNetworkDirectory
 import jp.co.soramitsu.common.nexus.WalletNetworkId
 import jp.co.soramitsu.common.nexus.WalletNetworkTag
@@ -31,7 +35,11 @@ import jp.co.soramitsu.common.nexus.WalletNetworkUnavailable
 import jp.co.soramitsu.common.presentation.compose.TokenIcon
 import jp.co.soramitsu.common.presentation.compose.components.WalletSheet
 import jp.co.soramitsu.common.presentation.compose.neon.ContentCard
+import jp.co.soramitsu.common.presentation.compose.neon.FilledButton
+import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.feature_wallet_impl.data.nexus.NexusPortfolioBalance
+import jp.co.soramitsu.ui_core.component.button.properties.Order
+import jp.co.soramitsu.ui_core.component.button.properties.Size
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
@@ -73,8 +81,60 @@ internal fun NetworkTagChip(tag: WalletNetworkTag, modifier: Modifier = Modifier
 }
 
 /**
+ * The home's Send and Receive. They ask which network only when there is a real choice (two
+ * live networks); otherwise they open the one network straight away, SORA2's flows exactly as
+ * before.
+ */
+@Composable
+internal fun WalletSendReceive(
+    networkChoices: (WalletNetworkAction) -> List<WalletNetworkChoice>,
+    onOpen: (WalletNetworkAction, WalletNetworkChoice) -> Unit,
+    modifier: Modifier = Modifier,
+    xorIcon: String? = null,
+) {
+    var picking by remember { mutableStateOf<Pair<WalletNetworkAction, List<WalletNetworkChoice>>?>(null) }
+    val start: (WalletNetworkAction) -> Unit = { action ->
+        val choices = networkChoices(action)
+        val only = WalletNetworkChoices.onlyChoice(choices)
+        when {
+            only != null -> onOpen(action, only)
+            choices.isNotEmpty() -> picking = action to choices
+        }
+    }
+    Row(modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        FilledButton(
+            modifier = Modifier.weight(1f).testTag("WalletSend"),
+            text = stringResource(R.string.common_send),
+            size = Size.Small,
+            order = Order.PRIMARY,
+            onClick = { start(WalletNetworkAction.SEND) },
+        )
+        FilledButton(
+            modifier = Modifier.weight(1f).testTag("WalletReceive"),
+            text = stringResource(R.string.common_receive),
+            size = Size.Small,
+            order = Order.SECONDARY,
+            onClick = { start(WalletNetworkAction.RECEIVE) },
+        )
+    }
+    picking?.let { (action, choices) ->
+        NetworkPickerSheet(
+            action = action,
+            choices = choices,
+            onPick = { choice ->
+                picking = null
+                onOpen(action, choice)
+            },
+            onClose = { picking = null },
+            xorIcon = xorIcon,
+        )
+    }
+}
+
+/**
  * The one question the wallet asks about networks: which network to receive or send on. The
- * main network is first; each row shows its tag, XOR balance and address.
+ * main network is first. The networks are listed as the SORA2 asset list lists tokens: in a card,
+ * each with XOR's icon, its balance and address, and its tag.
  */
 @Composable
 internal fun NetworkPickerSheet(
@@ -82,6 +142,7 @@ internal fun NetworkPickerSheet(
     choices: List<WalletNetworkChoice>,
     onPick: (WalletNetworkChoice) -> Unit,
     onClose: () -> Unit,
+    xorIcon: String? = null,
 ) {
     WalletSheet(
         title = stringResource(
@@ -89,10 +150,12 @@ internal fun NetworkPickerSheet(
         ),
         onClose = onClose,
     ) {
-        Column(Modifier.fillMaxWidth()) {
-            choices.forEachIndexed { index, choice ->
-                NetworkChoiceRow(choice, onClick = { onPick(choice) })
-                if (index < choices.lastIndex) Divider(color = MaterialTheme.customColors.fgOutline)
+        ContentCard(modifier = Modifier.fillMaxWidth()) {
+            Column(Modifier.padding(vertical = Dimens.x3)) {
+                choices.forEachIndexed { index, choice ->
+                    NetworkChoiceRow(choice, icon = xorIcon, onClick = { onPick(choice) })
+                    if (index < choices.lastIndex) Spacer(Modifier.size(Dimens.x2))
+                }
             }
         }
         Text(
@@ -106,8 +169,9 @@ internal fun NetworkPickerSheet(
     }
 }
 
+/** A network as a row of the SORA2 asset list: icon, name, balance, then address and tag. */
 @Composable
-private fun NetworkChoiceRow(choice: WalletNetworkChoice, onClick: () -> Unit) {
+private fun NetworkChoiceRow(choice: WalletNetworkChoice, icon: String?, onClick: () -> Unit) {
     val name = choice.network.name
     val amount = if (!choice.network.isLive) stringResource(R.string.network_address_ready)
     else choice.balance?.let { "$it XOR" }
@@ -120,15 +184,23 @@ private fun NetworkChoiceRow(choice: WalletNetworkChoice, onClick: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .clickable(enabled = choice.isAvailable, role = Role.Button, onClick = onClick)
-            .padding(vertical = 14.dp)
+            .padding(horizontal = Dimens.x3)
             .testTag("NetworkChoice${choice.id.wireId}"),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        TokenIcon(uri = icon, size = 40.dp)
+        Column(
+            Modifier
+                .weight(1f)
+                .padding(horizontal = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
             val content = if (choice.isAvailable) MaterialTheme.customColors.fgPrimary
             else MaterialTheme.customColors.fgSecondary
-            Text(name, style = MaterialTheme.customTypography.headline3, color = content)
-            amount?.let { Text(it, style = MaterialTheme.customTypography.textS, color = content) }
+            Text(name, style = MaterialTheme.customTypography.textM, color = content)
+            amount?.let {
+                Text(it, style = MaterialTheme.customTypography.textXSBold, color = MaterialTheme.customColors.fgSecondary)
+            }
             Text(
                 shortAddress(choice.address),
                 style = MaterialTheme.customTypography.textXS,
@@ -138,7 +210,7 @@ private fun NetworkChoiceRow(choice: WalletNetworkChoice, onClick: () -> Unit) {
                 Text(it, style = MaterialTheme.customTypography.textXS, color = MaterialTheme.customColors.fgSecondary)
             }
         }
-        choice.tag?.let { NetworkTagChip(it, Modifier.padding(start = 12.dp)) }
+        choice.tag?.let { NetworkTagChip(it) }
     }
 }
 
@@ -179,9 +251,10 @@ private fun NetworkAssetRow(
     onClick: () -> Unit,
 ) {
     val pending = balance.pendingTransactions.size + balance.recoveryPendingTransactions.size
+    val numbers = remember { NumbersFormatter() }
     val amount = when {
         !balance.networkLive -> stringResource(R.string.network_address_ready)
-        balance.xorQuantity != null -> "${balance.xorQuantity} XOR"
+        balance.xorQuantity != null -> numbers.nexusXor(balance.xorQuantity)
         balance.errorCode != null -> stringResource(R.string.balance_unavailable)
         else -> "…"
     } + if (pending > 0) " · $pending ${stringResource(R.string.wallet_status_checking)}" else ""
@@ -217,22 +290,9 @@ internal fun OtherNetworksCard(
     xorIcon: String?,
     xorName: String?,
     isNexusBalanceCurrent: (NexusPortfolioBalance) -> Boolean,
-    onSend: (NexusPortfolioBalance) -> Unit,
-    onRecovery: () -> Unit,
-    onRefresh: () -> Unit,
-    onLoadMore: (NexusPortfolioBalance) -> Unit,
-    walletId: String?,
+    onOpen: (NexusPortfolioBalance) -> Unit,
+    walletName: String? = null,
 ) {
-    val sheets = rememberNetworkSheetsState(walletId)
-    NetworkSheets(
-        state = sheets,
-        balances = balances,
-        isNexusBalanceCurrent = isNexusBalanceCurrent,
-        onSend = onSend,
-        onRecovery = onRecovery,
-        onRefresh = onRefresh,
-        onLoadMore = onLoadMore,
-    )
     ContentCard(modifier = Modifier.fillMaxWidth()) {
         Column(Modifier.padding(top = Dimens.x3, bottom = Dimens.x3)) {
             Text(
@@ -241,11 +301,20 @@ internal fun OtherNetworksCard(
                 color = MaterialTheme.customColors.fgPrimary,
                 modifier = Modifier.padding(horizontal = Dimens.x3),
             )
+            // With every wallet on screen above it, this card says whose rows these are.
+            walletName?.let {
+                Text(
+                    text = it,
+                    style = MaterialTheme.customTypography.textXSBold,
+                    color = MaterialTheme.customColors.fgSecondary,
+                    modifier = Modifier.padding(horizontal = Dimens.x3),
+                )
+            }
             NetworkAssetRows(
                 balances = balances.filter(isNexusBalanceCurrent),
                 xorIcon = xorIcon,
                 xorName = xorName,
-                onOpen = sheets::openActivity,
+                onOpen = onOpen,
             )
         }
     }

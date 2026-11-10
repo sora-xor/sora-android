@@ -147,12 +147,17 @@ class NexusPendingReconciler @Inject constructor(
             networkId = networkId,
             requireSelected = false,
         )
+        // Both history proofs ask for the block the status reported. Without it Taira's hash
+        // lookup walks every block range of the account's history (28 pages, 72 s for a faucet
+        // transfer on 2026-11-08), and both proofs did so for every committed send. A wrong
+        // height finds nothing: the send stays pending, it is never finalized on weaker evidence.
         check(
             torii.hasAuthoritativeCommittedTransaction(
                 network = network,
                 accountId = account.address,
                 assetDefinitionId = pending.assetId,
                 transactionHash = hash,
+                committedBlockHeight = committedAt,
             )
         ) { "NEXUS_TRANSACTION_HISTORY_PROOF_MISSING" }
         val readBack = torii.getAssetBalanceByDefinition(
@@ -167,6 +172,7 @@ class NexusPendingReconciler @Inject constructor(
             accountId = account.address,
             assetDefinitionId = pending.assetId,
             transactionHash = hash,
+            committedBlockHeight = committedAt,
         )
         check(transfersForSignedHash.all { transfer -> canonicalHash(transfer.transactionHash) == hash }) {
             "NEXUS_TRANSACTION_HISTORY_IDENTITY_MISMATCH"
@@ -200,14 +206,22 @@ class NexusPendingReconciler @Inject constructor(
         require(maxAttempts in 1..MAX_STATUS_ATTEMPTS)
         require(pollDelayMillis in 0..MAX_STATUS_POLL_DELAY_MILLIS)
         var result: NexusSendResult? = null
+        var failure: Throwable? = null
         repeat(maxAttempts) { attempt ->
-            result = reconcile(localId)
-            if (result.state in TERMINAL_STATES || attempt == maxAttempts - 1) {
-                return checkNotNull(result)
+            try {
+                val current = reconcile(localId)
+                result = current
+                failure = null
+                if (current.state in TERMINAL_STATES) return current
+            } catch (error: CancellationException) {
+                throw error
+            } catch (error: Throwable) {
+                // A status or proof read that fails now can answer on the next attempt.
+                failure = error
             }
-            if (pollDelayMillis > 0) delay(pollDelayMillis)
+            if (attempt < maxAttempts - 1 && pollDelayMillis > 0) delay(pollDelayMillis)
         }
-        return checkNotNull(result)
+        return result ?: throw checkNotNull(failure)
     }
 
     suspend fun recoverAfterRestart(): NexusRecoveryPass =

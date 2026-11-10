@@ -22,7 +22,9 @@ object IrohaAddressCodec {
         '\uff7a', '\uff74', '\uff83', '\uff71', '\uff7b', '\uff77', '\uff95', '\uff92',
         '\uff90', '\uff7c', '\u30f1', '\uff8b', '\uff93', '\uff7e', '\uff7d',
     )
-    private val alphabet = BASE58.toList() + poem
+
+    /** Every character an address can hold after its network prefix; the address screens draw all of them. */
+    internal val alphabet = BASE58.toList() + poem
     private val digitTable = alphabet.withIndex().associate { it.value to it.index }
     private val generators = intArrayOf(
         0x3b6a57b2,

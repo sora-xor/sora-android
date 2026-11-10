@@ -23,6 +23,7 @@ import jp.co.soramitsu.feature_blockexplorer_api.data.ProductionFeatureManager
 import jp.co.soramitsu.feature_blockexplorer_api.data.ProductionFeatureState
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
@@ -166,23 +167,238 @@ class NexusPortfolioTairaVisibilityTest {
         fixture()
         val accounts = MutableStateFlow(listOf(taira))
         every { dao.observeEnabledNetworkAccounts() } returns accounts
+        val changed = taira.copy(publicKey = "02".repeat(32),
+            address = IrohaAddressCodec.encode(ByteArray(32) { 2 }, NexusNetworks.taira.chainDiscriminant))
+        val old = NexusTransferHistoryItem("a".repeat(64), 1, "1", taira.address, taira.address)
         coEvery { torii.getXorBalance(any(), any()) } returns NexusAssetBalance(
             asset = TairaTestnetContract.XOR_ASSET_DEFINITION_ID, quantity = "1")
-        coEvery { torii.committedXorTransferPage(any(), any(), any(), null) } returns
-            NexusTransferHistorySlice(emptyList(), "page2")
-        var rows = emptyList<NexusPortfolioBalance>()
-        backgroundScope.launch { repository.observeCurrentWallet().collect { rows = it } }
+        coEvery { torii.committedXorTransferPage(any(), taira.address, any(), null) } returns
+            NexusTransferHistorySlice(listOf(old), "page2", setOf("old"))
+        coEvery { torii.committedXorTransferPage(any(), changed.address, any(), null) } returns
+            NexusTransferHistorySlice(emptyList(), null)
+        val emitted = mutableListOf<List<NexusPortfolioBalance>>()
+        backgroundScope.launch { repository.observeCurrentWallet().collect { emitted += it } }
         runCurrent()
         repository.loadMoreHistory("wallet", WalletNetworkId.TAIRA)
         runCurrent()
-        val changed = taira.copy(publicKey = "02".repeat(32),
-            address = IrohaAddressCodec.encode(ByteArray(32) { 2 }, NexusNetworks.taira.chainDiscriminant))
         accounts.value = listOf(changed)
         runCurrent()
-        assertEquals(changed.address, rows.single().address)
+        assertEquals(changed.address, emitted.last().single().address)
+        // The other address's history is never shown under this one, not even while it loads.
+        assertTrue(emitted.flatten().filter { it.address == changed.address }.none { old in it.confirmedTransfers })
         coVerify(exactly = 1) { torii.getXorBalance(NexusNetworks.taira, changed.address) }
         coVerify(exactly = 1) { torii.committedXorTransferPage(any(), changed.address, any(), null) }
         coVerify(exactly = 0) { torii.committedXorTransferPage(any(), changed.address, any(), "page2") }
+    }
+
+    @Test
+    fun `balance and Send show while the history is still being read`() = runTest {
+        fixture()
+        every { sendQualification.capabilitiesFor(any()) } returns QUALIFIED
+        val history = CompletableDeferred<NexusTransferHistorySlice>()
+        coEvery { torii.committedXorTransferPage(any(), any(), any(), null) } coAnswers { history.await() }
+        val emitted = mutableListOf<List<NexusPortfolioBalance>>()
+        backgroundScope.launch { repository.observeCurrentWallet().collect { emitted += it } }
+        runCurrent()
+
+        val early = emitted.last().single()
+        assertEquals("1", early.xorQuantity)
+        assertTrue(early.sendAvailable)
+        assertTrue(early.historyLoading)
+        assertTrue(early.confirmedTransfers.isEmpty())
+        assertFalse(early.historyHasMore)
+
+        val transfer = NexusTransferHistoryItem("a".repeat(64), 1, "1", taira.address, taira.address)
+        history.complete(NexusTransferHistorySlice(listOf(transfer), null, setOf("a")))
+        runCurrent()
+        assertEquals(early.copy(confirmedTransfers = listOf(transfer), historyLoading = false), emitted.last().single())
+    }
+
+    @Test
+    fun `rows shown before their history keep every Send check`() = runTest {
+        fixture()
+        every { sendQualification.capabilitiesFor(any()) } returns QUALIFIED
+        val journal = MutableStateFlow(emptyList<jp.co.soramitsu.core_db.model.PendingNetworkTransactionLocal>())
+        every { dao.observePendingTransactions("wallet") } returns journal
+        // The history never answers: every row below is one shown before it.
+        coEvery { torii.committedXorTransferPage(any(), any(), any(), any()) } coAnswers { awaitCancellation() }
+        var rows = emptyList<NexusPortfolioBalance>()
+        backgroundScope.launch { repository.observeCurrentWallet().collect { rows = it } }
+        runCurrent()
+        assertTrue(rows.single().historyLoading)
+        assertTrue(rows.single().sendAvailable)
+
+        features.value = features.value.copy(tairaAvailable = false)
+        runCurrent()
+        assertTrue(rows.single().historyLoading)
+        assertEquals("1", rows.single().xorQuantity)
+        assertFalse(rows.single().sendAvailable)
+
+        features.value = features.value.copy(tairaAvailable = true)
+        journal.value = listOf(pendingSend().copy(chainId = null))
+        runCurrent()
+        assertTrue(rows.single().historyLoading)
+        assertFalse(rows.single().sendAvailable)
+        assertEquals("NEXUS_PENDING_RECOVERY_REQUIRED", rows.single().errorCode)
+
+        journal.value = listOf(pendingSend())
+        every { sendQualification.capabilitiesFor(any()) } returns NexusSendCapabilities.unavailable()
+        repository.refresh()
+        runCurrent()
+        assertTrue(rows.single().historyLoading)
+        assertEquals(1, rows.single().pendingTransactions.size)
+        assertFalse(rows.single().sendAvailable)
+
+        coEvery { torii.getXorBalance(any(), any()) } throws NexusToriiException("NEXUS_XOR_DEFINITION_INVALID")
+        every { sendQualification.capabilitiesFor(any()) } returns QUALIFIED
+        repository.refresh()
+        runCurrent()
+        assertFalse(rows.single().sendAvailable)
+        assertEquals("NEXUS_XOR_DEFINITION_INVALID", rows.single().errorCode)
+    }
+
+    @Test
+    fun `empty history ranges are followed until a page has transfers`() = runTest {
+        fixture()
+        val transfer = NexusTransferHistoryItem("a".repeat(64), 1, "1", taira.address, taira.address)
+        coEvery { torii.committedXorTransferPage(any(), any(), any(), null) } returns
+            NexusTransferHistorySlice(emptyList(), "range2")
+        coEvery { torii.committedXorTransferPage(any(), any(), any(), "range2") } returns
+            NexusTransferHistorySlice(emptyList(), "range3")
+        coEvery { torii.committedXorTransferPage(any(), any(), any(), "range3") } returns
+            NexusTransferHistorySlice(listOf(transfer), "range4", setOf("a"))
+        var rows = emptyList<NexusPortfolioBalance>()
+        backgroundScope.launch { repository.observeCurrentWallet().collect { rows = it } }
+        runCurrent()
+
+        assertEquals(listOf(transfer), rows.single().confirmedTransfers)
+        assertTrue(rows.single().historyHasMore)
+        assertFalse(rows.single().historyLoading)
+        coVerify(exactly = 3) { torii.committedXorTransferPage(any(), any(), any(), any()) }
+        coVerify(exactly = 0) { torii.committedXorTransferPage(any(), any(), any(), "range4") }
+    }
+
+    @Test
+    fun `a page of recent activity stops after twelve empty ranges and Show more goes on`() = runTest {
+        fixture()
+        coEvery { torii.committedXorTransferPage(any(), any(), any(), any()) } answers {
+            val range = arg<String?>(3)?.removePrefix("range")?.toInt() ?: 0
+            NexusTransferHistorySlice(emptyList(), "range${range + 1}")
+        }
+        var rows = emptyList<NexusPortfolioBalance>()
+        backgroundScope.launch { repository.observeCurrentWallet().collect { rows = it } }
+        runCurrent()
+
+        assertTrue(rows.single().confirmedTransfers.isEmpty())
+        assertTrue(rows.single().historyHasMore)
+        assertFalse(rows.single().historyLoading)
+        coVerify(exactly = 12) { torii.committedXorTransferPage(any(), any(), any(), any()) }
+
+        repository.loadMoreHistory("wallet", WalletNetworkId.TAIRA)
+        runCurrent()
+        coVerify(exactly = 24) { torii.committedXorTransferPage(any(), any(), any(), any()) }
+        coVerify(exactly = 1) { torii.committedXorTransferPage(any(), any(), any(), "range12") }
+        coVerify(exactly = 1) { torii.getXorBalance(any(), any()) }
+    }
+
+    @Test
+    fun `a wallet read without history shows its balance and Send and never asks for history`() = runTest {
+        fixture()
+        every { sendQualification.capabilitiesFor(any()) } returns QUALIFIED
+        coEvery { torii.committedXorTransferPage(any(), any(), any(), any()) } returns
+            NexusTransferHistorySlice(emptyList(), "range2")
+        val emitted = mutableListOf<List<NexusPortfolioBalance>>()
+        backgroundScope.launch { repository.observeWallet("wallet", history = false).collect { emitted += it } }
+        runCurrent()
+
+        val row = emitted.single().single()
+        assertEquals("1", row.xorQuantity)
+        assertTrue(row.sendAvailable)
+        assertFalse(row.historyLoading)
+        assertFalse(row.historyHasMore)
+        repository.refresh()
+        runCurrent()
+        coVerify(exactly = 2) { torii.getXorBalance(any(), any()) }
+        coVerify(exactly = 0) { torii.committedXorTransferPage(any(), any(), any(), any()) }
+    }
+
+    @Test
+    fun `a refresh keeps the history on screen while it is read again`() = runTest {
+        fixture()
+        val old = NexusTransferHistoryItem("a".repeat(64), 1, "1", taira.address, taira.address)
+        val fresh = old.copy(transactionHash = "f".repeat(64))
+        val second = CompletableDeferred<NexusTransferHistorySlice>()
+        var calls = 0
+        coEvery { torii.committedXorTransferPage(any(), any(), any(), null) } coAnswers {
+            if (calls++ == 0) NexusTransferHistorySlice(listOf(old), "page2", setOf("old")) else second.await()
+        }
+        var rows = emptyList<NexusPortfolioBalance>()
+        backgroundScope.launch { repository.observeCurrentWallet().collect { rows = it } }
+        runCurrent()
+        repository.refresh()
+        runCurrent()
+        assertTrue(rows.single().historyLoading)
+        assertEquals(listOf(old), rows.single().confirmedTransfers)
+        assertTrue(rows.single().historyHasMore)
+
+        second.complete(NexusTransferHistorySlice(listOf(fresh), null, setOf("fresh")))
+        runCurrent()
+        assertEquals(listOf(fresh), rows.single().confirmedTransfers)
+        assertFalse(rows.single().historyHasMore)
+        assertFalse(rows.single().historyLoading)
+    }
+
+    @Test
+    fun `a transfer that leaves the journal stays listed until the history that holds it is read`() =
+        runTest {
+            fixture()
+            val send = pendingSend()
+            val journal = MutableStateFlow(listOf(send))
+            every { dao.observePendingTransactions("wallet") } returns journal
+            val confirmed = NexusTransferHistoryItem(checkNotNull(send.transactionHash), 2, "1", taira.address, send.recipient)
+            val second = CompletableDeferred<NexusTransferHistorySlice>()
+            var calls = 0
+            coEvery { torii.committedXorTransferPage(any(), any(), any(), null) } coAnswers {
+                if (calls++ == 0) NexusTransferHistorySlice(emptyList(), null) else second.await()
+            }
+            var rows = emptyList<NexusPortfolioBalance>()
+            backgroundScope.launch { repository.observeCurrentWallet().collect { rows = it } }
+            runCurrent()
+            assertEquals(listOf(send.localId), rows.single().pendingTransactions.map { it.localId })
+
+            // Reconciliation finalized it: the journal no longer lists it.
+            journal.value = emptyList()
+            runCurrent()
+            assertEquals(listOf(send.localId), rows.single().pendingTransactions.map { it.localId })
+
+            second.complete(NexusTransferHistorySlice(listOf(confirmed), null, setOf("confirmed")))
+            runCurrent()
+            assertTrue(rows.single().pendingTransactions.isEmpty())
+            assertEquals(listOf(confirmed), rows.single().confirmedTransfers)
+        }
+
+    @Test
+    fun `a row that turns Send off is shown at once even when a transfer left the journal`() = runTest {
+        fixture()
+        every { sendQualification.capabilitiesFor(any()) } returns QUALIFIED
+        val journal = MutableStateFlow(listOf(pendingSend()))
+        every { dao.observePendingTransactions("wallet") } returns journal
+        val second = CompletableDeferred<NexusTransferHistorySlice>()
+        var calls = 0
+        coEvery { torii.committedXorTransferPage(any(), any(), any(), null) } coAnswers {
+            if (calls++ == 0) NexusTransferHistorySlice(emptyList(), null) else second.await()
+        }
+        var rows = emptyList<NexusPortfolioBalance>()
+        backgroundScope.launch { repository.observeCurrentWallet().collect { rows = it } }
+        runCurrent()
+        assertTrue(rows.single().sendAvailable)
+
+        journal.value = emptyList()
+        features.value = features.value.copy(tairaAvailable = false)
+        runCurrent()
+        assertFalse(rows.single().sendAvailable)
+        assertTrue(rows.single().historyLoading)
+        assertTrue(rows.single().pendingTransactions.isEmpty())
     }
 
     @Test
@@ -248,5 +464,25 @@ class NexusPortfolioTairaVisibilityTest {
         return NetworkAccountLocal("wallet", id.wireId, "01".repeat(32),
             IrohaAddressCodec.encode(ByteArray(32) { 1 }, network.chainDiscriminant),
             network.derivationPath, 1, true)
+    }
+
+    /** A committed Taira send waiting for its history proof, as the journal stores it. */
+    private fun pendingSend() = jp.co.soramitsu.core_db.model.PendingNetworkTransactionLocal(
+        localId = "${TairaTestnetContract.PENDING_JOURNAL_PREFIX}send",
+        walletId = "wallet",
+        networkId = WalletNetworkId.TAIRA.wireId,
+        chainId = TairaTestnetContract.CHAIN_ID,
+        transactionHash = "ab".repeat(32),
+        assetId = TairaTestnetContract.XOR_ASSET_DEFINITION_ID,
+        amount = "1",
+        recipient = IrohaAddressCodec.encode(ByteArray(32) { 2 }, NexusNetworks.taira.chainDiscriminant),
+        state = "COMMITTED_PENDING_RECONCILIATION",
+        submissionIsAmbiguous = false,
+        createdAt = 1,
+        updatedAt = 1,
+    )
+
+    private companion object {
+        val QUALIFIED = NexusSendCapabilities(NexusCapabilityStatus.QUALIFIED, NexusCapabilityStatus.QUALIFIED)
     }
 }

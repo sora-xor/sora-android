@@ -1,48 +1,38 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  SORA Neon XML mirrors, light ("Daylight") values. Dark values are in values-night/neon_colors.xml.
-  Keep in sync with compose/theme/tokens/DayThemeColors.kt and compose/theme/neon/NeonTokens.kt
-  (NeonLight). Used by the XML theme (styles.xml), the splash and recovery panel, and dialogs.
+  XML mirrors of the classic SORA day palette (compose/theme/tokens/DayThemeColors.kt),
+  under the names the XML theme (styles.xml), the splash and recovery panel and dialogs use.
 -->
 <resources>
-    <color name="neon_canvas">#F2F3F8</color>
+    <color name="neon_canvas">#F5F2F2</color>
     <color name="neon_surface">#FFFFFF</color>
-    <color name="neon_surface_variant">#E9EBF2</color>
+    <color name="neon_surface_variant">#E8E1E1</color>
     <color name="neon_sheet">#FFFFFF</color>
-    <!-- 94% chrome tint (bottom navigation) -->
-    <color name="neon_chrome">#F0FFFFFF</color>
-    <!-- #0B0C14 at 8% -->
-    <color name="neon_hairline">#140B0C14</color>
-    <color name="neon_divider">#DADCE5</color>
-    <color name="neon_border_input">#7E8296</color>
+    <color name="neon_chrome">#FFFFFF</color>
+    <color name="neon_hairline">#E8E1E1</color>
+    <color name="neon_divider">#E8E1E1</color>
+    <color name="neon_border_input">#C3B3B3</color>
 
-    <color name="neon_text_primary">#0B0C14</color>
-    <color name="neon_text_secondary">#454A5E</color>
-    <color name="neon_text_tertiary">#5E6278</color>
-    <color name="neon_text_disabled">#A4A8B9</color>
-    <!-- Label on accent fills: white in light, ink in dark -->
+    <color name="neon_text_primary">#281818</color>
+    <color name="neon_text_secondary">#9D8181</color>
+    <color name="neon_text_tertiary">#C3B3B3</color>
+    <color name="neon_text_disabled">#C3B3B3</color>
     <color name="neon_on_accent">#FFFFFF</color>
-    <color name="neon_link">#00708A</color>
+    <color name="neon_link">#EE2233</color>
 
-    <color name="neon_brand_red">#C80E34</color>
-    <color name="neon_cyan">#00708A</color>
-    <color name="neon_polkaswap">#D6005A</color>
-    <color name="neon_polkaswap_text">#B0004B</color>
+    <color name="neon_brand_red">#EE2233</color>
+    <color name="neon_cyan">#EE2233</color>
+    <color name="neon_polkaswap">#FF0066</color>
+    <color name="neon_polkaswap_text">#FF0066</color>
 
-    <color name="neon_success">#08704D</color>
-    <color name="neon_success_container">#E3F6F0</color>
-    <color name="neon_warning">#8A4F00</color>
-    <color name="neon_warning_container">#FFF0DA</color>
-    <color name="neon_error">#BC0E2D</color>
-    <color name="neon_error_container">#F9E7EA</color>
+    <color name="neon_success">#169974</color>
+    <color name="neon_success_container">#D3F6EC</color>
+    <color name="neon_warning">#FF9900</color>
+    <color name="neon_warning_container">#FFF1D2</color>
+    <color name="neon_error">#CB0F1F</color>
+    <color name="neon_error_container">#FFE8EB</color>
 
-    <!-- Safe Mode CTA (cta.safe start colour) and card border (border.safe) -->
-    <color name="neon_safe_start">#08704D</color>
-    <!-- Glass button fill and pressed fill on the opaque XML surfaces -->
-    <!-- cta.disabled: #0B0C14 at 6% (disabled XML buttons) -->
-    <!-- infoContainer: reassurance callouts (design spec 7.17) -->
-    <!-- bg.toast (inverted in light, design spec 7.13) and its text -->
-    <color name="neon_toast">#14141F</color>
+    <color name="neon_safe_start">#169974</color>
+    <color name="neon_toast">#281818</color>
     <color name="neon_on_toast">#FFFFFF</color>
-    <color name="neon_swap_end">#A3128A</color>
 </resources>

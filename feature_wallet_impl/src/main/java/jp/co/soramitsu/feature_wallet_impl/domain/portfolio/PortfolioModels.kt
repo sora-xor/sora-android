@@ -73,12 +73,13 @@ data class PortfolioHolding(
 /** Why a holding is not part of the total. */
 enum class Exclusion { HIDDEN, UNPRICED, TESTNET }
 
-/** Sync state of a wallet, from best to worst. */
+/** Sync state of a wallet, from best to worst. READING: nothing is known about it yet. */
 enum class FreshnessKind(val severity: Int) {
     LIVE(0),
     SAVED(1),
-    PARTIAL(2),
-    OFFLINE(3),
+    READING(2),
+    PARTIAL(3),
+    OFFLINE(4),
 }
 
 /** [updatedAtMillis] is the last successful sync of the wallet; [unreachable] names failed networks. */
@@ -90,12 +91,15 @@ data class WalletFreshness(
 
 /**
  * What the source knows about a wallet's sync. [live] is true for the selected wallet, which the
- * app keeps current with a live subscription; other wallets are read on demand and age.
+ * app keeps current with a live subscription; other wallets are read on demand and age. [unread]
+ * says that no balance of this wallet has been read on this device yet, so having no holdings
+ * means nothing: its total is unknown, not zero.
  */
 data class WalletSync(
     val refreshedAtMillis: Long?,
     val unreachable: Set<WalletNetworkId> = emptySet(),
     val live: Boolean = false,
+    val unread: Boolean = false,
 )
 
 /** Every wallet's holdings as one consistent picture; the input to [PortfolioCalculator]. */
@@ -108,6 +112,10 @@ data class PortfolioSnapshot(
     val addresses: Map<String, Map<WalletNetworkId, String>>,
     /** The app's selected fiat currency sign, for formatting. */
     val fiatSymbol: String,
+    /** The last saved picture, shown until the live sources have answered. Nothing acts on it. */
+    val saved: Boolean = false,
+    /** When the newest of the prices was read, if known. */
+    val pricesReadAtMillis: Long? = null,
 ) {
     val selectedWallet: PortfolioWallet?
         get() = wallets.firstOrNull { it.selected }

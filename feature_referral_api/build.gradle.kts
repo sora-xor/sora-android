@@ -73,7 +73,7 @@ dependencies {
     implementation(libs.navigationFragmentDep)
     implementation(libs.navigationUiDep)
 
-    implementation(libs.xsubstrateDep)
+    implementation(project(":xsubstrate"))
 
     implementation(libs.daggerDep)
     ksp(libs.hiltCompilerDep)

@@ -480,6 +480,8 @@ class UserRepositoryImpl(
         }
     }
 
+    override fun curSoraAccountIfLoaded(): SoraAccount? = currentSoraAccount.value
+
     override fun flowCurSoraAccount(): Flow<SoraAccount> =
         currentSoraAccount.asStateFlow()
             .filterNotNull()

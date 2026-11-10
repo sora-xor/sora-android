@@ -34,7 +34,7 @@ import jp.co.soramitsu.common.domain.NetworkFeeUnavailable
 import jp.co.soramitsu.common.domain.TransactionChainFailure
 import jp.co.soramitsu.common.domain.TransactionNodeRefusal
 import jp.co.soramitsu.common.domain.TransactionOutcome
-import jp.co.soramitsu.common.logger.FirebaseWrapper
+import jp.co.soramitsu.common.logger.WalletDiagnostics
 import jp.co.soramitsu.common.presentation.transaction.TransactionResultBadge
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common_wallet.domain.model.LiquidityData
@@ -140,7 +140,7 @@ class AddLiquidityViewModelTest {
     @OptIn(ExperimentalStdlibApi::class)
     @Before
     fun setUp() = runTest {
-        mockkObject(FirebaseWrapper)
+        mockkObject(WalletDiagnostics)
         given(
             assetsInteractor.isNotEnoughXorLeftAfterTransaction(
                 networkFeeInXor = any(),
@@ -192,7 +192,7 @@ class AddLiquidityViewModelTest {
     @After
     fun tearDown() {
         io.mockk.verify(exactly = expectedReportedErrors) {
-            FirebaseWrapper.recordException(any())
+            WalletDiagnostics.recordException(any())
         }
     }
 
@@ -1207,7 +1207,8 @@ class AddLiquidityViewModelTest {
         setUpViewModel(null); advanceUntilIdle()
         viewModel.onToken1Change(XSTXAU_ASSET.token.id); advanceUntilIdle()
         assertEquals(XSTXAU_ASSET.token.id, viewModel.addState.value.assetState1!!.token.id)
-        assertTrue(viewModel.addState.value.assetState1!!.balance.startsWith("1 ("))
+        // XSTXAU has no fiat price here, so no empty "()" follows the balance.
+        assertEquals("1", viewModel.addState.value.assetState1!!.balance)
         viewModel.onToken1Change(XSTXAU_ASSET.token.id)
         assertEquals("Choose tokens", viewModel.addState.value.btnState.text)
     }

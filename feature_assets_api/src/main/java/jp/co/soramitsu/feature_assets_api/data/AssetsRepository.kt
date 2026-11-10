@@ -77,7 +77,24 @@ interface AssetsRepository {
         tokenId: String,
     ): Flow<Asset?>
 
+    /**
+     * Every whitelisted asset row of [address], whatever its visibility: what the account's rows
+     * say it holds. Reads rows only; unlike [getAssetsWhitelist] it never creates any.
+     */
+    fun subscribeAssetsOfWhitelist(address: String): Flow<List<Asset>>
+
+    /** When the newest of the app's saved prices was read; null when it has none. */
+    fun subscribeNewestPriceMillis(): Flow<Long?>
+
     fun subscribeAssetsActive(
+        address: String
+    ): Flow<List<Asset>>
+
+    fun subscribeAssetsFavorite(
+        address: String
+    ): Flow<List<Asset>>
+
+    fun subscribeAssetsVisible(
         address: String
     ): Flow<List<Asset>>
 

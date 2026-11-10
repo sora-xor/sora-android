@@ -15,9 +15,6 @@
     <string name="portfolio_all_wallets">همه کیف پول‌ها</string>
     <string name="portfolio_wallets">کیف پول‌ها</string>
     <string name="portfolio_scope_label">محدوده: %1$s. یک کیف پول انتخاب کنید</string>
-    <string name="portfolio_lens_tokens">توکن‌ها</string>
-    <string name="portfolio_lens_networks">شبکه‌ها</string>
-    <string name="portfolio_lens_wallets">کیف پول‌ها</string>
     <string name="portfolio_where_it_lives">محل نگهداری</string>
     <string name="portfolio_where_it_lives_title">%1$s · محل نگهداری</string>
     <plurals name="portfolio_networks">
@@ -31,10 +28,6 @@
     <plurals name="portfolio_holdings">
         <item quantity="one">%1$d موجودی دارایی</item>
         <item quantity="other">%1$d موجودی دارایی</item>
-    </plurals>
-    <plurals name="portfolio_tokens">
-        <item quantity="one">%1$d توکن</item>
-        <item quantity="other">%1$d توکن</item>
     </plurals>
     <plurals name="portfolio_assets_not_included">
         <item quantity="one">%1$d دارایی محاسبه نشده است</item>
@@ -55,10 +48,9 @@
     <string name="portfolio_route_none">در این نسخه مسیری از %1$s وجود ندارد.</string>
     <string name="portfolio_route_test">دارایی‌های شبکه آزمایشی ارزش پولی ندارند.</string>
     <string name="portfolio_route_ready">در SORA2 است. اکنون با حساب SORA2 خود در %1$s، در Polkaswap مبادله کنید.</string>
-    <string name="portfolio_no_route">بدون مسیر</string>
     <string name="portfolio_receive_on_sora2">دریافت در SORA2</string>
-    <string name="portfolio_send_on">ارسال در %1$s</string>
     <string name="portfolio_send_unavailable">ارسال در %1$s در این نسخه در دسترس نیست.</string>
+    <string name="portfolio_send_on">ارسال در %1$s</string>
     <string name="portfolio_move_no_other_wallet">برای انتقال، به کیف پول دیگری از خودتان با حسابی در %1$s نیاز دارید.</string>
     <string name="portfolio_move_needs_wallets">انتقال میان کیف پول‌های خودتان انجام می‌شود. برای جابه‌جایی وجه میان آن‌ها، کیف پول دیگری اضافه کنید.</string>
     <string name="portfolio_nothing_to_move">در اینجا فعلاً دارایی قابل انتقالی وجود ندارد.</string>
@@ -71,6 +63,7 @@
     <string name="portfolio_excluded_unpriced">بدون قیمت: %1$d</string>
     <string name="portfolio_excluded_testnet">دارایی‌های شبکه آزمایشی: %1$d</string>
     <string name="portfolio_excluded_caption">%1$s محاسبه نشده</string>
+    <string name="portfolio_prices_as_of">قیمت‌ها تا %1$s</string>
     <string name="portfolio_counted">محاسبه‌شده</string>
     <string name="portfolio_hidden_by_you">پنهان‌شده توسط شما</string>
     <string name="portfolio_without_price">بدون قیمت</string>
@@ -85,6 +78,9 @@
     <string name="portfolio_state_saved">ذخیره‌شده</string>
     <string name="portfolio_state_partial">ناقص</string>
     <string name="portfolio_state_offline">آفلاین</string>
+    <string name="portfolio_state_reading">در حال خواندن</string>
+    <string name="portfolio_reading_balances">در حال خواندن موجودی‌ها…</string>
+    <string name="portfolio_excluded_unread">کیف پول‌های هنوز خوانده‌نشده: %1$d</string>
     <string name="portfolio_age_seconds">%1$d ثانیه</string>
     <string name="portfolio_age_minutes">%1$d دقیقه</string>
     <string name="portfolio_age_hours">%1$d ساعت</string>
@@ -97,15 +93,14 @@
     <string name="portfolio_unreachable">%1$s در دسترس نیست</string>
     <string name="portfolio_refresh_all">تازه‌سازی همه کیف پول‌ها</string>
     <string name="portfolio_wallets_together">کیف پول‌های تجمیع‌شده: %1$d</string>
-    <string name="portfolio_wallets_note">نمای همه کیف پول‌ها، مجموع هر کیف پول را جمع می‌کند. کیف پول‌های انتخاب‌نشده داده‌های آخرین همگام‌سازی را نگه می‌دارند، پس فهرست عمر داده‌های هرکدام را نشان می‌دهد.</string>
+    <string name="portfolio_wallets_note">«همه کیف پول‌ها» مجموع هر کیف پول را جمع می‌کند. کیف پول‌های انتخاب‌نشده هنگام تماشا تقریباً هر دقیقه تازه می‌شوند و هر کدام قدمت اعدادش را نشان می‌دهد.</string>
     <string name="portfolio_manage_wallets">مدیریت کیف پول‌ها</string>
+    <string name="portfolio_manage_assets">مدیریت دارایی‌های کیف پول انتخابی</string>
     <string name="portfolio_selected">انتخاب‌شده</string>
-    <string name="portfolio_open_wallet_alone">باز کردن فقط %1$s</string>
     <string name="portfolio_other">سایر</string>
     <string name="portfolio_legend_description">%1$s، %2$s درصد، %3$s</string>
-    <string name="portfolio_no_price">بدون قیمت</string>
-    <string name="portfolio_no_value">بدون ارزش</string>
     <string name="portfolio_nothing_listed">دارایی‌ای برای نمایش وجود ندارد. دارایی‌های پنهان اینجا نشان داده نمی‌شوند.</string>
+    <string name="portfolio_no_balance_yet">هنوز موجودی ندارد</string>
     <string name="portfolio_wallet_ready">کیف پول شما آماده است.</string>
     <string name="portfolio_wallet_ready_body">توکن‌ها را در این کیف پول دریافت کنید. توکن‌های همه شبکه‌های پشتیبانی‌شده در برنامه، اینجا نمایش داده می‌شوند.</string>
     <string name="portfolio_token_gone">این توکن دیگر در این نما نیست.</string>
@@ -137,8 +132,8 @@
     <string name="portfolio_you_pay">می‌پردازید</string>
     <string name="portfolio_you_get">دریافت می‌کنید</string>
     <string name="portfolio_swap_note">Polkaswap پیش از امضا، قیمت، کارمزد و اثر بر قیمت را نشان می‌دهد. اینجا فقط جفت انتخاب می‌شود.</string>
-    <string name="portfolio_send_from">ارسال از</string>
-    <string name="portfolio_receive_to">دریافت در</string>
+    <string name="portfolio_send_from">ارسال از کدام کیف پول؟</string>
+    <string name="portfolio_receive_to">دریافت در کدام کیف پول؟</string>
     <string name="portfolio_sample_handoff_off">سبد نمونه: نشانی‌ها ساختگی هستند، بنابراین صفحه ارسال باز نمی‌شود.</string>
     <string name="portfolio_nexus_send_unavailable">ارسال در این شبکه فعلاً برای این کیف پول در دسترس نیست.</string>
     <string name="asset_add_to_favorites">افزودن %1$s به موارد دلخواه</string>

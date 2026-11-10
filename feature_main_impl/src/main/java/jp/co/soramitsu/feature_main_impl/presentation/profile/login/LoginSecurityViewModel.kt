@@ -30,7 +30,7 @@ import jp.co.soramitsu.androidfoundation.fragment.SingleLiveEvent
 import jp.co.soramitsu.androidfoundation.fragment.trigger
 import jp.co.soramitsu.androidfoundation.resource.ResourceManager
 import jp.co.soramitsu.common.R
-import jp.co.soramitsu.common.logger.FirebaseWrapper
+import jp.co.soramitsu.common.logger.WalletDiagnostics
 import jp.co.soramitsu.common.presentation.compose.components.initSmallTitle2
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
@@ -110,7 +110,7 @@ class LoginSecurityViewModel @Inject constructor(
             state = if (result.isSuccess) {
                 state.copy(restoring = null, restored = state.restored + address)
             } else {
-                result.exceptionOrNull()?.let { FirebaseWrapper.recordException(it) }
+                result.exceptionOrNull()?.let { WalletDiagnostics.recordException(it) }
                 state.copy(restoring = null, notRestorable = state.notRestorable + address)
             }
         }
