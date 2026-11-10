@@ -51,7 +51,9 @@ import jp.co.soramitsu.feature_main_impl.domain.PinCodeInteractor
 import jp.co.soramitsu.feature_select_node_api.SelectNodeRouter
 import jp.co.soramitsu.sora.substrate.substrate.ConnectionManager
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -118,9 +120,19 @@ class PinCodeViewModel @Inject constructor(
      */
     internal var removal by mutableStateOf<AccountRemovalState?>(null)
         private set
+    private var removalOpenedAtReturn = 0
+    private var removalBriefingJob: Job? = null
 
     private val _biometryInitialDialogEvent = SingleLiveEvent<Unit>()
     val biometryInitialDialogEvent: LiveData<Unit> = _biometryInitialDialogEvent
+
+    /**
+     * True while the owner is asked about biometrics that changed since they last approved them.
+     * The typed PIN was right, and nothing goes on until they answer. A held value, not an event,
+     * so the question comes back if the screen is rebuilt.
+     */
+    private val _enrollmentChangeQuestion = MutableLiveData(false)
+    val enrollmentChangeQuestion: LiveData<Boolean> = _enrollmentChangeQuestion
 
     private val _resetApplicationEvent = SingleLiveEvent<Unit>()
     val resetApplicationEvent: LiveData<Unit> = _resetApplicationEvent
@@ -344,12 +356,14 @@ class PinCodeViewModel @Inject constructor(
         viewModelScope.launch {
             tryCatch {
                 interactor.savePin(inputedCode)
-                biometricGate.approveEnrollmentAfterPin()
                 if (isChanging) {
+                    // Checking the current PIN already settled the biometrics.
                     _pincodeChangedEvent.trigger()
                     WalletSessionState.markUnlocked()
                     mainRouter.popBackStack()
                 } else {
+                    // A first PIN: the owner is asked about biometrics right below.
+                    biometricGate.approveEnrollmentAfterPin()
                     val available = interactor.isBiometryAvailable()
                     if (available) {
                         pinSetupAwaitingBiometry = true
@@ -375,8 +389,11 @@ class PinCodeViewModel @Inject constructor(
         }
 
         if (result) {
-            biometricGate.approveEnrollmentAfterPin()
-            processSuccessfullAuth()
+            if (enrollmentChangeNeedsAnswer()) {
+                _enrollmentChangeQuestion.value = true
+            } else {
+                processSuccessfullAuth()
+            }
         } else {
             inputedCode = ""
             state = state.copy(
@@ -389,8 +406,42 @@ class PinCodeViewModel @Inject constructor(
         }
     }
 
+    /**
+     * A typed PIN proves the owner is here, not that they know the phone's biometrics changed, so
+     * a changed enrollment waits for their answer. Only biometrics never approved on this install
+     * are approved by the PIN alone.
+     */
+    private suspend fun enrollmentChangeNeedsAnswer(): Boolean {
+        if (!biometricGate.enrollmentChanged()) {
+            biometricGate.approveFirstEnrollmentAfterPin()
+            return false
+        }
+        // With biometrics off, or none enrolled now, there is nothing to decide. The old key stays
+        // unusable, so the question comes when it matters.
+        return interactor.isBiometryEnabled() && interactor.isBiometryAvailable()
+    }
+
+    fun onEnrollmentChangeKept() {
+        if (_enrollmentChangeQuestion.value != true) return
+        _enrollmentChangeQuestion.value = false
+        biometricGate.approveEnrollmentAfterPin()
+        processSuccessfullAuth()
+    }
+
+    fun onEnrollmentChangeRefused() {
+        if (_enrollmentChangeQuestion.value != true) return
+        _enrollmentChangeQuestion.value = false
+        viewModelScope.launch {
+            tryCatch {
+                interactor.setBiometryEnabled(false)
+                isBiometryEnabled = false
+                processSuccessfullAuth()
+            }
+        }
+    }
+
     override fun onBackPressed() {
-        if (removal != null) {
+        if (removal != null || removalBriefingJob?.isActive == true) {
             // Back on the removal screen cancels: nothing was removed.
             onRemovalCancelled()
             return
@@ -424,8 +475,12 @@ class PinCodeViewModel @Inject constructor(
     fun onResume() {
         // The removal screen is already behind the PIN: coming back to it from the JSON export
         // (whose Back returns here) does not ask for the PIN again. The phrase is veiled again
-        // whenever the screen was left ([onRemovalHidden]).
-        if (removal != null) return
+        // whenever the screen was left ([onRemovalHidden]). Coming back from the background closes
+        // it instead, so a phone left on this screen shows no phrase to whoever picks it up.
+        if (removal != null || removalBriefingJob?.isActive == true) {
+            if (WalletSessionState.returnsFromBackground != removalOpenedAtReturn) onRemovalCancelled()
+            return
+        }
         startFingerprintScannerEventLiveData.value = biometricAllowed
         if (state.migrating && state.isConnected) {
             viewModelScope.launch {
@@ -529,12 +584,16 @@ class PinCodeViewModel @Inject constructor(
      * The PIN is not asked for again to show it.
      */
     private fun logout() {
-        viewModelScope.launch {
+        removalOpenedAtReturn = WalletSessionState.returnsFromBackground
+        removalBriefingJob = viewModelScope.launch {
             try {
                 check(this@PinCodeViewModel::addresses.isInitialized) {
                     "WALLET_DELETION_TARGETS_MISSING"
                 }
                 val briefing = interactor.walletRemovalBriefing(addresses.toList())
+                // Leaving while the keys load cancels this request too. A late result must not
+                // reopen the secret screen after Back or a return from the background.
+                ensureActive()
                 removal = AccountRemovalState(
                     accounts = briefing.accounts.map { account ->
                         AccountRemovalState.Account(
@@ -611,6 +670,8 @@ class PinCodeViewModel @Inject constructor(
 
     fun onRemovalCancelled() {
         if (removal?.working == true) return
+        removalBriefingJob?.cancel()
+        removalBriefingJob = null
         removal = null
         mainRouter.popBackStack()
     }

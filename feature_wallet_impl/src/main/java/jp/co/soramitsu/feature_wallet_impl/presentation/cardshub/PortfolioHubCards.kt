@@ -28,10 +28,10 @@ import jp.co.soramitsu.ui_core.component.button.properties.Size
 import jp.co.soramitsu.ui_core.resources.Dimens
 
 /**
- * The home's existing secondary cards under the Portfolio view's list: the same cards, in the same
- * order and with the same actions, as the home draws them with the Portfolio view off (pools, the
- * other networks' XOR, referral, backup, Edit view). Only the Assets card is left out, because the
- * hero and the Tokens lens replace it. With the Portfolio view off, the home is drawn unchanged.
+ * The home's existing secondary cards under the Portfolio view's list: the same cards with the same
+ * actions as the home draws with the Portfolio view off (the other networks' XOR, pools, referral,
+ * backup, Edit view). Only the Assets card is left out: the list above replaces it. With the
+ * Portfolio view off, the home is drawn unchanged.
  */
 @Composable
 internal fun PortfolioSecondaryCards(
@@ -46,6 +46,7 @@ internal fun PortfolioSecondaryCards(
     onEdit: () -> Unit,
     onNexusOpen: (NexusPortfolioBalance) -> Unit,
     isNexusBalanceCurrent: (NexusPortfolioBalance) -> Boolean,
+    selectedWalletName: String? = null,
 ) {
     Column(
         modifier = Modifier
@@ -53,54 +54,56 @@ internal fun PortfolioSecondaryCards(
             .padding(horizontal = Dimens.x2),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        val networkSection: @Composable () -> Unit = {
-            val walletNetworks = nexusPortfolio.filter { it.walletId == sora2Portfolio?.address }
-            if (walletNetworks.isNotEmpty()) {
-                OtherNetworksCard(
-                    balances = walletNetworks,
-                    xorIcon = sora2Portfolio?.xorIcon,
-                    xorName = sora2Portfolio?.xorName,
-                    isNexusBalanceCurrent = isNexusBalanceCurrent,
-                    onOpen = onNexusOpen,
-                )
-                Spacer(modifier = Modifier.size(size = 16.dp))
-            }
+        val walletNetworks = nexusPortfolio.filter { it.walletId == sora2Portfolio?.address }
+        if (walletNetworks.isNotEmpty()) {
+            OtherNetworksCard(
+                balances = walletNetworks,
+                xorIcon = sora2Portfolio?.xorIcon,
+                xorName = sora2Portfolio?.xorName,
+                isNexusBalanceCurrent = isNexusBalanceCurrent,
+                onOpen = onNexusOpen,
+                walletName = selectedWalletName,
+            )
+            Spacer(modifier = Modifier.size(size = 16.dp))
         }
-        val orderedCards = state.cards
+        // Pools, then backup, then the invitation; the Assets card is the list above.
+        state.cards
             .filterNot { it is TitledAmountCardState && it.state is FavoriteAssetsCardState }
-            .sortedBy { if (it is TitledAmountCardState) 0 else 1 }
-        val firstBanner = orderedCards.indexOfFirst { it !is TitledAmountCardState }
-        orderedCards.forEachIndexed { index, cardState ->
-            if (index == firstBanner) networkSection()
-            when (cardState) {
-                is TitledAmountCardState -> {
-                    CommonHubCard(
-                        title = cardState.title,
-                        amount = cardState.amount,
-                        onOpenFullCardClick = { onOpenFullCardClick.invoke(cardState.state) },
-                        collapseState = cardState.collapsedState,
-                        onCollapseClick = cardState.onCollapseClick,
-                    ) {
-                        (cardState.state as? FavoritePoolsCardState)?.let { pools ->
-                            PoolsList(pools.state, onPoolClick)
+            .sortedBy {
+                when (it) {
+                    is TitledAmountCardState -> 0
+                    BackupWalletState -> 1
+                    else -> 2
+                }
+            }
+            .forEach { cardState ->
+                when (cardState) {
+                    is TitledAmountCardState -> {
+                        CommonHubCard(
+                            title = cardState.title,
+                            amount = cardState.amount,
+                            onOpenFullCardClick = { onOpenFullCardClick.invoke(cardState.state) },
+                            collapseState = cardState.collapsedState,
+                            onCollapseClick = cardState.onCollapseClick,
+                        ) {
+                            (cardState.state as? FavoritePoolsCardState)?.let { pools ->
+                                PoolsList(pools.state, onPoolClick)
+                            }
+                        }
+                    }
+
+                    is BasicBannerCardState -> {
+                        when (cardState) {
+                            BackupWalletState -> BackupCard(onStartClicked = onBackupBannerClick)
+                            ReferralState -> ReferralCard(
+                                onStartClicked = onReferralClick,
+                                onCloseCard = onReferralClose,
+                            )
                         }
                     }
                 }
-
-                is BasicBannerCardState -> {
-                    when (cardState) {
-                        BackupWalletState -> BackupCard(onStartClicked = onBackupBannerClick)
-                        ReferralState -> ReferralCard(
-                            onStartClicked = onReferralClick,
-                            onCloseCard = onReferralClose,
-                        )
-                    }
-                }
+                Spacer(modifier = Modifier.size(size = 16.dp))
             }
-            Spacer(modifier = Modifier.size(size = 16.dp))
-        }
-
-        if (firstBanner == -1) networkSection()
 
         if (state.cards.isNotEmpty()) {
             BleachedButton(

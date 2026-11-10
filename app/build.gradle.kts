@@ -43,14 +43,14 @@ kotlin {
     jvmToolchain(17)
 }
 
-// Google Play: 3.9.1 is versionCode 3090100 (production). The classic 3.9.2 build 1
-// (3090201) was accepted by Play's bundle uploader on 4 November 2026; never reuse that code.
+// Google Play: 3.9.2 build 3 (3090203) went to production at 100% on 8 November 2026. Build 2
+// (3090202) was built but never uploaded; never reuse a code at or below 3090203.
 // From 3.9.0: versionCode = MAJOR * 1_000_000 + MINOR * 10_000 + PATCH * 100 + BUILD (00..99),
 // so 3.9.0 build 1 is 3090001.
 val appVersionName = "3.9.2"
 val appVersionCodeBase = appVersionName.split('.').map(String::toInt)
     .let { (major, minor, patch) -> major * 1_000_000 + minor * 10_000 + patch * 100 }
-val playLastPublishedVersionCode = 3090201
+val playLastPublishedVersionCode = 3090203
 // Local and debug builds default to the version base (3090200 for 3.9.2). Release builds still
 // require an explicit code above playLastPublishedVersionCode.
 val appVersionCode = explicitVersionCode ?: appVersionCodeBase

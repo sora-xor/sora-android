@@ -17,23 +17,29 @@ import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.SwapInteractor
 import jp.co.soramitsu.feature_polkaswap_api.launcher.PolkaswapRouter
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
+import jp.co.soramitsu.feature_wallet_impl.data.portfolio.LivePortfolioSource
 import jp.co.soramitsu.feature_wallet_impl.data.portfolio.PinnedTilt
 import jp.co.soramitsu.feature_wallet_impl.data.portfolio.PortfolioDebugHooks
 import jp.co.soramitsu.feature_wallet_impl.data.portfolio.PortfolioPreferences
 import jp.co.soramitsu.feature_wallet_impl.data.portfolio.PortfolioSource
+import jp.co.soramitsu.feature_wallet_impl.data.portfolio.SavedPicture
 import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.PortfolioFixtures
+import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.PortfolioFreshness
 import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.PortfolioFixtures.MAIN
 import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.PortfolioFixtures.SAVINGS
 import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.PortfolioFixtures.holding
 import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.PortfolioFixtures.xor
-import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.PortfolioLens
+import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.PortfolioHolding
+import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.WalletSync
 import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.PortfolioScope
 import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.PortfolioSlots
 import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.PortfolioSnapshot
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -67,7 +73,6 @@ class PortfolioViewModelTest {
     }
     private val preferences = mockk<PortfolioPreferences>(relaxed = true) {
         coEvery { scope() } returns null
-        coEvery { lens() } returns null
         coEvery { slotMaps() } returns emptyMap()
     }
 
@@ -124,6 +129,61 @@ class PortfolioViewModelTest {
         backgroundScope.launch { vm.model.collect {} }
         advanceUntilIdle()
         return vm
+    }
+
+    @Test
+    fun `the saved picture is there before anything has been collected`() = runTest {
+        val saved = PortfolioFixtures.snapshot(listOf(mainXor, savingsXor), wallets = listOf(MAIN, SAVINGS)).copy(saved = true)
+        val live = mockk<LivePortfolioSource>(relaxed = true) {
+            every { savedPicture() } returns SavedPicture(saved, PortfolioScope.SELECTED)
+            every { observe() } returns flow<PortfolioSnapshot> { awaitCancellation() }
+        }
+        coEvery { preferences.scope() } returns PortfolioScope.SELECTED
+        val vm = PortfolioViewModel(
+            liveSource = live,
+            preferences = preferences,
+            debugHooks = Optional.empty(),
+            walletRouter = walletRouter,
+            assetsRouter = assetsRouter,
+            polkaswapRouter = polkaswapRouter,
+            mainRouter = mainRouter,
+            swapInteractor = swapInteractor,
+        )
+        // No collector, no dispatcher run: this is what the very first frame draws.
+        val first = vm.model.value!!
+        assertEquals(PortfolioScope.SELECTED, first.scope)
+        assertEquals(listOf(MAIN), first.walletIds)
+        assertTrue(first.totals.known)
+        // Nothing read yet on this run: the saved picture keeps showing while it stays that way.
+        backgroundScope.launch { vm.model.collect {} }
+        advanceUntilIdle()
+        assertEquals(first.totals, vm.model.value?.totals)
+    }
+
+    @Test
+    fun `acting on a saved picture waits for what the app says is selected`() = runTest {
+        val saved = PortfolioFixtures.snapshot(listOf(mainXor, savingsXor), wallets = listOf(MAIN, SAVINGS)).copy(saved = true)
+        val live = mockk<LivePortfolioSource>(relaxed = true) {
+            every { savedPicture() } returns SavedPicture(saved, PortfolioScope.ALL)
+            every { observe() } returns flow<PortfolioSnapshot> { awaitCancellation() }
+        }
+        val vm = PortfolioViewModel(
+            liveSource = live,
+            preferences = preferences,
+            debugHooks = Optional.empty(),
+            walletRouter = walletRouter,
+            assetsRouter = assetsRouter,
+            polkaswapRouter = polkaswapRouter,
+            mainRouter = mainRouter,
+            swapInteractor = swapInteractor,
+        )
+        backgroundScope.launch { vm.model.collect {} }
+        advanceUntilIdle()
+        vm.openAssetDetails(mainXor.key)
+        advanceUntilIdle()
+        // Nothing live answered within the wait: nothing is switched or opened.
+        coVerify(exactly = 0) { live.select(any()) }
+        verify(exactly = 0) { assetsRouter.showAssetDetails(any()) }
     }
 
     @Test
@@ -230,7 +290,7 @@ class PortfolioViewModelTest {
         verify(exactly = 0) { polkaswapRouter.showSwap(any(), any()) }
     }
 
-    @Test fun `wallet and lens selections close sheets clear highlights and persist preferences`() = runTest {
+    @Test fun `wallet selections close sheets and persist the scope`() = runTest {
         val fake = source()
         val vm = viewModel(fake)
         vm.openSheet(PortfolioSheet.Wallets)
@@ -240,20 +300,15 @@ class PortfolioViewModelTest {
         assertEquals(SAVINGS, vm.model.value?.selectedWallet?.id)
         assertNull(vm.sheet.value)
         coVerify { preferences.setScope(PortfolioScope.SELECTED) }
-        vm.selectLens(PortfolioLens.TOKENS)
-        advanceUntilIdle()
-        coVerify { preferences.setLens(PortfolioLens.TOKENS) }
         vm.selectAllWallets()
         advanceUntilIdle()
         assertEquals(PortfolioScope.ALL, vm.model.value?.scope)
         coVerify { preferences.setScope(PortfolioScope.ALL) }
     }
 
-    @Test fun `legend highlight opens token distribution only on a repeated token tap`() = runTest {
+    @Test fun `the first legend tap picks a token, a second one opens where it lives`() = runTest {
         val vm = viewModel(source())
         val effects = effectsOf(vm)
-        vm.selectLens(PortfolioLens.TOKENS)
-        advanceUntilIdle()
         vm.onLegendTap(xor.id)
         advanceUntilIdle()
         assertEquals(xor.id, vm.model.value?.highlighted)
@@ -262,29 +317,188 @@ class PortfolioViewModelTest {
         advanceUntilIdle()
         assertEquals(listOf(PortfolioEffect.OpenWhereItLives(xor.id)), effects)
         assertNull(vm.model.value?.highlighted)
-        vm.onLegendTap(xor.id)
-        advanceUntilIdle()
-        vm.onLegendTap(null)
-        advanceUntilIdle()
-        assertNull(vm.model.value?.highlighted)
-        vm.selectLens(PortfolioLens.WALLETS)
-        advanceUntilIdle()
-        vm.onLegendTap(MAIN)
-        advanceUntilIdle()
-        vm.onLegendTap(MAIN)
-        advanceUntilIdle()
-        assertEquals(1, effects.size)
-        assertNull(vm.model.value?.highlighted)
     }
 
-    @Test fun `holding row expansion toggles independently of wallet scope`() = runTest {
+    @Test fun `Other in the legend picks nothing and opens nothing, however often it is tapped`() = runTest {
         val vm = viewModel(source())
-        vm.toggleRow(mainXor.key)
+        val effects = effectsOf(vm)
+        vm.onLegendTap(xor.id)
+        repeat(2) {
+            vm.onLegendTap(OTHER_KEY)
+            advanceUntilIdle()
+        }
+        assertNull(vm.model.value?.highlighted)
+        assertTrue(effects.isEmpty())
+    }
+
+    @Test fun `a list row opens and closes on its own`() = runTest {
+        val vm = viewModel(source())
+        vm.toggleRow(xor.id)
         advanceUntilIdle()
-        assertEquals(setOf(mainXor.key), vm.model.value?.expanded)
-        vm.toggleRow(mainXor.key)
+        assertEquals(setOf(xor.id), vm.model.value?.expanded)
+        vm.toggleRow(xor.id)
         advanceUntilIdle()
         assertTrue(vm.model.value!!.expanded.isEmpty())
+    }
+
+    @Test fun `with no saved choice a second wallet opens All wallets`() = runTest {
+        val fake = FakeSource(false, PortfolioFixtures.snapshot(listOf(mainXor), wallets = listOf(MAIN)))
+        val vm = viewModel(fake)
+        assertEquals(PortfolioScope.SELECTED, vm.model.value?.scope)
+        fake.snapshots.value = PortfolioFixtures.snapshot(listOf(mainXor, savingsXor), wallets = listOf(MAIN, SAVINGS))
+        advanceUntilIdle()
+        assertEquals(PortfolioScope.ALL, vm.model.value?.scope)
+    }
+
+    @Test fun `tapping the only wallet is no choice, so a second wallet still opens All wallets`() = runTest {
+        val fake = FakeSource(false, PortfolioFixtures.snapshot(listOf(mainXor), wallets = listOf(MAIN)))
+        val vm = viewModel(fake)
+        vm.openSheet(PortfolioSheet.Wallets)
+        vm.selectWallet(MAIN)
+        advanceUntilIdle()
+        assertNull(vm.sheet.value)
+        coVerify(exactly = 0) { preferences.setScope(any()) }
+        fake.snapshots.value = PortfolioFixtures.snapshot(listOf(mainXor, savingsXor), wallets = listOf(MAIN, SAVINGS))
+        advanceUntilIdle()
+        assertEquals(PortfolioScope.ALL, vm.model.value?.scope)
+    }
+
+    @Test fun `a saved choice of one wallet stays when another wallet appears`() = runTest {
+        coEvery { preferences.scope() } returns PortfolioScope.SELECTED
+        val fake = FakeSource(false, PortfolioFixtures.snapshot(listOf(mainXor), wallets = listOf(MAIN)))
+        val vm = viewModel(fake)
+        fake.snapshots.value = PortfolioFixtures.snapshot(listOf(mainXor, savingsXor), wallets = listOf(MAIN, SAVINGS))
+        advanceUntilIdle()
+        assertEquals(PortfolioScope.SELECTED, vm.model.value?.scope)
+    }
+
+    private val noPrice = PortfolioFixtures.token(xor.id, "XOR", null)
+
+    private fun TestScope.noTotalOf(holdings: List<PortfolioHolding>, vararg sync: Pair<String, WalletSync>, connected: Boolean = true): NoTotal? {
+        val snapshot = PortfolioFixtures.snapshot(holdings, wallets = listOf(MAIN, SAVINGS), sync = mapOf(*sync), connected = connected)
+        return viewModel(FakeSource(false, snapshot)).model.value!!.noTotal
+    }
+
+    private val readOk = WalletSync(1L, live = true)
+    private val neverRead = WalletSync(null, unread = true)
+    private val readFailed = WalletSync(null, unreachable = setOf(WalletNetworkId.SORA2), unread = true)
+
+    @Test fun `a total valued with old prices says how old they are`() = runTest {
+        val old = System.currentTimeMillis() - PortfolioFreshness.PRICES_OLD_AFTER_MS - 60_000L
+        fun asOf(holdings: List<PortfolioHolding>, readAt: Long?): Long? {
+            val snapshot = PortfolioFixtures.snapshot(holdings, wallets = listOf(MAIN, SAVINGS), sync = mapOf(MAIN to readOk, SAVINGS to readOk))
+                .copy(pricesReadAtMillis = readAt)
+            return viewModel(FakeSource(false, snapshot)).model.value!!.pricesAsOf
+        }
+        assertEquals(old, asOf(listOf(mainXor), old))
+        assertNull(asOf(listOf(mainXor), System.currentTimeMillis()))
+        assertNull(asOf(listOf(mainXor), null))
+        // No total, so nothing is valued with them.
+        assertNull(asOf(listOf(holding(MAIN, noPrice, "5")), old))
+    }
+
+    @Test fun `a total of priced holdings has nothing to explain`() = runTest {
+        assertNull(noTotalOf(listOf(mainXor), MAIN to readOk, SAVINGS to readOk))
+        assertNull(noTotalOf(listOf(mainXor), MAIN to readOk, SAVINGS to neverRead))
+    }
+
+    @Test fun `holdings with no price give Price unavailable`() = runTest {
+        assertEquals(NoTotal.PRICE, noTotalOf(listOf(holding(MAIN, noPrice, "5")), MAIN to readOk, SAVINGS to readOk))
+    }
+
+    @Test fun `a wallet that could not be read gives Balance unavailable, even next to unpriced holdings`() = runTest {
+        assertEquals(NoTotal.FAILED, noTotalOf(emptyList(), MAIN to readFailed, SAVINGS to readFailed))
+        assertEquals(NoTotal.FAILED, noTotalOf(listOf(holding(MAIN, noPrice, "5")), MAIN to readOk, SAVINGS to readFailed))
+    }
+
+    @Test fun `a network that failed for a wallet with nothing known gives Balance unavailable`() = runTest {
+        val taira = WalletSync(1L, unreachable = setOf(WalletNetworkId.TAIRA))
+        assertEquals(NoTotal.FAILED, noTotalOf(emptyList(), MAIN to taira, SAVINGS to readOk))
+    }
+
+    @Test fun `offline with a wallet never read gives Balance unavailable, not reading`() = runTest {
+        assertEquals(NoTotal.FAILED, noTotalOf(emptyList(), MAIN to neverRead, SAVINGS to readOk, connected = false))
+    }
+
+    @Test fun `while the first read runs the list says so`() = runTest {
+        assertEquals(NoTotal.READING, noTotalOf(emptyList(), MAIN to neverRead, SAVINGS to neverRead))
+    }
+
+    @Test fun `only testnet holdings have no monetary value`() = runTest {
+        val taira = holding(MAIN, xor, "5", network = WalletNetworkId.TAIRA)
+        assertEquals(NoTotal.TESTNET, noTotalOf(listOf(taira), MAIN to readOk, SAVINGS to readOk))
+    }
+
+    @Test fun `everything hidden, or nothing held, needs no reason`() = runTest {
+        assertNull(noTotalOf(listOf(holding(MAIN, xor, "5", hidden = true)), MAIN to readOk, SAVINGS to readOk))
+        assertNull(noTotalOf(emptyList(), MAIN to readOk, SAVINGS to readOk))
+    }
+
+    @Test fun `the stored chart colours are never overwritten while they load`() = runTest {
+        val gate = CompletableDeferred<Unit>()
+        val stored = mapOf("all|tokens" to mapOf(xor.id to 3))
+        coEvery { preferences.slotMaps() } coAnswers { gate.await(); stored }
+        val vm = viewModel(source())
+        assertTrue(vm.model.value != null)
+        coVerify(exactly = 0) { preferences.setSlotMaps(any()) }
+        gate.complete(Unit)
+        advanceUntilIdle()
+        assertEquals(3, vm.model.value?.slots?.get(xor.id))
+    }
+
+    @Test fun `the first picture never waits for the stored chart colours`() = runTest {
+        val gate = CompletableDeferred<Unit>()
+        coEvery { preferences.slotMaps() } coAnswers { gate.await(); emptyMap() }
+        val vm = viewModel(source())
+        assertTrue(vm.model.value != null)
+        gate.complete(Unit)
+    }
+
+    @Test fun `the stored scope is read before the first picture, so it never flashes All wallets`() = runTest {
+        val gate = CompletableDeferred<Unit>()
+        coEvery { preferences.scope() } coAnswers { gate.await(); PortfolioScope.SELECTED }
+        val vm = viewModel(source())
+        assertNull(vm.model.value)
+        gate.complete(Unit)
+        advanceUntilIdle()
+        assertEquals(PortfolioScope.SELECTED, vm.model.value?.scope)
+    }
+
+    @Test fun `a wallet that was read and holds nothing is empty, an unread one is not`() = runTest {
+        val read = FakeSource(
+            false,
+            PortfolioFixtures.snapshot(emptyList(), wallets = listOf(MAIN), sync = mapOf(MAIN to WalletSync(1L, live = true))),
+        )
+        assertTrue(viewModel(read).model.value!!.empty)
+        val unread = FakeSource(
+            false,
+            PortfolioFixtures.snapshot(emptyList(), wallets = listOf(MAIN), sync = mapOf(MAIN to WalletSync(null, unread = true))),
+        )
+        assertFalse(viewModel(unread).model.value!!.empty)
+        val failed = FakeSource(
+            false,
+            PortfolioFixtures.snapshot(
+                emptyList(),
+                wallets = listOf(MAIN),
+                sync = mapOf(MAIN to WalletSync(1L, unreachable = setOf(WalletNetworkId.TAIRA))),
+            ),
+        )
+        assertFalse(viewModel(failed).model.value!!.empty)
+    }
+
+    @Test fun `opening the home reads the wallets at once, and only while it is visible`() = runTest {
+        val fake = source()
+        val vm = viewModel(fake)
+        assertTrue(fake.refreshes.isEmpty())
+        vm.setVisible(true)
+        runCurrent()
+        assertEquals(listOf(MAIN, SAVINGS), fake.refreshes.first())
+        vm.setVisible(false)
+        runCurrent()
+        val count = fake.refreshes.size
+        advanceTimeBy(60_000)
+        runCurrent()
+        assertEquals(count, fake.refreshes.size)
     }
 
     @Test fun `quick send and receive ask for a wallet in all wallets scope`() = runTest {
@@ -292,15 +506,21 @@ class PortfolioViewModelTest {
         val vm = viewModel(fake)
         vm.onQuickSend()
         assertEquals(PortfolioSheet.PickWallet(WalletAction.SEND), vm.sheet.value)
+        val effects = effectsOf(vm)
         vm.onPickWallet(WalletAction.SEND, SAVINGS)
         advanceUntilIdle()
         assertEquals(listOf(SAVINGS), fake.selected)
         assertNull(vm.sheet.value)
+        // The host asks which network, if this wallet has a choice, then SORA2's own Send.
+        assertEquals(listOf(PortfolioEffect.ContinueAction(WalletAction.SEND, SAVINGS)), effects)
+        vm.openSora2Action(WalletAction.SEND)
         verify { assetsRouter.showContacts(AssetHolder.XOR_ASSET_ID) }
         vm.onQuickReceive()
         assertEquals(PortfolioSheet.PickWallet(WalletAction.RECEIVE), vm.sheet.value)
         vm.onPickWallet(WalletAction.RECEIVE, SAVINGS)
         advanceUntilIdle()
+        assertEquals(PortfolioEffect.ContinueAction(WalletAction.RECEIVE, SAVINGS), effects.last())
+        vm.openSora2Action(WalletAction.RECEIVE)
         verify { walletRouter.openQrCodeFlow() }
     }
 
@@ -367,13 +587,18 @@ class PortfolioViewModelTest {
         verify(exactly = 0) { assetsRouter.showContacts(any()) }
     }
 
-    @Test fun `asset detail routing accepts only existing sora2 holdings`() = runTest {
+    @Test fun `a holding's full page is SORA2's asset page or that network's XOR page`() = runTest {
         val fake = source()
         val vm = viewModel(fake)
+        val effects = effectsOf(vm)
         vm.openAssetDetails("missing")
         vm.openAssetDetails(mainMinamoto.key)
         advanceUntilIdle()
         verify(exactly = 0) { assetsRouter.showAssetDetails(any()) }
+        assertEquals(
+            listOf(PortfolioEffect.OpenNexusPage(MAIN, WalletNetworkId.MINAMOTO, mainMinamoto.address)),
+            effects,
+        )
         vm.openAssetDetails(savingsXor.key)
         advanceUntilIdle()
         assertEquals(listOf(SAVINGS), fake.selected)

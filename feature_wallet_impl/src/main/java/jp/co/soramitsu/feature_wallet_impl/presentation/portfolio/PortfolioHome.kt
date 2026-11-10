@@ -1,5 +1,6 @@
 package jp.co.soramitsu.feature_wallet_impl.presentation.portfolio
 
+import android.text.format.DateUtils
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -43,9 +44,8 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
-import androidx.compose.ui.graphics.drawscope.clipRect
-import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
@@ -62,18 +62,16 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import java.math.BigDecimal
 import jp.co.soramitsu.common.R
-import jp.co.soramitsu.common.nexus.WalletNetworkId
 import jp.co.soramitsu.common.nexus.WalletNetworkTag
 import jp.co.soramitsu.common.presentation.compose.neon.HeroCard
 import jp.co.soramitsu.common.presentation.compose.neon.NeonButton
-import jp.co.soramitsu.common.presentation.compose.neon.NeonSegments
 import jp.co.soramitsu.common.presentation.compose.neon.NeonVariant
 import jp.co.soramitsu.common.presentation.compose.neon.neonGlass
 import jp.co.soramitsu.common.presentation.compose.neon.safemode.AccountReadOnlyTags
@@ -83,18 +81,13 @@ import jp.co.soramitsu.common.presentation.compose.theme.neon.LocalFx
 import jp.co.soramitsu.common.presentation.compose.theme.neon.neon
 import jp.co.soramitsu.common.presentation.compose.theme.tokens.NeonType
 import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.FreshnessKind
-import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.PortfolioCalculator
 import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.PortfolioGroup
 import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.PortfolioHolding
-import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.PortfolioLens
 import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.PortfolioReadiness
 import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.PortfolioScope
-import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.PortfolioToken
-import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.PortfolioTotals
 import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.Readiness
 import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.WalletFreshness
 import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.isTestnet
-import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.portfolioTag
 import jp.co.soramitsu.feature_wallet_impl.presentation.cardshub.NetworkTagChip
 import jp.co.soramitsu.feature_wallet_impl.presentation.portfolio.motion.TiltState
 import jp.co.soramitsu.ui_core.component.button.properties.Size as ButtonSize
@@ -111,10 +104,8 @@ internal interface PortfolioHomeActions {
     fun onReceive()
     fun onMove()
     fun onSwap()
-    fun onLens(lens: PortfolioLens)
     fun onToggleRow(key: String)
-    fun onOpenToken(tokenId: String)
-    fun onOpenWalletAlone(walletId: String)
+    fun onOpenToken(tokenId: String, holdingKey: String? = null)
     fun onMoveHolding(holdingKey: String)
     fun onSwapHolding(holdingKey: String)
 }
@@ -126,7 +117,6 @@ internal fun PortfolioModel.colorOfGroup(key: String?): Color =
 
 /**
  * The hero: the sky with the scope chip, and the hero card overlapping its bottom by 22 dp.
- * [skyActive] is whether the sky is on screen; its looping light runs only then.
  */
 @Composable
 internal fun PortfolioHero(
@@ -135,7 +125,6 @@ internal fun PortfolioHero(
     tilt: TiltState,
     actions: PortfolioHomeActions,
     modifier: Modifier = Modifier,
-    skyActive: Boolean = true,
 ) {
     Box(modifier.fillMaxWidth()) {
         PortfolioSky(
@@ -144,7 +133,6 @@ internal fun PortfolioHero(
             highlighted = model.highlighted,
             tilt = tilt,
             onSliceTap = actions::onLegend,
-            active = skyActive,
         ) {
             ScopeChip(
                 model = model,
@@ -228,45 +216,52 @@ private fun ScopeChip(model: PortfolioModel, onClick: () -> Unit, modifier: Modi
     }
 }
 
+/** "Total balance" and how fresh the numbers under it are. */
+@Composable
+private fun HeroCardTop(model: PortfolioModel, actions: PortfolioHomeActions) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Overline(stringResource(R.string.portfolio_total_balance), Modifier.weight(1f))
+        // While the first read runs there is no age to show yet.
+        if (model.noTotal != NoTotal.READING) {
+            model.freshness?.let {
+                FreshnessChip(it, model.nowMillis, actions::onFreshness, Modifier.padding(end = 6.dp))
+            }
+        }
+    }
+}
+
 @Composable
 private fun EmptyCard(model: PortfolioModel, actions: PortfolioHomeActions) {
     val n = MaterialTheme.neon
-    val glows = LocalFx.current.glows
     HeroCard(Modifier.fillMaxWidth()) {
         Column(
             Modifier
                 .fillMaxWidth()
-                .drawBehind { drawPlanetLight(n.isDark, glows) }
-                .padding(horizontal = 22.dp, vertical = 24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+                .drawBehind { drawPlanetLight(n.isDark) }
+                .padding(start = 18.dp, end = 18.dp, top = 16.dp, bottom = 18.dp),
         ) {
             // An empty list is only "empty" if it could be read: the state says how fresh it is.
-            model.freshness?.let {
-                FreshnessChip(it, model.nowMillis, actions::onFreshness, Modifier.align(Alignment.End))
-            }
+            HeroCardTop(model, actions)
+            Spacer(Modifier.height(8.dp))
             Text(
                 text = stringResource(R.string.portfolio_wallet_ready),
                 style = MaterialTheme.customTypography.headline1,
                 color = n.textPrimary,
-                textAlign = TextAlign.Center,
                 modifier = Modifier.semantics { heading() },
             )
+            Spacer(Modifier.height(6.dp))
             Text(
                 text = stringResource(R.string.portfolio_wallet_ready_body),
                 style = MaterialTheme.customTypography.paragraphM,
                 color = n.textSecondary,
-                textAlign = TextAlign.Center,
             )
             NeonButton(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 6.dp),
+                    .padding(top = 14.dp),
                 size = ButtonSize.Large,
                 variant = NeonVariant.Primary,
                 text = stringResource(R.string.common_receive),
-                // The empty-wallet Receive is one of the two CTAs allowed to pulse (design spec 4.7.2).
-                pulse = true,
                 onClick = actions::onReceive,
             )
         }
@@ -278,25 +273,16 @@ private fun EmptyCard(model: PortfolioModel, actions: PortfolioHomeActions) {
 private fun PortfolioHeroCard(model: PortfolioModel, format: PortfolioFormat, actions: PortfolioHomeActions) {
     val largeText = LocalDensity.current.fontScale >= 1.3f
     val dark = MaterialTheme.neon.isDark
-    val glows = LocalFx.current.glows
     HeroCard(Modifier.fillMaxWidth()) {
         Column(
             Modifier
-                .drawBehind { drawPlanetLight(dark, glows) }
+                .drawBehind { drawPlanetLight(dark) }
                 .padding(start = 18.dp, end = 18.dp, top = 16.dp, bottom = 16.dp)
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Overline(stringResource(R.string.portfolio_total_balance), Modifier.weight(1f))
-                model.freshness?.let {
-                    FreshnessChip(it, model.nowMillis, actions::onFreshness, Modifier.padding(end = 6.dp))
-                }
-            }
+            HeroCardTop(model, actions)
             Spacer(Modifier.height(4.dp))
-            TotalBlock(model.totals, format, stale = model.freshness?.kind == FreshnessKind.OFFLINE)
-            if (model.totals.excluded > 0) {
-                Spacer(Modifier.height(4.dp))
-                ExclusionCaption(model.totals, actions::onCaption)
-            }
+            TotalBlock(model, format)
+            TotalCaption(model, actions::onCaption)
             if (model.fan.isNotEmpty()) {
                 Spacer(Modifier.height(8.dp))
                 val chips: @Composable () -> Unit = {
@@ -330,28 +316,42 @@ private fun PortfolioHeroCard(model: PortfolioModel, format: PortfolioFormat, ac
 }
 
 @Composable
-internal fun legendLabel(model: PortfolioModel, key: String?): String = when {
-    key == null -> stringResource(R.string.portfolio_other)
-    model.lens == PortfolioLens.TOKENS -> tokenSymbol(model, key) ?: key
-    model.lens == PortfolioLens.NETWORKS -> WalletNetworkId.fromWireId(key)?.let(::networkName) ?: key
-    else -> model.wallet(key)?.name ?: key
-}
+private fun legendLabel(model: PortfolioModel, key: String?): String =
+    if (key == null) stringResource(R.string.portfolio_other) else tokenSymbol(model, key) ?: key
 
 private fun tokenSymbol(model: PortfolioModel, key: String): String? =
     model.groups.firstOrNull { it.key == key }?.holdings?.firstOrNull()?.token?.symbol
 
+/** The dash that stands for a total the app does not have. */
 @Composable
-private fun TotalBlock(totals: PortfolioTotals, format: PortfolioFormat, stale: Boolean) {
+internal fun NoTotalDash() {
+    Text(
+        text = PortfolioFormat.NO_VALUE,
+        style = NeonType.displayHero.copy(fontSize = TOTAL_SIZE, lineHeight = 50.sp),
+        color = MaterialTheme.neon.textSecondary,
+        maxLines = 1,
+    )
+}
+
+@Composable
+private fun noTotalText(reason: NoTotal?): String? = when (reason) {
+    NoTotal.PRICE -> stringResource(R.string.tx_outcome_quote_unavailable)
+    NoTotal.FAILED -> stringResource(R.string.balance_unavailable)
+    NoTotal.TESTNET -> stringResource(R.string.portfolio_route_test)
+    NoTotal.READING -> stringResource(R.string.portfolio_reading_balances)
+    null -> null
+}
+
+/** The total, or a dash: a missing price or balance is never a zero. */
+@Composable
+private fun TotalBlock(model: PortfolioModel, format: PortfolioFormat) {
     val n = MaterialTheme.neon
-    val (symbol, whole, cents) = format.fiatParts(totals.fiat)
-    val primary = if (stale) n.textSecondary else n.textPrimary
-    val compact = whole.length > 10
-    val big = if (compact) 32.sp else 42.sp
-    val small = if (compact) 22.sp else 28.sp
-    val change = totals.changeFraction
+    val totals = model.totals
     val title = stringResource(R.string.portfolio_total_balance)
+    val reason = noTotalText(model.noTotal)
+    val change = totals.changeFraction.takeIf { totals.known }
     val description = buildString {
-        append(title).append(", ").append(format.fiat(totals.fiat))
+        append(title).append(", ").append(if (totals.known) format.fiat(totals.fiat) else reason ?: PortfolioFormat.NO_VALUE)
         if (change != null) {
             append(", ").append(format.signedFiat(totals.change)).append(", ").append(format.signedPercent(change)).append(" 24h")
         }
@@ -362,15 +362,26 @@ private fun TotalBlock(totals: PortfolioTotals, format: PortfolioFormat, stale: 
             heading()
         }
     ) {
-        Text(
-            text = buildAnnotatedString {
-                withStyle(SpanStyle(fontSize = small, color = n.textSecondary)) { append(symbol) }
-                withStyle(SpanStyle(fontSize = big, color = primary)) { append(whole) }
-                withStyle(SpanStyle(fontSize = small, color = n.textSecondary)) { append(cents) }
-            },
-            style = NeonType.displayHero.copy(lineHeight = 50.sp),
-            maxLines = 1,
-        )
+        if (totals.known) {
+            val stale = model.freshness?.kind == FreshnessKind.OFFLINE
+            val (symbol, whole, cents) = format.fiatParts(totals.fiat)
+            val compact = whole.length > 10
+            val big = if (compact) 32.sp else TOTAL_SIZE
+            val small = if (compact) 22.sp else 28.sp
+            Text(
+                text = buildAnnotatedString {
+                    withStyle(SpanStyle(fontSize = big, color = if (stale) n.textSecondary else n.textPrimary)) {
+                        append(symbol)
+                        append(whole)
+                    }
+                    withStyle(SpanStyle(fontSize = small, color = n.textSecondary)) { append(cents) }
+                },
+                style = NeonType.displayHero.copy(lineHeight = 50.sp),
+                maxLines = 1,
+            )
+        } else {
+            NoTotalDash()
+        }
         if (change != null) {
             ChangeLine(totals.change, change, format)
         }
@@ -410,15 +421,31 @@ private fun ChangeLine(change: Double, fraction: Double, format: PortfolioFormat
     )
 }
 
+/**
+ * Under the total: why there is none, or what it leaves out. While the first read runs the Assets
+ * card says so. A tap explains how the total is counted.
+ */
 @Composable
-private fun ExclusionCaption(totals: PortfolioTotals, onClick: () -> Unit) {
+private fun TotalCaption(model: PortfolioModel, onClick: () -> Unit) {
     val n = MaterialTheme.neon
-    val parts = buildList {
-        if (totals.hidden > 0) add(stringResource(R.string.portfolio_excluded_hidden, totals.hidden))
-        if (totals.unpriced > 0) add(stringResource(R.string.portfolio_excluded_unpriced, totals.unpriced))
-        if (totals.testnet > 0) add(stringResource(R.string.portfolio_excluded_testnet, totals.testnet))
-    }
-    val text = stringResource(R.string.portfolio_excluded_caption, parts.joinToString(", "))
+    val totals = model.totals
+    val text = when (model.noTotal) {
+        NoTotal.READING -> null
+        null -> {
+            val parts = buildList {
+                if (totals.hidden > 0) add(stringResource(R.string.portfolio_excluded_hidden, totals.hidden))
+                if (totals.unpriced > 0) add(stringResource(R.string.portfolio_excluded_unpriced, totals.unpriced))
+                if (totals.testnet > 0) add(stringResource(R.string.portfolio_excluded_testnet, totals.testnet))
+                if (totals.unread > 0) add(stringResource(R.string.portfolio_excluded_unread, totals.unread))
+            }
+            listOfNotNull(
+                model.pricesAsOf?.let { stringResource(R.string.portfolio_prices_as_of, pricesTime(it)) },
+                if (parts.isEmpty()) null else stringResource(R.string.portfolio_excluded_caption, parts.joinToString(", ")),
+            ).joinToString(" · ").ifEmpty { null }
+        }
+        else -> noTotalText(model.noTotal)
+    } ?: return
+    Spacer(Modifier.height(4.dp))
     Row(
         Modifier
             .heightIn(min = 40.dp)
@@ -426,13 +453,21 @@ private fun ExclusionCaption(totals: PortfolioTotals, onClick: () -> Unit) {
             .clickable(onClickLabel = stringResource(R.string.portfolio_how_we_count), role = Role.Button, onClick = onClick),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        PortfolioGlyph(Glyph.INFO, n.link, Modifier.size(16.dp))
+        PortfolioGlyph(Glyph.INFO, n.info, Modifier.size(16.dp))
         Spacer(Modifier.width(8.dp))
         Text(text, style = MaterialTheme.customTypography.textS, color = n.textSecondary)
     }
 }
 
-/** LIVE · 31s (green dot), SAVED · 2h, PARTIAL (amber), OFFLINE. */
+/** The time of today's prices; an older price says its date too. */
+@Composable
+private fun pricesTime(millis: Long): String {
+    val flags = DateUtils.FORMAT_SHOW_TIME or
+        if (DateUtils.isToday(millis)) 0 else DateUtils.FORMAT_SHOW_DATE or DateUtils.FORMAT_ABBREV_MONTH
+    return DateUtils.formatDateTime(LocalContext.current, millis, flags)
+}
+
+/** LIVE · 31s (green dot), SAVED · 2h, PARTIAL (amber), READING, OFFLINE. */
 @Composable
 internal fun FreshnessChip(freshness: WalletFreshness, nowMillis: Long, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val n = MaterialTheme.neon
@@ -440,7 +475,7 @@ internal fun FreshnessChip(freshness: WalletFreshness, nowMillis: Long, onClick:
     val color = when (freshness.kind) {
         FreshnessKind.LIVE -> n.textPrimary
         FreshnessKind.SAVED, FreshnessKind.PARTIAL -> n.warning
-        FreshnessKind.OFFLINE -> n.textSecondary
+        FreshnessKind.READING, FreshnessKind.OFFLINE -> n.textSecondary
     }
     val shape = RoundedCornerShape(16.dp)
     Row(
@@ -461,7 +496,7 @@ internal fun FreshnessChip(freshness: WalletFreshness, nowMillis: Long, onClick:
                     .clip(CircleShape)
                     .background(n.success)
             )
-            FreshnessKind.SAVED -> PortfolioGlyph(Glyph.CLOCK, color, Modifier.size(14.dp))
+            FreshnessKind.SAVED, FreshnessKind.READING -> PortfolioGlyph(Glyph.CLOCK, color, Modifier.size(14.dp))
             FreshnessKind.PARTIAL -> PortfolioGlyph(Glyph.WARNING, color, Modifier.size(14.dp))
             FreshnessKind.OFFLINE -> PortfolioGlyph(Glyph.OFFLINE, color, Modifier.size(14.dp))
         }
@@ -470,43 +505,13 @@ internal fun FreshnessChip(freshness: WalletFreshness, nowMillis: Long, onClick:
     }
 }
 
-/** The freshness of one wallet in a row: a small dot or glyph and the label, no chip. */
-@Composable
-internal fun FreshnessLine(freshness: WalletFreshness, nowMillis: Long, modifier: Modifier = Modifier) {
-    val n = MaterialTheme.neon
-    val color = when (freshness.kind) {
-        FreshnessKind.LIVE -> n.textSecondary
-        FreshnessKind.SAVED, FreshnessKind.PARTIAL -> n.warning
-        FreshnessKind.OFFLINE -> n.textTertiary
-    }
-    Row(modifier, verticalAlignment = Alignment.CenterVertically) {
-        when (freshness.kind) {
-            FreshnessKind.LIVE -> Box(
-                Modifier
-                    .size(6.dp)
-                    .clip(CircleShape)
-                    .background(n.success)
-            )
-            FreshnessKind.SAVED -> PortfolioGlyph(Glyph.CLOCK, color, Modifier.size(12.dp))
-            FreshnessKind.PARTIAL -> PortfolioGlyph(Glyph.WARNING, color, Modifier.size(12.dp))
-            FreshnessKind.OFFLINE -> PortfolioGlyph(Glyph.OFFLINE, color, Modifier.size(12.dp))
-        }
-        Spacer(Modifier.width(5.dp))
-        Text(freshnessLabel(freshness, nowMillis), color = color, style = NeonType.eyebrow, maxLines = 1)
-    }
-}
-
-/** A group's share as the fan shows it (its rays), so the row and its legend chip agree. */
-internal fun PortfolioModel.shareText(group: PortfolioGroup, format: PortfolioFormat): String =
-    fan.firstOrNull { it.key == group.key }?.let { format.rays(it.rays, it.countedFiat) }
-        ?: format.share(group.share)
-
 @Composable
 internal fun freshnessLabel(freshness: WalletFreshness, nowMillis: Long): String {
     val state = stringResource(
         when (freshness.kind) {
             FreshnessKind.LIVE -> R.string.portfolio_state_live
             FreshnessKind.SAVED -> R.string.portfolio_state_saved
+            FreshnessKind.READING -> R.string.portfolio_state_reading
             FreshnessKind.PARTIAL -> R.string.portfolio_state_partial
             FreshnessKind.OFFLINE -> R.string.portfolio_state_offline
         }
@@ -563,7 +568,7 @@ private fun LegendChip(
             Spacer(Modifier.width(8.dp))
             Text(label, style = MaterialTheme.customTypography.textSBold, color = n.textPrimary, maxLines = 1)
             Spacer(Modifier.width(6.dp))
-            Text(percent, style = NeonType.amountS.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold), color = n.textSecondary, maxLines = 1)
+            Text(percent, style = NeonType.amountS.copy(fontWeight = FontWeight.SemiBold), color = n.textSecondary, maxLines = 1)
         }
     }
 }
@@ -607,8 +612,7 @@ private fun QuickAction(label: String, colors: Pair<Color, Color>, onClick: () -
             .padding(vertical = 6.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        // Lit from the top left like the planet, with a glow of its own colour below it. Pressing
-        // sinks it a little (Reduce Motion: it only dims).
+        // Lit from the top left like the planet. Pressing sinks it a little (Reduce Motion: it only dims).
         Box(
             modifier = Modifier
                 .size(56.dp)
@@ -617,22 +621,6 @@ private fun QuickAction(label: String, colors: Pair<Color, Color>, onClick: () -
                     scaleX = scale
                     scaleY = scale
                     alpha = 1f - 0.15f * press
-                }
-                .drawBehind {
-                    if (fx.glows) {
-                        val center = Offset(size.width / 2f, size.height / 2f + 5.dp.toPx())
-                        val radius = size.minDimension * 0.85f
-                        drawCircle(
-                            Brush.radialGradient(
-                                0f to colors.second.copy(alpha = if (n.isDark) 0.55f else 0.32f),
-                                1f to Color.Transparent,
-                                center = center,
-                                radius = radius,
-                            ),
-                            radius = radius,
-                            center = center,
-                        )
-                    }
                 }
                 .clip(CircleShape)
                 .background(Brush.linearGradient(listOf(colors.first, colors.second)))
@@ -651,67 +639,27 @@ private fun QuickAction(label: String, colors: Pair<Color, Color>, onClick: () -
     }
 }
 
-/**
- * The planet's light falling on the top of the hero card: a soft red glow from its top edge and a
- * rim of light along the edge's middle.
- */
-private fun DrawScope.drawPlanetLight(dark: Boolean, glows: Boolean) {
-    val top = Offset(size.width / 2f, 0f)
-    clipRect {
-        if (glows) {
-            val radius = size.width * 0.55f
-            scale(1f, 0.45f, top) {
-                drawCircle(
-                    Brush.radialGradient(
-                        0f to PortfolioPalette.soraGlow.copy(alpha = if (dark) 0.22f else 0.12f),
-                        1f to Color.Transparent,
-                        center = top,
-                        radius = radius,
-                    ),
-                    radius = radius,
-                    center = top,
-                )
-            }
-        }
-        val rim = size.width * 0.64f
-        drawRect(
-            Brush.horizontalGradient(
-                0f to Color.Transparent,
-                0.5f to PortfolioPalette.soraGlow.copy(alpha = if (dark) 0.85f else 0.55f),
-                1f to Color.Transparent,
-                startX = top.x - rim / 2f,
-                endX = top.x + rim / 2f,
-            ),
-            topLeft = Offset(top.x - rim / 2f, 0f),
-            size = Size(rim, 1.5.dp.toPx()),
-        )
-    }
-}
-
-/** Tokens · Networks · Wallets, with the app's segmented control. */
-@Composable
-internal fun LensControl(lenses: List<PortfolioLens>, selected: PortfolioLens, onSelect: (PortfolioLens) -> Unit, modifier: Modifier = Modifier) {
-    val labels = lenses.map { lens ->
-        stringResource(
-            when (lens) {
-                PortfolioLens.TOKENS -> R.string.portfolio_lens_tokens
-                PortfolioLens.NETWORKS -> R.string.portfolio_lens_networks
-                PortfolioLens.WALLETS -> R.string.portfolio_lens_wallets
-            }
-        )
-    }
-    NeonSegments(
-        labels = labels,
-        selected = lenses.indexOf(selected).coerceAtLeast(0),
-        onSelect = { index -> lenses.getOrNull(index)?.let(onSelect) },
-        modifier = modifier,
+/** The planet's light on the top of the hero card: a rim along the middle of its edge. */
+private fun DrawScope.drawPlanetLight(dark: Boolean) {
+    val middle = size.width / 2f
+    val rim = size.width * 0.64f
+    drawRect(
+        Brush.horizontalGradient(
+            0f to Color.Transparent,
+            0.5f to PortfolioPalette.soraGlow.copy(alpha = if (dark) 0.85f else 0.55f),
+            1f to Color.Transparent,
+            startX = middle - rim / 2f,
+            endX = middle + rim / 2f,
+        ),
+        topLeft = Offset(middle - rim / 2f, 0f),
+        size = Size(rim, 1.5.dp.toPx()),
     )
 }
 
-/** The list for the active lens, in one glass card titled Assets. Rows add up to the header. */
+/** Every token held across the scope's wallets and networks, in one card titled Assets. */
 @Composable
 internal fun PortfolioList(model: PortfolioModel, format: PortfolioFormat, actions: PortfolioHomeActions, modifier: Modifier = Modifier) {
-    val groups = model.groups.filter { it.holdings.isNotEmpty() || model.lens == PortfolioLens.WALLETS }
+    val groups = model.groups.filter { it.holdings.isNotEmpty() }
     PortfolioCard(modifier) {
         Text(
             text = stringResource(R.string.liquid_assets),
@@ -724,19 +672,23 @@ internal fun PortfolioList(model: PortfolioModel, format: PortfolioFormat, actio
         )
         if (groups.isEmpty()) {
             Text(
-                text = stringResource(R.string.portfolio_nothing_listed),
+                text = when {
+                    model.noTotal == NoTotal.READING -> stringResource(R.string.portfolio_reading_balances)
+                    model.noTotal == NoTotal.FAILED -> stringResource(R.string.balance_unavailable)
+                    model.holdsAnything -> stringResource(R.string.portfolio_nothing_listed)
+                    else -> stringResource(R.string.portfolio_no_balance_yet)
+                },
                 style = MaterialTheme.customTypography.paragraphS,
                 color = MaterialTheme.neon.textSecondary,
-                modifier = Modifier.padding(20.dp),
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 20.dp, end = 20.dp, top = 12.dp, bottom = 28.dp),
             )
         }
         groups.forEachIndexed { index, group ->
             if (index > 0) RowDivider()
-            when (model.lens) {
-                PortfolioLens.TOKENS -> TokenRow(model, group, format, actions)
-                PortfolioLens.NETWORKS -> NetworkRow(model, group, format, actions)
-                PortfolioLens.WALLETS -> WalletRow(model, group, format, actions)
-            }
+            TokenRow(model, group, format, actions)
         }
     }
 }
@@ -748,17 +700,14 @@ private fun ExpandChevron(expanded: Boolean) {
 }
 
 @Composable
-private fun RowAmounts(top: String, topMuted: Boolean, bottom: String) {
+private fun RowAmounts(numbers: RowNumbers) {
     val n = MaterialTheme.neon
     Column(horizontalAlignment = Alignment.End) {
-        Text(
-            top,
-            style = if (topMuted) NeonType.amountS else NeonType.amountM,
-            color = if (topMuted) n.textTertiary else n.textPrimary,
-            maxLines = 1,
-        )
-        Spacer(Modifier.height(2.dp))
-        Text(bottom, style = NeonType.amountS, color = n.textSecondary, maxLines = 1)
+        Text(numbers.main, style = NeonType.amountM, color = n.textPrimary, maxLines = 1)
+        numbers.detail?.let {
+            Spacer(Modifier.height(2.dp))
+            Text(it, style = NeonType.amountS, color = n.textSecondary, maxLines = 1)
+        }
     }
 }
 
@@ -773,13 +722,6 @@ private fun ChangeBadge(change: Double?, format: PortfolioFormat) {
         color = if (up) n.success else n.error,
         maxLines = 1,
     )
-}
-
-@Composable
-private fun fiatOrReason(format: PortfolioFormat, group: PortfolioGroup, token: PortfolioToken?): Pair<String, Boolean> = when {
-    group.testnetOnly -> stringResource(R.string.portfolio_no_value) to true
-    token != null && token.price == null -> stringResource(R.string.portfolio_no_price) to true
-    else -> format.fiat(group.countedFiat) to false
 }
 
 @Composable
@@ -798,7 +740,6 @@ private fun TokenRow(model: PortfolioModel, group: PortfolioGroup, format: Portf
             pluralStringResource(R.plurals.portfolio_wallets, group.walletIds.size, group.walletIds.size)
         else -> networkName(group.networks.first())
     }
-    val (fiat, muted) = fiatOrReason(format, group, token)
     val whereLabel = stringResource(R.string.portfolio_where_it_lives)
     val moveLabel = stringResource(R.string.portfolio_move)
     val swapLabel = stringResource(R.string.portfolio_swap)
@@ -836,13 +777,27 @@ private fun TokenRow(model: PortfolioModel, group: PortfolioGroup, format: Portf
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(token.symbol, style = MaterialTheme.customTypography.headline3, color = n.textPrimary, maxLines = 1)
+                    Text(
+                        token.symbol,
+                        style = MaterialTheme.customTypography.headline3,
+                        color = n.textPrimary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f, fill = false),
+                    )
                     Spacer(Modifier.width(8.dp))
                     if (group.testnetOnly) NetworkTagChip(WalletNetworkTag.TESTNET) else ChangeBadge(token.change24h, format)
                 }
                 Spacer(Modifier.height(4.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(subtitle, style = MaterialTheme.customTypography.textS, color = n.textSecondary, maxLines = 1)
+                    Text(
+                        subtitle,
+                        style = MaterialTheme.customTypography.textS,
+                        color = n.textSecondary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f, fill = false),
+                    )
                     if (model.scope == PortfolioScope.ALL && model.allWalletsAvailable) {
                         Spacer(Modifier.width(8.dp))
                         WalletDots(group.walletIds.map { model.colorOfWallet(it) })
@@ -850,7 +805,7 @@ private fun TokenRow(model: PortfolioModel, group: PortfolioGroup, format: Portf
                 }
             }
             Spacer(Modifier.width(8.dp))
-            RowAmounts(fiat, muted, format.amount(group.amount, token.symbol))
+            RowAmounts(format.rowNumbers(group.holdings, group.amount, token.symbol))
             if (expandable) {
                 Spacer(Modifier.width(6.dp))
                 ExpandChevron(expanded)
@@ -864,8 +819,7 @@ private fun TokenRow(model: PortfolioModel, group: PortfolioGroup, format: Portf
                         model = model,
                         holding = holding,
                         format = format,
-                        showToken = false,
-                        onClick = { actions.onOpenToken(holding.token.id) },
+                        onClick = { actions.onOpenToken(holding.token.id, holding.key) },
                     )
                 }
             }
@@ -886,19 +840,18 @@ private fun HoldingsWell(content: @Composable () -> Unit) {
     ) { content() }
 }
 
-/** Holding row: network badge, network, wallet, amount, fiat and a readiness chip when actionable. */
+/** Holding row: network badge, network, wallet, its numbers and a readiness chip when actionable. */
 @Composable
 internal fun HoldingRow(
     model: PortfolioModel,
     holding: PortfolioHolding,
     format: PortfolioFormat,
-    showToken: Boolean,
     onClick: () -> Unit,
 ) {
     val n = MaterialTheme.neon
     val wallet = model.wallet(holding.walletId)
     val readiness = PortfolioReadiness.readiness(holding)
-    val counted = PortfolioCalculator.countedFiat(holding)
+    val numbers = format.rowNumbers(listOf(holding), holding.total, holding.token.symbol)
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -907,12 +860,12 @@ internal fun HoldingRow(
             .padding(horizontal = 12.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        if (showToken) TokenOrb(holding.token.iconUri, 30.dp) else NetworkBadge(holding.network, 30.dp)
+        NetworkBadge(holding.network, 30.dp)
         Spacer(Modifier.width(10.dp))
         Column(Modifier.weight(1f)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    if (showToken) holding.token.symbol else networkName(holding.network),
+                    networkName(holding.network),
                     style = MaterialTheme.customTypography.textMBold,
                     color = n.textPrimary,
                     maxLines = 1,
@@ -934,10 +887,7 @@ internal fun HoldingRow(
                     Spacer(Modifier.width(6.dp))
                 }
                 Text(
-                    text = listOfNotNull(
-                        wallet?.name?.takeIf { model.allWalletsAvailable },
-                        if (showToken) networkName(holding.network) else null,
-                    ).joinToString(" · ").ifEmpty { networkName(holding.network) },
+                    text = wallet?.name ?: networkName(holding.network),
                     style = MaterialTheme.customTypography.textS,
                     color = n.textSecondary,
                     maxLines = 1,
@@ -947,201 +897,14 @@ internal fun HoldingRow(
         }
         Spacer(Modifier.width(8.dp))
         Column(horizontalAlignment = Alignment.End) {
-            Text(format.amount(holding.total, holding.token.symbol), style = NeonType.amountS.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold), color = n.textPrimary, maxLines = 1)
-            Spacer(Modifier.height(3.dp))
-            Text(
-                counted?.let(format::fiat) ?: stringResource(if (holding.network.isTestnet) R.string.portfolio_no_value else R.string.portfolio_no_price),
-                style = NeonType.amountS,
-                color = if (counted != null) n.textSecondary else n.textTertiary,
-                maxLines = 1,
-            )
-        }
-    }
-}
-
-@Composable
-private fun NetworkRow(model: PortfolioModel, group: PortfolioGroup, format: PortfolioFormat, actions: PortfolioHomeActions) {
-    val n = MaterialTheme.neon
-    val network = WalletNetworkId.fromWireId(group.key) ?: return
-    val expanded = group.key in model.expanded
-    val tokens = group.holdings.groupBy { it.token.id }.values.map { holdings ->
-        holdings to holdings.sumOf { PortfolioCalculator.countedFiat(it) ?: 0.0 }
-    }.sortedByDescending { it.second }
-    val tokenCount = tokens.size
-    Column(Modifier.animateContentSize()) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .heightIn(min = 72.dp)
-                .clickable(onClick = { actions.onToggleRow(group.key) })
-                .semantics { stateDescription = if (expanded) "expanded" else "collapsed" }
-                .padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            NetworkBadge(network, 40.dp)
-            Spacer(Modifier.width(12.dp))
-            Column(Modifier.weight(1f)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(networkName(network), style = MaterialTheme.customTypography.headline3, color = n.textPrimary, maxLines = 1)
-                    network.portfolioTag?.let { tag ->
-                        Spacer(Modifier.width(8.dp))
-                        NetworkTagChip(tag)
-                    }
-                }
-                Spacer(Modifier.height(4.dp))
-                Text(
-                    text = listOfNotNull(
-                        if (network.isTestnet) null else model.shareText(group, format),
-                        pluralStringResource(R.plurals.portfolio_tokens, tokenCount, tokenCount),
-                    ).joinToString(" · "),
-                    style = MaterialTheme.customTypography.textS,
-                    color = n.textSecondary,
-                    maxLines = 1,
-                )
-            }
-            Spacer(Modifier.width(8.dp))
-            Text(
-                if (network.isTestnet) stringResource(R.string.portfolio_no_value) else format.fiat(group.countedFiat),
-                style = if (network.isTestnet) NeonType.amountS else NeonType.amountM,
-                color = if (network.isTestnet) n.textTertiary else n.textPrimary,
-                maxLines = 1,
-            )
-            Spacer(Modifier.width(6.dp))
-            ExpandChevron(expanded)
-        }
-        if (expanded) {
-            HoldingsWell {
-                tokens.take(MAX_EXPANDED).forEachIndexed { index, (holdings, fiat) ->
-                    if (index > 0) RowDivider(inset = 12.dp)
-                    val token = holdings.first().token
-                    val amount = holdings.fold(BigDecimal.ZERO) { acc, h -> acc + h.total }
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .heightIn(min = 56.dp)
-                            .clickable(onClick = { actions.onOpenToken(token.id) })
-                            .padding(horizontal = 12.dp, vertical = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        TokenOrb(token.iconUri, 30.dp)
-                        Spacer(Modifier.width(10.dp))
-                        Column(Modifier.weight(1f)) {
-                            Text(token.symbol, style = MaterialTheme.customTypography.textMBold, color = n.textPrimary)
-                            if (model.allWalletsAvailable && model.scope == PortfolioScope.ALL) {
-                                Spacer(Modifier.height(4.dp))
-                                WalletDots(holdings.map { it.walletId }.distinct().map { model.colorOfWallet(it) })
-                            }
-                        }
-                        Column(horizontalAlignment = Alignment.End) {
-                            Text(format.amount(amount, token.symbol), style = NeonType.amountS.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold), color = n.textPrimary, maxLines = 1)
-                            Spacer(Modifier.height(3.dp))
-                            Text(
-                                when {
-                                    network.isTestnet -> stringResource(R.string.portfolio_no_value)
-                                    token.price == null -> stringResource(R.string.portfolio_no_price)
-                                    else -> format.fiat(fiat)
-                                },
-                                style = NeonType.amountS,
-                                color = n.textSecondary,
-                                maxLines = 1,
-                            )
-                        }
-                    }
-                }
+            Text(numbers.main, style = NeonType.amountS.copy(fontWeight = FontWeight.SemiBold), color = n.textPrimary, maxLines = 1)
+            numbers.detail?.let {
+                Spacer(Modifier.height(3.dp))
+                Text(it, style = NeonType.amountS, color = n.textSecondary, maxLines = 1)
             }
         }
     }
 }
 
-@Composable
-private fun WalletRow(model: PortfolioModel, group: PortfolioGroup, format: PortfolioFormat, actions: PortfolioHomeActions) {
-    val n = MaterialTheme.neon
-    val wallet = model.wallet(group.key) ?: return
-    val summary = model.walletSummary(wallet.id)
-    val expanded = group.key in model.expanded
-    val networks = summary?.networks?.size ?: group.networks.size
-    Column(Modifier.animateContentSize()) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .heightIn(min = 72.dp)
-                .clickable(onClick = { actions.onToggleRow(group.key) })
-                .semantics { stateDescription = if (expanded) "expanded" else "collapsed" }
-                .padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            WalletAvatar(wallet.name, model.colorOfWallet(wallet.id), 40.dp)
-            Spacer(Modifier.width(12.dp))
-            Column(Modifier.weight(1f)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        wallet.name,
-                        style = MaterialTheme.customTypography.headline3,
-                        color = n.textPrimary,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.weight(1f, fill = false),
-                    )
-                    if (wallet.selected) {
-                        Spacer(Modifier.width(8.dp))
-                        PortfolioTag(stringResource(R.string.portfolio_selected))
-                    }
-                }
-                Spacer(Modifier.height(4.dp))
-                Text(
-                    text = listOf(
-                        model.shareText(group, format),
-                        pluralStringResource(R.plurals.portfolio_networks, networks, networks),
-                    ).joinToString(" · "),
-                    style = MaterialTheme.customTypography.textS,
-                    color = n.textSecondary,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
-            Spacer(Modifier.width(8.dp))
-            Column(horizontalAlignment = Alignment.End) {
-                Text(format.fiat(group.countedFiat), style = NeonType.amountM, color = n.textPrimary, maxLines = 1)
-                summary?.freshness?.let {
-                    Spacer(Modifier.height(4.dp))
-                    FreshnessLine(it, model.nowMillis)
-                }
-            }
-            Spacer(Modifier.width(6.dp))
-            ExpandChevron(expanded)
-        }
-        if (expanded) {
-            HoldingsWell {
-                group.holdings.take(MAX_EXPANDED).forEachIndexed { index, holding ->
-                    if (index > 0) RowDivider(inset = 12.dp)
-                    HoldingRow(
-                        model = model,
-                        holding = holding,
-                        format = format,
-                        showToken = true,
-                        onClick = { actions.onOpenToken(holding.token.id) },
-                    )
-                }
-                if (group.holdings.isNotEmpty()) RowDivider(inset = 12.dp)
-                Row(
-                    Modifier
-                        .fillMaxWidth()
-                        .heightIn(min = 48.dp)
-                        .clickable(role = Role.Button, onClick = { actions.onOpenWalletAlone(wallet.id) })
-                        .padding(horizontal = 14.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(
-                        stringResource(R.string.portfolio_open_wallet_alone, wallet.name),
-                        style = MaterialTheme.customTypography.textSBold,
-                        color = n.link,
-                        modifier = Modifier.weight(1f),
-                    )
-                    PortfolioGlyph(Glyph.ARROW_RIGHT, n.link, Modifier.size(18.dp))
-                }
-            }
-        }
-    }
-}
-
-private const val MAX_EXPANDED = 5
+/** The size of the hero's total. */
+private val TOTAL_SIZE = 42.sp

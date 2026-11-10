@@ -10,22 +10,43 @@ import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
 import javax.inject.Inject
 
-/** A biometric enrollment is trusted only after the owner has entered the wallet PIN. */
+/**
+ * A biometric enrollment is trusted only after the owner has entered the wallet PIN, and a changed
+ * one only after the owner has also said yes to it. Someone who knows the phone's passcode can add
+ * a fingerprint, and the owner typing the PIN as usual must not approve it for them.
+ */
 class BiometricUnlockGate internal constructor(private val key: EnrollmentKey) {
     @Inject constructor() : this(AndroidEnrollmentKey())
 
     internal interface EnrollmentKey {
+        fun exists(): Boolean
         fun approveAfterPin()
         fun cipher(): Cipher
     }
 
     private var pending: Cipher? = null
 
+    /** A new PIN, or the owner's yes: the biometrics enrolled now may unlock. */
     fun approveEnrollmentAfterPin() {
         cancel()
         // Devices without strong biometrics continue to use their wallet PIN.
         runCatching { key.approveAfterPin() }
     }
+
+    /**
+     * After a typed PIN, when no enrollment was ever approved here: the first unlock after
+     * updating from a version without this key. Anything that exists is left as it is.
+     */
+    fun approveFirstEnrollmentAfterPin() {
+        cancel()
+        // An unreadable Keystore approves nothing.
+        if (runCatching { key.exists() }.getOrDefault(true)) return
+        runCatching { key.approveAfterPin() }
+    }
+
+    /** An approved key that stopped working: biometrics were added or removed since. */
+    fun enrollmentChanged(): Boolean =
+        runCatching { key.exists() }.getOrDefault(false) && !isAvailable()
 
     fun isAvailable(): Boolean = runCatching { key.cipher() }.isSuccess
 
@@ -48,6 +69,8 @@ class BiometricUnlockGate internal constructor(private val key: EnrollmentKey) {
 
 private class AndroidEnrollmentKey : BiometricUnlockGate.EnrollmentKey {
     private fun store() = KeyStore.getInstance("AndroidKeyStore").apply { load(null) }
+
+    override fun exists(): Boolean = store().containsAlias(ALIAS)
 
     override fun approveAfterPin() {
         val store = store()

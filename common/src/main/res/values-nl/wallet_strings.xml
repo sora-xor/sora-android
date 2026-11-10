@@ -123,6 +123,10 @@
     <string name="wallet_connect_session_closed">IrohaConnect-sessie gesloten</string>
     <string name="wallet_connect_background_closed">De sessie is gesloten toen de wallet de voorgrond verliet</string>
     <string name="wallet_connect_pin_unavailable">De pincode van je wallet is niet beschikbaar. Open SORA om je wallet te ontgrendelen en probeer het opnieuw.</string>
+    <string name="biometric_enrollment_changed_title">Biometrie op deze telefoon is gewijzigd</string>
+    <string name="biometric_enrollment_changed_message">Sinds SORA voor het laatst met biometrie is ontgrendeld, is er op deze telefoon een vingerafdruk of gezicht toegevoegd of verwijderd. Iedereen van wie de vingerafdruk of het gezicht op deze telefoon staat, kan je wallet ontgrendelen. Heb je dit niet zelf gedaan, zet biometrie dan uit.</string>
+    <string name="biometric_enrollment_changed_keep">Biometrie behouden</string>
+    <string name="biometric_enrollment_changed_turn_off">Uitzetten</string>
     <string name="wallet_connect_relay_ready">Versleutelde relay gereed. Wachten op de identiteit van de applicatie…</string>
     <string name="wallet_connect_invalid_message">De applicatie heeft een ongeldig of opnieuw afgespeeld IrohaConnect-bericht verzonden</string>
     <string name="wallet_connect_app_closed">De applicatie heeft de versleutelde sessie gesloten</string>

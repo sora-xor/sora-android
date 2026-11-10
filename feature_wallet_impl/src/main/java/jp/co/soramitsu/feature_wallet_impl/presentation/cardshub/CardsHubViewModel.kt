@@ -78,6 +78,7 @@ import jp.co.soramitsu.feature_wallet_impl.data.nexus.NexusSendRequest
 import jp.co.soramitsu.feature_wallet_impl.data.nexus.NexusSendResult
 import jp.co.soramitsu.feature_wallet_impl.data.nexus.NexusTransactionCoordinator
 import jp.co.soramitsu.feature_wallet_impl.domain.CardsHubInteractorImpl
+import jp.co.soramitsu.feature_wallet_impl.presentation.portfolio.PortfolioFormat
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import jp.co.soramitsu.ui_core.component.toolbar.BasicToolbarState
 import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarState
@@ -838,7 +839,12 @@ class CardsHubViewModel @Inject constructor(
 
         val data = mapPoolsData(pools.first, numbersFormatter, rewardTokensList)
         return TitledAmountCardState(
-            amount = formatFiatAmount(data.second, pools.first.fiatSymbol, numbersFormatter),
+            // A sum over pools without a price is no value, not a zero.
+            amount = if (pools.first.any { it.printFiat() != null }) {
+                formatFiatAmount(data.second, pools.first.fiatSymbol, numbersFormatter)
+            } else {
+                PortfolioFormat.NO_VALUE
+            },
             title = CardHubType.POOLS.userName,
             state = FavoritePoolsCardState(
                 state = data.first

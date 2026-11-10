@@ -15,9 +15,6 @@
     <string name="portfolio_all_wallets">Bütün pulqabılar</string>
     <string name="portfolio_wallets">Pulqabılar</string>
     <string name="portfolio_scope_label">Əhatə dairəsi: %1$s. Pulqabı seçin</string>
-    <string name="portfolio_lens_tokens">Tokenlər</string>
-    <string name="portfolio_lens_networks">Şəbəkələr</string>
-    <string name="portfolio_lens_wallets">Pulqabılar</string>
     <string name="portfolio_where_it_lives">Aktivin yerləşdiyi yer</string>
     <string name="portfolio_where_it_lives_title">%1$s · yerləşdiyi yer</string>
     <plurals name="portfolio_networks">
@@ -31,10 +28,6 @@
     <plurals name="portfolio_holdings">
         <item quantity="one">%1$d aktiv qalığı</item>
         <item quantity="other">%1$d aktiv qalığı</item>
-    </plurals>
-    <plurals name="portfolio_tokens">
-        <item quantity="one">%1$d token</item>
-        <item quantity="other">%1$d token</item>
     </plurals>
     <plurals name="portfolio_assets_not_included">
         <item quantity="one">%1$d aktiv daxil edilməyib</item>
@@ -55,10 +48,9 @@
     <string name="portfolio_route_none">Bu versiyada %1$s-dən marşrut yoxdur.</string>
     <string name="portfolio_route_test">Sınaq şəbəkəsinin aktivlərinin pul dəyəri yoxdur.</string>
     <string name="portfolio_route_ready">SORA2-dədir. %1$s daxilindəki SORA2 hesabınızla indi Polkaswap-da mübadilə edin.</string>
-    <string name="portfolio_no_route">marşrut yoxdur</string>
     <string name="portfolio_receive_on_sora2">SORA2-də qəbul et</string>
-    <string name="portfolio_send_on">%1$s üzərindən göndər</string>
     <string name="portfolio_send_unavailable">Bu versiyada %1$s üzərindən göndəriş mümkün deyil.</string>
+    <string name="portfolio_send_on">%1$s üzərindən göndər</string>
     <string name="portfolio_move_no_other_wallet">Köçürmə üçün %1$s şəbəkəsində hesabı olan başqa pulqabınız lazımdır.</string>
     <string name="portfolio_move_needs_wallets">Köçürmə öz pulqabılarınız arasında edilir. Aralarında vəsait köçürmək üçün başqa pulqabı əlavə edin.</string>
     <string name="portfolio_nothing_to_move">Hazırda burada köçürülə bilən aktiv yoxdur.</string>
@@ -71,6 +63,7 @@
     <string name="portfolio_excluded_unpriced">Qiyməti yoxdur: %1$d</string>
     <string name="portfolio_excluded_testnet">Sınaq şəbəkəsi aktivləri: %1$d</string>
     <string name="portfolio_excluded_caption">%1$s daxil edilməyib</string>
+    <string name="portfolio_prices_as_of">Qiymətlər: %1$s</string>
     <string name="portfolio_counted">Hesablanıb</string>
     <string name="portfolio_hidden_by_you">Sizin gizlətdikləriniz</string>
     <string name="portfolio_without_price">Qiymət yoxdur</string>
@@ -85,6 +78,9 @@
     <string name="portfolio_state_saved">SAXLANILIB</string>
     <string name="portfolio_state_partial">QİSMƏN</string>
     <string name="portfolio_state_offline">OFLAYN</string>
+    <string name="portfolio_state_reading">OXUNUR</string>
+    <string name="portfolio_reading_balances">Balanslar oxunur…</string>
+    <string name="portfolio_excluded_unread">Hələ oxunmamış pulqabılar: %1$d</string>
     <string name="portfolio_age_seconds">%1$d san</string>
     <string name="portfolio_age_minutes">%1$d dəq</string>
     <string name="portfolio_age_hours">%1$d saat</string>
@@ -97,15 +93,14 @@
     <string name="portfolio_unreachable">%1$s əlçatan deyil</string>
     <string name="portfolio_refresh_all">Bütün pulqabıları yenilə</string>
     <string name="portfolio_wallets_together">Birlikdə hesablanan pulqabılar: %1$d</string>
-    <string name="portfolio_wallets_note">Bütün pulqabılar hər pulqabının cəmini toplayır. Seçilməyən pulqabılar son sinxronizasiya məlumatını saxlayır; siyahı hər birinin nə qədər köhnə olduğunu göstərir.</string>
+    <string name="portfolio_wallets_note">«Bütün pulqabılar» hər pulqabının öz cəmini toplayır. Seçilməmiş pulqabılar baxdığınız müddətdə təxminən dəqiqədə bir yenilənir və hər biri rəqəmlərinin nə qədər köhnə olduğunu göstərir.</string>
     <string name="portfolio_manage_wallets">Pulqabıları idarə et</string>
+    <string name="portfolio_manage_assets">Seçilmiş pulqabının aktivlərini idarə et</string>
     <string name="portfolio_selected">Seçilib</string>
-    <string name="portfolio_open_wallet_alone">Yalnız %1$s pulqabısını aç</string>
     <string name="portfolio_other">Digər</string>
     <string name="portfolio_legend_description">%1$s, %2$s faiz, %3$s</string>
-    <string name="portfolio_no_price">Qiymət yoxdur</string>
-    <string name="portfolio_no_value">Dəyər yoxdur</string>
     <string name="portfolio_nothing_listed">Siyahıya alınacaq aktiv yoxdur. Gizli aktivlər burada göstərilmir.</string>
+    <string name="portfolio_no_balance_yet">Hələ balans yoxdur</string>
     <string name="portfolio_wallet_ready">Pulqabınız hazırdır.</string>
     <string name="portfolio_wallet_ready_body">Bu pulqabıya token qəbul edin. Tətbiqin dəstəklədiyi bütün şəbəkələrdəki tokenlər burada görünəcək.</string>
     <string name="portfolio_token_gone">Bu token artıq bu görünüşdə yoxdur.</string>
@@ -137,8 +132,8 @@
     <string name="portfolio_you_pay">Ödəyirsiniz</string>
     <string name="portfolio_you_get">Alırsınız</string>
     <string name="portfolio_swap_note">Polkaswap imzalamadan əvvəl qiyməti, komissiyanı və qiymətə təsiri göstərir. Burada yalnız cüt seçilir.</string>
-    <string name="portfolio_send_from">Göndəriş mənbəyi</string>
-    <string name="portfolio_receive_to">Qəbul ünvanı</string>
+    <string name="portfolio_send_from">Hansı pulqabıdan göndərilsin?</string>
+    <string name="portfolio_receive_to">Hansı pulqabıya qəbul edilsin?</string>
     <string name="portfolio_sample_handoff_off">Nümunə portfel: ünvanlar uydurmadır, ona görə Göndər ekranı açılmır.</string>
     <string name="portfolio_nexus_send_unavailable">Bu pulqabı üçün bu şəbəkədə göndəriş hazırda mümkün deyil.</string>
     <string name="asset_add_to_favorites">%1$s aktivini sevimlilərə əlavə et</string>

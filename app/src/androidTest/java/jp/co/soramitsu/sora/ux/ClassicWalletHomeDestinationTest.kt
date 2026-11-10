@@ -37,6 +37,10 @@ class ClassicWalletHomeDestinationTest {
     private lateinit var nav: androidx.navigation.NavHostController
     private fun show(fragment: SoraBaseFragment<*>, vm: Any, readOnly: Boolean = false) {
         fragment.javaClass.getDeclaredField("viewModel\$delegate").apply { isAccessible = true }.set(fragment, lazyOf(vm))
+        // The classic home is the Portfolio view's fallback: the policy's one constant brings it back.
+        if (fragment is CardsHubFragment) {
+            CardsHubFragment::class.java.getDeclaredField("portfolioView").apply { isAccessible = true }.setBoolean(fragment, false)
+        }
         compose.setContent { SoraAppTheme {
             CompositionLocalProvider(LocalSelectedAccountReadOnly provides readOnly) {
                 nav = rememberNavController(); val scroll = rememberScrollState()

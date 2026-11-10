@@ -328,6 +328,8 @@ internal class NodeDetailsViewModel @AssistedInject constructor(
     private fun submitButtonEnabled(): Boolean = addressIsValid && nameIsValid && genesisHashIsValid
 
     fun onPinCodeChecked(checked: Boolean) {
+        // Process death on the PIN screen brings the form back empty, with nothing to save.
+        if (_state.value.nameState.value.text.isBlank() || _state.value.addressState.value.text.isBlank()) return
         pinCodeChecked = checked
         val nodeConnected = isCurrentNodeConnected()
         node = ChainNode(

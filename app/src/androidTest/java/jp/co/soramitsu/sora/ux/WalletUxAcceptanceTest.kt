@@ -238,6 +238,9 @@ class WalletUxAcceptanceTest {
                 fragment = CardsHubFragment()
                 CardsHubFragment::class.java.getDeclaredField("viewModel\$delegate").apply { isAccessible = true }
                     .set(fragment, lazyOf(vm))
+                // Only the home's view model is doubled here, not the Portfolio view's.
+                CardsHubFragment::class.java.getDeclaredField("portfolioView").apply { isAccessible = true }
+                    .setBoolean(fragment, false)
                 activity.supportFragmentManager.beginTransaction().add(fragment, "ux-scanner-contract")
                     .setMaxLifecycle(fragment, Lifecycle.State.CREATED).commitNow()
                 // Only activate its result callback. No mocked fragment view or wallet navigation is installed.
@@ -301,6 +304,9 @@ class WalletUxAcceptanceTest {
                 fragment = CardsHubFragment()
                 CardsHubFragment::class.java.getDeclaredField("viewModel\$delegate").apply { isAccessible = true }
                     .set(fragment, lazyOf(vm))
+                // Only the home's view model is doubled here, not the Portfolio view's.
+                CardsHubFragment::class.java.getDeclaredField("portfolioView").apply { isAccessible = true }
+                    .setBoolean(fragment, false)
                 activity.supportFragmentManager.beginTransaction().add(fragment, "ux-denied-scanner")
                     .setMaxLifecycle(fragment, Lifecycle.State.CREATED).commitNow()
                 (fragment.lifecycle as LifecycleRegistry).handleLifecycleEvent(Lifecycle.Event.ON_START)

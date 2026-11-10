@@ -122,6 +122,10 @@
     <string name="wallet_connect_session_closed">Sesi IrohaConnect ditutup</string>
     <string name="wallet_connect_background_closed">Sesi ditutup saat dompet meninggalkan latar depan</string>
     <string name="wallet_connect_pin_unavailable">PIN dompet Anda tidak tersedia. Buka SORA untuk membuka kunci dompet Anda, lalu coba lagi.</string>
+    <string name="biometric_enrollment_changed_title">Biometrik di ponsel ini berubah</string>
+    <string name="biometric_enrollment_changed_message">Sidik jari atau wajah ditambahkan atau dihapus di ponsel ini sejak terakhir kali biometrik membuka SORA. Siapa pun yang sidik jari atau wajahnya ada di ponsel ini dapat membuka kunci dompet Anda. Jika bukan Anda yang membuat perubahan ini, matikan biometrik.</string>
+    <string name="biometric_enrollment_changed_keep">Tetap gunakan biometrik</string>
+    <string name="biometric_enrollment_changed_turn_off">Matikan</string>
     <string name="wallet_connect_relay_ready">Relai terenkripsi siap. Menunggu identitas aplikasi…</string>
     <string name="wallet_connect_invalid_message">Aplikasi mengirim pesan IrohaConnect yang tidak valid atau diputar ulang</string>
     <string name="wallet_connect_app_closed">Aplikasi menutup sesi terenkripsi</string>

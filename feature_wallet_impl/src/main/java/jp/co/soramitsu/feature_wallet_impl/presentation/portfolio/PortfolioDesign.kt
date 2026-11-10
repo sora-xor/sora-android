@@ -32,6 +32,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
@@ -42,15 +43,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -73,18 +78,20 @@ import jp.co.soramitsu.common.domain.DEFAULT_ICON_URI
 import jp.co.soramitsu.common.nexus.WalletNetworkDirectory
 import jp.co.soramitsu.common.nexus.WalletNetworkId
 import jp.co.soramitsu.common.nexus.WalletNetworkTag
+import jp.co.soramitsu.common.presentation.compose.neon.ContentCard
 import jp.co.soramitsu.common.presentation.compose.neon.GlassCard
 import jp.co.soramitsu.common.presentation.compose.neon.NeonButton
 import jp.co.soramitsu.common.presentation.compose.neon.NeonVariant
 import jp.co.soramitsu.common.presentation.compose.neon.NeumorphicSurface
 import jp.co.soramitsu.common.presentation.compose.theme.neon.neon
 import jp.co.soramitsu.common.presentation.compose.theme.tokens.NeonType
+import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.isTestnet
 import jp.co.soramitsu.feature_wallet_impl.presentation.cardshub.NetworkTagChip
 import jp.co.soramitsu.ui_core.component.button.properties.Size as ButtonSize
 import jp.co.soramitsu.ui_core.component.icons.TokenIcon
 import jp.co.soramitsu.ui_core.theme.customTypography
 
-/** Colours of the portfolio surfaces that the Neon tokens do not define (portfolio-view SPEC §3.1). */
+/** Colours of the portfolio surfaces that the theme's tokens do not define (portfolio-view SPEC §3.1). */
 internal object PortfolioPalette {
     /** Chart slots, validated for colour-blind separation; colour follows the entity. */
     val slots = listOf(
@@ -123,11 +130,9 @@ internal object PortfolioPalette {
     val actionMove = Color(0xFFA57BFF) to Color(0xFF5B2FD1)
     val actionSwap = Color(0xFFFF4F96) to Color(0xFFD6005A)
 
-    fun network(network: WalletNetworkId): Color = when (network) {
-        WalletNetworkId.SORA2 -> Color(0xFFE2242F)
-        WalletNetworkId.MINAMOTO -> Color(0xFF6B4BD8)
-        WalletNetworkId.TAIRA -> Color(0xFF1E9C87)
-    }
+    /** A network's badge, lit (first) to deep (second): one colour for mainnets, one for testnets. */
+    val mainnetBadge = Color(0xFF6E5BFF) to Color(0xFF3A2BB8)
+    val testnetBadge = Color(0xFFFFB547) to Color(0xFFD9781A)
 }
 
 internal val isDarkTheme: Boolean
@@ -148,59 +153,85 @@ internal enum class Glyph { SEND, RECEIVE, MOVE, CHEVRON_DOWN, CHEVRON_RIGHT, IN
 
 @Composable
 internal fun PortfolioGlyph(glyph: Glyph, tint: Color, modifier: Modifier = Modifier) {
-    Canvas(modifier.size(24.dp)) {
-        val u = size.minDimension / 24f
-        val stroke = Stroke(width = 2f * u, cap = StrokeCap.Round, join = StrokeJoin.Round)
-        fun p(x: Float, y: Float) = Offset(x * u, y * u)
-        fun line(vararg pts: Pair<Float, Float>) {
-            val path = Path()
-            pts.forEachIndexed { i, (x, y) -> if (i == 0) path.moveTo(x * u, y * u) else path.lineTo(x * u, y * u) }
-            drawPath(path, tint, style = stroke)
+    Canvas(modifier.size(24.dp)) { drawGlyph(glyph, SolidColor(tint), null) }
+}
+
+/** A glyph for a button's icon slot, tinted by the button. */
+@Composable
+internal fun rememberGlyphPainter(glyph: Glyph): Painter = remember(glyph) { GlyphPainter(glyph) }
+
+private class GlyphPainter(private val glyph: Glyph) : Painter() {
+    private var filter: ColorFilter? = null
+
+    override val intrinsicSize: Size = Size(GLYPH_PX, GLYPH_PX)
+
+    override fun applyColorFilter(colorFilter: ColorFilter?): Boolean {
+        filter = colorFilter
+        return true
+    }
+
+    override fun DrawScope.onDraw() = drawGlyph(glyph, SolidColor(Color.Black), filter)
+
+    private companion object {
+        const val GLYPH_PX = 60f
+    }
+}
+
+private fun DrawScope.drawGlyph(glyph: Glyph, brush: Brush, filter: ColorFilter?) {
+    val u = size.minDimension / 24f
+    val stroke = Stroke(width = 2f * u, cap = StrokeCap.Round, join = StrokeJoin.Round)
+    fun p(x: Float, y: Float) = Offset(x * u, y * u)
+    fun line(vararg pts: Pair<Float, Float>) {
+        val path = Path()
+        pts.forEachIndexed { i, (x, y) -> if (i == 0) path.moveTo(x * u, y * u) else path.lineTo(x * u, y * u) }
+        drawPath(path, brush, style = stroke, colorFilter = filter)
+    }
+    fun ring(radius: Float, x: Float, y: Float) =
+        drawCircle(brush, radius = radius * u, center = p(x, y), style = stroke, colorFilter = filter)
+    fun dot(x: Float, y: Float) = drawCircle(brush, radius = 1.2f * u, center = p(x, y), colorFilter = filter)
+    when (glyph) {
+        Glyph.SEND -> {
+            line(7f to 17f, 17f to 7f)
+            line(9f to 7f, 17f to 7f, 17f to 15f)
         }
-        when (glyph) {
-            Glyph.SEND -> {
-                line(7f to 17f, 17f to 7f)
-                line(9f to 7f, 17f to 7f, 17f to 15f)
+        Glyph.RECEIVE -> {
+            line(17f to 7f, 7f to 17f)
+            line(7f to 9f, 7f to 17f, 15f to 17f)
+        }
+        Glyph.MOVE -> {
+            ring(2.4f, 5.5f, 17.5f)
+            ring(2.4f, 18.5f, 6.5f)
+            val path = Path().apply {
+                moveTo(7.3f * u, 15.8f * u)
+                cubicTo(10.5f * u, 8.5f * u, 13.5f * u, 15.5f * u, 16.7f * u, 8.2f * u)
             }
-            Glyph.RECEIVE -> {
-                line(17f to 7f, 7f to 17f)
-                line(7f to 9f, 7f to 17f, 15f to 17f)
-            }
-            Glyph.MOVE -> {
-                drawCircle(tint, radius = 2.4f * u, center = p(5.5f, 17.5f), style = stroke)
-                drawCircle(tint, radius = 2.4f * u, center = p(18.5f, 6.5f), style = stroke)
-                val path = Path().apply {
-                    moveTo(7.3f * u, 15.8f * u)
-                    cubicTo(10.5f * u, 8.5f * u, 13.5f * u, 15.5f * u, 16.7f * u, 8.2f * u)
-                }
-                drawPath(path, tint, style = stroke)
-            }
-            Glyph.CHEVRON_DOWN -> line(6f to 9.5f, 12f to 15.5f, 18f to 9.5f)
-            Glyph.CHEVRON_RIGHT -> line(9.5f to 6f, 15.5f to 12f, 9.5f to 18f)
-            Glyph.INFO -> {
-                drawCircle(tint, radius = 9f * u, center = p(12f, 12f), style = stroke)
-                line(12f to 11f, 12f to 16.5f)
-                drawCircle(tint, radius = 1.2f * u, center = p(12f, 7.6f))
-            }
-            Glyph.CHECK -> line(5f to 12.5f, 10f to 17f, 19f to 7.5f)
-            Glyph.CLOCK -> {
-                drawCircle(tint, radius = 9f * u, center = p(12f, 12f), style = stroke)
-                line(12f to 7f, 12f to 12f, 15.5f to 14f)
-            }
-            Glyph.WARNING -> {
-                line(12f to 4f, 21f to 19.5f, 3f to 19.5f, 12f to 4f)
-                line(12f to 10f, 12f to 14f)
-                drawCircle(tint, radius = 1.2f * u, center = p(12f, 16.8f))
-            }
-            Glyph.OFFLINE -> {
-                drawCircle(tint, radius = 9f * u, center = p(12f, 12f), style = stroke)
-                line(5.6f to 5.6f, 18.4f to 18.4f)
-            }
-            Glyph.BACK -> line(15f to 5f, 8f to 12f, 15f to 19f)
-            Glyph.ARROW_RIGHT -> {
-                line(5f to 12f, 19f to 12f)
-                line(13f to 6f, 19f to 12f, 13f to 18f)
-            }
+            drawPath(path, brush, style = stroke, colorFilter = filter)
+        }
+        Glyph.CHEVRON_DOWN -> line(6f to 9.5f, 12f to 15.5f, 18f to 9.5f)
+        Glyph.CHEVRON_RIGHT -> line(9.5f to 6f, 15.5f to 12f, 9.5f to 18f)
+        Glyph.INFO -> {
+            ring(9f, 12f, 12f)
+            line(12f to 11f, 12f to 16.5f)
+            dot(12f, 7.6f)
+        }
+        Glyph.CHECK -> line(5f to 12.5f, 10f to 17f, 19f to 7.5f)
+        Glyph.CLOCK -> {
+            ring(9f, 12f, 12f)
+            line(12f to 7f, 12f to 12f, 15.5f to 14f)
+        }
+        Glyph.WARNING -> {
+            line(12f to 4f, 21f to 19.5f, 3f to 19.5f, 12f to 4f)
+            line(12f to 10f, 12f to 14f)
+            dot(12f, 16.8f)
+        }
+        Glyph.OFFLINE -> {
+            ring(9f, 12f, 12f)
+            line(5.6f to 5.6f, 18.4f to 18.4f)
+        }
+        Glyph.BACK -> line(15f to 5f, 8f to 12f, 15f to 19f)
+        Glyph.ARROW_RIGHT -> {
+            line(5f to 12f, 19f to 12f)
+            line(13f to 6f, 19f to 12f, 13f to 18f)
         }
     }
 }
@@ -216,16 +247,26 @@ internal fun PolkaswapFlower(modifier: Modifier = Modifier, tint: Color? = null)
     )
 }
 
-/** A network's badge: its monogram on its colour. */
+/** A network's badge: SORA2 wears the SORA mark; any other network its monogram. */
 @Composable
 internal fun NetworkBadge(network: WalletNetworkId, size: Dp, modifier: Modifier = Modifier) {
-    val color = PortfolioPalette.network(network)
+    if (network == WalletNetworkId.SORA2) {
+        val glyph = remember { soraGlyphPath() }
+        Canvas(modifier.size(size)) {
+            val r = this.size.minDimension / 2f
+            drawCircle(PortfolioPalette.soraRed, radius = r)
+            scale(2f * r / SORA_GLYPH_VIEWPORT, 2f * r / SORA_GLYPH_VIEWPORT, Offset.Zero) {
+                drawPath(glyph, Color.White)
+            }
+        }
+        return
+    }
+    val colors = if (network.isTestnet) PortfolioPalette.testnetBadge else PortfolioPalette.mainnetBadge
     Box(
         modifier = modifier
             .size(size)
             .clip(CircleShape)
-            .background(Brush.linearGradient(listOf(lerp(color, Color.White, 0.22f), lerp(color, Color.Black, 0.28f))))
-            .border(1.dp, Color.White.copy(alpha = 0.26f), CircleShape),
+            .background(Brush.linearGradient(listOf(colors.first, colors.second))),
         contentAlignment = Alignment.Center,
     ) {
         Text(
@@ -312,22 +353,6 @@ internal fun TokenOrb(iconUri: String?, size: Dp, modifier: Modifier = Modifier)
     }
 }
 
-/** Small tag, e.g. Selected. */
-@Composable
-internal fun PortfolioTag(text: String, modifier: Modifier = Modifier) {
-    val n = MaterialTheme.neon
-    Text(
-        text = text,
-        color = n.textSecondary,
-        style = NeonType.eyebrow.copy(letterSpacing = 0.8.sp),
-        maxLines = 1,
-        modifier = modifier
-            .clip(RoundedCornerShape(5.dp))
-            .background(n.surfaceVariant)
-            .padding(horizontal = 6.dp, vertical = 2.dp),
-    )
-}
-
 /** Readiness chip: Swap-ready (with the flower) or the directory's Testnet tag. "No route" has no chip. */
 @Composable
 internal fun ReadinessChip(ready: Boolean, modifier: Modifier = Modifier) {
@@ -368,14 +393,21 @@ internal fun Overline(text: String, modifier: Modifier = Modifier, color: Color 
     )
 }
 
-/** The app's glass card with a column inside. */
+/** The app's card with a column inside. */
 @Composable
 internal fun PortfolioCard(
     modifier: Modifier = Modifier,
-    radius: Dp = 24.dp,
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    GlassCard(modifier = modifier.fillMaxWidth(), cornerRadius = radius) {
+    ContentCard(modifier = modifier.fillMaxWidth()) {
+        Column(Modifier.fillMaxWidth(), content = content)
+    }
+}
+
+/** A block of rows inside a sheet. */
+@Composable
+internal fun SheetCard(content: @Composable ColumnScope.() -> Unit) {
+    GlassCard(modifier = Modifier.fillMaxWidth(), cornerRadius = 18.dp) {
         Column(Modifier.fillMaxWidth(), content = content)
     }
 }
@@ -391,6 +423,15 @@ internal fun RowDivider(modifier: Modifier = Modifier, inset: Dp = 16.dp) {
     )
 }
 
+/**
+ * The fill behind a status note. The classic night palette's containers are pale, made for dark
+ * text, so on a dark page a note sits on a tint of its own colour instead.
+ */
+@Composable
+@ReadOnlyComposable
+internal fun statusFill(edge: Color, container: Color): Color =
+    if (MaterialTheme.neon.isDark) edge.copy(alpha = 0.16f) else container
+
 /** Info or warning banner with a coloured edge. */
 @Composable
 internal fun PortfolioBanner(
@@ -401,7 +442,7 @@ internal fun PortfolioBanner(
 ) {
     val n = MaterialTheme.neon
     val edge = if (warning) n.warning else n.info
-    val fill = if (warning) n.warningContainer else n.infoContainer
+    val fill = statusFill(edge, if (warning) n.warningContainer else n.infoContainer)
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -444,8 +485,8 @@ internal fun NeuIconButton(
 }
 
 /**
- * Bottom sheet in the SORA Neon style (as the app's other sheets): scrim, opaque glass body, top
- * radius 28, grabber, title and Close, scrolling body; at most 88 % of the screen.
+ * Bottom sheet as the app's other sheets: scrim, solid body, top radius 28, grabber, title and
+ * Close, scrolling body; at most 88 % of the screen.
  */
 @Composable
 internal fun PortfolioSheetScaffold(
@@ -542,7 +583,7 @@ internal fun PortfolioSheetScaffold(
     }
 }
 
-/** A selectable row inside a sheet (radio semantics by default). */
+/** A selectable row inside a sheet (radio semantics by default), in the app's accent when selected. */
 @Composable
 internal fun SheetRow(
     selected: Boolean,
@@ -562,8 +603,8 @@ internal fun SheetRow(
             .fillMaxWidth()
             .heightIn(min = 68.dp)
             .clip(shape)
-            .background(if (selected) n.polkaswapBrand.copy(alpha = if (n.isDark) 0.14f else 0.07f) else n.glassFill)
-            .border(if (selected) 1.5.dp else 1.dp, if (selected) n.polkaswapBrand.copy(alpha = 0.75f) else n.hairline, shape)
+            .background(if (selected) n.brandRed.copy(alpha = if (n.isDark) 0.14f else 0.07f) else n.glassFill)
+            .border(if (selected) 1.5.dp else 1.dp, if (selected) n.brandRed else n.hairline, shape)
             .clickable(role = role, onClick = onClick)
             .padding(horizontal = 14.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -614,6 +655,6 @@ internal fun CheckLine(text: String, ok: Boolean, modifier: Modifier = Modifier)
     Row(modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         PortfolioGlyph(if (ok) Glyph.CHECK else Glyph.INFO, if (ok) n.success else n.warning, Modifier.size(18.dp))
         Spacer(Modifier.width(10.dp))
-        Text(text, style = MaterialTheme.customTypography.paragraphS, color = n.textSecondary)
+        Text(text, style = MaterialTheme.customTypography.paragraphS, color = n.textPrimary)
     }
 }

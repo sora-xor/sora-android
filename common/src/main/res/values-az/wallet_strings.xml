@@ -122,6 +122,10 @@
     <string name="wallet_connect_session_closed">IrohaConnect sessiyası bağlanıb</string>
     <string name="wallet_connect_background_closed">Pul kisəsi ön plandan çıxanda sessiya bağlanıb</string>
     <string name="wallet_connect_pin_unavailable">Pul kisənizin PIN kodu əlçatan deyil. Pul kisənizin kilidini açmaq üçün SORA-nı açın, sonra yenidən cəhd edin.</string>
+    <string name="biometric_enrollment_changed_title">Bu telefonda biometrik məlumatlar dəyişib</string>
+    <string name="biometric_enrollment_changed_message">SORA sonuncu dəfə biometriya ilə açılandan bəri bu telefona barmaq izi və ya üz əlavə edilib, yaxud silinib. Barmaq izi və ya üzü bu telefonda olan hər kəs pul kisənizin kilidini aça bilər. Bu dəyişikliyi siz etməmisinizsə, biometriyanı söndürün.</string>
+    <string name="biometric_enrollment_changed_keep">Biometriyanı saxla</string>
+    <string name="biometric_enrollment_changed_turn_off">Söndür</string>
     <string name="wallet_connect_relay_ready">Şifrələnmiş ötürücü hazırdır. Tətbiqin kimliyi gözlənilir…</string>
     <string name="wallet_connect_invalid_message">Tətbiq etibarsız və ya təkrar oynadılmış IrohaConnect mesajı göndərib</string>
     <string name="wallet_connect_app_closed">Tətbiq şifrələnmiş sessiyanı bağlayıb</string>

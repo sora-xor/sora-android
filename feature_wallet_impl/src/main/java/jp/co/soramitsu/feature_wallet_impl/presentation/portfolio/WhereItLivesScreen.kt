@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -39,11 +40,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
@@ -77,10 +76,8 @@ import jp.co.soramitsu.common.presentation.compose.theme.tokens.NeonType
 import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.MoveBlock
 import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.PortfolioCalculator
 import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.PortfolioHolding
-import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.PortfolioLens
 import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.PortfolioReadiness
 import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.PortfolioScope
-import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.PortfolioSlots
 import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.Readiness
 import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.TokenLocations
 import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.isTestnet
@@ -91,7 +88,6 @@ import jp.co.soramitsu.ui_core.theme.customTypography
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
-import kotlin.math.sqrt
 
 internal interface WhereItLivesActions {
     fun onBack()
@@ -133,6 +129,7 @@ internal fun WhereItLivesScreen(
     tilt: TiltState,
     scroll: ScrollState,
     actions: WhereItLivesActions,
+    holdingKey: String? = null,
 ) {
     val n = MaterialTheme.neon
     val locations = remember(model, tokenId) {
@@ -151,7 +148,7 @@ internal fun WhereItLivesScreen(
             TopBar(title = "", chrome = { 0f }, onBack = actions::onBack)
             return@Box
         }
-        var selectedKey by rememberSaveable(tokenId) { mutableStateOf<String?>(null) }
+        var selectedKey by rememberSaveable(tokenId, holdingKey) { mutableStateOf(holdingKey) }
         val selected = locations.holdings.firstOrNull { it.key == selectedKey }
             ?: locations.holdings.first()
         val tokenColor = tokenColor(model, tokenId)
@@ -165,7 +162,6 @@ internal fun WhereItLivesScreen(
             Orbit(
                 locations = locations,
                 selectedNetwork = selected.network,
-                color = tokenColor,
                 tilt = tilt,
                 format = format,
                 onSatellite = { network ->
@@ -174,20 +170,14 @@ internal fun WhereItLivesScreen(
             )
             TokenHeader(model, locations, format)
             Spacer(Modifier.height(22.dp))
-            Row(
-                Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
+            Column(Modifier.padding(horizontal = 16.dp)) {
                 Text(
                     stringResource(R.string.portfolio_where_it_lives),
                     style = MaterialTheme.customTypography.headline1,
                     color = n.textPrimary,
-                    modifier = Modifier
-                        .weight(1f)
-                        .semantics { heading() },
+                    modifier = Modifier.semantics { heading() },
                 )
+                Spacer(Modifier.height(4.dp))
                 Overline(
                     pluralStringResource(R.plurals.portfolio_holdings, locations.holdings.size, locations.holdings.size) + " · " +
                         pluralStringResource(R.plurals.portfolio_networks, locations.networks.size, locations.networks.size)
@@ -220,10 +210,8 @@ internal fun WhereItLivesScreen(
     }
 }
 
-private fun tokenColor(model: PortfolioModel, tokenId: String): Color {
-    val slot = if (model.lens == PortfolioLens.TOKENS) model.slots[tokenId] else PortfolioSlots.seed(PortfolioLens.TOKENS)[tokenId]
-    return if (slot != null) PortfolioPalette.slot(slot) else PortfolioPalette.polkaswap
-}
+private fun tokenColor(model: PortfolioModel, tokenId: String): Color =
+    model.slots[tokenId]?.let(PortfolioPalette::slot) ?: PortfolioPalette.polkaswap
 
 @Composable
 private fun TopBar(title: String, chrome: () -> Float, onBack: () -> Unit) {
@@ -256,36 +244,39 @@ private fun TopBar(title: String, chrome: () -> Float, onBack: () -> Unit) {
     }
 }
 
-/** Satellite angles per count (degrees, 0 = right, positive = down), from the reference design. */
+/** Satellite angles per count (degrees, 0 = right, positive = down): left, right, then in front. */
 private val SATELLITE_ANGLES = mapOf(
     1 to listOf(200.0),
-    2 to listOf(165.0, 20.0),
-    3 to listOf(168.0, 92.0, 14.0),
+    2 to listOf(195.0, 345.0),
+    3 to listOf(190.0, 350.0, 100.0),
 )
 
 @Composable
 private fun Orbit(
     locations: TokenLocations,
     selectedNetwork: WalletNetworkId,
-    color: Color,
     tilt: TiltState,
     format: PortfolioFormat,
     onSatellite: (WalletNetworkId) -> Unit,
 ) {
     val n = MaterialTheme.neon
     val dark = n.isDark
-    // One satellite per network, largest first.
-    val networks = locations.holdings.map { it.network }.distinct()
+    // One satellite per network, in the wallet's order of networks.
+    val networks = locations.networks
     val amounts = networks.associateWith { network ->
         locations.holdings
             .filter { it.network == network }
             .fold(BigDecimal.ZERO) { acc, h -> acc + h.total }
     }
+    val swapReady = locations.holdings
+        .filter { PortfolioReadiness.readiness(it) == Readiness.READY }
+        .mapTo(HashSet()) { it.network }
     val angles = SATELLITE_ANGLES[networks.size.coerceIn(1, 3)].orEmpty()
     val lineColor = n.textPrimary.copy(alpha = if (dark) 0.22f else 0.18f)
-    val ringColor = n.textPrimary
-    val muted = n.textTertiary
+    val ringColor = n.textPrimary.copy(alpha = if (dark) 0.16f else 0.14f)
+    val muted = n.textTertiary.copy(alpha = 0.7f)
     val pink = n.polkaswapBrand
+    val edge = Color.White.copy(alpha = if (dark) 0.2f else 0.9f)
     BoxWithConstraints(
         Modifier
             .fillMaxWidth()
@@ -293,35 +284,17 @@ private fun Orbit(
     ) {
         val width = maxWidth
         val cx = width / 2
-        val cy = ORBIT_HEIGHT * 0.52f
-        val rx = min(150.dp, width * 0.36f)
-        val ry = 54.dp
-        val gateX = min(width - 58.dp, cx + rx + 34.dp)
-        val gateY = 64.dp
+        val cy = ORBIT_HEIGHT * 0.54f
+        // Narrow enough that the side satellites' amounts stay on screen.
+        val rx = min(150.dp, (width - 96.dp) / 2)
+        val ry = 48.dp
+        val gateX = width - 62.dp
+        val gateY = 48.dp
         val positions = networks.mapIndexed { index, network ->
             val angle = (angles.getOrNull(index) ?: 0.0) * PI / 180
             network to Pair(cx + rx * cos(angle).toFloat(), cy + ry * sin(angle).toFloat())
         }
-        // Aura in the token's colour (static).
-        Canvas(
-            Modifier
-                .fillMaxSize()
-                .semantics { hideFromAccessibility() }
-        ) {
-            val center = Offset(cx.toPx(), cy.toPx())
-            val radius = size.height * 0.62f
-            drawCircle(
-                Brush.radialGradient(
-                    0f to color.copy(alpha = if (dark) 0.42f else 0.22f),
-                    1f to Color.Transparent,
-                    center = center,
-                    radius = radius,
-                ),
-                radius = radius,
-                center = center,
-            )
-        }
-        // Rings in perspective.
+        // The ring in perspective.
         Canvas(
             Modifier
                 .fillMaxSize()
@@ -329,26 +302,25 @@ private fun Orbit(
                 .semantics { hideFromAccessibility() }
         ) {
             val center = Offset(cx.toPx(), cy.toPx())
-            fun ring(w: Dp, h: Dp, alpha: Float) = drawOval(
-                color = ringColor.copy(alpha = alpha),
-                topLeft = Offset(center.x - w.toPx() / 2, center.y - h.toPx() / 2),
-                size = Size(w.toPx(), h.toPx()),
+            val radius = rx.toPx()
+            drawOval(
+                color = ringColor,
+                topLeft = Offset(center.x - radius, center.y - ry.toPx()),
+                size = Size(radius * 2, ry.toPx() * 2),
                 style = Stroke(1.dp.toPx()),
             )
-            ring(rx * 2, 112.dp, if (dark) 0.16f else 0.14f)
-            ring(rx * 1.43f, 78.dp, if (dark) 0.09f else 0.08f)
         }
         // The token's orb.
         Box(
             Modifier
-                .offset(cx - 38.dp, cy - 38.dp)
-                .size(76.dp)
+                .offset(cx - ORB_SIZE / 2, cy - ORB_SIZE / 2)
+                .size(ORB_SIZE)
                 .tiltLayer(tilt, OrbitDepth.ORB, OrbitDepth.ORB * OrbitDepth.Y_RATIO)
                 .clip(CircleShape)
-                .border(2.dp, Color.White.copy(alpha = 0.35f), CircleShape)
+                .border(2.dp, Color.White.copy(alpha = if (dark) 0.18f else 0.9f), CircleShape)
                 .semantics { hideFromAccessibility() }
         ) {
-            TokenOrb(locations.token.iconUri, 76.dp)
+            TokenOrb(locations.token.iconUri, ORB_SIZE)
         }
         // Links and satellites.
         Box(
@@ -365,17 +337,19 @@ private fun Orbit(
                 val gate = Offset(gateX.toPx(), gateY.toPx())
                 positions.forEach { (network, pos) ->
                     val p = Offset(pos.first.toPx(), pos.second.toPx())
-                    drawLine(lineColor, p, center, strokeWidth = 1.5.dp.toPx(), cap = StrokeCap.Round)
+                    // Up to the orb's edge, so the line never crosses the token's icon.
+                    val toOrb = center - p
+                    val orbEdge = center - toOrb / toOrb.getDistance() * (ORB_SIZE / 2).toPx()
+                    drawLine(lineColor, p, orbEdge, strokeWidth = 1.dp.toPx(), cap = StrokeCap.Round)
                     val control = Offset((p.x + gate.x) / 2, minOf(p.y, gate.y) - 38.dp.toPx())
                     val path = Path().apply {
                         moveTo(p.x, p.y)
                         quadraticTo(control.x, control.y, gate.x, gate.y)
                     }
-                    val alpha = if (network == selectedNetwork) 1f else 0.55f
-                    val ready = network == WalletNetworkId.SORA2
+                    val ready = network in swapReady
                     drawPath(
                         path = path,
-                        color = if (ready) pink.copy(alpha = alpha) else muted.copy(alpha = 0.8f * alpha),
+                        color = if (ready) pink else muted,
                         style = Stroke(
                             width = if (ready) 2.dp.toPx() else 1.5.dp.toPx(),
                             cap = StrokeCap.Round,
@@ -386,47 +360,41 @@ private fun Orbit(
             }
             val largest = amounts.values.maxOf { it.toDouble() }.takeIf { it > 0.0 } ?: 1.0
             positions.forEach { (network, pos) ->
-                val on = network == selectedNetwork
-                // Satellites are sized by amount: 30 dp for the smallest, 44 dp for the largest.
-                val badge = 30.dp + 14.dp * sqrt(amounts.getValue(network).toDouble() / largest).toFloat()
-                val label = networkName(network) + ", " + format.amount(amounts.getValue(network), locations.token.symbol)
+                // Satellites are sized by amount: 32 dp for the smallest, 46 dp for the largest.
+                val amount = amounts.getValue(network)
+                val badge = 32.dp + 14.dp * (amount.toDouble() / largest).toFloat()
+                val label = networkName(network) + ", " + format.amount(amount, locations.token.symbol)
                 Column(
                     modifier = Modifier
-                        .offset(pos.first - 34.dp, pos.second - 26.dp)
-                        .width(68.dp)
+                        .offset(pos.first - SATELLITE_WIDTH / 2, pos.second - 26.dp)
+                        .width(SATELLITE_WIDTH)
                         .clip(RoundedCornerShape(12.dp))
                         .clickable(onClickLabel = label, role = Role.Button, onClick = { onSatellite(network) })
                         .semantics {
                             contentDescription = label
-                            selected = on
+                            selected = network == selectedNetwork
                         },
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    Box(
-                        Modifier
-                            .size(52.dp)
-                            .scale(if (on) 1.12f else 1f),
-                        contentAlignment = Alignment.Center,
-                    ) {
+                    Box(Modifier.size(52.dp), contentAlignment = Alignment.Center) {
                         Box(
                             Modifier
                                 .clip(CircleShape)
-                                .border(if (on) 2.dp else 0.dp, if (on) pink else Color.Transparent, CircleShape)
-                                .padding(if (on) 3.dp else 0.dp)
+                                .border(2.dp, if (network in swapReady) pink else edge, CircleShape)
                         ) {
                             NetworkBadge(network, badge)
                         }
                     }
                     Spacer(Modifier.height(2.dp))
                     Text(
-                        format.compact(amounts.getValue(network)),
-                        style = MaterialTheme.customTypography.textXSBold,
-                        color = if (on) n.textPrimary else n.textSecondary,
+                        format.amount(amount),
+                        style = NeonType.amountS,
+                        color = n.textPrimary,
                         maxLines = 1,
                         modifier = Modifier
-                            .clip(RoundedCornerShape(6.dp))
-                            .background(n.glassSolid.copy(alpha = 0.82f))
-                            .padding(horizontal = 6.dp, vertical = 1.dp),
+                            .clip(RoundedCornerShape(9.dp))
+                            .background(if (dark) Color.Black.copy(alpha = 0.35f) else Color.White.copy(alpha = 0.85f))
+                            .padding(horizontal = 7.dp, vertical = 1.dp),
                     )
                 }
             }
@@ -434,18 +402,24 @@ private fun Orbit(
         // The Polkaswap node.
         Column(
             Modifier
-                .offset(gateX - 56.dp, gateY - 23.dp)
+                .offset(gateX - 56.dp, gateY - 26.dp)
                 .width(112.dp)
                 .tiltLayer(tilt, OrbitDepth.POLKASWAP, OrbitDepth.POLKASWAP * OrbitDepth.Y_RATIO)
                 .semantics { hideFromAccessibility() },
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            PolkaswapDisc(46.dp)
+            PolkaswapDisc(52.dp)
             Spacer(Modifier.height(4.dp))
             Overline("Polkaswap")
         }
     }
 }
+
+/** The token's icon in the middle of the orbit. */
+private val ORB_SIZE = 76.dp
+
+/** Wide enough for a whole amount under the satellite. */
+private val SATELLITE_WIDTH = 112.dp
 
 @Composable
 internal fun PolkaswapDisc(size: Dp, modifier: Modifier = Modifier) {
@@ -472,20 +446,22 @@ private fun TokenHeader(model: PortfolioModel, locations: TokenLocations, format
     Column(Modifier.padding(horizontal = 16.dp)) {
         Row(verticalAlignment = Alignment.Bottom) {
             Text(token.symbol, style = MaterialTheme.customTypography.displayM, color = n.textPrimary)
-            Spacer(Modifier.width(10.dp))
-            Text(
-                token.name,
-                style = MaterialTheme.customTypography.textM,
-                color = n.textSecondary,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.padding(bottom = 4.dp),
-            )
+            if (token.name.isNotBlank() && token.name != token.symbol) {
+                Spacer(Modifier.width(10.dp))
+                Text(
+                    token.name,
+                    style = MaterialTheme.customTypography.textM,
+                    color = n.textSecondary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.padding(bottom = 4.dp),
+                )
+            }
         }
         Spacer(Modifier.height(4.dp))
         Text(
             format.amount(amount, token.symbol),
-            style = NeonType.displayHero.copy(fontSize = 34.sp, lineHeight = 42.sp),
+            style = NeonType.displayHero.copy(fontSize = 28.sp, lineHeight = 36.sp),
             color = n.textPrimary,
             maxLines = 1,
         )
@@ -493,8 +469,8 @@ private fun TokenHeader(model: PortfolioModel, locations: TokenLocations, format
         FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(
                 when {
-                    testnetOnly -> stringResource(R.string.portfolio_no_value)
-                    token.price == null -> stringResource(R.string.portfolio_no_price)
+                    testnetOnly -> PortfolioFormat.NO_VALUE
+                    token.price == null -> stringResource(R.string.tx_outcome_quote_unavailable)
                     else -> format.fiat(locations.countedFiat)
                 },
                 style = NeonType.amountM.copy(fontWeight = FontWeight.Normal),
@@ -508,7 +484,8 @@ private fun TokenHeader(model: PortfolioModel, locations: TokenLocations, format
                     color = if (up) n.success else n.error,
                 )
             }
-            if (!testnetOnly && token.price != null) {
+            // Without a price a token has no share of a total: the page does not say 0%.
+            if (locations.countedFiat > 0.0) {
                 Text(
                     if (model.scope == PortfolioScope.ALL) {
                         stringResource(R.string.portfolio_share_of_all, format.share(locations.share))
@@ -551,7 +528,7 @@ private fun HoldingItem(
             }
     ) {
         Box(Modifier.semantics { this.selected = selected }) {
-            HoldingRow(model, holding, format, showToken = false, onClick = onSelect)
+            HoldingRow(model, holding, format, onClick = onSelect)
         }
         if (selected) {
             Column(
@@ -561,6 +538,13 @@ private fun HoldingItem(
                 Breakdown(holding, format, color)
                 RouteCard(model, holding)
                 HoldingActions(model, holding, actions)
+                model.wallet(holding.walletId)?.takeUnless { it.selected }?.let { wallet ->
+                    Text(
+                        stringResource(R.string.portfolio_switch_note, wallet.name),
+                        style = MaterialTheme.customTypography.textS,
+                        color = n.textSecondary,
+                    )
+                }
             }
         }
     }
@@ -624,16 +608,18 @@ private fun Breakdown(holding: PortfolioHolding, format: PortfolioFormat, color:
             if (exclusion == null) stringResource(R.string.portfolio_total_counted) else stringResource(R.string.portfolio_total_not_counted),
             format.amount(total, symbol),
             bold = true,
-        ) {}
+        )
     }
 }
 
 @Composable
-private fun BreakdownRow(label: String, value: String, bold: Boolean = false, key: @Composable () -> Unit) {
+private fun BreakdownRow(label: String, value: String, bold: Boolean = false, key: (@Composable () -> Unit)? = null) {
     val n = MaterialTheme.neon
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-        key()
-        Spacer(Modifier.width(8.dp))
+        key?.let {
+            it()
+            Spacer(Modifier.width(8.dp))
+        }
         Text(label, style = MaterialTheme.customTypography.textS, color = n.textSecondary, modifier = Modifier.weight(1f))
         Text(
             value,
@@ -651,40 +637,51 @@ private fun RouteCard(model: PortfolioModel, holding: PortfolioHolding) {
     val ready = readiness == Readiness.READY
     val pink = n.polkaswapBrand
     val wallet = model.wallet(holding.walletId)
+    val fill = when (readiness) {
+        Readiness.READY -> pink.copy(alpha = if (n.isDark) 0.10f else 0.05f)
+        Readiness.TEST -> statusFill(n.warning, n.warningContainer)
+        Readiness.NONE -> Color.Transparent
+    }
+    val edge = when (readiness) {
+        Readiness.READY -> pink.copy(alpha = 0.40f)
+        Readiness.TEST -> n.warning.copy(alpha = 0.3f)
+        Readiness.NONE -> n.hairline
+    }
     Column(
         Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
-            .background(if (ready) pink.copy(alpha = if (n.isDark) 0.10f else 0.05f) else n.glassFill)
-            .border(1.dp, if (ready) pink.copy(alpha = 0.40f) else n.hairline, RoundedCornerShape(16.dp))
+            .background(fill)
+            .border(1.dp, edge, RoundedCornerShape(16.dp))
             .padding(12.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             HopChip(networkName(holding.network)) { NetworkBadge(holding.network, 22.dp) }
-            Spacer(Modifier.width(6.dp))
-            if (ready) {
-                PortfolioGlyph(Glyph.ARROW_RIGHT, n.textTertiary, Modifier.size(16.dp))
+            Spacer(Modifier.width(8.dp))
+            if (readiness == Readiness.TEST) {
+                ReadinessChip(ready = false)
             } else {
-                Text(
-                    stringResource(R.string.portfolio_no_route),
-                    style = MaterialTheme.customTypography.textXSBold,
-                    color = n.textTertiary,
+                PortfolioGlyph(
+                    Glyph.ARROW_RIGHT,
+                    n.textTertiary,
+                    Modifier
+                        .size(16.dp)
+                        .alpha(if (ready) 1f else 0.45f),
                 )
-            }
-            Spacer(Modifier.width(6.dp))
-            HopChip("Polkaswap", dex = true, muted = !ready) {
-                PolkaswapFlower(Modifier.size(16.dp), tint = n.polkaswapBrand)
+                Spacer(Modifier.width(8.dp))
+                HopChip("Polkaswap", dex = true, muted = !ready) {
+                    PolkaswapFlower(Modifier.size(16.dp), tint = n.polkaswapBrand)
+                }
             }
         }
         val text = when (readiness) {
             Readiness.READY -> stringResource(R.string.portfolio_route_ready, wallet?.name.orEmpty())
             Readiness.NONE -> stringResource(R.string.portfolio_route_runs_on_sora2) + " " +
                 stringResource(R.string.portfolio_route_none, networkName(holding.network))
-            Readiness.TEST -> stringResource(R.string.portfolio_route_test) + " " +
-                stringResource(R.string.portfolio_route_none, networkName(holding.network))
+            Readiness.TEST -> stringResource(R.string.portfolio_route_test)
         }
-        Text(text, style = MaterialTheme.customTypography.paragraphS, color = n.textSecondary)
+        Text(text, style = MaterialTheme.customTypography.paragraphS, color = n.textPrimary)
     }
 }
 
@@ -740,6 +737,7 @@ private fun HoldingActions(model: PortfolioModel, holding: PortfolioHolding, act
                         size = ButtonSize.Small,
                         variant = NeonVariant.Secondary,
                         text = sendLabel,
+                        leftIcon = rememberGlyphPainter(Glyph.SEND),
                         enabled = holding.sendAvailable,
                         onClick = { actions.onSend(holding.key) },
                     )
@@ -748,6 +746,7 @@ private fun HoldingActions(model: PortfolioModel, holding: PortfolioHolding, act
                         size = ButtonSize.Small,
                         variant = NeonVariant.Secondary,
                         text = moveLabel,
+                        leftIcon = rememberGlyphPainter(Glyph.MOVE),
                         enabled = moveBlock == null,
                         onClick = { actions.onMoveSheet(holding.key) },
                     )
@@ -763,37 +762,39 @@ private fun HoldingActions(model: PortfolioModel, holding: PortfolioHolding, act
                     enabled = holding.sendAvailable,
                     onClick = { actions.onSend(holding.key) },
                 )
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    NeonButton(
-                        modifier = Modifier.weight(1f),
-                        size = ButtonSize.Small,
-                        variant = NeonVariant.Secondary,
-                        text = stringResource(R.string.portfolio_receive_on_sora2),
-                        onClick = { actions.onReceiveOnSora2(holding.walletId) },
-                    )
-                    NeonButton(
-                        modifier = Modifier.weight(1f),
-                        size = ButtonSize.Small,
-                        variant = NeonVariant.Secondary,
-                        text = moveLabel,
-                        enabled = moveBlock == null,
-                        onClick = { actions.onMoveSheet(holding.key) },
-                    )
-                }
-                reasons += stringResource(
-                    if (readiness == Readiness.TEST) R.string.portfolio_route_test else R.string.portfolio_route_runs_on_sora2
+                // One under the other: "Receive on SORA2" does not fit half a row in every language.
+                NeonButton(
+                    modifier = Modifier.fillMaxWidth(),
+                    size = ButtonSize.Small,
+                    variant = NeonVariant.Secondary,
+                    text = stringResource(R.string.portfolio_receive_on_sora2),
+                    onClick = { actions.onReceiveOnSora2(holding.walletId) },
+                )
+                NeonButton(
+                    modifier = Modifier.fillMaxWidth(),
+                    size = ButtonSize.Small,
+                    variant = NeonVariant.Secondary,
+                    text = moveLabel,
+                    leftIcon = rememberGlyphPainter(Glyph.MOVE),
+                    enabled = moveBlock == null,
+                    onClick = { actions.onMoveSheet(holding.key) },
                 )
             }
         }
         reasons.distinct().forEach { reason ->
             Text(reason, style = MaterialTheme.customTypography.textS, color = n.textSecondary)
         }
-        if (holding.network == WalletNetworkId.SORA2 && !model.sample) {
-            NeonButton(
-                size = ButtonSize.ExtraSmall,
-                variant = NeonVariant.Tertiary,
+        if (!model.sample) {
+            Text(
                 text = stringResource(R.string.portfolio_asset_details),
-                onClick = { actions.onAssetDetails(holding.key) },
+                style = MaterialTheme.customTypography.textSBold,
+                color = n.link,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(6.dp))
+                    .clickable(role = Role.Button, onClick = { actions.onAssetDetails(holding.key) })
+                    .heightIn(min = 48.dp)
+                    .wrapContentHeight(Alignment.CenterVertically),
             )
         }
     }
@@ -803,44 +804,39 @@ private fun HoldingActions(model: PortfolioModel, holding: PortfolioHolding, act
 @Composable
 private fun PolkaswapCard(model: PortfolioModel, locations: TokenLocations, actions: WhereItLivesActions, modifier: Modifier = Modifier) {
     val n = MaterialTheme.neon
-    val pink = n.polkaswapBrand
     val sora2 = locations.holdings.firstOrNull { it.network == WalletNetworkId.SORA2 }
     val walletName = (sora2?.walletId?.let(model::wallet) ?: model.selectedWallet)?.name.orEmpty()
-    val shape = RoundedCornerShape(24.dp)
-    Column(
-        modifier
-            .fillMaxWidth()
-            .clip(shape)
-            .background(Brush.linearGradient(listOf(pink.copy(alpha = if (n.isDark) 0.18f else 0.08f), n.glassFill, n.glassFill)))
-            .border(1.dp, pink.copy(alpha = 0.40f), shape)
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            PolkaswapDisc(44.dp)
-            Spacer(Modifier.width(12.dp))
-            Column(Modifier.weight(1f)) {
-                Text("Polkaswap", style = MaterialTheme.customTypography.headline2, color = n.textPrimary)
-                Text(stringResource(R.string.portfolio_polkaswap_body), style = MaterialTheme.customTypography.paragraphS, color = n.textSecondary)
+    PortfolioCard(modifier) {
+        Column(
+            Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                PolkaswapDisc(44.dp)
+                Spacer(Modifier.width(12.dp))
+                Column(Modifier.weight(1f)) {
+                    Text("Polkaswap", style = MaterialTheme.customTypography.headline2, color = n.textPrimary)
+                    Text(stringResource(R.string.portfolio_polkaswap_body), style = MaterialTheme.customTypography.paragraphS, color = n.textSecondary)
+                }
             }
-        }
-        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            CheckLine(stringResource(R.string.portfolio_check_account, walletName), ok = true)
-            CheckLine(stringResource(R.string.portfolio_check_available), ok = true)
-            CheckLine(
-                stringResource(if (model.swapDisclaimerPending) R.string.portfolio_check_disclaimer_pending else R.string.portfolio_check_disclaimer_done),
-                ok = !model.swapDisclaimerPending,
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                CheckLine(stringResource(R.string.portfolio_check_account, walletName), ok = true)
+                CheckLine(stringResource(R.string.portfolio_check_available), ok = true)
+                CheckLine(
+                    stringResource(if (model.swapDisclaimerPending) R.string.portfolio_check_disclaimer_pending else R.string.portfolio_check_disclaimer_done),
+                    ok = !model.swapDisclaimerPending,
+                )
+            }
+            NeonButton(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 48.dp),
+                size = ButtonSize.Large,
+                variant = NeonVariant.Swap,
+                text = stringResource(R.string.portfolio_open_polkaswap),
+                leftIcon = painterResource(R.drawable.ic_polkaswap),
+                onClick = { actions.onOpenPolkaswap(locations.token.id, sora2?.key) },
             )
         }
-        NeonButton(
-            modifier = Modifier
-                .fillMaxWidth()
-                .heightIn(min = 48.dp),
-            size = ButtonSize.Large,
-            variant = NeonVariant.Swap,
-            text = stringResource(R.string.portfolio_open_polkaswap),
-            leftIcon = painterResource(R.drawable.ic_polkaswap),
-            onClick = { actions.onOpenPolkaswap(locations.token.id, sora2?.key) },
-        )
     }
 }

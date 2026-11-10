@@ -15,9 +15,6 @@
     <string name="portfolio_all_wallets">כל הארנקים</string>
     <string name="portfolio_wallets">ארנקים</string>
     <string name="portfolio_scope_label">היקף: %1$s. בחירת ארנק</string>
-    <string name="portfolio_lens_tokens">טוקנים</string>
-    <string name="portfolio_lens_networks">רשתות</string>
-    <string name="portfolio_lens_wallets">ארנקים</string>
     <string name="portfolio_where_it_lives">מיקום הנכסים</string>
     <string name="portfolio_where_it_lives_title">%1$s · מיקום הנכסים</string>
     <plurals name="portfolio_networks">
@@ -34,11 +31,6 @@
         <item quantity="one">%1$d החזקה</item>
         <item quantity="two">%1$d החזקות</item>
         <item quantity="other">%1$d החזקות</item>
-    </plurals>
-    <plurals name="portfolio_tokens">
-        <item quantity="one">%1$d טוקן</item>
-        <item quantity="two">%1$d טוקנים</item>
-        <item quantity="other">%1$d טוקנים</item>
     </plurals>
     <plurals name="portfolio_assets_not_included">
         <item quantity="one">%1$d נכס שלא נכלל</item>
@@ -60,10 +52,9 @@
     <string name="portfolio_route_none">בגרסה זו אין מסלול מ-%1$s.</string>
     <string name="portfolio_route_test">לנכסי רשת בדיקה אין ערך כספי.</string>
     <string name="portfolio_route_ready">ב-SORA2. אפשר להחליף כעת ב-Polkaswap באמצעות חשבון SORA2 שלך ב-%1$s.</string>
-    <string name="portfolio_no_route">אין מסלול</string>
     <string name="portfolio_receive_on_sora2">קבלה ב-SORA2</string>
-    <string name="portfolio_send_on">שליחה ב-%1$s</string>
     <string name="portfolio_send_unavailable">שליחה ב-%1$s אינה זמינה בגרסה זו.</string>
+    <string name="portfolio_send_on">שליחה ב-%1$s</string>
     <string name="portfolio_move_no_other_wallet">לצורך העברה דרוש ארנק נוסף שלך עם חשבון ב-%1$s.</string>
     <string name="portfolio_move_needs_wallets">העברה מתבצעת בין הארנקים שלך. יש להוסיף ארנק נוסף כדי להעביר כספים ביניהם.</string>
     <string name="portfolio_nothing_to_move">אין כאן כרגע נכסים שניתן להעביר.</string>
@@ -76,6 +67,7 @@
     <string name="portfolio_excluded_unpriced">ללא מחיר: %1$d</string>
     <string name="portfolio_excluded_testnet">נכסי רשת בדיקה: %1$d</string>
     <string name="portfolio_excluded_caption">%1$s לא נכלל</string>
+    <string name="portfolio_prices_as_of">מחירים נכון ל-%1$s</string>
     <string name="portfolio_counted">נכלל בחישוב</string>
     <string name="portfolio_hidden_by_you">הוסתר על ידך</string>
     <string name="portfolio_without_price">אין מחיר</string>
@@ -90,6 +82,9 @@
     <string name="portfolio_state_saved">שמור</string>
     <string name="portfolio_state_partial">חלקי</string>
     <string name="portfolio_state_offline">לא מקוון</string>
+    <string name="portfolio_state_reading">בקריאה</string>
+    <string name="portfolio_reading_balances">קורא יתרות…</string>
+    <string name="portfolio_excluded_unread">ארנקים שעדיין לא נקראו: %1$d</string>
     <string name="portfolio_age_seconds">%1$d שנ׳</string>
     <string name="portfolio_age_minutes">%1$d דק׳</string>
     <string name="portfolio_age_hours">%1$d שע׳</string>
@@ -102,15 +97,14 @@
     <string name="portfolio_unreachable">לא ניתן להגיע אל %1$s</string>
     <string name="portfolio_refresh_all">רענון כל הארנקים</string>
     <string name="portfolio_wallets_together">ארנקים יחד: %1$d</string>
-    <string name="portfolio_wallets_note">התצוגה של כל הארנקים מחברת את הסכום של כל ארנק. ארנקים שלא נבחרו שומרים את נתוני הסנכרון האחרון, ולכן הרשימה מציגה כמה זמן עבר מאז כל עדכון.</string>
+    <string name="portfolio_wallets_note">„כל הארנקים” מחבר את הסכום של כל ארנק. ארנקים שלא נבחרו מתרעננים בערך פעם בדקה בזמן שאתה צופה, ולכן כל אחד מציג בן כמה המספרים שלו.</string>
     <string name="portfolio_manage_wallets">ניהול ארנקים</string>
+    <string name="portfolio_manage_assets">ניהול הנכסים של הארנק שנבחר</string>
     <string name="portfolio_selected">נבחר</string>
-    <string name="portfolio_open_wallet_alone">פתיחת %1$s בלבד</string>
     <string name="portfolio_other">אחר</string>
     <string name="portfolio_legend_description">%1$s, %2$s אחוזים, %3$s</string>
-    <string name="portfolio_no_price">אין מחיר</string>
-    <string name="portfolio_no_value">אין ערך</string>
     <string name="portfolio_nothing_listed">אין נכסים להצגה. נכסים מוסתרים לא מוצגים כאן.</string>
+    <string name="portfolio_no_balance_yet">עדיין אין יתרה</string>
     <string name="portfolio_wallet_ready">הארנק שלך מוכן.</string>
     <string name="portfolio_wallet_ready_body">אפשר לקבל טוקנים לארנק הזה. הם יופיעו כאן בכל רשת שהיישומון תומך בה.</string>
     <string name="portfolio_token_gone">הטוקן הזה אינו מופיע עוד בתצוגה זו.</string>
@@ -142,8 +136,8 @@
     <string name="portfolio_you_pay">לתשלום</string>
     <string name="portfolio_you_get">לקבלה</string>
     <string name="portfolio_swap_note">Polkaswap מציג מחיר, עמלה והשפעה על המחיר לפני החתימה. כאן נבחר רק הצמד.</string>
-    <string name="portfolio_send_from">שליחה מתוך</string>
-    <string name="portfolio_receive_to">קבלה אל</string>
+    <string name="portfolio_send_from">לשלוח מאיזה ארנק?</string>
+    <string name="portfolio_receive_to">לקבל לאיזה ארנק?</string>
     <string name="portfolio_sample_handoff_off">תיק לדוגמה: הכתובות בדויות, ולכן מסך השליחה לא נפתח.</string>
     <string name="portfolio_nexus_send_unavailable">שליחה ברשת זו אינה זמינה לארנק הזה כרגע.</string>
     <string name="asset_add_to_favorites">הוספת %1$s למועדפים</string>

@@ -5,6 +5,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.action.ViewActions.pressBack
+import androidx.test.espresso.matcher.RootMatchers.isDialog
+import androidx.test.espresso.matcher.ViewMatchers.isRoot
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.presentation.compose.components.TransactionResultBadgeOverlay
@@ -19,13 +23,17 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class WalletDialogBehaviorTest {
     @get:Rule val compose = createAndroidComposeRule<ComponentActivity>()
+    // Espresso's default root accepts a dialog only once it has window focus. Until then it picks the
+    // activity window, which cannot get focus back while the dialog is open, so the press fails after
+    // ten seconds. Naming the dialog makes Espresso wait for the dialog instead.
+    private fun pressBackOnDialog() { onView(isRoot()).inRoot(isDialog()).perform(pressBack()) }
     @Test fun qrSelectionRoutesGalleryCameraAndDismissSeparately() {
         val events = mutableListOf<String>()
         compose.setContent { SoraAppTheme { ModalQrSelectionDialog({ events += "gallery" }, { events += "camera" }, { events += "dismiss" }) } }
         compose.onNodeWithText(compose.activity.getString(R.string.qr_upload)).performClick()
         compose.onNodeWithText(compose.activity.getString(R.string.common_scan)).performClick()
         compose.runOnIdle { assertEquals(listOf("gallery", "camera"), events) }
-        androidx.test.espresso.Espresso.pressBack()
+        pressBackOnDialog()
         compose.runOnIdle { assertEquals(listOf("gallery", "camera", "dismiss"), events) }
     }
     @Test fun transactionOutcomeBadgesKeepSubmittedDistinctFromFailure() {
@@ -48,7 +56,7 @@ class WalletDialogBehaviorTest {
         compose.onNodeWithText("Notice").assertDoesNotExist()
         compose.runOnIdle { dialog.value = jp.co.soramitsu.common.base.AlertDialogData(R.string.common_error_general_title, R.string.activity_error_title) }
         compose.onNodeWithText(compose.activity.getString(R.string.activity_error_title)).assertIsDisplayed()
-        androidx.test.espresso.Espresso.pressBack()
+        pressBackOnDialog()
         compose.runOnIdle { assertEquals(jp.co.soramitsu.common.base.AlertDialogData(), dialog.value) }
     }
     @Test fun confirmationRequiresTheExplicitConfirmActionAndClosesBeforeItsCallback() {
@@ -63,7 +71,7 @@ class WalletDialogBehaviorTest {
         compose.onNodeWithText("Review action").assertIsDisplayed()
         compose.onNodeWithText("Keep wallet").performClick()
         compose.runOnIdle { assertEquals(listOf("dismiss"), events); dialog.value = question() }
-        androidx.test.espresso.Espresso.pressBack()
+        pressBackOnDialog()
         compose.runOnIdle { assertEquals(listOf("dismiss", "dismiss"), events); dialog.value = question() }
         compose.onNodeWithText("Proceed").performClick()
         compose.runOnIdle { assertEquals(listOf("dismiss", "dismiss", "confirm"), events); assertNull(dialog.value) }
@@ -80,7 +88,7 @@ class WalletDialogBehaviorTest {
         compose.onNodeWithText(compose.activity.getString(R.string.common_ok)).performClick()
         compose.onNodeWithText("The final receipt cannot be lower than this quoted amount.").assertDoesNotExist()
         compose.onNodeWithText("Minimum received").performClick()
-        androidx.test.espresso.Espresso.pressBack()
+        pressBackOnDialog()
         compose.onNodeWithText("The final receipt cannot be lower than this quoted amount.").assertDoesNotExist()
         compose.onNodeWithText("1.25 XOR").assertIsDisplayed()
     }

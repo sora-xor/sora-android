@@ -122,6 +122,10 @@
     <string name="wallet_connect_session_closed">نشست IrohaConnect بسته شد</string>
     <string name="wallet_connect_background_closed">هنگامی که کیف پول از پیش‌زمینه خارج شد، نشست بسته شد</string>
     <string name="wallet_connect_pin_unavailable">کد PIN کیف پول شما در دسترس نیست. SORA را باز کنید و قفل کیف پول خود را باز کنید، سپس دوباره تلاش کنید.</string>
+    <string name="biometric_enrollment_changed_title">بیومتریک این تلفن تغییر کرده است</string>
+    <string name="biometric_enrollment_changed_message">از آخرین باری که SORA با بیومتریک باز شد، اثر انگشت یا چهره‌ای به این تلفن اضافه یا از آن حذف شده است. هر کسی که اثر انگشت یا چهره‌اش روی این تلفن باشد می‌تواند قفل کیف پول شما را باز کند. اگر این تغییر را شما انجام نداده‌اید، بیومتریک را خاموش کنید.</string>
+    <string name="biometric_enrollment_changed_keep">حفظ بیومتریک</string>
+    <string name="biometric_enrollment_changed_turn_off">خاموش کردن</string>
     <string name="wallet_connect_relay_ready">رله رمزگذاری‌شده آماده است. در انتظار هویت برنامه…</string>
     <string name="wallet_connect_invalid_message">برنامه پیام IrohaConnect نامعتبر یا بازپخش‌شده فرستاد</string>
     <string name="wallet_connect_app_closed">برنامه نشست رمزگذاری‌شده را بست</string>

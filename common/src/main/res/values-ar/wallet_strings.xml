@@ -120,6 +120,10 @@
     <string name="wallet_connect_session_closed">أُغلقت جلسة IrohaConnect</string>
     <string name="wallet_connect_background_closed">أُغلقت الجلسة عندما غادرت المحفظة المقدمة</string>
     <string name="wallet_connect_pin_unavailable">رمز PIN لمحفظتك غير متاح. افتح SORA لفتح قفل محفظتك، ثم حاول مرة أخرى.</string>
+    <string name="biometric_enrollment_changed_title">تغيّرت البيانات الحيوية على هذا الهاتف</string>
+    <string name="biometric_enrollment_changed_message">أُضيفت بصمة أو وجه إلى هذا الهاتف أو أُزيلا منه منذ آخر فتح لـ SORA بالبيانات الحيوية. يمكن لأي شخص تكون بصمته أو وجهه على هذا الهاتف فتح محفظتك. إذا لم تُجرِ هذا التغيير بنفسك، فأوقف البيانات الحيوية.</string>
+    <string name="biometric_enrollment_changed_keep">الإبقاء على البيانات الحيوية</string>
+    <string name="biometric_enrollment_changed_turn_off">إيقاف</string>
     <string name="wallet_connect_relay_ready">الوسيط المشفر جاهز. بانتظار هوية التطبيق…</string>
     <string name="wallet_connect_invalid_message">أرسل التطبيق رسالة IrohaConnect غير صالحة أو معاد تشغيلها</string>
     <string name="wallet_connect_app_closed">أغلق التطبيق الجلسة المشفرة</string>

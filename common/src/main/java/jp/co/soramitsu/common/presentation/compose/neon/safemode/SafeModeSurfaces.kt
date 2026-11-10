@@ -110,6 +110,17 @@ object WalletSessionState {
     fun markLocked() {
         unlockedState.value = false
     }
+
+    /**
+     * How many times the app came back from the background in this process, counted on the main
+     * thread. A screen that stays open past the PIN notes this and closes once it has changed.
+     */
+    var returnsFromBackground = 0
+        private set
+
+    fun markReturnedFromBackground() {
+        returnsFromBackground++
+    }
 }
 
 /**

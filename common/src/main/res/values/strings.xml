@@ -628,6 +628,10 @@
     <string name="wallet_connect_session_closed">IrohaConnect session closed</string>
     <string name="wallet_connect_background_closed">Session closed when the wallet left the foreground</string>
     <string name="wallet_connect_pin_unavailable">Your wallet PIN is unavailable. Open SORA to unlock your wallet, then try again.</string>
+    <string name="biometric_enrollment_changed_title">Biometrics changed on this phone</string>
+    <string name="biometric_enrollment_changed_message">A fingerprint or face was added or removed on this phone since biometrics last unlocked SORA. Anyone whose fingerprint or face is on this phone can unlock your wallet. If you didn\'t make this change, turn biometrics off.</string>
+    <string name="biometric_enrollment_changed_keep">Keep biometrics</string>
+    <string name="biometric_enrollment_changed_turn_off">Turn off</string>
     <string name="wallet_connect_relay_ready">Encrypted relay ready. Waiting for the application identity…</string>
     <string name="wallet_connect_invalid_message">The application sent an invalid or replayed IrohaConnect message</string>
     <string name="wallet_connect_app_closed">The application closed the encrypted session</string>
@@ -966,9 +970,6 @@
   <string name="portfolio_all_wallets">All wallets</string>
   <string name="portfolio_wallets">Wallets</string>
   <string name="portfolio_scope_label">Scope: %1$s. Choose a wallet</string>
-  <string name="portfolio_lens_tokens">Tokens</string>
-  <string name="portfolio_lens_networks">Networks</string>
-  <string name="portfolio_lens_wallets">Wallets</string>
   <string name="portfolio_where_it_lives">Where it lives</string>
   <string name="portfolio_where_it_lives_title">%1$s · where it lives</string>
   <plurals name="portfolio_networks">
@@ -982,10 +983,6 @@
   <plurals name="portfolio_holdings">
     <item quantity="one">%1$d holding</item>
     <item quantity="other">%1$d holdings</item>
-  </plurals>
-  <plurals name="portfolio_tokens">
-    <item quantity="one">%1$d token</item>
-    <item quantity="other">%1$d tokens</item>
   </plurals>
   <plurals name="portfolio_assets_not_included">
     <item quantity="one">%1$d asset, not included</item>
@@ -1006,10 +1003,9 @@
   <string name="portfolio_route_none">There is no route from %1$s in this version.</string>
   <string name="portfolio_route_test">Testnet assets have no monetary value.</string>
   <string name="portfolio_route_ready">On SORA2. Swap on Polkaswap now with your SORA2 account in %1$s.</string>
-  <string name="portfolio_no_route">no route</string>
   <string name="portfolio_receive_on_sora2">Receive on SORA2</string>
-  <string name="portfolio_send_on">Send on %1$s</string>
   <string name="portfolio_send_unavailable">Sending on %1$s is not available in this version.</string>
+  <string name="portfolio_send_on">Send on %1$s</string>
   <string name="portfolio_move_no_other_wallet">Move needs another of your wallets with an account on %1$s.</string>
   <string name="portfolio_move_needs_wallets">Move works between your own wallets. Add another wallet to move funds between them.</string>
   <string name="portfolio_nothing_to_move">Nothing here can be moved right now.</string>
@@ -1022,9 +1018,10 @@
   <string name="portfolio_excluded_unpriced">Without a price: %1$d</string>
   <string name="portfolio_excluded_testnet">Testnet assets: %1$d</string>
   <string name="portfolio_excluded_caption">%1$s not included</string>
+  <string name="portfolio_prices_as_of">Prices as of %1$s</string>
   <string name="portfolio_counted">Counted</string>
   <string name="portfolio_hidden_by_you">Hidden by you</string>
-  <string name="portfolio_without_price">No price</string>
+  <string name="portfolio_without_price">Without a price</string>
   <string name="portfolio_testnets">Testnets (Taira)</string>
   <string name="portfolio_never_counted">Never counted</string>
   <string name="portfolio_pool_stakes">Pool stakes</string>
@@ -1035,6 +1032,9 @@
   <string name="portfolio_state_live">LIVE</string>
   <string name="portfolio_state_saved">SAVED</string>
   <string name="portfolio_state_partial">PARTIAL</string>
+  <string name="portfolio_state_reading">READING</string>
+  <string name="portfolio_reading_balances">Reading balances…</string>
+  <string name="portfolio_excluded_unread">Wallets not read yet: %1$d</string>
   <string name="portfolio_state_offline">OFFLINE</string>
   <string name="portfolio_age_seconds">%1$ds</string>
   <string name="portfolio_age_minutes">%1$dm</string>
@@ -1048,15 +1048,14 @@
   <string name="portfolio_unreachable">%1$s unreachable</string>
   <string name="portfolio_refresh_all">Refresh all wallets</string>
   <string name="portfolio_wallets_together">Wallets together: %1$d</string>
-  <string name="portfolio_wallets_note">All wallets adds each wallet’s own total. Wallets that are not selected keep their last sync, so the list says how old each one is.</string>
+  <string name="portfolio_wallets_note">All wallets adds each wallet’s own total. Wallets that are not selected refresh about once a minute while you look, so each one shows how old its numbers are.</string>
   <string name="portfolio_manage_wallets">Manage wallets</string>
+  <string name="portfolio_manage_assets">Manage selected wallet\'s assets</string>
   <string name="portfolio_selected">Selected</string>
-  <string name="portfolio_open_wallet_alone">Open %1$s alone</string>
   <string name="portfolio_other">Other</string>
   <string name="portfolio_legend_description">%1$s, %2$s percent, %3$s</string>
-  <string name="portfolio_no_price">No price</string>
-  <string name="portfolio_no_value">No value</string>
   <string name="portfolio_nothing_listed">Nothing to list. Hidden assets are not shown here.</string>
+  <string name="portfolio_no_balance_yet">No balance yet</string>
   <string name="portfolio_wallet_ready">Your wallet is ready.</string>
   <string name="portfolio_wallet_ready_body">Receive tokens to this wallet. They show up here, on every network this app supports.</string>
   <string name="portfolio_token_gone">This token is no longer in this view.</string>
@@ -1088,8 +1087,8 @@
   <string name="portfolio_you_pay">You pay</string>
   <string name="portfolio_you_get">You get</string>
   <string name="portfolio_swap_note">Polkaswap shows price, fee and impact before you sign. This only picks the pair.</string>
-  <string name="portfolio_send_from">Send from</string>
-  <string name="portfolio_receive_to">Receive to</string>
+  <string name="portfolio_send_from">Send from which wallet?</string>
+  <string name="portfolio_receive_to">Receive to which wallet?</string>
   <string name="portfolio_sample_handoff_off">Sample portfolio: addresses are invented, so this does not open Send.</string>
   <string name="portfolio_nexus_send_unavailable">Sending on this network is not available for this wallet right now.</string>
   <string name="hide_zero_balances">Hide zero balances</string>
