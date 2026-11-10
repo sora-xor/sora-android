@@ -3776,6 +3776,10 @@ class WalletUpgradeBackupTest {
             scenario.onActivity { activity -> assertTrue(activity.window.attributes.flags and android.view.WindowManager.LayoutParams.FLAG_SECURE != 0) }
             androidx.test.espresso.Espresso.onView(androidx.test.espresso.matcher.ViewMatchers.withText(android.R.string.cancel))
                 .perform(androidx.test.espresso.action.ViewActions.click())
+            val deadline = SystemClock.uptimeMillis() + 5000
+            while (scenario.state != androidx.lifecycle.Lifecycle.State.DESTROYED && SystemClock.uptimeMillis() < deadline) {
+                SystemClock.sleep(25)
+            }
             assertEquals(androidx.lifecycle.Lifecycle.State.DESTROYED, scenario.state)
         }
         assertTrue(WalletUpgradeBackup.preservedGenerations(context).isEmpty())
