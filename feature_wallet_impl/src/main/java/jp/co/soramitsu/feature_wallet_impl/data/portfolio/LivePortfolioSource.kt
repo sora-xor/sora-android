@@ -46,6 +46,7 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.scan
 import kotlinx.coroutines.flow.transformLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.sync.Semaphore
@@ -98,7 +99,14 @@ class LivePortfolioSource @Inject constructor(
     private data class WalletRead(val atMillis: Long?, val balances: Map<String, ReadBalance>?)
 
     /** The app's rows for one wallet. Null while they are loading, or when they cannot be read. */
-    private data class WalletRows(val assets: List<Asset>?, val failed: Boolean = false)
+    private data class WalletRows(
+        val assets: List<Asset>?,
+        val failed: Boolean = false,
+        // Initial zero rows can precede an import's balance subscription. Once the subscription
+        // has held funds, a later zero is authoritative too: those funds were spent.
+        val confirmed: Boolean = false,
+        val remembered: Boolean = false,
+    )
 
     private data class WalletRaw(
         val account: SoraAccount,
@@ -116,6 +124,7 @@ class LivePortfolioSource @Inject constructor(
 
     private val reads = MutableStateFlow<Map<String, WalletRead>>(emptyMap())
     private val savedNetworks = MutableStateFlow<Map<String, List<SavedNetworkBalance>>>(emptyMap())
+    private val rememberedRows = MutableStateFlow<Map<String, WalletRows>>(emptyMap())
     private val failedReads = MutableStateFlow<Set<String>>(emptySet())
     private val lastReadsState = MutableStateFlow<Map<String, Long>>(emptyMap())
     private val readPermits = Semaphore(MAX_PARALLEL_READS)
@@ -144,6 +153,8 @@ class LivePortfolioSource @Inject constructor(
         userRepository.flowSoraAccountsList()
             .distinctUntilChanged()
             .flatMapLatest { accounts ->
+                val ids = accounts.map { it.substrateAddress }.toSet()
+                rememberedRows.update { rows -> rows.filterKeys { it in ids } }
                 if (accounts.isEmpty()) {
                     flowOf(PortfolioSnapshot.EMPTY)
                 } else {
@@ -189,7 +200,7 @@ class LivePortfolioSource @Inject constructor(
                     PortfolioWallet(id, wallet.name, id == selectedId)
                 },
                 holdings = saved.wallets.flatMap { (id, wallet) ->
-                    sora2Holdings(id, false, null, wallet.toRead()) { it.withChangeIf(!oldPrices) } +
+                    sora2Holdings(id, false, null, wallet.toRead(), priced = { it.withChangeIf(!oldPrices) }) +
                         nexusHoldings(id, null, wallet.networks, xorToken.withChangeIf(!oldPrices))
                 },
                 sync = saved.wallets.mapValues { (_, wallet) ->
@@ -306,16 +317,26 @@ class LivePortfolioSource @Inject constructor(
         val id = account.substrateAddress
         // Every whitelisted row, whatever its visibility: all the wallet holds. A row flow can wait
         // for the app's remote configuration, so it never holds the first picture back.
+        // A screen subscription or wallet-list change restarts this flow. Preserve a confirmed
+        // zero across that restart, without calling the remembered first frame live.
+        var lastRows = rememberedRows.value[id]?.copy(remembered = true) ?: WalletRows(null)
         val rows: Flow<WalletRows> = assetsRepository.subscribeAssetsOfWhitelist(id)
-            .map { WalletRows(it) }
-            .onStart { emit(WalletRows(null)) }
+            .scan(lastRows) { previous, assets ->
+                WalletRows(assets, confirmed = previous.confirmed || assets.any { it.balance.total.signum() > 0 })
+            }
+            .onEach {
+                lastRows = it
+                if (it.confirmed && !it.remembered) rememberedRows.update { rows -> rows + (id to it) }
+            }
             .catch { error ->
                 if (error is CancellationException) throw error
-                emit(WalletRows(null, failed = true))
+                // A database observation failure cannot bring back a balance from before a spend.
+                emit(lastRows.copy(failed = true))
             }
         // Balances only: the Portfolio view shows no history, so it never asks Torii for one.
         val nexus: Flow<List<NexusPortfolioBalance>?> =
             nexusPortfolioRepository.observeWallet(id, history = false)
+                .onEach { rememberNetworks(id, it) }
                 .map<List<NexusPortfolioBalance>, List<NexusPortfolioBalance>?> { it }
                 .onStart { emit(null) }
                 .catch { error ->
@@ -323,6 +344,23 @@ class LivePortfolioSource @Inject constructor(
                     emit(emptyList())
                 }
         return combine(rows, nexus) { r, n -> WalletRaw(account, r, n, clock()) }
+    }
+
+    /** A later failed read keeps the latest successful amount, including a confirmed zero. */
+    private fun rememberNetworks(walletId: String, rows: List<NexusPortfolioBalance>) {
+        savedNetworks.update { saved ->
+            val previous = saved[walletId].orEmpty().associateBy { it.network }
+            val latest = rows.mapNotNull { row ->
+                if (!row.networkLive) return@mapNotNull null
+                val quantity = row.xorQuantity?.toBigDecimalOrNull()?.takeIf { it.signum() >= 0 }
+                if (quantity != null) {
+                    SavedNetworkBalance(row.networkId.wireId, row.address, quantity.toPlainString())
+                } else {
+                    previous[row.networkId.wireId]?.takeIf { it.address == row.address }
+                }
+            }
+            saved + (walletId to latest)
+        }
     }
 
     /** The whitelist's tokens as the app prices them now; empty until they have loaded. */
@@ -401,18 +439,18 @@ class LivePortfolioSource @Inject constructor(
             val id = raw.account.substrateAddress
             val read = freshReads[id]
             val rows = raw.rows.assets
-            val sora2 = sora2Holdings(id, id == selectedId, rows, read, priced)
+            val sora2 = sora2Holdings(id, id == selectedId, rows, read, priced, raw.rows.confirmed)
             val nexus = nexusHoldings(id, raw.nexus, saved[id].orEmpty(), xorToken)
             holdings += sora2
             holdings += nexus
-            val sora2Known = read != null || rows.orEmpty().any { it.balance.total.signum() > 0 }
+            val sora2Known = read != null || raw.rows.confirmed
             val unread = !sora2Known ||
                 (sora2.isEmpty() && nexus.isEmpty() && raw.nexus == null && id !in saved)
             val unreachable = buildSet {
                 if (raw.rows.failed || (!sora2Known && id in failed)) add(WalletNetworkId.SORA2)
                 raw.nexus.orEmpty().filter { it.networkLive && it.xorQuantity == null }.forEach { add(it.networkId) }
             }
-            val live = id == selectedId && rows != null && node.up
+            val live = id == selectedId && raw.rows.confirmed && !raw.rows.remembered && !raw.rows.failed && node.up
             sync[id] = WalletSync(
                 refreshedAtMillis = if (live) maxOf(raw.emittedAtMillis, read?.atMillis ?: 0L) else read?.atMillis,
                 unreachable = unreachable,
@@ -445,12 +483,13 @@ class LivePortfolioSource @Inject constructor(
         rows: List<Asset>?,
         read: WalletRead?,
         priced: (PortfolioToken) -> PortfolioToken,
+        rowsConfirmed: Boolean = false,
     ): List<PortfolioHolding> {
         val balances = read?.balances
         val rowsHold = rows.orEmpty().any { it.balance.total.signum() > 0 }
         val useRead = balances != null && when {
             rows == null -> true
-            selected -> !rowsHold && balances.isNotEmpty()
+            selected -> !rowsConfirmed && !rowsHold && balances.isNotEmpty()
             else -> true
         }
         if (useRead) {

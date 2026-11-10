@@ -49,9 +49,10 @@ class SafeModePlatformFlowTest {
     @Test fun freshInstallDoesNotShowUpgradeWelcome() {
         info.lastUpdateTime = info.firstInstallTime; assertFalse(UpgradeWelcome.isPending(context))
     }
-    @Test fun updatedInstallShowsWelcomeUntilExplicitCompletion() {
-        assertTrue(UpgradeWelcome.isPending(context)); assertTrue(UpgradeWelcome.isPending(context))
+    @Test fun updatedInstallDoesNotRequireAWelcomeAcknowledgement() {
+        assertFalse(UpgradeWelcome.isPending(context)); assertFalse(UpgradeWelcome.isPending(context))
         assertTrue(preferences.all.isEmpty())
+        verify(exactly = 0) { packages.getPackageInfo(any<String>(), any<Int>()) }
     }
     @Test fun markingWelcomeDonePersistsAndSkipsPackageInspection() {
         UpgradeWelcome.markDone(context); clearMocks(packages, answers = false)
