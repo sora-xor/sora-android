@@ -199,6 +199,20 @@ class PortfolioHostFlowTest {
         compose.onNodeWithTag("NetworkChoiceminamoto").performClick()
         compose.runOnIdle { verify(exactly = 1) { hub.openNexusSend(balances.value.single()) } }
     }
+    @Test fun pausedLiveNetworkStaysInPickerAndBecomesAvailableWhenItsReadRecovers() {
+        choose(WalletNetworkId.SORA2, WalletNetworkId.TAIRA)
+        choices = choices.map { if (it.id == WalletNetworkId.TAIRA) it.copy(unavailable = WalletNetworkUnavailable.PAUSED) else it }
+        balances.value = listOf(balance(network = WalletNetworkId.TAIRA, address = "main-taira", available = false))
+        show(); click(R.string.common_send)
+        compose.onNodeWithTag("NetworkChoicetaira").assertIsNotEnabled()
+        compose.runOnIdle {
+            verify(exactly = 0) { portfolio.onQuickSend(); portfolio.openSora2Action(any()) }
+            choose(WalletNetworkId.SORA2, WalletNetworkId.TAIRA)
+            balances.value = listOf(balance(network = WalletNetworkId.TAIRA, address = "main-taira"))
+        }
+        compose.onNodeWithTag("NetworkChoicetaira").assertIsEnabled().performClick()
+        compose.runOnIdle { verify(exactly = 1) { hub.openNexusSend(balances.value.single()) } }
+    }
     @Test fun allWalletScopeKeepsWalletChoiceBeforeNetworkChoice() {
         current.value = model(scope = PortfolioScope.ALL); choose(WalletNetworkId.SORA2, WalletNetworkId.MINAMOTO)
         show(); click(R.string.common_send); click(R.string.common_receive)

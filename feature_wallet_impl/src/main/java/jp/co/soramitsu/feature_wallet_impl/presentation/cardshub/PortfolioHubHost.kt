@@ -72,7 +72,7 @@ internal fun PortfolioHomeHost(
     // Send and Receive ask which network only when the wallet has a real choice, as on the
     // classic home. All wallets first asks which wallet, then the same question for that wallet.
     val latestModel by rememberUpdatedState(model)
-    var networkPick by remember(sora2Portfolio?.address) { mutableStateOf<Pair<WalletNetworkAction, List<WalletNetworkChoice>>?>(null) }
+    var networkPick by remember(sora2Portfolio?.address) { mutableStateOf<WalletNetworkAction?>(null) }
     val openNetwork: (WalletNetworkAction, WalletNetworkChoice) -> Unit = remember(portfolio, hub, navController) {
         { action, choice ->
             if (choice.id == WalletNetworkId.SORA2) {
@@ -98,7 +98,7 @@ internal fun PortfolioHomeHost(
                     true
                 }
                 else -> {
-                    networkPick = action to choices
+                    networkPick = action
                     true
                 }
             }
@@ -109,10 +109,10 @@ internal fun PortfolioHomeHost(
     }
     PortfolioEffects(portfolio, hub, navController, sora2Portfolio?.address, chooseNetwork)
     if (inFront) {
-        networkPick?.let { (action, choices) ->
+        networkPick?.let { action ->
             NetworkPickerSheet(
                 action = action,
-                choices = choices,
+                choices = hub.networkChoices(action),
                 onPick = { choice ->
                     networkPick = null
                     openNetwork(action, choice)
