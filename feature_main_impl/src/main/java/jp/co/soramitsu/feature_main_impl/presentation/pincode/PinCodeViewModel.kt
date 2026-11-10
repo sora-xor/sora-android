@@ -51,7 +51,9 @@ import jp.co.soramitsu.feature_main_impl.domain.PinCodeInteractor
 import jp.co.soramitsu.feature_select_node_api.SelectNodeRouter
 import jp.co.soramitsu.sora.substrate.substrate.ConnectionManager
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -119,6 +121,7 @@ class PinCodeViewModel @Inject constructor(
     internal var removal by mutableStateOf<AccountRemovalState?>(null)
         private set
     private var removalOpenedAtReturn = 0
+    private var removalBriefingJob: Job? = null
 
     private val _biometryInitialDialogEvent = SingleLiveEvent<Unit>()
     val biometryInitialDialogEvent: LiveData<Unit> = _biometryInitialDialogEvent
@@ -438,7 +441,7 @@ class PinCodeViewModel @Inject constructor(
     }
 
     override fun onBackPressed() {
-        if (removal != null) {
+        if (removal != null || removalBriefingJob?.isActive == true) {
             // Back on the removal screen cancels: nothing was removed.
             onRemovalCancelled()
             return
@@ -474,7 +477,7 @@ class PinCodeViewModel @Inject constructor(
         // (whose Back returns here) does not ask for the PIN again. The phrase is veiled again
         // whenever the screen was left ([onRemovalHidden]). Coming back from the background closes
         // it instead, so a phone left on this screen shows no phrase to whoever picks it up.
-        if (removal != null) {
+        if (removal != null || removalBriefingJob?.isActive == true) {
             if (WalletSessionState.returnsFromBackground != removalOpenedAtReturn) onRemovalCancelled()
             return
         }
@@ -582,12 +585,15 @@ class PinCodeViewModel @Inject constructor(
      */
     private fun logout() {
         removalOpenedAtReturn = WalletSessionState.returnsFromBackground
-        viewModelScope.launch {
+        removalBriefingJob = viewModelScope.launch {
             try {
                 check(this@PinCodeViewModel::addresses.isInitialized) {
                     "WALLET_DELETION_TARGETS_MISSING"
                 }
                 val briefing = interactor.walletRemovalBriefing(addresses.toList())
+                // Leaving while the keys load cancels this request too. A late result must not
+                // reopen the secret screen after Back or a return from the background.
+                ensureActive()
                 removal = AccountRemovalState(
                     accounts = briefing.accounts.map { account ->
                         AccountRemovalState.Account(
@@ -664,6 +670,8 @@ class PinCodeViewModel @Inject constructor(
 
     fun onRemovalCancelled() {
         if (removal?.working == true) return
+        removalBriefingJob?.cancel()
+        removalBriefingJob = null
         removal = null
         mainRouter.popBackStack()
     }
