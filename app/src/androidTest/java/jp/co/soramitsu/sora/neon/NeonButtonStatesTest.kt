@@ -23,6 +23,7 @@ import jp.co.soramitsu.common.presentation.compose.theme.SoraAppTheme
 import jp.co.soramitsu.common.presentation.compose.theme.neon.FxPolicy
 import jp.co.soramitsu.common.presentation.compose.theme.neon.FxTier
 import jp.co.soramitsu.common.presentation.compose.theme.neon.LocalFx
+import jp.co.soramitsu.ui_core.lit.LitPreload
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Rule
@@ -50,6 +51,10 @@ class NeonButtonStatesTest {
 
     @Test fun withMotionOnTheLoadingSignalAnimates() {
         val motion = FxPolicy(FxTier.FULL, reduceMotion = false, opaqueGlass = false, highContrast = false)
+        // The filled button's lacquer is baked once per size on its first draw. Baked here first, so the
+        // screen capture below does not wait for it on a busy device.
+        val density = InstrumentationRegistry.getInstrumentation().targetContext.resources.displayMetrics.density
+        LitPreload(density, dark = false).lacquer(height = 40.dp, radius = 28.dp)
         compose.mainClock.autoAdvance = false
         compose.setContent {
             SoraAppTheme {
