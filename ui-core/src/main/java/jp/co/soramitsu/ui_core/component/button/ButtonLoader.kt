@@ -1,12 +1,9 @@
 package jp.co.soramitsu.ui_core.component.button
 
+import android.animation.ValueAnimator
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -20,17 +17,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
@@ -40,42 +34,34 @@ import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.component.button.properties.Size
 import jp.co.soramitsu.ui_core.extensions.withOpacity
 import jp.co.soramitsu.ui_core.resources.Dimens
+import jp.co.soramitsu.ui_core.sacred.SacredSeal
+import jp.co.soramitsu.ui_core.sacred.SacredSealState
 import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.elevation
 import jp.co.soramitsu.ui_core.theme.opacity
 
+/**
+ * What a button turns into while what it sent is in flight: the open circle of heaven turning round the square
+ * of earth standing on its corner ([SacredSeal]).
+ */
 @Composable
 internal fun ButtonLoader(
     size: Dp
 ) {
-    val currentRotation = remember { mutableStateOf(0f) }
-    val rotation = remember { Animatable(currentRotation.value) }
-    val animationDuration = 3000
-    val targetShift = 360f
-
-    LaunchedEffect(Unit) {
-        rotation.animateTo(
-            targetValue = currentRotation.value + targetShift,
-            animationSpec = infiniteRepeatable(
-                animation = tween(animationDuration, easing = LinearEasing),
-                repeatMode = RepeatMode.Restart
-            )
-        ) {
-            currentRotation.value = value
-        }
-    }
-
     Box(
         modifier = Modifier.size(size)
             .clip(CircleShape)
             .background(MaterialTheme.customColors.fgPrimary.withOpacity(MaterialTheme.opacity.actionBgDisabled)),
         contentAlignment = Alignment.Center
     ) {
-        Icon(
-            modifier = Modifier.rotate(rotation.value),
-            painter = painterResource(R.drawable.ic_loading),
-            contentDescription = null,
-            tint = MaterialTheme.customColors.fgPrimary.withOpacity(MaterialTheme.opacity.actionFgDisabled)
+        val ink = MaterialTheme.customColors.fgPrimary.withOpacity(MaterialTheme.opacity.actionFgDisabled)
+        SacredSeal(
+            state = SacredSealState.WORKING,
+            working = ink,
+            settled = ink,
+            broken = ink,
+            diameter = size * 0.58f,
+            loops = ValueAnimator.areAnimatorsEnabled(),
         )
     }
 }

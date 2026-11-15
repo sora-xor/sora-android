@@ -78,7 +78,9 @@ import jp.co.soramitsu.common.presentation.compose.neon.safemode.SafeModeScreen
 import jp.co.soramitsu.common.presentation.compose.theme.neon.LocalFx
 import jp.co.soramitsu.common.presentation.compose.theme.neon.neon
 import jp.co.soramitsu.ui_core.lit.LitLed
+import jp.co.soramitsu.ui_core.lit.LocalLitPalette
 import jp.co.soramitsu.ui_core.lit.litWell
+import jp.co.soramitsu.ui_core.sacred.SacredEmblem
 import jp.co.soramitsu.common.presentation.compose.theme.tokens.NeonType
 import jp.co.soramitsu.common.util.ext.shake
 import jp.co.soramitsu.common.util.testTagAsId
@@ -122,6 +124,8 @@ fun PincodeScreen(
     }
     BoxWithConstraints(Modifier.fillMaxSize().background(n.neuBg)) {
         val keySize = if (maxWidth >= 400.dp && maxHeight >= 760.dp) 80.dp else 72.dp
+        // Room for the emblem between the dots and the keys; short screens go without.
+        val showsEmblem = maxHeight >= 720.dp
         Column(
             Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).heightIn(min = maxHeight),
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -149,6 +153,16 @@ fun PincodeScreen(
                         wrong = pinCodeScreenState.enableShakeAnimation,
                     )
                 }
+            }
+            // The planet in its ring. The ring is the lock: each digit draws one more of its circles.
+            if (showsEmblem) {
+                SacredEmblem(
+                    share = pinCodeScreenState.checkedDotsCount.toFloat() / pinCodeScreenState.maxDotsCount.coerceAtLeast(1),
+                    wrong = pinCodeScreenState.enableShakeAnimation,
+                    line = LocalLitPalette.current.ink,
+                    wrongColor = n.error,
+                    reduceMotion = fx.reduceMotion,
+                )
             }
             CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
                 PincodeInputView(

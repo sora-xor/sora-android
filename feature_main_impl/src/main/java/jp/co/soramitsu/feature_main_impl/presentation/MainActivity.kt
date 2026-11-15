@@ -22,6 +22,7 @@ package jp.co.soramitsu.feature_main_impl.presentation
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import jp.co.soramitsu.ui_core.lit.LitDome
+import jp.co.soramitsu.ui_core.sacred.TenmonFlight
 import android.app.ActivityOptions
 import android.content.ComponentCallbacks2
 import android.content.Context
@@ -256,6 +257,11 @@ class MainActivity :
             type(statusBars = true) {
                 padding(top = true)
             }
+        }
+
+        // The flight through the gate of heaven: once for each start of the app, over the first screen.
+        if (!restoredFromSavedState) {
+            TenmonFlight.launchOnce(this, FxPolicy.from(DeviceFxSignals.read(this), NeonEffectsPreference.reduceEffects.value).litMotion)
         }
     }
 
