@@ -1,6 +1,7 @@
 package jp.co.soramitsu.feature_wallet_impl.presentation.portfolio
 
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.Easing
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -15,10 +16,15 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
@@ -26,13 +32,17 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.graphics.asAndroidPath
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.withTransform
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.PathParser
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.semantics.hideFromAccessibility
@@ -43,16 +53,23 @@ import jp.co.soramitsu.common.presentation.compose.theme.neon.LocalFx
 import jp.co.soramitsu.common.presentation.compose.theme.neon.neon
 import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.FanSlice
 import jp.co.soramitsu.feature_wallet_impl.presentation.portfolio.motion.TiltState
+import jp.co.soramitsu.feature_wallet_impl.presentation.portfolio.motion.layerOffset
 import jp.co.soramitsu.feature_wallet_impl.presentation.portfolio.motion.tiltLayer
+import jp.co.soramitsu.ui_core.lit.LitHeroFrame
+import jp.co.soramitsu.ui_core.lit.LitHeroPerformance
+import jp.co.soramitsu.ui_core.lit.LitHeroRenderer
+import jp.co.soramitsu.ui_core.lit.LitHeroSegment
 import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.math.cos
+import kotlin.math.exp
 import kotlin.math.floor
 import kotlin.math.hypot
 import kotlin.math.min
 import kotlin.math.sin
 import kotlin.math.sqrt
+import kotlinx.coroutines.launch
 
 /**
  * Geometry of the sky in dp (portfolio-view SPEC §3.1). On Android the sky starts below the status
@@ -95,6 +112,13 @@ internal object SkyGeometry {
     const val DIMMED = 0.26f
 
     const val INTRO_MS = 1100
+
+    /** Scrolling: the planet lags by this share, so the card slides over it. */
+    const val SCROLL_LAG = 0.24f
+
+    /** Pulled past the top by this many dp, the planet has swollen by [SWELL]. */
+    const val SWELL_PULL = 140f
+    const val SWELL = 0.14f
 
     /** Depths at full deflection, x then y (y is 0.65 × x). The planet and its ring move as one. */
     const val STARS = 3f
@@ -203,32 +227,118 @@ internal fun PortfolioSky(
     tilt: TiltState,
     onSliceTap: (String) -> Unit,
     modifier: Modifier = Modifier,
+    heroVisible: Boolean = true,
+    reading: Boolean = false,
+    scrollDp: () -> Float = { 0f },
+    pullDp: () -> Float = { 0f },
     overlay: @Composable BoxScope.() -> Unit,
 ) {
     val dark = isDarkTheme
     val fx = LocalFx.current
     val page = MaterialTheme.neon.canvas
+    val glyphForLit = remember { soraGlyphPath() }
+    val litHero = remember { LitHeroRenderer(glyphForLit.asAndroidPath(), SORA_GLYPH_VIEWPORT) }
     // The sky fades out at its bottom edge into the page behind the content.
-    val background = remember(dark) {
-        val top = if (dark) PortfolioPalette.nightTop else PortfolioPalette.dawnTop
-        val bottom = if (dark) PortfolioPalette.nightBottom else PortfolioPalette.dawnBottom
-        Brush.verticalGradient(0f to top, 0.72f to bottom, 1f to bottom.copy(alpha = 0f))
+    val background = remember(dark, litHero) {
+        if (litHero.isAvailable) {
+            SolidColor(Color.Transparent)
+        } else {
+            val top = if (dark) PortfolioPalette.nightTop else PortfolioPalette.dawnTop
+            val bottom = if (dark) PortfolioPalette.nightBottom else PortfolioPalette.dawnBottom
+            Brush.verticalGradient(0f to top, 0.72f to bottom, 1f to bottom.copy(alpha = 0f))
+        }
     }
     val intro = rememberRingIntro(fan.map { it.key }, animate = !fx.reduceMotion)
+    val comet = rememberComet(
+        running = litHero.isAvailable && heroVisible && fx.litMotion && !LitHeroPerformance.isSlow,
+        reading = reading,
+    )
+    val bloom = rememberBloom(reading, enabled = litHero.isAvailable && !fx.reduceMotion)
+    LaunchedEffect(LitHeroPerformance.isSlow) {
+        if (LitHeroPerformance.isSlow) LitHeroPerformance.restThenRetry()
+    }
     // Reduce Motion: the highlight only fades in and out.
     val highlight by animateFloatAsState(if (highlighted != null) 1f else 0f, tween(220), label = "ringHighlight")
     val arcs = remember(fan) { ringArcs(fan) }
     val glyph = remember { soraGlyphPath() }
     val currentFan by rememberUpdatedState(fan)
     val currentTap by rememberUpdatedState(onSliceTap)
+    val currentScroll by rememberUpdatedState(scrollDp)
     Box(
         modifier
             .fillMaxWidth()
             .height(SkyGeometry.HEIGHT)
             .background(background)
     ) {
+        if (litHero.isAvailable) {
+            // The ray-traced scene: planet, ring and what they cast on the page, all in one pass.
+            Canvas(
+                Modifier
+                    .fillMaxSize()
+                    // Scrolling moves the finished picture: the shader runs only when the scene itself changes.
+                    .graphicsLayer {
+                        compositingStrategy = CompositingStrategy.Offscreen
+                        translationY = (scrollDp() * SkyGeometry.SCROLL_LAG).dp.toPx()
+                        val swell = 1f + min(pullDp(), SkyGeometry.SWELL_PULL) / SkyGeometry.SWELL_PULL * SkyGeometry.SWELL
+                        scaleX = swell
+                        scaleY = swell
+                        transformOrigin = TransformOrigin(0.5f, SkyGeometry.CENTER_Y / SkyGeometry.HEIGHT)
+                    }
+                    .semantics { hideFromAccessibility() }
+            ) {
+                if (!heroVisible) return@Canvas
+                val shift = layerOffset(
+                    tilt.x.toDouble(),
+                    tilt.y.toDouble(),
+                    SkyGeometry.SYSTEM.toDouble(),
+                    (SkyGeometry.SYSTEM * SkyGeometry.Y_RATIO).toDouble(),
+                    1.0,
+                )
+                val pose = RingPose.at(Offset.Zero, 1f, tilt.x, tilt.y)
+                val radians = (PI / 180f).toFloat()
+                val gap = if (arcs.size > 1) SkyGeometry.GAP_DEG else 0f
+                val reveal = intro.value
+                litHero.draw(
+                    this,
+                    LitHeroFrame(
+                        center = Offset(
+                            size.width / density / 2f + shift.dx.toFloat(),
+                            SkyGeometry.CENTER_Y.value + shift.dy.toFloat(),
+                        ),
+                        planetRadius = SkyGeometry.PLANET_RADIUS.value,
+                        ringRadius = SkyGeometry.RING_RADIUS.value,
+                        ringWidth = SkyGeometry.RING_WIDTH.value,
+                        ringThickness = 3.2f,
+                        outerOrbit = SkyGeometry.ORBIT_OUTER.value,
+                        aspect = pose.aspect,
+                        rollRadians = pose.rollDeg * radians,
+                        tiltX = tilt.x,
+                        tiltY = tilt.y,
+                        reveal = reveal,
+                        cometAngle = comet.angle,
+                        cometPower = comet.power,
+                        bottomFade = SkyGeometry.HEIGHT.value * 0.24f,
+                        dark = dark,
+                        ringStart = (arcs.firstOrNull()?.start ?: 0f) * radians,
+                        segments = arcs.map { arc ->
+                            val key = arc.slice.key ?: OTHER_KEY
+                            val selected = highlighted == key
+                            LitHeroSegment(
+                                start = (arc.start + gap / 2f) * radians,
+                                sweep = (arc.sweep - gap).coerceAtLeast(0.6f) * radians,
+                                color = colorOf(arc.slice.key),
+                                strength = if (selected) 1f else 1f - (1f - SkyGeometry.DIMMED) * highlight,
+                                widthScale = if (selected) 1f + (SkyGeometry.SELECTED_WIDTH - 1f) * highlight else 1f,
+                                lift = if (selected) highlight else 0f,
+                            )
+                        },
+                        bloom = bloom.value,
+                    ),
+                )
+            }
+        }
         // Nebula and the planet's halo: x only.
-        Canvas(
+        if (!litHero.isAvailable) Canvas(
             Modifier
                 .fillMaxSize()
                 .tiltLayer(tilt, SkyGeometry.NEBULA, 0f)
@@ -236,7 +346,7 @@ internal fun PortfolioSky(
         ) {
             drawNebula(dark, Offset(size.width / 2f, SkyGeometry.CENTER_Y.toPx()))
         }
-        if (dark) {
+        if (dark && !litHero.isAvailable) {
             Canvas(
                 Modifier
                     .fillMaxSize()
@@ -253,8 +363,10 @@ internal fun PortfolioSky(
                 .semantics { hideFromAccessibility() }
                 .pointerInput(Unit) {
                     detectTapGestures { position ->
+                        // The ring is where it is drawn: lower than its rest, once the page has scrolled.
+                        val lag = if (litHero.isAvailable) (currentScroll() * SkyGeometry.SCROLL_LAG).dp.toPx() else 0f
                         val pose = RingPose.at(
-                            Offset(size.width / 2f, SkyGeometry.CENTER_Y.toPx()),
+                            Offset(size.width / 2f, SkyGeometry.CENTER_Y.toPx() + lag),
                             SkyGeometry.RING_RADIUS.toPx(),
                             tilt.x,
                             tilt.y,
@@ -270,6 +382,7 @@ internal fun PortfolioSky(
                     }
                 }
         ) {
+            if (litHero.isAvailable) return@Canvas
             val pose = RingPose.at(
                 Offset(size.width / 2f, SkyGeometry.CENTER_Y.toPx()),
                 SkyGeometry.RING_RADIUS.toPx(),
@@ -289,15 +402,93 @@ internal fun PortfolioSky(
             drawPlanet(pose.center, SkyGeometry.PLANET_RADIUS.toPx(), glyph, dark, tilt.x, tilt.y)
             drawRingHalf(pose, ring, front = true)
         }
-        Box(
-            Modifier
-                .fillMaxWidth()
-                .height(SkyGeometry.TOP_FADE)
-                .background(Brush.verticalGradient(listOf(page, page.copy(alpha = 0f))))
-        )
+        if (!litHero.isAvailable) {
+            Box(
+                Modifier
+                    .fillMaxWidth()
+                    .height(SkyGeometry.TOP_FADE)
+                    .background(Brush.verticalGradient(listOf(page, page.copy(alpha = 0f))))
+            )
+        }
         overlay()
     }
 }
+
+/** The light that laps the ring while the sky is on screen, faster while balances are being read. */
+@Stable
+private class CometState {
+    var angle by mutableFloatStateOf((PI / 2).toFloat())
+    var power by mutableFloatStateOf(0f)
+}
+
+@Composable
+private fun rememberComet(running: Boolean, reading: Boolean): CometState {
+    val state = remember { CometState() }
+    val readingNow by rememberUpdatedState(reading)
+    LaunchedEffect(running) {
+        var last = 0L
+        var skip = false
+        var started = 0L
+        var late = 0
+        while (running || state.power > 0.002f) {
+            withFrameNanos { now ->
+                val dt = if (last == 0L) 0f else ((now - last) / 1_000_000_000f).coerceAtMost(0.1f)
+                if (started == 0L) started = now
+                // Whatever else the first moments on screen are busy with is not the GPU's fault.
+                if (running && last != 0L && now - started > COMET_SETTLE_NANOS) {
+                    late = if (now - last > COMET_LATE_NANOS) late + 1 else (late - 1).coerceAtLeast(0)
+                    if (late >= COMET_LATE_FRAMES) LitHeroPerformance.markSlow()
+                }
+                last = now
+                // Thirty frames a second are plenty for the comet alone.
+                skip = !skip
+                if (!skip) {
+                    val lap = if (readingNow) COMET_LAP_READING else COMET_LAP
+                    state.power += ((if (running) 1f else 0f) - state.power) * min(2f * dt * 3.5f, 1f)
+                    state.angle = (state.angle + 2f * dt * 2f * PI.toFloat() / lap) % (2f * PI.toFloat())
+                }
+            }
+        }
+        state.power = 0f
+    }
+    return state
+}
+
+private const val COMET_LAP = 9f
+private const val COMET_LAP_READING = 2.6f
+private const val COMET_SETTLE_NANOS = 1_500_000_000L
+
+/** Under twenty frames a second for this many frames more than not: this phone's GPU cannot carry the comet. */
+private const val COMET_LATE_NANOS = 50_000_000L
+private const val COMET_LATE_FRAMES = 24
+
+/** Runs [action] each time a read ends. It outlives the effect that noticed, so a new read does not freeze it midway. */
+@Composable
+internal fun OnReadFinished(reading: Boolean, action: suspend () -> Unit) {
+    val scope = rememberCoroutineScope()
+    val currentAction by rememberUpdatedState(action)
+    val was = remember { booleanArrayOf(reading) }
+    LaunchedEffect(reading) {
+        if (was[0] && !reading) scope.launch { currentAction() }
+        was[0] = reading
+    }
+}
+
+/** When a read finishes the scene flares once and dies away. */
+@Composable
+private fun rememberBloom(reading: Boolean, enabled: Boolean): State<Float> {
+    val bloom = remember { Animatable(0f) }
+    OnReadFinished(reading) {
+        if (enabled) {
+            bloom.snapTo(1f)
+            bloom.animateTo(0f, tween(BLOOM_MS, easing = BLOOM_DECAY))
+        }
+    }
+    return bloom.asState()
+}
+
+private const val BLOOM_MS = 1700
+private val BLOOM_DECAY = Easing { t -> 1f - exp(-5.8f * t) }
 
 /** The ring draws itself in, once per set of slices (first data, a new lens). */
 @Composable

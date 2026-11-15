@@ -40,6 +40,7 @@ import jp.co.soramitsu.common.util.BuildUtils
 import jp.co.soramitsu.common.util.Flavor
 import jp.co.soramitsu.core_db.WalletUpgradeBackup
 import jp.co.soramitsu.feature_select_node_api.NodeManager
+import jp.co.soramitsu.feature_wallet_impl.presentation.portfolio.PortfolioPreload
 import jp.co.soramitsu.sora.splash.domain.StartupTimeTrace
 import timber.log.Timber
 
@@ -100,6 +101,7 @@ open class SoraApp : Application(), Configuration.Provider, ImageLoaderFactory {
 
         registerActivityLifecycleCallbacks(resourceManager)
         registerActivityLifecycleCallbacks(StartNodeManagerWhenWalletReady())
+        registerActivityLifecycleCallbacks(PrepareWalletHomeOnFirstActivity())
 
         OptionsProvider.CURRENT_VERSION_CODE = BuildConfig.VERSION_CODE
         OptionsProvider.CURRENT_VERSION_NAME = BuildConfig.VERSION_NAME
@@ -114,6 +116,21 @@ open class SoraApp : Application(), Configuration.Provider, ImageLoaderFactory {
      * clear the gate without a restart, so every later activity creation or resume tries again
      * until the node connection has started.
      */
+    /** Someone is opening the app, not a background job waking it: get the Wallet home's materials ready. */
+    private inner class PrepareWalletHomeOnFirstActivity : ActivityLifecycleCallbacks {
+        override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {
+            unregisterActivityLifecycleCallbacks(this)
+            PortfolioPreload.start(this@SoraApp)
+        }
+
+        override fun onActivityStarted(activity: Activity) = Unit
+        override fun onActivityResumed(activity: Activity) = Unit
+        override fun onActivityPaused(activity: Activity) = Unit
+        override fun onActivityStopped(activity: Activity) = Unit
+        override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) = Unit
+        override fun onActivityDestroyed(activity: Activity) = Unit
+    }
+
     private inner class StartNodeManagerWhenWalletReady : ActivityLifecycleCallbacks {
         private fun startWhenReady() {
             if (WalletUpgradeBackup.blockingFailure() != null) return

@@ -44,19 +44,19 @@ object DayThemeColors {
 
     val AccentTertiaryContainer = Brown10
 
-    val BgPage = Brown5
+    val BgPage = Color(0xFFE8E2DE)
 
-    val BgSurface = Color(0xffffffff)
+    val BgSurface = Color(0xFFF6F2EF)
 
-    val BgSurfaceVariant = Brown10
+    val BgSurfaceVariant = Color(0xFFE7E1DD)
 
     val BgSurfaceInverted = Brown90
 
-    val FgPrimary = Brown90
+    val FgPrimary = Color(0xFF2A1A1C)
 
-    val FgSecondary = Brown50
+    val FgSecondary = Color(0xFF6F5D5E)
 
-    val FgTertiary = Brown30
+    val FgTertiary = Color(0xFF8A7675)
 
     val FgInverted = Brown5
 

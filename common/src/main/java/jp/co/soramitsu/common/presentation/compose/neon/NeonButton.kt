@@ -68,6 +68,9 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
+import jp.co.soramitsu.ui_core.lit.litLacquerGloss
+import jp.co.soramitsu.ui_core.lit.litLacquerShadow
+import jp.co.soramitsu.ui_core.lit.litPlate
 import androidx.compose.ui.unit.dp
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.presentation.compose.theme.neon.GlowSpec
@@ -110,7 +113,8 @@ private fun styleFor(variant: NeonVariant, n: NeonTokens, enabled: Boolean): Neo
         NeonVariant.Swap -> filled(n.ctaSwap, n.glowSwap)
         NeonVariant.Safe -> filled(n.ctaSafe, n.glowSafe)
         NeonVariant.Secondary -> NeonButtonStyle(
-            fill = SolidColor(n.glassFill),
+            // A raised plate stands behind it.
+            fill = null,
             pressedFill = SolidColor(n.glassFillPressed),
             label = if (enabled) n.textPrimary else n.textDisabled,
             edge = if (enabled) n.borderGlass else null,
@@ -126,7 +130,7 @@ private fun styleFor(variant: NeonVariant, n: NeonTokens, enabled: Boolean): Neo
             pressedOverlay = null,
         )
         NeonVariant.Destructive -> NeonButtonStyle(
-            fill = SolidColor(n.glassFill),
+            fill = null,
             pressedFill = SolidColor(n.errorContainer),
             label = if (enabled) n.error else n.textDisabled,
             edge = if (enabled) SolidColor(n.error.copy(alpha = .60f)) else null,
@@ -141,6 +145,8 @@ private fun styleFor(variant: NeonVariant, n: NeonTokens, enabled: Boolean): Neo
  * Large 56, Small 40, ExtraSmall 32. Disabled buttons need a reason (in the label or in a line
  * below). [pulse] is only for the two whitelisted CTAs of design spec 4.7.2.
  */
+private val NeonPillRadius = 28.dp
+
 @Composable
 fun NeonButton(
     modifier: Modifier = Modifier,
@@ -174,6 +180,15 @@ fun NeonButton(
         peak = style.glow?.peak ?: 0f,
     )
     val loadingLabel = stringResource(R.string.common_loading)
+    // The filled variants are lacquer: a gloss over the fill and their own colour on the plate below.
+    val lacquered = enabled && style.fill != null && shape == NeonPillShape &&
+        (variant == NeonVariant.Primary || variant == NeonVariant.Swap || variant == NeonVariant.Safe)
+    val plated = shape == NeonPillShape && (variant == NeonVariant.Secondary || variant == NeonVariant.Destructive)
+    val lacquerShadow = when (variant) {
+        NeonVariant.Swap -> n.polkaswapBrand
+        NeonVariant.Safe -> n.success
+        else -> n.brandRed
+    }
     val sizeModifier = if (shape == CircleShape) {
         Modifier.requiredSizeIn(minWidth = size, minHeight = size)
     } else {
@@ -218,6 +233,8 @@ fun NeonButton(
                     scaleX = scale
                     scaleY = scale
                 }
+                .then(if (lacquered) Modifier.litLacquerShadow(lacquerShadow, NeonPillRadius) else Modifier)
+                .then(if (plated) Modifier.litPlate(NeonPillRadius, elevation = 8.dp) else Modifier)
                 .clip(shape)
                 .then(
                     when {
@@ -226,6 +243,7 @@ fun NeonButton(
                         else -> Modifier
                     },
                 )
+                .then(if (lacquered) Modifier.litLacquerGloss(NeonPillRadius) else Modifier)
                 .drawWithContent {
                     drawContent()
                     if (pressed && style.pressedOverlay != null) drawRect(style.pressedOverlay)

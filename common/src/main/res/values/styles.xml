@@ -175,4 +175,17 @@
         <item name="android:indeterminate">true</item>
         <item name="android:indeterminateDuration">1300</item>
     </style>
+    <!-- The selected tab sits in a recess in the bar. -->
+    <style name="SoraBottomNavSelection" parent="Widget.Material3.BottomNavigationView.ActiveIndicator">
+        <item name="android:width">60dp</item>
+        <item name="android:height">30dp</item>
+        <item name="android:color">@color/neon_surface_variant</item>
+        <item name="shapeAppearance">@style/SoraBottomNavSelectionShape</item>
+    </style>
+
+    <style name="SoraBottomNavSelectionShape" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">50%</item>
+    </style>
+
 </resources>

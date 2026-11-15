@@ -32,7 +32,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
@@ -57,6 +56,7 @@ import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -89,6 +89,12 @@ import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.isTestnet
 import jp.co.soramitsu.feature_wallet_impl.presentation.cardshub.NetworkTagChip
 import jp.co.soramitsu.ui_core.component.button.properties.Size as ButtonSize
 import jp.co.soramitsu.ui_core.component.icons.TokenIcon
+import jp.co.soramitsu.ui_core.lit.LitEngravedLine
+import jp.co.soramitsu.ui_core.lit.LitLed
+import jp.co.soramitsu.ui_core.lit.LocalLitPalette
+import jp.co.soramitsu.ui_core.lit.litCoin
+import jp.co.soramitsu.ui_core.lit.litPlate
+import jp.co.soramitsu.ui_core.lit.litWell
 import jp.co.soramitsu.ui_core.theme.customTypography
 
 /** Colours of the portfolio surfaces that the theme's tokens do not define (portfolio-view SPEC §3.1). */
@@ -247,12 +253,12 @@ internal fun PolkaswapFlower(modifier: Modifier = Modifier, tint: Color? = null)
     )
 }
 
-/** A network's badge: SORA2 wears the SORA mark; any other network its monogram. */
+/** A network's badge, struck as a coin: SORA2 wears the SORA mark; any other network its monogram. */
 @Composable
 internal fun NetworkBadge(network: WalletNetworkId, size: Dp, modifier: Modifier = Modifier) {
     if (network == WalletNetworkId.SORA2) {
         val glyph = remember { soraGlyphPath() }
-        Canvas(modifier.size(size)) {
+        Canvas(modifier.size(size).litCoin()) {
             val r = this.size.minDimension / 2f
             drawCircle(PortfolioPalette.soraRed, radius = r)
             scale(2f * r / SORA_GLYPH_VIEWPORT, 2f * r / SORA_GLYPH_VIEWPORT, Offset.Zero) {
@@ -265,6 +271,7 @@ internal fun NetworkBadge(network: WalletNetworkId, size: Dp, modifier: Modifier
     Box(
         modifier = modifier
             .size(size)
+            .litCoin()
             .clip(CircleShape)
             .background(Brush.linearGradient(listOf(colors.first, colors.second))),
         contentAlignment = Alignment.Center,
@@ -288,9 +295,9 @@ internal fun WalletAvatar(name: String, color: Color, size: Dp, modifier: Modifi
     Box(
         modifier = modifier
             .size(size)
+            .litCoin()
             .clip(CircleShape)
-            .background(Brush.linearGradient(listOf(lerp(color, Color.White, 0.16f), lerp(color, Color.Black, 0.34f))))
-            .border(1.dp, Color.White.copy(alpha = 0.22f), CircleShape),
+            .background(Brush.linearGradient(listOf(lerp(color, Color.White, 0.16f), lerp(color, Color.Black, 0.34f)))),
         contentAlignment = Alignment.Center,
     ) {
         Text(
@@ -306,7 +313,7 @@ internal fun WalletAvatar(name: String, color: Color, size: Dp, modifier: Modifi
 @Composable
 internal fun AllWalletsAvatar(size: Dp, modifier: Modifier = Modifier) {
     val glyph = remember { soraGlyphPath() }
-    Canvas(modifier.size(size)) {
+    Canvas(modifier.size(size).litCoin()) {
         val r = this.size.minDimension / 2f
         drawCircle(
             Brush.linearGradient(
@@ -319,26 +326,14 @@ internal fun AllWalletsAvatar(size: Dp, modifier: Modifier = Modifier) {
         scale(2f * r / SORA_GLYPH_VIEWPORT, 2f * r / SORA_GLYPH_VIEWPORT, Offset.Zero) {
             drawPath(glyph, Color.White)
         }
-        drawCircle(Color.White.copy(alpha = 0.22f), radius = r - 0.5.dp.toPx(), style = Stroke(width = 1.dp.toPx()))
     }
 }
 
 /** One small dot per wallet that holds a token. */
 @Composable
 internal fun WalletDots(colors: List<Color>, modifier: Modifier = Modifier) {
-    val ring = MaterialTheme.neon.glassSolid
-    Row(modifier, horizontalArrangement = Arrangement.spacedBy((-3).dp)) {
-        colors.forEach { color ->
-            Box(
-                Modifier
-                    .size(11.dp)
-                    .clip(CircleShape)
-                    .background(ring)
-                    .padding(1.5.dp)
-                    .clip(CircleShape)
-                    .background(color)
-            )
-        }
+    Row(modifier, horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+        colors.forEach { color -> LitLed(color, diameter = 7.dp) }
     }
 }
 
@@ -348,7 +343,7 @@ internal fun WalletDots(colors: List<Color>, modifier: Modifier = Modifier) {
  */
 @Composable
 internal fun TokenOrb(iconUri: String?, size: Dp, modifier: Modifier = Modifier) {
-    Box(modifier.size(size).clip(CircleShape), contentAlignment = Alignment.Center) {
+    Box(modifier.size(size).litCoin().clip(CircleShape), contentAlignment = Alignment.Center) {
         TokenIcon(uri = iconUri ?: DEFAULT_ICON_URI, size = size)
     }
 }
@@ -404,6 +399,23 @@ internal fun PortfolioCard(
     }
 }
 
+/** The floor of a well that means something: mostly porcelain, a breath of the colour. */
+@Composable
+internal fun litTint(color: Color): Color {
+    val palette = LocalLitPalette.current
+    return if (palette.dark) lerp(palette.wellFloor, color, 0.16f) else lerp(lerp(palette.wellFloor, Color.White, 0.42f), color, 0.09f)
+}
+
+/** Lays this out larger than its slot by these margins, without moving what is round it. */
+internal fun Modifier.bleed(horizontal: Dp, vertical: Dp): Modifier = layout { measurable, constraints ->
+    val h = horizontal.roundToPx()
+    val v = vertical.roundToPx()
+    val placeable = measurable.measure(constraints.copy(maxWidth = constraints.maxWidth + 2 * h, minWidth = 0))
+    val width = (placeable.width - 2 * h).coerceAtLeast(0)
+    val height = (placeable.height - 2 * v).coerceAtLeast(0)
+    layout(width, height) { placeable.place(-h, -v) }
+}
+
 /** A block of rows inside a sheet. */
 @Composable
 internal fun SheetCard(content: @Composable ColumnScope.() -> Unit) {
@@ -414,23 +426,8 @@ internal fun SheetCard(content: @Composable ColumnScope.() -> Unit) {
 
 @Composable
 internal fun RowDivider(modifier: Modifier = Modifier, inset: Dp = 16.dp) {
-    Box(
-        modifier
-            .fillMaxWidth()
-            .padding(horizontal = inset)
-            .height(1.dp)
-            .background(MaterialTheme.neon.hairline)
-    )
+    LitEngravedLine(modifier.padding(horizontal = inset))
 }
-
-/**
- * The fill behind a status note. The classic night palette's containers are pale, made for dark
- * text, so on a dark page a note sits on a tint of its own colour instead.
- */
-@Composable
-@ReadOnlyComposable
-internal fun statusFill(edge: Color, container: Color): Color =
-    if (MaterialTheme.neon.isDark) edge.copy(alpha = 0.16f) else container
 
 /** Info or warning banner with a coloured edge. */
 @Composable
@@ -442,13 +439,11 @@ internal fun PortfolioBanner(
 ) {
     val n = MaterialTheme.neon
     val edge = if (warning) n.warning else n.info
-    val fill = statusFill(edge, if (warning) n.warningContainer else n.infoContainer)
+    val floor = litTint(edge)
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .background(fill)
-            .border(1.dp, edge.copy(alpha = 0.35f), RoundedCornerShape(16.dp))
+            .litWell(radius = 16.dp, depth = 2.2.dp, floor = floor)
             .padding(14.dp),
     ) {
         PortfolioGlyph(if (warning) Glyph.WARNING else Glyph.INFO, edge, Modifier.size(20.dp))
@@ -598,13 +593,14 @@ internal fun SheetRow(
 ) {
     val n = MaterialTheme.neon
     val shape = RoundedCornerShape(18.dp)
+    val floor = litTint(n.brandRed)
     Row(
         modifier = modifier
             .fillMaxWidth()
             .heightIn(min = 68.dp)
+            // Raised at rest, pressed in when it is the current choice.
+            .then(if (selected) Modifier.litWell(radius = 18.dp, depth = 2.6.dp, floor = floor) else Modifier.litPlate(radius = 18.dp, elevation = 8.dp))
             .clip(shape)
-            .background(if (selected) n.brandRed.copy(alpha = if (n.isDark) 0.14f else 0.07f) else n.glassFill)
-            .border(if (selected) 1.5.dp else 1.dp, if (selected) n.brandRed else n.hairline, shape)
             .clickable(role = role, onClick = onClick)
             .padding(horizontal = 14.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,

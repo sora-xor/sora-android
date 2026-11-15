@@ -1,9 +1,20 @@
 package jp.co.soramitsu.feature_wallet_impl.presentation.portfolio
 
 import android.text.format.DateUtils
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.CubicBezierEasing
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -32,7 +43,9 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.material.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -44,8 +57,11 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
@@ -61,11 +77,13 @@ import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import jp.co.soramitsu.common.R
@@ -91,7 +109,13 @@ import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.isTestnet
 import jp.co.soramitsu.feature_wallet_impl.presentation.cardshub.NetworkTagChip
 import jp.co.soramitsu.feature_wallet_impl.presentation.portfolio.motion.TiltState
 import jp.co.soramitsu.ui_core.component.button.properties.Size as ButtonSize
+import jp.co.soramitsu.ui_core.lit.LitCabochon
+import jp.co.soramitsu.ui_core.lit.LitLed
+import jp.co.soramitsu.ui_core.lit.litPlate
+import jp.co.soramitsu.ui_core.lit.litWell
 import jp.co.soramitsu.ui_core.theme.customTypography
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 /** What the home's controls do; the fragment wires these to the view models. */
 internal interface PortfolioHomeActions {
@@ -115,8 +139,59 @@ internal fun PortfolioModel.colorOfWallet(walletId: String): Color = PortfolioPa
 internal fun PortfolioModel.colorOfGroup(key: String?): Color =
     if (key == null || key == OTHER_KEY) PortfolioPalette.other else PortfolioPalette.slot(slots[key])
 
+/** How far the hero card overlaps the sky: the ring's front passes just above the card. */
+internal val HERO_CARD_OVERLAP = 10.dp
+
 /**
- * The hero: the sky with the scope chip, and the hero card overlapping its bottom by 22 dp.
+ * The hero's plate: the largest, standing highest, the planet's red falling on its top edge and the window's
+ * reflection sliding over its glaze as the phone turns. It rises into place the first time it is seen, and fresh
+ * light crosses it then and each time a read finishes.
+ */
+@Composable
+private fun HeroPlate(reading: Boolean, content: @Composable () -> Unit) {
+    val shape = RoundedCornerShape(26.dp)
+    val fx = LocalFx.current
+    val enter = remember { Animatable(if (fx.litMotion) 0f else 1f) }
+    val sweep = remember { Animatable(if (fx.litMotion) SHEEN_SWEEP_FROM else 0f) }
+    LaunchedEffect(Unit) {
+        if (fx.litMotion) {
+            launch { sweep.animateTo(0f, SHEEN_SWEEP) }
+            enter.animateTo(1f, spring(dampingRatio = 0.72f, stiffness = Spring.StiffnessLow))
+        }
+    }
+    OnReadFinished(reading) {
+        if (fx.litMotion) {
+            sweep.snapTo(SHEEN_SWEEP_FROM)
+            sweep.animateTo(0f, SHEEN_SWEEP)
+        }
+    }
+    Box(
+        Modifier
+            .fillMaxWidth()
+            .graphicsLayer {
+                translationY = (1f - enter.value) * 22.dp.toPx()
+                alpha = (enter.value * 2.5f).coerceAtMost(1f)
+            }
+            .litPlate(
+                radius = 26.dp,
+                elevation = 18.dp,
+                halo = 0.45f,
+                bounce = PortfolioPalette.soraGlow,
+                sheen = true,
+                sheenSweep = { sweep.value },
+            )
+            .clip(shape),
+    ) { content() }
+}
+
+private const val SHEEN_SWEEP_FROM = -1.2f
+private val SHEEN_SWEEP = tween<Float>(950, easing = CubicBezierEasing(0.2f, 0.7f, 0.2f, 1f))
+
+private val PortfolioModel.isReading: Boolean
+    get() = noTotal == NoTotal.READING || freshness?.kind == FreshnessKind.READING
+
+/**
+ * The hero: the sky with the scope chip, and the hero card overlapping its bottom a little.
  */
 @Composable
 internal fun PortfolioHero(
@@ -125,6 +200,9 @@ internal fun PortfolioHero(
     tilt: TiltState,
     actions: PortfolioHomeActions,
     modifier: Modifier = Modifier,
+    heroVisible: Boolean = true,
+    scrollDp: () -> Float = { 0f },
+    pullDp: () -> Float = { 0f },
 ) {
     Box(modifier.fillMaxWidth()) {
         PortfolioSky(
@@ -133,6 +211,10 @@ internal fun PortfolioHero(
             highlighted = model.highlighted,
             tilt = tilt,
             onSliceTap = actions::onLegend,
+            heroVisible = heroVisible,
+            reading = model.isReading,
+            scrollDp = scrollDp,
+            pullDp = pullDp,
         ) {
             ScopeChip(
                 model = model,
@@ -166,7 +248,7 @@ internal fun PortfolioHero(
                 )
             }
         }
-        Box(Modifier.padding(top = SkyGeometry.HEIGHT - 22.dp, start = 16.dp, end = 16.dp)) {
+        Box(Modifier.padding(top = SkyGeometry.HEIGHT - HERO_CARD_OVERLAP, start = 16.dp, end = 16.dp)) {
             if (model.empty) {
                 EmptyCard(model, actions)
             } else {
@@ -233,11 +315,10 @@ private fun HeroCardTop(model: PortfolioModel, actions: PortfolioHomeActions) {
 @Composable
 private fun EmptyCard(model: PortfolioModel, actions: PortfolioHomeActions) {
     val n = MaterialTheme.neon
-    HeroCard(Modifier.fillMaxWidth()) {
+    HeroPlate(model.isReading) {
         Column(
             Modifier
                 .fillMaxWidth()
-                .drawBehind { drawPlanetLight(n.isDark) }
                 .padding(start = 18.dp, end = 18.dp, top = 16.dp, bottom = 18.dp),
         ) {
             // An empty list is only "empty" if it could be read: the state says how fresh it is.
@@ -272,11 +353,9 @@ private fun EmptyCard(model: PortfolioModel, actions: PortfolioHomeActions) {
 @Composable
 private fun PortfolioHeroCard(model: PortfolioModel, format: PortfolioFormat, actions: PortfolioHomeActions) {
     val largeText = LocalDensity.current.fontScale >= 1.3f
-    val dark = MaterialTheme.neon.isDark
-    HeroCard(Modifier.fillMaxWidth()) {
+    HeroPlate(model.isReading) {
         Column(
             Modifier
-                .drawBehind { drawPlanetLight(dark) }
                 .padding(start = 18.dp, end = 18.dp, top = 16.dp, bottom = 16.dp)
         ) {
             HeroCardTop(model, actions)
@@ -301,10 +380,12 @@ private fun PortfolioHeroCard(model: PortfolioModel, format: PortfolioFormat, ac
                 if (largeText) {
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) { chips() }
                 } else {
+                    // Scrolling clips: the row runs to the plate's edges, with room for the chips' shadows.
                     Row(
                         Modifier
-                            .padding(horizontal = 0.dp)
-                            .horizontalScroll(rememberScrollState()),
+                            .bleed(horizontal = 18.dp, vertical = 12.dp)
+                            .horizontalScroll(rememberScrollState())
+                            .padding(horizontal = 18.dp, vertical = 12.dp),
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) { chips() }
                 }
@@ -368,16 +449,14 @@ private fun TotalBlock(model: PortfolioModel, format: PortfolioFormat) {
             val compact = whole.length > 10
             val big = if (compact) 32.sp else TOTAL_SIZE
             val small = if (compact) 22.sp else 28.sp
-            Text(
-                text = buildAnnotatedString {
-                    withStyle(SpanStyle(fontSize = big, color = if (stale) n.textSecondary else n.textPrimary)) {
-                        append(symbol)
-                        append(whole)
-                    }
-                    withStyle(SpanStyle(fontSize = small, color = n.textSecondary)) { append(cents) }
-                },
-                style = NeonType.displayHero.copy(lineHeight = 50.sp),
-                maxLines = 1,
+            RollingTotal(
+                main = symbol + whole,
+                cents = cents,
+                big = big,
+                small = small,
+                mainColor = if (stale) n.textSecondary else n.textPrimary,
+                centsColor = n.textSecondary,
+                rollsUp = (totals.change) >= 0,
             )
         } else {
             NoTotalDash()
@@ -389,15 +468,87 @@ private fun TotalBlock(model: PortfolioModel, format: PortfolioFormat) {
 }
 
 /**
- * ▲ +$148.20 · +1.2% · 24h: arrow and sign always, the app's up and down colours, in a capsule
- * tinted with the direction's colour.
+ * The total, pressed into the plate. When it changes, only the digits that changed roll, like a counter: digits
+ * have one width, so the rest stay still.
+ */
+@OptIn(ExperimentalAnimationApi::class)
+@Composable
+private fun RollingTotal(
+    main: String,
+    cents: String,
+    big: TextUnit,
+    small: TextUnit,
+    mainColor: Color,
+    centsColor: Color,
+    rollsUp: Boolean,
+) {
+    val fx = LocalFx.current
+    val base = letterpress(NeonType.displayHero.copy(lineHeight = 50.sp, fontFeatureSettings = "tnum"))
+    val text = main + cents
+    val mainLength = main.length
+    if (fx.reduceMotion) {
+        Text(
+            text = buildAnnotatedString {
+                withStyle(SpanStyle(fontSize = big, color = mainColor)) { append(main) }
+                withStyle(SpanStyle(fontSize = small, color = centsColor)) { append(cents) }
+            },
+            style = base,
+            maxLines = 1,
+        )
+        return
+    }
+    Row {
+        text.forEachIndexed { index, char ->
+            val inMain = index < mainLength
+            key(text.length - index) {
+                AnimatedContent(
+                    targetState = char,
+                    transitionSpec = {
+                        val direction = if (rollsUp) 1 else -1
+                        (slideInVertically(spring(dampingRatio = 0.82f, stiffness = Spring.StiffnessMediumLow)) { it * direction * 5 / 8 } + fadeIn()) togetherWith
+                            (slideOutVertically(tween(180)) { -it * direction * 5 / 8 } + fadeOut(tween(140)))
+                    },
+                    label = "rollingDigit",
+                    modifier = Modifier.alignByBaseline(),
+                ) { shown ->
+                    Text(
+                        text = shown.toString(),
+                        style = base.copy(
+                            fontSize = if (inMain) big else small,
+                            color = if (inMain) mainColor else centsColor,
+                        ),
+                        maxLines = 1,
+                    )
+                }
+            }
+        }
+    }
+}
+
+/** Text pressed into a plate: the light catches the far edge of each stroke. */
+@Composable
+private fun letterpress(style: TextStyle): TextStyle {
+    val dark = MaterialTheme.neon.isDark
+    val shadow = with(LocalDensity.current) {
+        Shadow(
+            color = if (dark) Color.Black.copy(alpha = 0.45f) else Color.White.copy(alpha = 0.9f),
+            offset = Offset(0.35.dp.toPx(), 0.7.dp.toPx()),
+            blurRadius = 0f,
+        )
+    }
+    return style.copy(shadow = shadow)
+}
+
+/**
+ * ▲ +$148.20 · +1.2% · 24h: arrow and sign always, the app's up and down colours, in a shallow well whose floor
+ * takes the direction's colour.
  */
 @Composable
 private fun ChangeLine(change: Double, fraction: Double, format: PortfolioFormat) {
     val n = MaterialTheme.neon
     val up = change >= 0
     val color = if (up) n.success else n.error
-    val shape = RoundedCornerShape(50)
+    val floor = litTint(color)
     Text(
         text = buildAnnotatedString {
             withStyle(SpanStyle(color = color)) {
@@ -413,11 +564,9 @@ private fun ChangeLine(change: Double, fraction: Double, format: PortfolioFormat
         style = NeonType.amountM,
         maxLines = 1,
         modifier = Modifier
-            .padding(top = 4.dp)
-            .clip(shape)
-            .background(color.copy(alpha = if (n.isDark) 0.13f else 0.09f))
-            .border(1.dp, color.copy(alpha = 0.32f), shape)
-            .padding(horizontal = 10.dp, vertical = 3.dp),
+            .padding(top = 6.dp)
+            .litWell(radius = 18.dp, depth = 1.8.dp, floor = floor)
+            .padding(horizontal = 12.dp, vertical = 5.dp),
     )
 }
 
@@ -482,20 +631,14 @@ internal fun FreshnessChip(freshness: WalletFreshness, nowMillis: Long, onClick:
         modifier = modifier
             .minimumInteractiveComponentSize()
             .heightIn(min = 32.dp)
+            .litWell(radius = 16.dp, depth = 1.8.dp)
             .clip(shape)
-            .background(n.glassFill)
-            .border(1.dp, n.hairline, shape)
             .clickable(onClickLabel = stringResource(R.string.portfolio_sync_status), role = Role.Button, onClick = onClick)
-            .padding(horizontal = 10.dp),
+            .padding(horizontal = 11.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         when (freshness.kind) {
-            FreshnessKind.LIVE -> Box(
-                Modifier
-                    .size(8.dp)
-                    .clip(CircleShape)
-                    .background(n.success)
-            )
+            FreshnessKind.LIVE -> LitLed(n.success, diameter = 7.dp)
             FreshnessKind.SAVED, FreshnessKind.READING -> PortfolioGlyph(Glyph.CLOCK, color, Modifier.size(14.dp))
             FreshnessKind.PARTIAL -> PortfolioGlyph(Glyph.WARNING, color, Modifier.size(14.dp))
             FreshnessKind.OFFLINE -> PortfolioGlyph(Glyph.OFFLINE, color, Modifier.size(14.dp))
@@ -544,28 +687,36 @@ private fun LegendChip(
     val description =
         stringResource(R.string.portfolio_legend_description, label, percent.removeSuffix("%"), fiat)
     val shape = RoundedCornerShape(18.dp)
+    val floor = litTint(color)
+    val interaction = remember { MutableInteractionSource() }
+    val pressed by interaction.collectIsPressedAsState()
+    val press by animateFloatAsState(
+        if (pressed) 1f else 0f,
+        if (pressed) tween(90) else spring(dampingRatio = 0.52f, stiffness = Spring.StiffnessMediumLow),
+        label = "chipPress",
+    )
     Box(Modifier.minimumInteractiveComponentSize(), contentAlignment = Alignment.Center) {
         Row(
             modifier = Modifier
                 .heightIn(min = 36.dp)
+                .graphicsLayer {
+                    val scale = 1f - 0.05f * press
+                    scaleX = scale
+                    scaleY = scale
+                }
+                // Raised at rest, pressed in when selected.
+                .then(if (selected) Modifier.litWell(radius = 18.dp, depth = 2.2.dp, floor = floor) else Modifier.litPlate(radius = 18.dp, elevation = 6.dp))
                 .clip(shape)
-                .background(if (selected) color.copy(alpha = 0.18f) else n.glassFill)
-                .border(if (selected) 1.5.dp else 1.dp, if (selected) color else n.hairline, shape)
-                .clickable(role = Role.Button, onClick = onClick)
+                .clickable(interactionSource = interaction, indication = null, role = Role.Button, onClick = onClick)
                 .clearAndSetSemantics {
                     contentDescription = description
                     this.selected = selected
                 }
-                .padding(start = 10.dp, end = 12.dp),
+                .padding(start = 13.dp, end = 14.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Box(
-                Modifier
-                    .size(10.dp)
-                    .clip(RoundedCornerShape(3.dp))
-                    .background(color)
-            )
-            Spacer(Modifier.width(8.dp))
+            LitLed(color, diameter = 8.dp)
+            Spacer(Modifier.width(9.dp))
             Text(label, style = MaterialTheme.customTypography.textSBold, color = n.textPrimary, maxLines = 1)
             Spacer(Modifier.width(6.dp))
             Text(percent, style = NeonType.amountS.copy(fontWeight = FontWeight.SemiBold), color = n.textSecondary, maxLines = 1)
@@ -573,21 +724,21 @@ private fun LegendChip(
     }
 }
 
-/** Send · Receive · Move · Swap, each a glossy disc in one of the hero's colours. */
+/** Send · Receive · Move · Swap, each a glass cabochon in one of the hero's colours, seated in a well. */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun QuickActions(actions: PortfolioHomeActions, largeText: Boolean) {
     val items: @Composable () -> Unit = {
-        QuickAction(stringResource(R.string.common_send), PortfolioPalette.actionSend, onClick = actions::onSend) {
+        QuickAction(stringResource(R.string.common_send), PortfolioPalette.actionSend, order = 0, onClick = actions::onSend) {
             PortfolioGlyph(Glyph.SEND, Color.White, Modifier.size(24.dp))
         }
-        QuickAction(stringResource(R.string.common_receive), PortfolioPalette.actionReceive, onClick = actions::onReceive) {
+        QuickAction(stringResource(R.string.common_receive), PortfolioPalette.actionReceive, order = 1, onClick = actions::onReceive) {
             PortfolioGlyph(Glyph.RECEIVE, Color.White, Modifier.size(24.dp))
         }
-        QuickAction(stringResource(R.string.portfolio_move), PortfolioPalette.actionMove, onClick = actions::onMove) {
+        QuickAction(stringResource(R.string.portfolio_move), PortfolioPalette.actionMove, order = 2, onClick = actions::onMove) {
             PortfolioGlyph(Glyph.MOVE, Color.White, Modifier.size(24.dp))
         }
-        QuickAction(stringResource(R.string.portfolio_swap), PortfolioPalette.actionSwap, onClick = actions::onSwap) {
+        QuickAction(stringResource(R.string.portfolio_swap), PortfolioPalette.actionSwap, order = 3, onClick = actions::onSwap) {
             PolkaswapFlower(Modifier.size(26.dp), tint = Color.White)
         }
     }
@@ -599,61 +750,34 @@ private fun QuickActions(actions: PortfolioHomeActions, largeText: Boolean) {
 }
 
 @Composable
-private fun QuickAction(label: String, colors: Pair<Color, Color>, onClick: () -> Unit, icon: @Composable () -> Unit) {
+private fun QuickAction(label: String, colors: Pair<Color, Color>, order: Int, onClick: () -> Unit, icon: @Composable () -> Unit) {
     val n = MaterialTheme.neon
     val fx = LocalFx.current
     val interaction = remember { MutableInteractionSource() }
     val pressed by interaction.collectIsPressedAsState()
-    val press by animateFloatAsState(if (pressed) 1f else 0f, tween(120), label = "actionPress")
+    val haptics = LocalHapticFeedback.current
+    LaunchedEffect(pressed) {
+        if (pressed) haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+    }
     Column(
         modifier = Modifier
             .widthIn(min = 72.dp)
             .clickable(interactionSource = interaction, indication = null, role = Role.Button, onClick = onClick)
-            .padding(vertical = 6.dp),
+            .padding(vertical = 4.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        // Lit from the top left like the planet. Pressing sinks it a little (Reduce Motion: it only dims).
-        Box(
-            modifier = Modifier
-                .size(56.dp)
-                .graphicsLayer {
-                    val scale = if (fx.reduceMotion) 1f else 1f - 0.06f * press
-                    scaleX = scale
-                    scaleY = scale
-                    alpha = 1f - 0.15f * press
-                }
-                .clip(CircleShape)
-                .background(Brush.linearGradient(listOf(colors.first, colors.second)))
-                .border(1.dp, Color.White.copy(alpha = 0.22f), CircleShape),
-            contentAlignment = Alignment.Center,
+        LitCabochon(
+            lit = colors.first,
+            deep = colors.second,
+            pressed = pressed,
+            reduceMotion = fx.reduceMotion,
+            enterDelayMillis = if (fx.litMotion) 180 + 65 * order else null,
         ) {
-            Box(
-                Modifier
-                    .matchParentSize()
-                    .background(Brush.verticalGradient(0f to Color.White.copy(alpha = 0.28f), 0.5f to Color.Transparent))
-            )
             icon()
         }
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(7.dp))
         Text(label, style = MaterialTheme.customTypography.textSBold, color = n.textPrimary, maxLines = 1)
     }
-}
-
-/** The planet's light on the top of the hero card: a rim along the middle of its edge. */
-private fun DrawScope.drawPlanetLight(dark: Boolean) {
-    val middle = size.width / 2f
-    val rim = size.width * 0.64f
-    drawRect(
-        Brush.horizontalGradient(
-            0f to Color.Transparent,
-            0.5f to PortfolioPalette.soraGlow.copy(alpha = if (dark) 0.85f else 0.55f),
-            1f to Color.Transparent,
-            startX = middle - rim / 2f,
-            endX = middle + rim / 2f,
-        ),
-        topLeft = Offset(middle - rim / 2f, 0f),
-        size = Size(rim, 1.5.dp.toPx()),
-    )
 }
 
 /** Every token held across the scope's wallets and networks, in one card titled Assets. */
@@ -663,7 +787,7 @@ internal fun PortfolioList(model: PortfolioModel, format: PortfolioFormat, actio
     PortfolioCard(modifier) {
         Text(
             text = stringResource(R.string.liquid_assets),
-            style = MaterialTheme.customTypography.headline2,
+            style = letterpress(MaterialTheme.customTypography.headline2),
             color = MaterialTheme.neon.textPrimary,
             maxLines = 1,
             modifier = Modifier
@@ -687,10 +811,34 @@ internal fun PortfolioList(model: PortfolioModel, format: PortfolioFormat, actio
             )
         }
         groups.forEachIndexed { index, group ->
-            if (index > 0) RowDivider()
-            TokenRow(model, group, format, actions)
+            RiseIn(order = index) {
+                Column {
+                    if (index > 0) RowDivider()
+                    TokenRow(model, group, format, actions)
+                }
+            }
         }
     }
+}
+
+/** Rises into place and fades in, once, the first time this row is seen; the first eight in turn. */
+@Composable
+private fun RiseIn(order: Int, content: @Composable () -> Unit) {
+    val fx = LocalFx.current
+    val animate = fx.litMotion && order < 8
+    val rise = remember { Animatable(if (animate) 0f else 1f) }
+    LaunchedEffect(Unit) {
+        if (animate) {
+            delay(40L * order)
+            rise.animateTo(1f, spring(dampingRatio = 0.8f, stiffness = Spring.StiffnessMediumLow))
+        }
+    }
+    Box(
+        Modifier.graphicsLayer {
+            translationY = (1f - rise.value) * 10.dp.toPx()
+            alpha = (rise.value * 2f).coerceAtMost(1f)
+        },
+    ) { content() }
 }
 
 @Composable
@@ -829,14 +977,12 @@ private fun TokenRow(model: PortfolioModel, group: PortfolioGroup, format: Portf
 
 @Composable
 private fun HoldingsWell(content: @Composable () -> Unit) {
-    val n = MaterialTheme.neon
     Column(
         Modifier
             .padding(start = 12.dp, end = 12.dp, bottom = 12.dp)
             .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .background(n.neuBg.copy(alpha = if (n.isDark) 0.85f else 0.9f))
-            .border(1.dp, n.hairline, RoundedCornerShape(16.dp))
+            .litWell(radius = 18.dp, depth = 3.dp)
+            .clip(RoundedCornerShape(18.dp))
     ) { content() }
 }
 
@@ -878,12 +1024,7 @@ internal fun HoldingRow(
             Spacer(Modifier.height(3.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
                 if (model.allWalletsAvailable && wallet != null) {
-                    Box(
-                        Modifier
-                            .size(8.dp)
-                            .clip(CircleShape)
-                            .background(model.colorOfWallet(wallet.id))
-                    )
+                    LitLed(model.colorOfWallet(wallet.id), diameter = 7.dp)
                     Spacer(Modifier.width(6.dp))
                 }
                 Text(

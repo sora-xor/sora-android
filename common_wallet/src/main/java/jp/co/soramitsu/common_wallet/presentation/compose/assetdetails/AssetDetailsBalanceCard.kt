@@ -211,10 +211,12 @@ fun AssetDetailsBalanceCard(
                     onClick = onReceiveClick,
                 )
                 if (swapAvailable) {
+                    // Polkaswap is the only swap the wallet has: its flower, in its own colour.
                     AmountCardIcon(
-                        res = R.drawable.ic_refresh_24,
+                        res = R.drawable.ic_polkaswap_40,
                         text = stringResource(id = R.string.polkaswap_swap_title),
                         enabled = !readOnly,
+                        ownColors = true,
                         onClick = onSwapClick,
                     )
                 }
@@ -232,9 +234,9 @@ fun AssetDetailsBalanceCard(
 }
 
 @Composable
-private fun AmountCardIcon(@DrawableRes res: Int, text: String, enabled: Boolean, onClick: () -> Unit) =
+private fun AmountCardIcon(@DrawableRes res: Int, text: String, enabled: Boolean, ownColors: Boolean = false, onClick: () -> Unit) =
     jp.co.soramitsu.common.view.AmountCardIcon(testTagId = "${text}Button", res = res, text = text,
-        isEnabled = enabled, onClick = onClick)
+        isEnabled = enabled, ownColors = ownColors, onClick = onClick)
 
 /**
  * One line under the balance, in the style of the locked note: why the balance is smaller than

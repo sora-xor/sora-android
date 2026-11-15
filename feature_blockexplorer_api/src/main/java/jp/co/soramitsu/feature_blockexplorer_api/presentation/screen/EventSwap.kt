@@ -93,7 +93,7 @@ internal fun EventSwap(
                         bottom.linkTo(token2.bottom)
                         start.linkTo(token2.start, margin = (-16).dp)
                     },
-                painter = painterResource(id = R.drawable.ic_refresh_24),
+                painter = painterResource(id = R.drawable.ic_polkaswap_40),
                 contentDescription = null,
                 tint = Color.Unspecified
             )

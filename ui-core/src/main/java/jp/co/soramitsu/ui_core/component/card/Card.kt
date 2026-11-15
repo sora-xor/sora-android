@@ -3,7 +3,6 @@ package jp.co.soramitsu.ui_core.component.card
 import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
@@ -14,14 +13,19 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.LocalContentColor
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
+import androidx.compose.material.contentColorFor
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import jp.co.soramitsu.ui_core.lit.litPlate
 import jp.co.soramitsu.ui_core.modifier.applyIf
 import jp.co.soramitsu.ui_core.theme.borderRadius
 import jp.co.soramitsu.ui_core.theme.customColors
@@ -36,17 +40,26 @@ fun ContentCard(
     onClick: (() -> Unit)? = null,
     content: @Composable BoxScope.() -> Unit,
 ) {
-    androidx.compose.material.Card(
-        modifier = modifier
-            .applyIf(onClick != null) {
-                clickable(onClick = onClick!!)
-            },
-        shape = RoundedCornerShape(cornerRadius),
-        elevation = if (isSystemInDarkTheme()) 0.dp else 10.dp,
-        backgroundColor = backgroundColor,
-    ) {
-        Box(modifier = Modifier.padding(innerPadding)) {
-            content()
+    // A porcelain plate: a custom colour is the plate's glaze.
+    val shape = RoundedCornerShape(cornerRadius)
+    val plain = backgroundColor == MaterialTheme.customColors.bgSurface
+    CompositionLocalProvider(LocalContentColor provides contentColorFor(backgroundColor)) {
+        Box(
+            modifier = modifier
+                .litPlate(
+                    radius = cornerRadius,
+                    faceTop = backgroundColor.takeUnless { plain },
+                    faceBottom = backgroundColor.takeUnless { plain },
+                )
+                .clip(shape)
+                .applyIf(onClick != null) {
+                    clickable(onClick = onClick!!)
+                },
+            propagateMinConstraints = true,
+        ) {
+            Box(modifier = Modifier.padding(innerPadding)) {
+                content()
+            }
         }
     }
 }

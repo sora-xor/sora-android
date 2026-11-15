@@ -38,6 +38,9 @@ import jp.co.soramitsu.common.presentation.compose.theme.neon.NeonClassicLightHi
 import jp.co.soramitsu.common.presentation.compose.theme.neon.NeonEffectsPreference
 import jp.co.soramitsu.common.presentation.compose.theme.neon.rememberFxPolicy
 import jp.co.soramitsu.common.presentation.compose.theme.tokens.DayThemeColors
+import jp.co.soramitsu.ui_core.lit.LitDay
+import jp.co.soramitsu.ui_core.lit.LitNight
+import jp.co.soramitsu.ui_core.lit.LocalLitPalette
 import jp.co.soramitsu.common.presentation.compose.theme.tokens.NeonType
 import jp.co.soramitsu.common.presentation.compose.theme.tokens.NightThemeColors
 import jp.co.soramitsu.common.presentation.compose.theme.tokens.buttonM
@@ -125,6 +128,9 @@ fun SoraAppTheme(
                         else -> NeonClassicLight
                     },
                     LocalFx provides fx,
+                    LocalLitPalette provides (if (darkTheme) LitNight else LitDay).let { lit ->
+                        if (highContrast) lit.copy(outline = lit.inkSecondary) else lit
+                    },
                     LocalContentColor provides palette.fgPrimary,
                     content = content,
                 )

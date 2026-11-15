@@ -20,8 +20,11 @@ limitations under the License.
 package jp.co.soramitsu.feature_main_impl.presentation.pincode
 
 import androidx.annotation.DrawableRes
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.snap
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -47,6 +50,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -67,13 +71,16 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import jp.co.soramitsu.common.presentation.compose.neon.ProtectWalletSecrets
-import jp.co.soramitsu.common.presentation.compose.neon.NeonGlow
 import jp.co.soramitsu.common.presentation.compose.neon.NeumorphicSurface
 import jp.co.soramitsu.common.presentation.compose.neon.safemode.AccountCheckProgress
 import jp.co.soramitsu.common.presentation.compose.neon.safemode.LegacyPinUpgradePanel
 import jp.co.soramitsu.common.presentation.compose.neon.safemode.SafeModeScreen
 import jp.co.soramitsu.common.presentation.compose.theme.neon.LocalFx
 import jp.co.soramitsu.common.presentation.compose.theme.neon.neon
+import jp.co.soramitsu.ui_core.lit.LitLed
+import jp.co.soramitsu.ui_core.lit.LocalLitPalette
+import jp.co.soramitsu.ui_core.lit.litWell
+import jp.co.soramitsu.ui_core.sacred.SacredEmblem
 import jp.co.soramitsu.common.presentation.compose.theme.tokens.NeonType
 import jp.co.soramitsu.common.util.ext.shake
 import jp.co.soramitsu.common.util.testTagAsId
@@ -117,6 +124,8 @@ fun PincodeScreen(
     }
     BoxWithConstraints(Modifier.fillMaxSize().background(n.neuBg)) {
         val keySize = if (maxWidth >= 400.dp && maxHeight >= 760.dp) 80.dp else 72.dp
+        // Room for the emblem between the dots and the keys; short screens go without.
+        val showsEmblem = maxHeight >= 720.dp
         Column(
             Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).heightIn(min = maxHeight),
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -145,6 +154,16 @@ fun PincodeScreen(
                     )
                 }
             }
+            // The planet in its ring. The ring is the lock: each digit draws one more of its circles.
+            if (showsEmblem) {
+                SacredEmblem(
+                    share = pinCodeScreenState.checkedDotsCount.toFloat() / pinCodeScreenState.maxDotsCount.coerceAtLeast(1),
+                    wrong = pinCodeScreenState.enableShakeAnimation,
+                    line = LocalLitPalette.current.ink,
+                    wrongColor = n.error,
+                    reduceMotion = fx.reduceMotion,
+                )
+            }
             CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
                 PincodeInputView(
                     keySize = keySize,
@@ -164,6 +183,7 @@ fun PincodeScreen(
 @Composable
 private fun DotsProgress(modifier: Modifier, maxDotsCount: Int, checkedDotsCount: Int, wrong: Boolean) {
     val n = MaterialTheme.neon
+    val fx = LocalFx.current
     val entered = checkedDotsCount.coerceIn(0, maxDotsCount)
     val description = stringResource(jp.co.soramitsu.common.R.string.neon_pin_digits_entered, entered, maxDotsCount)
     Row(
@@ -171,16 +191,23 @@ private fun DotsProgress(modifier: Modifier, maxDotsCount: Int, checkedDotsCount
             contentDescription = description
             liveRegion = LiveRegionMode.Polite
         },
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         repeat(maxDotsCount) { index ->
-            val filled = index < entered
-            Box(Modifier.size(14.dp)) {
-                if (filled && !wrong) NeonGlow(n.glowDot, CircleShape, Modifier.matchParentSize())
-                Box(
-                    Modifier.matchParentSize()
-                        .background(if (filled) (if (wrong) n.error else n.cyan) else androidx.compose.ui.graphics.Color.Transparent, CircleShape)
-                        .border(1.5.dp, if (wrong) n.error else if (filled) n.cyan else n.textTertiary, CircleShape),
+            // A row of wells pressed into the page: each digit drops a lit bead into its well.
+            val bead = animateFloatAsState(
+                targetValue = if (index < entered) 1f else 0f,
+                animationSpec = if (fx.reduceMotion) snap() else spring(dampingRatio = 0.55f, stiffness = Spring.StiffnessMedium),
+                label = "pinBead",
+            )
+            Box(Modifier.size(24.dp).litWell(radius = 12.dp, depth = 2.dp), contentAlignment = Alignment.Center) {
+                LitLed(
+                    color = if (wrong) n.error else n.cyan,
+                    diameter = 15.dp,
+                    modifier = Modifier.graphicsLayer {
+                        scaleX = bead.value
+                        scaleY = bead.value
+                    },
                 )
             }
         }

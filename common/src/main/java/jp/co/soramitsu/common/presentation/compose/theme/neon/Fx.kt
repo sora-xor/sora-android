@@ -79,6 +79,9 @@ data class FxPolicy(
     /** Neumorphic shadows and the light-theme card shadow. */
     val shadows: Boolean get() = tier != FxTier.MINIMAL
 
+    /** Decorative motion of the lit materials: the hero's comet, entrances. */
+    val litMotion: Boolean get() = tier == FxTier.FULL && !reduceMotion
+
     /** Looping motion (shimmer sweep, rotating pending rings). */
     val loops: Boolean get() = !reduceMotion && tier != FxTier.MINIMAL
 

@@ -4,18 +4,18 @@
   under the names the XML theme (styles.xml), the splash and recovery panel and dialogs use.
 -->
 <resources>
-    <color name="neon_canvas">#45245F</color>
-    <color name="neon_surface">#592D71</color>
-    <color name="neon_surface_variant">#492067</color>
+    <color name="neon_canvas">#3D1F54</color>
+    <color name="neon_surface">#5B3173</color>
+    <color name="neon_surface_variant">#341A49</color>
     <color name="neon_sheet">#592D71</color>
-    <color name="neon_chrome">#592D71</color>
+    <color name="neon_chrome">#5B3173</color>
     <color name="neon_hairline">#744594</color>
     <color name="neon_divider">#744594</color>
     <color name="neon_border_input">#9B6FA5</color>
 
     <color name="neon_text_primary">#FCFCFC</color>
-    <color name="neon_text_secondary">#C29AB7</color>
-    <color name="neon_text_tertiary">#9B6FA5</color>
+    <color name="neon_text_secondary">#D3B0CA</color>
+    <color name="neon_text_tertiary">#AB80B5</color>
     <color name="neon_text_disabled">#9B6FA5</color>
     <color name="neon_on_accent">#FFFFFF</color>
     <color name="neon_link">#F754A3</color>
@@ -35,4 +35,6 @@
     <color name="neon_safe_start">#44E5B2</color>
     <color name="neon_toast">#FCFCFC</color>
     <color name="neon_on_toast">#45245F</color>
+    <color name="lit_bar_edge">#26FFFFFF</color>
+    <color name="lit_bar_shadow">#59120620</color>
 </resources>

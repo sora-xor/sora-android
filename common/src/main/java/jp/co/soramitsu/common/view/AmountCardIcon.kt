@@ -56,6 +56,8 @@ fun AmountCardIcon(
     @DrawableRes res: Int,
     text: String,
     isEnabled: Boolean = true,
+    /** Draw the icon in its own colours (a brand mark, like Polkaswap's flower). */
+    ownColors: Boolean = false,
     onClick: () -> Unit,
 ) {
     val interaction = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
@@ -73,7 +75,12 @@ fun AmountCardIcon(
             interactionSource = interaction, modifier = Modifier.size(Size.Large)) {
             androidx.compose.material.Icon(painterResource(res), contentDescription = null,
                 modifier = Modifier.size(24.dp),
-                tint = if (!isEnabled) n.textDisabled else if (pressed) n.cyan else n.textSecondary)
+                tint = when {
+                    !isEnabled -> n.textDisabled
+                    ownColors -> androidx.compose.ui.graphics.Color.Unspecified
+                    pressed -> n.cyan
+                    else -> n.textSecondary
+                })
         }
         Text(text = text, modifier = Modifier.padding(top = Dimens.x1),
             textAlign = androidx.compose.ui.text.style.TextAlign.Center,

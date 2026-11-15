@@ -3,6 +3,7 @@
 package jp.co.soramitsu.sora.portfolio
 
 import android.graphics.Bitmap
+import android.os.Build
 import androidx.activity.ComponentActivity
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.graphics.Color
@@ -21,14 +22,15 @@ import jp.co.soramitsu.feature_wallet_impl.presentation.portfolio.SkyGeometry
 import jp.co.soramitsu.feature_wallet_impl.presentation.portfolio.motion.TiltState
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+import org.junit.Assume.assumeTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
- * The hero sky on a test clock. The classic design runs no looping light: once the ring has drawn
- * itself in (at once on test devices, which run with animations off), the frame only changes with
- * the tilt.
+ * The hero sky on a test clock. Where lit motion runs, the comet laps the ring for as long as the sky is on
+ * screen. Without it (a phone under the full tier, power saving), once the ring has drawn itself in the frame
+ * only changes with the tilt.
  */
 @RunWith(AndroidJUnit4::class)
 class PortfolioSkyMotionTest {
@@ -37,6 +39,7 @@ class PortfolioSkyMotionTest {
     // XOR wraps round behind the planet; VAL is highlighted.
     private val fan = listOf(FanSlice("xor", 70.0, 70), FanSlice("val", 30.0, 30))
     private val motion = FxPolicy(FxTier.FULL, reduceMotion = false, opaqueGlass = false, highContrast = false)
+    private val still = FxPolicy(FxTier.REDUCED, reduceMotion = false, opaqueGlass = false, highContrast = false)
     private val tilt = TiltState()
 
     private fun sky(fx: FxPolicy) {
@@ -60,12 +63,22 @@ class PortfolioSkyMotionTest {
 
     private fun frame(): Bitmap = compose.onRoot().captureToImage().asAndroidBitmap()
 
-    @Test fun afterItsDrawInTheSkyHoldsStill() {
-        sky(motion)
+    @Test fun withoutLitMotionTheSkyHoldsStillAfterItsDrawIn() {
+        sky(still)
         settle()
         val before = frame()
         compose.mainClock.advanceTimeBy(5_000L)
         assertTrue(before.sameAs(frame()))
+    }
+
+    @Test fun withLitMotionTheCometKeepsLapping() {
+        // The comet belongs to the traced hero, which needs Android 13.
+        assumeTrue(Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+        sky(motion)
+        settle()
+        val before = frame()
+        compose.mainClock.advanceTimeBy(1_500L)
+        assertFalse(before.sameAs(frame()))
     }
 
     @Test fun theTiltMovesThePlanetAndItsRing() {
