@@ -518,7 +518,9 @@ class WalletUxAcceptanceTest {
                     }
                     instrumentation.waitForIdleSync()
                 }
-                waitUntil { findText("Wallet") != null }
+                // The PIN's local account check and the first home render can take over 10 seconds in the
+                // fully instrumented suite on a busy host; it took 28 s for the whole class alone.
+                waitUntil(timeoutMillis = 60_000) { findText("Wallet") != null }
                 capture("normal-sample-wallet-home")
                 // A wallet set up on this version never gets the one-time upgrade-complete sheet.
                 assertNull(findText(context.getString(jp.co.soramitsu.common.R.string.safe_mode_whats_new_title)))
