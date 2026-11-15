@@ -35,19 +35,19 @@ object NightThemeColors {
 
     val AccentTertiaryContainer = Color(0xff313131)
 
-    val BgPage = Color(0xff45245f)
+    val BgPage = Color(0xFF3D1F54)
 
-    val BgSurface = Color(0xFF592d71)
+    val BgSurface = Color(0xFF5B3173)
 
-    val BgSurfaceVariant = Color(0xff492067)
+    val BgSurfaceVariant = Color(0xFF341A49)
 
     val BgSurfaceInverted = Color(0xfffcfcfc)
 
     val FgPrimary = Color(0xfffcfcfc)
 
-    val FgSecondary = Color(0xffc29ab7)
+    val FgSecondary = Color(0xFFD3B0CA)
 
-    val FgTertiary = Color(0xff9b6fa5)
+    val FgTertiary = Color(0xFFAB80B5)
 
     val FgInverted = Color(0xff45245f)
 

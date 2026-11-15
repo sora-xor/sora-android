@@ -38,13 +38,26 @@
         tools:textColor="@color/grey_800"
         tools:visibility="visible" />
 
+    <!-- The bar is a porcelain slab standing above the page: its shadow falls up over the page behind. -->
+    <View
+        android:id="@+id/bottomBarShadow"
+        android:layout_width="0dp"
+        android:layout_height="18dp"
+        android:background="@drawable/bg_lit_bar_shadow"
+        android:importantForAccessibility="no"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@id/bottomNavigationView"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bottomNavigationView"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:background="?attr/pureWhiteOnDay"
+        android:background="@drawable/bg_lit_bar"
         android:visibility="gone"
         app:elevation="2dp"
+        app:itemActiveIndicatorStyle="@style/SoraBottomNavSelection"
         app:itemIconTint="@drawable/bottom_navigation_icon_color_selector"
         app:itemTextAppearanceActive="@style/TextAppearance.Soramitsu.Neu.BottomNavigation"
         app:itemTextAppearanceInactive="@style/TextAppearance.Soramitsu.Neu.BottomNavigation"
@@ -69,14 +82,21 @@
         android:outlineProvider="none"
         android:visibility="gone"
         android:contentDescription="@string/polkaswap_swap_title"
+        android:stateListAnimator="@animator/lit_dome_press"
         app:layout_constraintBottom_toBottomOf="@id/bottomNavigationView"
         app:layout_constraintEnd_toEndOf="@id/bottomNavigationView"
         app:layout_constraintStart_toStartOf="@id/bottomNavigationView">
+        <androidx.compose.ui.platform.ComposeView
+            android:id="@+id/fabDome"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:layout_gravity="center"
+            android:elevation="4dp"
+            android:importantForAccessibility="no" />
         <ImageView
             android:layout_width="56dp"
             android:layout_height="56dp"
             android:layout_gravity="center"
-            android:background="@drawable/bg_neon_swap_disc"
             android:duplicateParentState="true"
             android:elevation="4dp"
             android:padding="8dp"

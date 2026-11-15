@@ -19,6 +19,9 @@ limitations under the License.
 
 package jp.co.soramitsu.feature_main_impl.presentation
 
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
+import jp.co.soramitsu.ui_core.lit.LitDome
 import android.app.ActivityOptions
 import android.content.ComponentCallbacks2
 import android.content.Context
@@ -220,6 +223,8 @@ class MainActivity :
                 NeonEffectsPreference.reduceEffects.collect { updateSwapEffects() }
             }
         }
+        // The Polkaswap button: a white ceramic dome standing in the bar, under the pink flower.
+        binding.fabDome.setContent { LitDome(lit = Color(0xFFFFFFFF), deep = Color(0xFFD8D1CC), diameter = 56.dp) }
         binding.fabMain.setOnClickListener {
             debounceClickHandler.debounceClick {
                 polkaswapRouter.showSwap(SubstrateOptionsProvider.feeAssetId)
@@ -364,11 +369,13 @@ class MainActivity :
 
     override fun showBottomBar() {
         requireBinding()?.fabMain?.show()
+        requireBinding()?.bottomBarShadow?.show()
         requireBinding()?.bottomNavigationView?.show()
     }
 
     override fun hideBottomBar() {
         requireBinding()?.fabMain?.gone()
+        requireBinding()?.bottomBarShadow?.gone()
         requireBinding()?.bottomNavigationView?.gone()
     }
 

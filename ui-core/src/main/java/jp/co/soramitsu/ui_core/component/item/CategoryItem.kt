@@ -3,7 +3,6 @@ package jp.co.soramitsu.ui_core.component.item
 import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,7 +18,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -27,7 +25,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import jp.co.soramitsu.ui_core.R
-import jp.co.soramitsu.ui_core.modifier.applyIf
+import jp.co.soramitsu.ui_core.lit.litPlate
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
@@ -37,7 +35,7 @@ fun CategoryItem(
     modifier: Modifier = Modifier,
     title: String,
     cornerRadius: Dp = 36.dp,
-    elevation: Dp = 32.dp,
+    elevation: Dp = 14.dp,
     subtitle: String? = null,
     subtitleColor: Color = MaterialTheme.customColors.fgSecondary,
     subtitleIcon: Int? = null,
@@ -46,16 +44,8 @@ fun CategoryItem(
 ) {
     Row(
         modifier = modifier
-            .applyIf(!isSystemInDarkTheme()) {
-                shadow(
-                    elevation = elevation,
-                    ambientColor = Color(0xFF999999),
-                    spotColor = Color(0xFF999999),
-                    shape = RoundedCornerShape(cornerRadius)
-                )
-            }
+            .litPlate(radius = cornerRadius, elevation = elevation)
             .clip(RoundedCornerShape(cornerRadius))
-            .background(MaterialTheme.customColors.bgSurface)
             .clickable { onClick() },
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween

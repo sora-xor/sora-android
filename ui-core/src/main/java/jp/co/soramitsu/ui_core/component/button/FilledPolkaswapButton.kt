@@ -35,6 +35,7 @@ import jp.co.soramitsu.ui_core.component.button.properties.buttonElevation
 import jp.co.soramitsu.ui_core.component.button.properties.buttonSize
 import jp.co.soramitsu.ui_core.extensions.ripple
 import jp.co.soramitsu.ui_core.resources.Dimens
+import jp.co.soramitsu.ui_core.lit.litLacquer
 import jp.co.soramitsu.ui_core.theme.borderRadius
 import jp.co.soramitsu.ui_core.theme.customTypography
 
@@ -52,12 +53,13 @@ fun FilledPolkaswapButton(
     maxLines: Int = 1,
     onClick: () -> Unit,
 ) {
+    val colors = ButtonColors.filledPolkaswapButtonColors(order)
     CompositionLocalProvider(
         LocalRippleConfiguration provides RippleConfiguration(color = Color.White.ripple())
     ) {
         Button(
-            modifier = modifier.buttonSize(size, shape, true, enabled),
-            colors = ButtonColors.filledPolkaswapButtonColors(order),
+            modifier = modifier.then(if (enabled) Modifier.litLacquer(shape, colors.backgroundColor(true).value) else Modifier).buttonSize(size, shape, false, enabled),
+            colors = colors,
             shape = shape,
             border = null,
             enabled = enabled,

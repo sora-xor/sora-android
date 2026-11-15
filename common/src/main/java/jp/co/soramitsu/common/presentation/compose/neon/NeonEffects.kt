@@ -51,6 +51,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
+import jp.co.soramitsu.ui_core.lit.litPlate
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import kotlin.math.roundToInt
@@ -152,14 +153,10 @@ fun Modifier.neonGlass(
     border: Brush? = n.borderGlass,
     opaqueColor: Color? = null,
 ): Modifier {
-    val opaque = opaqueColor != null || fx.opaqueGlass || fx.highContrast
-    val fill = opaqueColor ?: if (opaque) n.glassSolid else n.glassFill
-    val shadow = n.cardShadow
+    // A porcelain plate; an explicit colour is its glaze.
     return this
-        .then(if (shadow != null && fx.shadows) Modifier.dropShadow(shape, shadow) else Modifier)
+        .litPlate(shape, faceTop = opaqueColor, faceBottom = opaqueColor)
         .clip(shape)
-        .background(fill)
-        .then(if (opaque) Modifier else Modifier.background(n.glassHighlight))
         .then(if (border != null) Modifier.neonBorder(shape, border, fx) else Modifier)
 }
 

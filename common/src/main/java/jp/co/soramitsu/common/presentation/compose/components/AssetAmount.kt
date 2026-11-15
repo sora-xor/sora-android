@@ -62,6 +62,8 @@ import jp.co.soramitsu.common.util.testTagAsId
 import jp.co.soramitsu.ui_core.component.button.properties.Size
 import jp.co.soramitsu.ui_core.component.input.number.BasicNumberInput
 import jp.co.soramitsu.ui_core.component.input.number.DefaultCursorPosition
+import jp.co.soramitsu.ui_core.lit.litCoin
+import jp.co.soramitsu.ui_core.lit.litPlate
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.borderRadius
 import jp.co.soramitsu.ui_core.theme.customColors
@@ -89,16 +91,13 @@ fun AssetAmountInput(
         modifier = modifier
             .fillMaxWidth()
             .wrapContentHeight()
-            .background(
-                color = MaterialTheme.customColors.bgSurface,
-                shape = shape,
-            )
-            .border(
-                border = BorderStroke(
-                    1.dp,
-                    if (focusedInput.value) MaterialTheme.customColors.fgPrimary else MaterialTheme.customColors.bgSurface
-                ),
-                shape = shape,
+            .litPlate(shape, elevation = 12.dp)
+            .then(
+                if (focusedInput.value) {
+                    Modifier.border(BorderStroke(1.dp, MaterialTheme.customColors.fgPrimary), shape)
+                } else {
+                    Modifier
+                },
             )
             .padding(Dimens.x2),
         verticalAlignment = Alignment.CenterVertically,
@@ -108,6 +107,7 @@ fun AssetAmountInput(
             size = Size.Small,
             modifier = Modifier
                 .testTagAsId("TokenIcon")
+                .litCoin()
                 .clickable(enabled = tokenSelectable, onClick = onSelectToken)
         )
         Column(

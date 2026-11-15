@@ -57,6 +57,9 @@ import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.PortfolioScope
 import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.PortfolioSlots
 import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.SwapBlock
 import jp.co.soramitsu.ui_core.component.button.properties.Size as ButtonSize
+import jp.co.soramitsu.ui_core.lit.LitLed
+import jp.co.soramitsu.ui_core.lit.litPlate
+import jp.co.soramitsu.ui_core.lit.litWell
 import jp.co.soramitsu.ui_core.theme.customTypography
 
 internal interface PortfolioSheetActions {
@@ -265,9 +268,8 @@ private fun HoldingCard(model: PortfolioModel, holding: PortfolioHolding, line: 
         Modifier
             .fillMaxWidth()
             .heightIn(min = 68.dp)
+            .litPlate(radius = 18.dp, elevation = 8.dp)
             .clip(shape)
-            .background(n.glassFill)
-            .border(1.dp, n.hairline, shape)
             .then(if (onClick != null) Modifier.clickable(role = Role.Button, onClick = onClick) else Modifier)
             .padding(14.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -436,9 +438,10 @@ private fun AmountField(
         Modifier
             .fillMaxWidth()
             .heightIn(min = 60.dp)
+            // A field is a well pressed into the sheet.
+            .litWell(radius = 16.dp, depth = 2.6.dp)
             .clip(shape)
-            .background(n.neuBg)
-            .border(1.dp, if (error) n.error else n.borderInput, shape)
+            .then(if (error) Modifier.border(1.5.dp, n.error, shape) else Modifier)
             .padding(start = 16.dp, end = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -530,18 +533,19 @@ private fun SwapSheet(model: PortfolioModel, holdingKey: String?, format: Portfo
                 val on = id == target
                 val color = PortfolioPalette.slot(PortfolioSlots.seed(PortfolioLens.TOKENS)[id])
                 val shape = RoundedCornerShape(20.dp)
+                val floor = litTint(color)
                 Row(
                     Modifier
                         .heightIn(min = 48.dp)
+                        // Raised at rest, pressed in when chosen.
+                        .then(if (on) Modifier.litWell(radius = 20.dp, depth = 2.2.dp, floor = floor) else Modifier.litPlate(radius = 20.dp, elevation = 6.dp))
                         .clip(shape)
-                        .background(if (on) color.copy(alpha = 0.18f) else n.glassFill)
-                        .border(if (on) 1.5.dp else 1.dp, if (on) color else n.hairline, shape)
                         .clickable(role = Role.RadioButton, onClick = { target = id })
                         .semantics { selected = on }
                         .padding(horizontal = 16.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Box(Modifier.size(10.dp).clip(RoundedCornerShape(3.dp)).background(color))
+                    LitLed(color, diameter = 8.dp)
                     Spacer(Modifier.width(8.dp))
                     Text(TARGET_SYMBOLS[id] ?: id.take(6), style = MaterialTheme.customTypography.textSBold, color = n.textPrimary)
                 }

@@ -412,7 +412,7 @@ class TxDetailsViewModel @AssistedInject constructor(
                         ),
                         feeToken.printBalance(transaction.base.fee, numbersFormatter, AssetHolder.ROUNDING),
                         feeToken.printFiat(transaction.base.fee, numbersFormatter),
-                        R.drawable.ic_refresh_24,
+                        R.drawable.ic_polkaswap_40,
                         resourceManager.getString(R.string.polkaswap_swapped),
                     ),
                     amount1 = transaction.tokenFrom.printBalance(

@@ -11,6 +11,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Button
+import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Icon
 import androidx.compose.material.LocalRippleConfiguration
@@ -20,6 +21,7 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
@@ -30,9 +32,9 @@ import androidx.compose.ui.unit.dp
 import jp.co.soramitsu.ui_core.R
 import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.component.button.properties.Size
-import jp.co.soramitsu.ui_core.component.button.properties.buttonElevation
 import jp.co.soramitsu.ui_core.component.button.properties.buttonSize
 import jp.co.soramitsu.ui_core.resources.Dimens
+import jp.co.soramitsu.ui_core.lit.litPlate
 import jp.co.soramitsu.ui_core.theme.borderRadius
 import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
@@ -59,14 +61,22 @@ fun BleachedButton(
             rippleAlpha = null,
         )
     ) {
+        val colors = ButtonColors.bleachedButtonColors(order)
         Button(
-            modifier = modifier.buttonSize(size, shape, true, enabled),
-            colors = ButtonColors.bleachedButtonColors(order),
+            // A raised plate stands behind the button; it needs no fill or shadow of its own.
+            modifier = modifier.then(if (enabled) Modifier.litPlate(shape, elevation = 8.dp) else Modifier).buttonSize(size, shape, false, enabled),
+            colors = ButtonDefaults.buttonColors(
+                backgroundColor = Color.Transparent,
+                contentColor = colors.contentColor(true).value,
+                disabledBackgroundColor = colors.backgroundColor(false).value,
+                disabledContentColor = colors.contentColor(false).value,
+            ),
             shape = shape,
             border = null,
             enabled = enabled,
             onClick = onClick,
-            elevation = buttonElevation(size, true),
+            // A shadow from the button itself would show through its clear fill.
+            elevation = null,
             contentPadding = PaddingValues(0.dp),
         ) {
             leftIcon?.let { painter ->

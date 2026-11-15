@@ -93,11 +93,11 @@ class NeonContrastTest {
         assertEquals(NightThemeColors.FgPrimary, NeonClassicDark.textPrimary)
         assertEquals(NightThemeColors.AccentPrimary, NeonClassicDark.brandRed)
         for (n in listOf(NeonClassicLight, NeonClassicDark)) {
-            // Solid surfaces: no aurora, grain, glow or neumorphic depth.
+            // Lit surfaces: no aurora, grain or glow, and the neumorphic depth is real.
             assertEquals(Color.Transparent, n.auroraCyan)
             assertEquals(0f, n.grainAlpha)
             assertEquals(0f, n.glowPrimary.rest)
-            assertEquals(0f, n.neuDark.alpha)
+            assertTrue("neumorphic controls have depth", n.neuDark.alpha > 0f)
             assertEquals(n.surface, n.glassFill)
             assertEquals(SolidColor(n.brandRed), n.ctaPrimary)
         }
@@ -216,7 +216,8 @@ class NeonContrastTest {
 
             val secondary = buttonStyle(NeonVariant.Secondary, n, true)
             val disabledSecondary = buttonStyle(NeonVariant.Secondary, n, false)
-            assertEquals(SolidColor(n.glassFill), secondary.styleField("fill"))
+            // A raised plate stands behind it, so it has no fill of its own.
+            assertEquals(null, secondary.styleField("fill"))
             assertEquals(SolidColor(n.glassFillPressed), secondary.styleField("pressedFill"))
             assertEquals(n.textPrimary, secondary.labelColor())
             assertEquals(n.textDisabled, disabledSecondary.labelColor())

@@ -84,6 +84,7 @@ import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.isTestnet
 import jp.co.soramitsu.feature_wallet_impl.presentation.portfolio.motion.TiltState
 import jp.co.soramitsu.feature_wallet_impl.presentation.portfolio.motion.tiltLayer
 import jp.co.soramitsu.ui_core.component.button.properties.Size as ButtonSize
+import jp.co.soramitsu.ui_core.lit.litWell
 import jp.co.soramitsu.ui_core.theme.customTypography
 import kotlin.math.PI
 import kotlin.math.cos
@@ -316,8 +317,6 @@ private fun Orbit(
                 .offset(cx - ORB_SIZE / 2, cy - ORB_SIZE / 2)
                 .size(ORB_SIZE)
                 .tiltLayer(tilt, OrbitDepth.ORB, OrbitDepth.ORB * OrbitDepth.Y_RATIO)
-                .clip(CircleShape)
-                .border(2.dp, Color.White.copy(alpha = if (dark) 0.18f else 0.9f), CircleShape)
                 .semantics { hideFromAccessibility() }
         ) {
             TokenOrb(locations.token.iconUri, ORB_SIZE)
@@ -564,9 +563,7 @@ private fun Breakdown(holding: PortfolioHolding, format: PortfolioFormat, color:
     Column(
         Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .background(n.neuBg)
-            .border(1.dp, n.hairline, RoundedCornerShape(16.dp))
+            .litWell(radius = 16.dp, depth = 2.6.dp)
             .padding(14.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
@@ -637,22 +634,15 @@ private fun RouteCard(model: PortfolioModel, holding: PortfolioHolding) {
     val ready = readiness == Readiness.READY
     val pink = n.polkaswapBrand
     val wallet = model.wallet(holding.walletId)
-    val fill = when (readiness) {
-        Readiness.READY -> pink.copy(alpha = if (n.isDark) 0.10f else 0.05f)
-        Readiness.TEST -> statusFill(n.warning, n.warningContainer)
-        Readiness.NONE -> Color.Transparent
-    }
-    val edge = when (readiness) {
-        Readiness.READY -> pink.copy(alpha = 0.40f)
-        Readiness.TEST -> n.warning.copy(alpha = 0.3f)
-        Readiness.NONE -> n.hairline
+    val floor = when (readiness) {
+        Readiness.READY -> litTint(pink)
+        Readiness.TEST -> litTint(n.warning)
+        Readiness.NONE -> null
     }
     Column(
         Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .background(fill)
-            .border(1.dp, edge, RoundedCornerShape(16.dp))
+            .litWell(radius = 16.dp, depth = 2.2.dp, floor = floor)
             .padding(12.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
