@@ -1156,7 +1156,35 @@ class PinCodeViewModelTest {
         assertNotNull(pinCodeViewModel.pincodeChangedEvent.value)
     }
 
-    @Test fun `legacy PIN change explains the new length and cannot escape forced upgrade`() = runTest {
+    // An update never stops the owner (rule of 2026-11-09): a 4-digit PIN that SORA 2.x made
+    // unlocks as it is, with no explanation and no new PIN to make.
+    @Test fun `a 4-digit PIN from SORA 2_x unlocks at startup with its 4 digits and nothing else`() = runTest {
+        given(interactor.isCodeSet()).willReturn(true)
+        given(interactor.isPincodeUpdateNeeded()).willReturn(true)
+        given(interactor.checkPin("1234")).willReturn(true)
+        pinCodeViewModel.startAuth(PinCodeAction.TIMEOUT_CHECK)
+        advanceUntilIdle()
+        assertEquals(4, pinCodeViewModel.state.maxDotsCount)
+        "1234".forEach { pinCodeViewModel.pinCodeNumberClicked(it.toString()) }
+        advanceUntilIdle()
+        verify(interactor).checkPin("1234")
+        verify(mainRouter).popBackStack()
+        assertFalse(pinCodeViewModel.state.isLengthInfoAlertVisible)
+        verify(interactor, never()).savePin(anyString())
+        assertNull(pinCodeViewModel.closeAppLiveData.value)
+    }
+
+    @Test fun `every PIN check takes the stored PIN's length and a new PIN always has 6 digits`() = runTest {
+        given(interactor.isPincodeUpdateNeeded()).willReturn(true)
+        pinCodeViewModel.startAuth(PinCodeAction.OPEN_PASSPHRASE)
+        advanceUntilIdle()
+        assertEquals(4, pinCodeViewModel.state.maxDotsCount)
+        pinCodeViewModel.startAuth(PinCodeAction.CREATE_PIN_CODE)
+        advanceUntilIdle()
+        assertEquals(6, pinCodeViewModel.state.maxDotsCount)
+    }
+
+    @Test fun `changing a 4-digit PIN in Settings explains the new length and can be cancelled`() = runTest {
         given(interactor.isPincodeUpdateNeeded()).willReturn(true)
         given(interactor.checkPin("1234")).willReturn(true)
         given(resourceManager.getString(R.string.pincode_enter_current_pin_code)).willReturn("Current PIN")
@@ -1170,10 +1198,10 @@ class PinCodeViewModelTest {
         assertTrue(pinCodeViewModel.state.isLengthInfoAlertVisible)
         pinCodeViewModel.setNewLengthPinCodeClicked()
         assertFalse(pinCodeViewModel.state.isLengthInfoAlertVisible)
-        assertFalse(pinCodeViewModel.state.isBackButtonVisible)
         pinCodeViewModel.onBackPressed()
-        assertNotNull(pinCodeViewModel.closeAppLiveData.value)
-        verify(mainRouter, never()).popBackStack()
+        verify(mainRouter).popBackStack()
+        assertNull(pinCodeViewModel.closeAppLiveData.value)
+        verify(interactor, never()).savePin(anyString())
     }
 
     @Test fun `optional PIN change can be canceled after authenticating the old PIN`() = runTest {

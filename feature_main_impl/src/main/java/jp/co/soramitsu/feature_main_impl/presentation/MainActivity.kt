@@ -311,12 +311,10 @@ class MainActivity :
                 .show()
         }
 
-        viewModel.isPincodeUpdateNeeded.observe(this) { isUpdateNeeded ->
-            if (isUpdateNeeded) {
-                mainRouter.showPin(PinCodeAction.CHANGE_PIN_CODE)
-            } else {
-                mainRouter.showPin(PinCodeAction.TIMEOUT_CHECK)
-            }
+        // Always the ordinary unlock, also for a 4-digit PIN from SORA 2.x: the PIN screen takes
+        // its length, and an update never stops the owner to make a new PIN.
+        viewModel.isPincodeUpdateNeeded.observe(this) {
+            mainRouter.showPin(PinCodeAction.TIMEOUT_CHECK)
         }
     }
 

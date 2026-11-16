@@ -83,7 +83,6 @@ class PinCodeViewModel @Inject constructor(
     private lateinit var action: PinCodeAction
     private var tempCode = ""
     private var isBiometryEnabled = false
-    private var isPincodeUpdateNeeded: Boolean = false
     private var isChanging = false
     private var triesUsed = 0
     private var buttonsDisabled = false
@@ -193,6 +192,25 @@ class PinCodeViewModel @Inject constructor(
         createIdleTimer().start()
     }
 
+    /**
+     * How many digits the stored PIN has. SORA 2.x made 4-digit PINs. They keep working as they
+     * are: an update never stops the owner to replace one (rule of 2026-11-09), so every check
+     * takes the stored length and Settings > Change PIN is the way to 6 digits. If the stored PIN
+     * cannot be read here, the usual 6 is shown and the check itself reports the failure.
+     */
+    private suspend fun storedPinDigits(): Int =
+        try {
+            if (interactor.isPincodeUpdateNeeded()) {
+                PinCodeInteractor.OLD_PINCODE_LENGTH
+            } else {
+                PinCodeInteractor.PINCODE_LENGTH
+            }
+        } catch (error: CancellationException) {
+            throw error
+        } catch (error: Throwable) {
+            PinCodeInteractor.PINCODE_LENGTH
+        }
+
     fun startAuth(pinCodeAction: PinCodeAction) {
         // Back on the removal screen (from the JSON export): it is already past the PIN and
         // keeps its state; nothing is asked or started again.
@@ -201,6 +219,13 @@ class PinCodeViewModel @Inject constructor(
         if (pinCodeAction == PinCodeAction.TIMEOUT_CHECK) WalletSessionState.markLocked()
         viewModelScope.launch {
             action = pinCodeAction
+            state = state.copy(
+                maxDotsCount = if (action == PinCodeAction.CREATE_PIN_CODE) {
+                    PinCodeInteractor.PINCODE_LENGTH
+                } else {
+                    storedPinDigits()
+                }
+            )
             when (action) {
                 PinCodeAction.CREATE_PIN_CODE -> {
                     state = state.copy(
@@ -224,16 +249,10 @@ class PinCodeViewModel @Inject constructor(
                 }
 
                 PinCodeAction.CHANGE_PIN_CODE -> {
-                    isPincodeUpdateNeeded = interactor.isPincodeUpdateNeeded()
-                    // The forced 4-to-6 digit change replaces the unlock (U10).
-                    if (isPincodeUpdateNeeded) WalletSessionState.markLocked()
-                    val maxDotsLength = if (isPincodeUpdateNeeded) {
-                        PinCodeInteractor.OLD_PINCODE_LENGTH
-                    } else {
-                        PinCodeInteractor.PINCODE_LENGTH
-                    }
+                    // Only ever opened from Settings: the current PIN (4 digits if SORA 2.x set
+                    // it) is typed, then a 6-digit one is made. It can be cancelled like any
+                    // other change; nothing at startup forces it.
                     state = state.copy(
-                        maxDotsCount = maxDotsLength,
                         toolbarTitleString = resourceManager.getString(R.string.pincode_enter_current_pin_code),
                         isBackButtonVisible = true
                     )
@@ -448,7 +467,7 @@ class PinCodeViewModel @Inject constructor(
         }
         if (PinCodeAction.CREATE_PIN_CODE == action) {
             if (tempCode.isEmpty()) {
-                if (isChanging && !isPincodeUpdateNeeded) {
+                if (isChanging) {
                     mainRouter.popBackStack()
                 } else {
                     _closeAppLiveData.trigger()
@@ -464,7 +483,7 @@ class PinCodeViewModel @Inject constructor(
                 )
             }
         } else {
-            if (PinCodeAction.TIMEOUT_CHECK == action || isPincodeUpdateNeeded) {
+            if (PinCodeAction.TIMEOUT_CHECK == action) {
                 _closeAppLiveData.trigger()
             } else {
                 mainRouter.popBackStack()
