@@ -17,16 +17,26 @@ the scalar stored canonically, and a keypair is `[secret | public]`.
   - `sr25519-randombytes.h` uses `arc4random_buf`.
   - The Elligator hash-to-group code is removed. Only the VRF used it, and it
     had a type error.
+  - `merlin_rng_wipe` wipes with `memzero` instead of `memset`, so the
+    compiler cannot drop the stores.
   - The VRF, the default RNG and donna's own `sr25519.c` are left out.
 - `sr25519.c`: the C API, derived from donna's `sr25519.c` and following
   schnorrkel 0.9:
   - It reads and writes the canonical scalar format, where donna uses the
     ed25519 (×8) form.
-  - Soft derivation computes the public key from the secret.
+  - Soft derivation of a keypair commits its stored public key, as
+    sr25519-crust and schnorrkel's `Keypair::derived_key` do.
   - The signing witness takes 64 bytes from the transcript RNG.
-  - Secrets are wiped after use.
+  - Secrets are wiped after use. Each function that handles a secret also
+    zeroes the 16 KiB of stack below its frame before it returns, which
+    covers the frames of everything it called (SHA-512, Keccak, scalar
+    multiplication).
   - Key material that is not valid ends the process, as the Rust library's
     panic did. `sr25519_verify` returns false instead.
+
+- Build with `-DED25519_NO_INLINE_ASM` (`Package.swift` and Android's
+  `Android.mk` do). ed25519-donna's x86-64 inline-asm table select leaves
+  `xmm15` out of its clobber list; `sr25519.c` does not build with it.
 
 ## Compatibility
 

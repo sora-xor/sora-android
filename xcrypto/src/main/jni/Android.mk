@@ -14,6 +14,9 @@ LOCAL_SRC_FILES := \
 LOCAL_C_INCLUDES := $(LOCAL_PATH)/sr25519/include $(LOCAL_PATH)/sr25519
 LOCAL_CFLAGS := -O2 -fvisibility=hidden -fstack-protector-strong -D_FORTIFY_SOURCE=2 \
     -Wall -Wno-unused-function -Wno-incompatible-pointer-types -Wno-macro-redefined
+# The portable constant-time table select on every ABI, not ed25519-donna's x86-64 inline asm,
+# whose clobber list leaves out xmm15 (sr25519.c does not build with it).
+LOCAL_CFLAGS += -DED25519_NO_INLINE_ASM
 # Record source and NDK paths relative to the module and the NDK, not the build machine: the
 # library is then the same byte for byte wherever it is built (the release script's --reproduce
 # check), and no user name or checkout path ends up in the shipped binary.

@@ -7,12 +7,14 @@
  *  - byte formats of the sr25519-crust/schnorrkel API the app shipped with:
  *    secret scalars are stored canonically (SecretKey::to_bytes), not
  *    multiplied by the cofactor, in keypairs and secrets;
- *  - soft derivation computes the public key from the secret, as schnorrkel;
+ *  - soft derivation of a keypair commits the keypair's stored public key,
+ *    as schnorrkel's Keypair::derived_key and sr25519-crust do;
  *  - the signing witness takes 64 bytes from the transcript RNG, as
  *    schnorrkel's witness_scalar;
  *  - invalid key material ends the process (the Rust library panicked);
  *    sr25519_verify returns false for an invalid public key or signature;
- *  - secrets and nonces are wiped after use; no VRF.
+ *  - secrets and nonces are wiped after use, and so is the stack that the
+ *    computations on them used; no VRF.
  * The algorithms follow schnorrkel 0.9 (w3f/schnorrkel): MiniSecretKey
  * expand_ed25519, SecretKey/PublicKey derived_key_simple,
  * hard_derive_mini_secret_key, sign_simple and verify_simple.
@@ -27,7 +29,40 @@
 #include "donna/merlin.h"
 #include "donna/memzero.h"
 
+/*
+ * ed25519-donna's x86-64 inline-asm table select (ed25519-donna-64bit-x86.h,
+ * -64bit-x86-32bit.h) writes xmm15 without naming it in its clobber list, so
+ * a compiler may keep a live value there across the asm. Both app builds
+ * define ED25519_NO_INLINE_ASM, which compiles the portable constant-time C
+ * select instead; a build that would compile the asm one stops here.
+ */
+#if defined(HAVE_GE25519_SCALARMULT_BASE_CHOOSE_NIELS)
+#error "build sr25519 with -DED25519_NO_INLINE_ASM"
+#endif
+
 static const uint8_t SIGNING_CONTEXT[] = "substrate";
+
+/*
+ * Bytes of stack that wipe_stack() zeroes. The deepest call, sr25519_sign,
+ * uses under 10 KiB below its caller at -O0 (iOS Debug) and under 3.6 KiB at
+ * -O2 and -Os, in 64- and 32-bit arithmetic, on arm64 and x86-64.
+ */
+#define SR25519_STACK_WIPE_BYTES 16384
+
+/*
+ * Zeroes the stack below the calling function's frame. Each public function
+ * that handles a secret does its work in a DONNA_NOINLINE helper and calls
+ * this after the helper returns, so this frame covers the helper's frame and
+ * the frames of everything it called: the SHA-512 message schedule, Keccak
+ * scratch, the signed window digits of a scalar, scalar products and spilled
+ * registers. memzero stores through a volatile pointer, so the stores stay.
+ * AddressSanitizer builds with use-after-return detection put frames on a
+ * separate fake stack that this does not reach; no shipped build uses it.
+ */
+static DONNA_NOINLINE void wipe_stack(void) {
+    uint8_t scratch[SR25519_STACK_WIPE_BYTES];
+    memzero(scratch, sizeof scratch);
+}
 
 static void sr25519_fail(void) {
     /* Not valid key material: the Rust library panicked here. */
@@ -100,7 +135,7 @@ static void expand_ed25519(uint8_t key[32], uint8_t nonce[32], const uint8_t min
     memzero(hash, sizeof hash);
 }
 
-static void keypair_from_mini_secret(uint8_t *keypair_out, const uint8_t mini_secret_key[32]) {
+static DONNA_NOINLINE void keypair_from_mini_secret(uint8_t *keypair_out, const uint8_t mini_secret_key[32]) {
     uint8_t key[32], nonce[32], public_key[32];
     bignum256modm scalar;
     expand_ed25519(key, nonce, mini_secret_key);
@@ -138,9 +173,10 @@ static void hdkd_transcript(merlin_transcript *t) {
 
 void sr25519_keypair_from_seed(uint8_t *keypair_out, const uint8_t *seed_ptr) {
     keypair_from_mini_secret(keypair_out, seed_ptr);
+    wipe_stack();
 }
 
-void sr25519_derive_keypair_hard(uint8_t *keypair_out, const uint8_t *pair_ptr, const uint8_t *cc_ptr) {
+static DONNA_NOINLINE void derive_keypair_hard(uint8_t *keypair_out, const uint8_t *pair_ptr, const uint8_t *cc_ptr) {
     bignum256modm key;
     uint8_t key_bytes[32], nonce[32], mini[32], chain_code_out[32];
     ge25519 public_point;
@@ -162,22 +198,29 @@ void sr25519_derive_keypair_hard(uint8_t *keypair_out, const uint8_t *pair_ptr, 
     memzero(key_bytes, sizeof key_bytes);
     memzero(nonce, sizeof nonce);
     memzero(mini, sizeof mini);
+    memzero(chain_code_out, sizeof chain_code_out);
 }
 
-void sr25519_derive_keypair_soft(uint8_t *keypair_out, const uint8_t *pair_ptr, const uint8_t *cc_ptr) {
+void sr25519_derive_keypair_hard(uint8_t *keypair_out, const uint8_t *pair_ptr, const uint8_t *cc_ptr) {
+    derive_keypair_hard(keypair_out, pair_ptr, cc_ptr);
+    wipe_stack();
+}
+
+static DONNA_NOINLINE void derive_keypair_soft(uint8_t *keypair_out, const uint8_t *pair_ptr, const uint8_t *cc_ptr) {
     bignum256modm key, scalar, derived;
-    uint8_t key_bytes[32], nonce[32], own_public[32], chain_code_out[32];
+    uint8_t key_bytes[32], nonce[32], chain_code_out[32];
     uint8_t derived_bytes[32], derived_nonce[32], derived_public[32];
     ge25519 public_point;
     parse_secret(key, key_bytes, nonce, pair_ptr);
     parse_public(&public_point, pair_ptr + 64);
 
-    /* SecretKey::derived_key: the public key comes from the secret. */
-    public_from_scalar(own_public, key);
-
+    /* Keypair::derived_key: the transcript commits the keypair's stored public
+     * key, as sr25519-crust and the prebuilt library did. For every keypair
+     * the apps build it is secret·B. The derived public key comes from the
+     * derived secret. */
     merlin_transcript t;
     hdkd_transcript(&t);
-    derive_scalar_and_chaincode(&t, scalar, chain_code_out, own_public, cc_ptr);
+    derive_scalar_and_chaincode(&t, scalar, chain_code_out, pair_ptr + 64, cc_ptr);
 
     /* nonce: t.witness_bytes(b"HDKD-nonce", [nonce, secret.to_bytes()]) */
     uint8_t secret_bytes[64];
@@ -212,6 +255,11 @@ void sr25519_derive_keypair_soft(uint8_t *keypair_out, const uint8_t *pair_ptr, 
     memzero(derived_nonce, sizeof derived_nonce);
 }
 
+void sr25519_derive_keypair_soft(uint8_t *keypair_out, const uint8_t *pair_ptr, const uint8_t *cc_ptr) {
+    derive_keypair_soft(keypair_out, pair_ptr, cc_ptr);
+    wipe_stack();
+}
+
 void sr25519_derive_public_soft(uint8_t *pubkey_out, const uint8_t *public_ptr, const uint8_t *cc_ptr) {
     ge25519 public_point, offset, derived;
     bignum256modm scalar;
@@ -227,11 +275,11 @@ void sr25519_derive_public_soft(uint8_t *pubkey_out, const uint8_t *public_ptr, 
     ristretto_encode(pubkey_out, derived);
 }
 
-void sr25519_sign(uint8_t *signature_out,
-                  const uint8_t *public_ptr,
-                  const uint8_t *secret_ptr,
-                  const uint8_t *message_ptr,
-                  unsigned long message_length) {
+static DONNA_NOINLINE void sign_message(uint8_t *signature_out,
+                                        const uint8_t *public_ptr,
+                                        const uint8_t *secret_ptr,
+                                        const uint8_t *message_ptr,
+                                        unsigned long message_length) {
     bignum256modm key, r, k, s, kx;
     uint8_t key_bytes[32], nonce[32];
     ge25519 public_point;
@@ -284,6 +332,15 @@ void sr25519_sign(uint8_t *signature_out,
     memzero(nonce, sizeof nonce);
 }
 
+void sr25519_sign(uint8_t *signature_out,
+                  const uint8_t *public_ptr,
+                  const uint8_t *secret_ptr,
+                  const uint8_t *message_ptr,
+                  unsigned long message_length) {
+    sign_message(signature_out, public_ptr, secret_ptr, message_ptr, message_length);
+    wipe_stack();
+}
+
 bool sr25519_verify(const uint8_t *signature_ptr,
                     const uint8_t *message_ptr,
                     unsigned long message_length,
@@ -331,11 +388,17 @@ bool sr25519_public_key_is_valid(const uint8_t *public_ptr) {
     return ristretto_decode(&point, public_ptr) == 1;
 }
 
-bool sr25519_secret_is_valid(const uint8_t *secret_ptr) {
+static DONNA_NOINLINE bool secret_is_valid(const uint8_t *secret_ptr) {
     bignum256modm key;
     int valid = load_canonical_scalar(key, secret_ptr);
     memzero(key, sizeof(bignum256modm));
     return valid != 0;
+}
+
+bool sr25519_secret_is_valid(const uint8_t *secret_ptr) {
+    bool valid = secret_is_valid(secret_ptr);
+    wipe_stack();
+    return valid;
 }
 
 bool sr25519_signature_is_well_formed(const uint8_t *signature_ptr) {
@@ -349,7 +412,7 @@ bool sr25519_signature_is_well_formed(const uint8_t *signature_ptr) {
     return load_canonical_scalar(s, s_bytes) != 0;
 }
 
-void sr25519_to_ed25519_bytes(uint8_t *secret_out, const uint8_t *secret_ptr) {
+static DONNA_NOINLINE void to_ed25519_bytes(uint8_t *secret_out, const uint8_t *secret_ptr) {
     bignum256modm key;
     uint8_t key_bytes[32], nonce[32];
     parse_secret(key, key_bytes, nonce, secret_ptr);
@@ -361,12 +424,25 @@ void sr25519_to_ed25519_bytes(uint8_t *secret_out, const uint8_t *secret_ptr) {
     memzero(nonce, sizeof nonce);
 }
 
-void sr25519_from_ed25519_bytes(uint8_t *secret_out, const uint8_t *secret_ptr) {
-    /* SecretKey::from_ed25519_bytes(..).to_bytes(): divide by the cofactor. */
+void sr25519_to_ed25519_bytes(uint8_t *secret_out, const uint8_t *secret_ptr) {
+    to_ed25519_bytes(secret_out, secret_ptr);
+    wipe_stack();
+}
+
+static DONNA_NOINLINE void from_ed25519_bytes(uint8_t *secret_out, const uint8_t *secret_ptr) {
+    /* SecretKey::from_ed25519_bytes(..).to_bytes() in schnorrkel 0.9: divide by
+     * the cofactor, with no range check. schnorrkel 0.11 rejects a result that
+     * is not canonical; callers check it with sr25519_secret_is_valid before
+     * they keep it, since signing with it would end the process. */
     uint8_t key_bytes[32];
     memcpy(key_bytes, secret_ptr, 32);
     divide_scalar_bytes_by_cofactor(key_bytes);
     memcpy(secret_out, key_bytes, 32);
     memmove(secret_out + 32, secret_ptr + 32, 32);
     memzero(key_bytes, sizeof key_bytes);
+}
+
+void sr25519_from_ed25519_bytes(uint8_t *secret_out, const uint8_t *secret_ptr) {
+    from_ed25519_bytes(secret_out, secret_ptr);
+    wipe_stack();
 }

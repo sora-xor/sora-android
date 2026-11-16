@@ -12,7 +12,12 @@
  *
  * Inputs that are not valid key material (a non-canonical scalar, a public
  * key that is not a Ristretto point) end the process, as the Rust library
- * did, except in sr25519_verify, which returns false.
+ * did, except in sr25519_verify, which returns false. Callers that can be
+ * handed such input check it first with sr25519_secret_is_valid and
+ * sr25519_public_key_is_valid.
+ *
+ * Build with -DED25519_NO_INLINE_ASM (sr25519.c refuses to build without it
+ * on x86-64).
  */
 
 #include <stdbool.h>
@@ -39,13 +44,21 @@ extern "C" {
 /** Hard derivation (//junction): keypair_out from pair_ptr and chain code cc_ptr. */
 void sr25519_derive_keypair_hard(uint8_t *keypair_out, const uint8_t *pair_ptr, const uint8_t *cc_ptr);
 
-/** Soft derivation (/junction). The output nonce is random, as in schnorrkel. */
+/**
+ * Soft derivation (/junction). The transcript commits the keypair's stored public
+ * key (pair_ptr + 64), as schnorrkel's Keypair::derived_key and sr25519-crust do.
+ * The output nonce is random, as in schnorrkel.
+ */
 void sr25519_derive_keypair_soft(uint8_t *keypair_out, const uint8_t *pair_ptr, const uint8_t *cc_ptr);
 
 /** Soft derivation of a public key alone. */
 void sr25519_derive_public_soft(uint8_t *pubkey_out, const uint8_t *public_ptr, const uint8_t *cc_ptr);
 
-/** Secret from its Ed25519 representation (scalar divided by the cofactor). */
+/**
+ * Secret from its Ed25519 representation (scalar divided by the cofactor), with
+ * no range check, as schnorrkel 0.9. Check the result with sr25519_secret_is_valid
+ * before keeping it: schnorrkel 0.11 rejects a non-canonical one here.
+ */
 void sr25519_from_ed25519_bytes(uint8_t *secret_out, const uint8_t *secret_ptr);
 
 /** Keypair from a 32-byte mini secret key (schnorrkel ExpansionMode::Ed25519). */

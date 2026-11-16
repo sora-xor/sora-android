@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "merlin.h"
+#include "memzero.h"
 #include "sr25519-randombytes.h"
 
 /******** The Keccak-f[1600] permutation ********/
@@ -267,9 +268,7 @@ void merlin_rng_random_bytes(merlin_rng* mrng, uint8_t* buffer, size_t buffer_le
 }
 
 void merlin_rng_wipe(merlin_rng* mrng) {
-#ifdef HAVE_EXPLICIT_BZERO
-    explicit_bzero(&mrng->sctx, sizeof(merlin_strobe128));
-#else
-    memset(&mrng->sctx, 0, sizeof(merlin_strobe128));
-#endif
+    /* memzero, not memset: a compiler may drop a memset of memory that is not
+     * read again (with LTO or a unity build it can see that). */
+    memzero(&mrng->sctx, sizeof(merlin_strobe128));
 }
