@@ -33,7 +33,9 @@ import jp.co.soramitsu.common.domain.AssetHolder
 import jp.co.soramitsu.common.domain.DuplicateWaitingTransactionException
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.domain.TransactionOutcome
-import jp.co.soramitsu.common.domain.printFiat
+import jp.co.soramitsu.common.domain.calcFiat
+import jp.co.soramitsu.common.domain.formatFiat
+import jp.co.soramitsu.common.domain.formatFiatOrEmpty
 import jp.co.soramitsu.common.presentation.compose.components.initSmallTitle2
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.util.NumbersFormatter
@@ -168,8 +170,8 @@ class ReferralViewModel @Inject constructor(
                                     numbersFormatter
                                 ),
                                 extrinsicFee = feeToken.formatBalance(extrinsicFee),
-                                extrinsicFeeFiat = feeToken.printFiat(
-                                    extrinsicFee,
+                                extrinsicFeeFiat = feeToken.formatFiatOrEmpty(
+                                    feeToken.calcFiat(extrinsicFee),
                                     numbersFormatter
                                 )
                             ),
@@ -531,16 +533,14 @@ class ReferralViewModel @Inject constructor(
             precision = AssetHolder.ROUNDING
         )
 
+    /** "0.07 XOR ($0.01)", or just "0.07 XOR" while the token has no fiat price, never "(0)". */
     private fun Token.printAmountWithFee(
         amount: BigDecimal,
         numbersFormatter: NumbersFormatter
     ): String {
-        return "${this.printBalance(amount, numbersFormatter, AssetHolder.ROUNDING)} (${
-            this.printFiat(
-                amount,
-                numbersFormatter
-            )
-        })"
+        val balance = this.printBalance(amount, numbersFormatter, AssetHolder.ROUNDING)
+        val fiat = this.calcFiat(amount) ?: return balance
+        return "$balance (${this.formatFiat(fiat, numbersFormatter)})"
     }
 
     private fun validateFeePayment(fee: BigDecimal): Boolean {
