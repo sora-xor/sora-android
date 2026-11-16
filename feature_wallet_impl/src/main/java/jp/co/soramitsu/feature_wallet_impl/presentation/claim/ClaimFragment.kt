@@ -82,8 +82,10 @@ class ClaimFragment : SoraBaseFragment<ClaimViewModel>() {
         }
     }
 
+    // The wallet is open underneath (the PIN opens it first): Back returns to it. The claim is
+    // offered again at the next unlock until it is done.
     override fun onBack() {
-        requireActivity().finish()
+        viewModel.onBackPressed()
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {

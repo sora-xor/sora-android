@@ -37,6 +37,14 @@ enum class PinCodeAction {
      * that asked (MainRouter.returnFromPinConfirmation).
      */
     GOOGLE_BACKUP,
+
+    /**
+     * Settings > Login & security, turning biometric unlock on while this install has no usable
+     * approval for the biometrics enrolled now (they changed since the owner last approved them,
+     * or were never approved here). The PIN, and for a changed enrollment the owner's answer,
+     * approve them. The unlock itself never asks (update rule of 2026-11-09).
+     */
+    APPROVE_BIOMETRICS,
 }
 
 /**

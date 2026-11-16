@@ -32,6 +32,7 @@ import javax.inject.Inject
 import jp.co.soramitsu.feature_account_api.domain.WalletPinLockedException
 import javax.crypto.Cipher
 import jp.co.soramitsu.common.security.BiometricUnlockGate
+import jp.co.soramitsu.androidfoundation.coroutine.CoroutineManager
 import jp.co.soramitsu.androidfoundation.fragment.SingleLiveEvent
 import jp.co.soramitsu.androidfoundation.fragment.trigger
 import jp.co.soramitsu.androidfoundation.resource.ResourceManager
@@ -41,6 +42,7 @@ import jp.co.soramitsu.common.presentation.compose.SnackBarState
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.presentation.viewmodel.FailureNotice
 import jp.co.soramitsu.common.util.KeyMaterialUnavailableException
+import jp.co.soramitsu.common.util.WalletStorageFailures
 import jp.co.soramitsu.common.vibration.DeviceVibrator
 import jp.co.soramitsu.common.presentation.compose.neon.safemode.WalletSessionState
 import jp.co.soramitsu.feature_main_api.domain.model.PinCodeAction
@@ -50,6 +52,7 @@ import jp.co.soramitsu.feature_main_impl.domain.MainInteractor
 import jp.co.soramitsu.feature_main_impl.domain.PinCodeInteractor
 import jp.co.soramitsu.feature_select_node_api.SelectNodeRouter
 import jp.co.soramitsu.sora.substrate.substrate.ConnectionManager
+import kotlin.coroutines.EmptyCoroutineContext
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -70,6 +73,8 @@ class PinCodeViewModel @Inject constructor(
     private val deviceVibrator: DeviceVibrator,
     connectionManager: ConnectionManager,
     private val biometricGate: BiometricUnlockGate = BiometricUnlockGate(),
+    /** Runs the claim check after the PIN screen has closed; null in tests (the screen's scope). */
+    private val coroutineManager: CoroutineManager? = null,
 ) : BaseViewModel(), WithProgress by progress {
 
     internal var state by mutableStateOf(
@@ -127,8 +132,9 @@ class PinCodeViewModel @Inject constructor(
 
     /**
      * True while the owner is asked about biometrics that changed since they last approved them.
-     * The typed PIN was right, and nothing goes on until they answer. A held value, not an event,
-     * so the question comes back if the screen is rebuilt.
+     * Asked only when the owner turns biometric unlock on in Settings ([PinCodeAction.APPROVE_BIOMETRICS])
+     * and the typed PIN was right; the unlock itself never asks. A held value, not an event, so
+     * the question comes back if the screen is rebuilt.
      */
     private val _enrollmentChangeQuestion = MutableLiveData(false)
     val enrollmentChangeQuestion: LiveData<Boolean> = _enrollmentChangeQuestion
@@ -155,14 +161,9 @@ class PinCodeViewModel @Inject constructor(
         connectionManager.connectionState
             .catch { onError(it) }
             .onEach {
-                val reconnected = it && !state.isConnected
                 state = state.copy(
                     isConnected = it
                 )
-                // U2: "We'll continue as soon as you're back online" - continue by itself.
-                if (reconnected && state.migrating && state.checkNeedsNetwork) {
-                    viewModelScope.launch { tryCatch { proceed() } }
-                }
             }
             .launchIn(viewModelScope)
 
@@ -240,7 +241,8 @@ class PinCodeViewModel @Inject constructor(
                 PinCodeAction.LOGOUT,
                 PinCodeAction.CUSTOM_NODE,
                 PinCodeAction.SELECT_NODE,
-                PinCodeAction.GOOGLE_BACKUP -> {
+                PinCodeAction.GOOGLE_BACKUP,
+                PinCodeAction.APPROVE_BIOMETRICS -> {
                     state = state.copy(
                         toolbarTitleString = resourceManager.getString(R.string.pincode_enter_pin_code),
                         isBiometricButtonVisible = false
@@ -278,10 +280,11 @@ class PinCodeViewModel @Inject constructor(
                         }
                     } catch (t: Throwable) {
                         onError(t)
-                        if (t is KeyMaterialUnavailableException) {
-                            // The stored PIN exists but the wallet key cannot be used right now
-                            // (busy or missing Keystore key). Keep asking for the existing PIN;
-                            // offering to create a new one would replace the stored PIN.
+                        if (t is KeyMaterialUnavailableException || WalletStorageFailures.isTransient(t)) {
+                            // The stored PIN exists but cannot be read right now (busy or missing
+                            // Keystore key, a busy disk). Keep asking for the existing PIN;
+                            // offering to create a new one would replace the stored PIN (and
+                            // saving it would fail the same way).
                             state = state.copy(
                                 toolbarTitleString = resourceManager.getString(R.string.pincode_enter_pin_code),
                                 isBackButtonVisible = false
@@ -408,9 +411,15 @@ class PinCodeViewModel @Inject constructor(
         }
 
         if (result) {
-            if (enrollmentChangeNeedsAnswer()) {
-                _enrollmentChangeQuestion.value = true
+            if (action == PinCodeAction.APPROVE_BIOMETRICS) {
+                approveBiometricsAfterPin()
             } else {
+                // A typed PIN approves only biometrics never approved on this install (the first
+                // unlock after updating from a version without the approval). A changed
+                // enrollment stays unapproved, so biometric unlock stays off, and the unlock goes
+                // on without a question (update rule of 2026-11-09): the owner turns it on again
+                // in Settings, behind the PIN and their answer.
+                biometricGate.approveFirstEnrollmentAfterPin()
                 processSuccessfullAuth()
             }
         } else {
@@ -426,25 +435,31 @@ class PinCodeViewModel @Inject constructor(
     }
 
     /**
-     * A typed PIN proves the owner is here, not that they know the phone's biometrics changed, so
-     * a changed enrollment waits for their answer. Only biometrics never approved on this install
-     * are approved by the PIN alone.
+     * The owner turns biometric unlock on in Settings and typed the right PIN. A typed PIN proves
+     * the owner is here, not that they know the phone's biometrics changed, so a changed
+     * enrollment waits for their answer; biometrics never approved here are approved by the PIN.
      */
-    private suspend fun enrollmentChangeNeedsAnswer(): Boolean {
-        if (!biometricGate.enrollmentChanged()) {
-            biometricGate.approveFirstEnrollmentAfterPin()
-            return false
+    private suspend fun approveBiometricsAfterPin() {
+        if (biometricGate.enrollmentChanged()) {
+            _enrollmentChangeQuestion.value = true
+        } else {
+            enableApprovedBiometrics()
         }
-        // With biometrics off, or none enrolled now, there is nothing to decide. The old key stays
-        // unusable, so the question comes when it matters.
-        return interactor.isBiometryEnabled() && interactor.isBiometryAvailable()
+    }
+
+    private suspend fun enableApprovedBiometrics() {
+        biometricGate.approveEnrollmentAfterPin()
+        interactor.setBiometryEnabled(true)
+        isBiometryEnabled = true
+        processSuccessfullAuth()
     }
 
     fun onEnrollmentChangeKept() {
         if (_enrollmentChangeQuestion.value != true) return
         _enrollmentChangeQuestion.value = false
-        biometricGate.approveEnrollmentAfterPin()
-        processSuccessfullAuth()
+        viewModelScope.launch {
+            tryCatch { enableApprovedBiometrics() }
+        }
     }
 
     fun onEnrollmentChangeRefused() {
@@ -501,12 +516,6 @@ class PinCodeViewModel @Inject constructor(
             return
         }
         startFingerprintScannerEventLiveData.value = biometricAllowed
-        if (state.migrating && state.isConnected) {
-            viewModelScope.launch {
-                delay(300)
-                proceed()
-            }
-        }
     }
 
     fun onAuthenticationError(errString: String) {
@@ -587,6 +596,10 @@ class PinCodeViewModel @Inject constructor(
 
                 PinCodeAction.GOOGLE_BACKUP -> {
                     mainRouter.returnFromPinConfirmation(PinCodeAction.GOOGLE_BACKUP)
+                }
+
+                PinCodeAction.APPROVE_BIOMETRICS -> {
+                    mainRouter.popBackStack()
                 }
 
                 else -> {
@@ -837,55 +850,52 @@ class PinCodeViewModel @Inject constructor(
     private var proceeded = false
 
     /**
-     * After unlocking: checks whether the account still has an older SORA balance to claim.
-     * Only an unchecked 15-word legacy phrase needs the network for that; every other account is
-     * checked on the phone, so being offline never keeps the person at this screen (U2).
+     * After unlocking the wallet opens at once: nothing after the PIN waits for the network or an
+     * answer (update rule of 2026-11-09). A claim of an older SORA balance that the last check
+     * already found on this phone is offered on top of the wallet (Back returns to it). Whether
+     * an account has one is checked afterwards in the background; a claim it finds is offered at
+     * the next unlock, and a check that fails runs again then.
      */
     private suspend fun proceed() {
-        // Set before the first suspension: a second trigger (reconnect, resume, biometrics
-        // dialog) while this one waits must not navigate a second time.
+        // Set before the first suspension: a second trigger (resume, biometrics dialog) while
+        // this one reads must not navigate a second time.
         if (proceeding || proceeded) return
         proceeding = true
         try {
-            val needsNetwork = try {
-                interactor.migrationCheckNeedsNetwork()
+            val claimPending = try {
+                interactor.isClaimKnownPending()
             } catch (error: CancellationException) {
                 throw error
             } catch (_: Throwable) {
-                // Unreadable right now: the optional check below is skipped, never waited for.
+                // Unreadable right now: nothing is offered; the background check below decides.
                 false
             }
-            // Only a check that needs the network ever says it waits for it (U2).
-            state = state.copy(
-                migrating = true,
-                checkNeedsNetwork = needsNetwork,
-            )
-            if (state.isConnected || !needsNetwork) {
-                val needs = try {
-                    interactor.needsMigration()
-                } catch (error: CancellationException) {
-                    throw error
-                } catch (error: Throwable) {
-                    // The claim check is optional: it runs again at the next unlock (nothing was
-                    // recorded). It never keeps the person out of the wallet.
-                    jp.co.soramitsu.common.logger.WalletDiagnostics.recordException(error)
-                    false
-                }
-                state = state.copy(
-                    migrating = false,
-                    checkNeedsNetwork = false,
-                )
-                proceeded = true
-                WalletSessionState.markUnlocked()
-                if (needs) {
-                    mainRouter.showClaim()
-                } else {
-                    mainRouter.popBackStack()
-                }
+            proceeded = true
+            WalletSessionState.markUnlocked()
+            if (claimPending) {
+                mainRouter.showClaim()
+            } else {
+                mainRouter.popBackStack()
             }
-            // Otherwise it waits for the network; the reconnect handler calls this again.
+            checkClaimInBackground()
         } finally {
             proceeding = false
+        }
+    }
+
+    /** The optional claim check, after the wallet opened. Never keeps anyone out of it. */
+    private fun checkClaimInBackground() {
+        val manager = coroutineManager
+        val scope = manager?.applicationScope ?: viewModelScope
+        scope.launch(manager?.io ?: EmptyCoroutineContext) {
+            try {
+                interactor.needsMigration()
+            } catch (error: CancellationException) {
+                throw error
+            } catch (error: Throwable) {
+                // Nothing was recorded: it runs again after the next unlock.
+                jp.co.soramitsu.common.logger.WalletDiagnostics.recordException(error)
+            }
         }
     }
 

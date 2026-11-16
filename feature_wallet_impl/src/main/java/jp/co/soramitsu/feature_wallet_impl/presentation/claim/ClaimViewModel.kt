@@ -124,6 +124,11 @@ class ClaimViewModel @Inject constructor(
         if (claimDone && screenInFront) router.closeClaimScreen()
     }
 
+    /** Back leaves the claim for the wallet underneath; nothing in flight is cancelled. */
+    override fun onBackPressed() {
+        router.closeClaimScreen()
+    }
+
     fun contactsUsClicked() {
         _openSendEmailEvent.postValue(OptionsProvider.email)
     }

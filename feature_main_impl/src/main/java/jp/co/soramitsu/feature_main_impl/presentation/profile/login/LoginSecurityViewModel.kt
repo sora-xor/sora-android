@@ -33,6 +33,7 @@ import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.logger.WalletDiagnostics
 import jp.co.soramitsu.common.presentation.compose.components.initSmallTitle2
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
+import jp.co.soramitsu.common.security.BiometricUnlockGate
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_main_api.domain.model.PinCodeAction
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
@@ -45,6 +46,7 @@ class LoginSecurityViewModel @Inject constructor(
     private val mainInteractor: MainInteractor,
     private val userRepository: UserRepository,
     private val resourceManager: ResourceManager,
+    private val biometricGate: BiometricUnlockGate,
 ) : BaseViewModel() {
 
     internal var state by mutableStateOf(LoginSecurityState(false, false))
@@ -59,14 +61,7 @@ class LoginSecurityViewModel @Inject constructor(
         _toolbarState.value = initSmallTitle2(
             title = R.string.settings_login_title,
         )
-        viewModelScope.launch {
-            val available = mainInteractor.isBiometryAvailable()
-            val enabled = mainInteractor.isBiometryEnabled()
-            state = state.copy(
-                bioAvailable = available,
-                bioEnabled = enabled && available,
-            )
-        }
+        refreshBiometrics()
         viewModelScope.launch {
             // Key sets found at startup that no account uses (an unfinished account setup, an
             // account removed in an older version, or keys kept by "Set up this device again").
@@ -83,6 +78,28 @@ class LoginSecurityViewModel @Inject constructor(
             } catch (error: Throwable) {
                 onBackgroundError(error)
             }
+        }
+    }
+
+    /** Back from the PIN screen that approves biometrics: show what it decided. */
+    override fun onScreenResumed() {
+        super.onScreenResumed()
+        refreshBiometrics()
+    }
+
+    /**
+     * Biometric unlock shows as on only while it can unlock: on, available, and approved by the
+     * owner for the biometrics enrolled now. After a change of enrollment the unlock no longer
+     * asks about it (update rule of 2026-11-09); it shows as off here until the owner turns it on.
+     */
+    private fun refreshBiometrics() {
+        viewModelScope.launch {
+            val available = mainInteractor.isBiometryAvailable()
+            val enabled = mainInteractor.isBiometryEnabled()
+            state = state.copy(
+                bioAvailable = available,
+                bioEnabled = enabled && available && biometricGate.isAvailable(),
+            )
         }
     }
 
@@ -121,6 +138,12 @@ class LoginSecurityViewModel @Inject constructor(
     }
 
     fun toggleBio(checked: Boolean) {
+        if (checked && !biometricGate.isAvailable()) {
+            // Biometrics changed since the owner approved them, or were never approved here:
+            // only the PIN (and for a change, the owner's answer) approves them.
+            mainRouter.showPin(PinCodeAction.APPROVE_BIOMETRICS)
+            return
+        }
         state = state.copy(bioEnabled = checked)
         viewModelScope.launch {
             tryCatch {

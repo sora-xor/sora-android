@@ -37,14 +37,14 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestRule
 
 /**
- * The account check after unlocking (design spec 9.2 U1, U2): it says it waits for the network
- * only when it needs the network, and it opens the wallet exactly once.
+ * The account check after unlocking. Update rule of 2026-11-09: the wallet opens as soon as the
+ * PIN is right. The optional check for an older SORA balance to claim never keeps anyone at the
+ * PIN screen: not offline, not while the network answers, and not on a claim it finds then.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class PinCodeAccountCheckTest {
@@ -62,6 +62,7 @@ class PinCodeAccountCheckTest {
         coEvery { it.isBiometryEnabled() } returns false
         coEvery { it.retrieveTriesUsed() } returns 0
         coEvery { it.retrieveTimerStartedTimestamp() } returns 0L
+        coEvery { it.isClaimKnownPending() } returns false
         coEvery { it.needsMigration() } returns false
     }
     private val mainRouter = mockk<MainRouter>(relaxed = true)
@@ -83,56 +84,76 @@ class PinCodeAccountCheckTest {
         connectionManager,
     )
 
-    @Test
-    fun `a second trigger while the check starts never opens the wallet twice`() = runTest {
-        val needsNetwork = CompletableDeferred<Boolean>()
-        coEvery { interactor.migrationCheckNeedsNetwork() } coAnswers { needsNetwork.await() }
-        val vm = viewModel()
+    private fun kotlinx.coroutines.test.TestScope.unlock(vm: PinCodeViewModel) {
         vm.startAuth(PinCodeAction.TIMEOUT_CHECK)
         advanceUntilIdle()
         vm.pinCodeNumberClicked("123456")
         advanceUntilIdle()
-        // While the first check waits, the biometrics dialog answer starts another one.
+    }
+
+    @Test
+    fun `a second trigger while the wallet opens never opens it twice`() = runTest {
+        val pending = CompletableDeferred<Boolean>()
+        coEvery { interactor.isClaimKnownPending() } coAnswers { pending.await() }
+        val vm = viewModel()
+        unlock(vm)
+        // While the first one reads, the biometrics dialog answer starts another one.
         vm.biometryDialogNoClicked()
         advanceUntilIdle()
-        needsNetwork.complete(false)
+        pending.complete(false)
         advanceUntilIdle()
         verify(exactly = 1) { mainRouter.popBackStack() }
         coVerify(exactly = 1) { interactor.needsMigration() }
     }
 
     @Test
-    fun `offline, an account checked on the phone never says it waits for the network`() = runTest {
+    fun `offline, a check that needs the network never keeps the wallet closed`() = runTest {
         connection.value = false
-        val claim = CompletableDeferred<Boolean>()
-        coEvery { interactor.migrationCheckNeedsNetwork() } returns false
-        coEvery { interactor.needsMigration() } coAnswers { claim.await() }
+        val networkAnswer = CompletableDeferred<Boolean>()
+        coEvery { interactor.migrationCheckNeedsNetwork() } returns true
+        coEvery { interactor.needsMigration() } coAnswers { networkAnswer.await() }
         val vm = viewModel()
-        vm.startAuth(PinCodeAction.TIMEOUT_CHECK)
-        advanceUntilIdle()
-        vm.pinCodeNumberClicked("123456")
-        advanceUntilIdle()
-        assertTrue(vm.state.migrating)
+        unlock(vm)
+        // The wallet is open while the check still waits for the network.
+        verify(exactly = 1) { mainRouter.popBackStack() }
+        assertFalse(vm.state.migrating)
         assertFalse(vm.state.checkNeedsNetwork)
-        claim.complete(false)
+        // Coming back online answers it in the background; nothing navigates again.
+        connection.value = true
+        networkAnswer.complete(true)
         advanceUntilIdle()
         verify(exactly = 1) { mainRouter.popBackStack() }
+        verify(exactly = 0) { mainRouter.showClaim() }
+        coVerify(exactly = 0) { interactor.migrationCheckNeedsNetwork() }
     }
 
     @Test
-    fun `a check that needs the network waits for it and continues by itself`() = runTest {
-        connection.value = false
-        coEvery { interactor.migrationCheckNeedsNetwork() } returns true
+    fun `a claim found by the check is not pushed in front of the wallet that just opened`() = runTest {
+        coEvery { interactor.needsMigration() } returns true
         val vm = viewModel()
-        vm.startAuth(PinCodeAction.TIMEOUT_CHECK)
-        advanceUntilIdle()
-        vm.pinCodeNumberClicked("123456")
-        advanceUntilIdle()
-        assertTrue(vm.state.migrating && vm.state.checkNeedsNetwork)
-        verify(exactly = 0) { mainRouter.popBackStack() }
-        connection.value = true
-        advanceUntilIdle()
+        unlock(vm)
         verify(exactly = 1) { mainRouter.popBackStack() }
-        assertFalse(vm.state.migrating)
+        verify(exactly = 0) { mainRouter.showClaim() }
+        coVerify(exactly = 1) { interactor.needsMigration() }
+    }
+
+    @Test
+    fun `a claim already known on this phone is offered on top of the wallet once`() = runTest {
+        coEvery { interactor.isClaimKnownPending() } returns true
+        val vm = viewModel()
+        unlock(vm)
+        vm.onResume()
+        advanceUntilIdle()
+        verify(exactly = 1) { mainRouter.showClaim() }
+        verify(exactly = 0) { mainRouter.popBackStack() }
+    }
+
+    @Test
+    fun `an unreadable claim state opens the wallet`() = runTest {
+        coEvery { interactor.isClaimKnownPending() } throws IllegalStateException("unreadable")
+        val vm = viewModel()
+        unlock(vm)
+        verify(exactly = 1) { mainRouter.popBackStack() }
+        verify(exactly = 0) { mainRouter.showClaim() }
     }
 }

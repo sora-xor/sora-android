@@ -389,6 +389,25 @@ class PinCodeViewModelTest {
     }
 
     @Test
+    fun `a busy disk keeps asking for the stored pin and never offers a new one`() =
+        runTest {
+            // Update rule of 2026-11-09: a read that fails for a moment is not a missing PIN.
+            given(interactor.isCodeSet())
+                .willThrow(java.io.UncheckedIOException(java.io.IOException("busy")))
+            given(interactor.checkPin(anyString())).willReturn(true)
+
+            pinCodeViewModel.startAuth(PinCodeAction.TIMEOUT_CHECK)
+            advanceUntilIdle()
+
+            assertEquals(enterPincode, pinCodeViewModel.state.toolbarTitleString)
+            repeat(6) { pinCodeViewModel.pinCodeNumberClicked("1") }
+            advanceUntilIdle()
+
+            verify(interactor).checkPin(anyString())
+            verify(interactor, never()).savePin(anyString())
+        }
+
+    @Test
     fun `unusable wallet key keeps asking for the stored pin and never offers a new one`() =
         runTest {
             // The PIN is stored but cannot be decrypted right now (busy or missing Keystore key).
@@ -434,16 +453,14 @@ class PinCodeViewModelTest {
         verify(mainRouter).popBackStack()
     }
 
-    // Offline unlock: the PIN is checked on the phone, and an account whose claim check needs no
-    // network (every account except an unchecked 15-word legacy phrase) enters the wallet while
-    // SORA2 is disconnected, so Taira and offline addresses stay reachable. The legacy account
-    // whose check needs the network waits for it (PinCodeAccountCheckTest).
+    // Offline unlock: the PIN is checked on the phone and the wallet opens while SORA2 is
+    // disconnected, so Taira and offline addresses stay reachable. The optional claim check runs
+    // afterwards and is never waited for (update rule of 2026-11-09; PinCodeAccountCheckTest).
     @Test
-    fun `offline unlock grants access only after correct PIN when the account check needs no network`() = runTest {
+    fun `offline unlock grants access only after correct PIN`() = runTest {
         connected.value = false
         given(interactor.isCodeSet()).willReturn(true)
         given(interactor.checkPin(anyString())).willReturn(false, true)
-        given(interactor.migrationCheckNeedsNetwork()).willReturn(false)
         pinCodeViewModel.startAuth(PinCodeAction.TIMEOUT_CHECK)
         advanceUntilIdle()
 
@@ -464,7 +481,6 @@ class PinCodeViewModelTest {
     fun `offline onboarding enters wallet after PIN confirmation`() = runTest {
         connected.value = false
         given(interactor.isBiometryAvailable()).willReturn(false)
-        given(interactor.migrationCheckNeedsNetwork()).willReturn(false)
         pinCodeViewModel.startAuth(PinCodeAction.CREATE_PIN_CODE)
         advanceUntilIdle()
         "123456".forEach { pinCodeViewModel.pinCodeNumberClicked(it.toString()) }
@@ -1237,15 +1253,16 @@ class PinCodeViewModelTest {
         verify(mainRouter).popBackStack()
     }
 
-    @Test fun `an unreadable migration hint does not prevent successful offline unlock`() = runTest {
+    @Test fun `an unreadable claim state does not prevent successful offline unlock`() = runTest {
         given(interactor.isCodeSet()).willReturn(true)
-        given(interactor.migrationCheckNeedsNetwork()).willThrow(IllegalStateException("hint unavailable"))
+        given(interactor.isClaimKnownPending()).willThrow(IllegalStateException("claim state unavailable"))
         connected.value = false
         pinCodeViewModel.startAuth(PinCodeAction.TIMEOUT_CHECK)
         advanceUntilIdle()
         enterCorrectPin()
         advanceUntilIdle()
         verify(mainRouter).popBackStack()
+        verify(mainRouter, never()).showClaim()
         assertFalse(pinCodeViewModel.state.migrating)
     }
 
@@ -1260,9 +1277,9 @@ class PinCodeViewModelTest {
         verify(mainRouter, never()).showClaim()
     }
 
-    @Test fun `an available legacy claim opens claim screen once`() = runTest {
+    @Test fun `a claim known on this phone is offered on top of the opened wallet once`() = runTest {
         given(interactor.isCodeSet()).willReturn(true)
-        given(interactor.needsMigration()).willReturn(true)
+        given(interactor.isClaimKnownPending()).willReturn(true)
         pinCodeViewModel.startAuth(PinCodeAction.TIMEOUT_CHECK)
         advanceUntilIdle()
         enterCorrectPin()
@@ -1271,6 +1288,18 @@ class PinCodeViewModelTest {
         advanceUntilIdle()
         verify(mainRouter, times(1)).showClaim()
         verify(mainRouter, never()).popBackStack()
+    }
+
+    @Test fun `a claim the network finds after the PIN never diverts the wallet that opened`() = runTest {
+        given(interactor.isCodeSet()).willReturn(true)
+        given(interactor.needsMigration()).willReturn(true)
+        pinCodeViewModel.startAuth(PinCodeAction.TIMEOUT_CHECK)
+        advanceUntilIdle()
+        enterCorrectPin()
+        advanceUntilIdle()
+        verify(mainRouter).popBackStack()
+        verify(mainRouter, never()).showClaim()
+        verify(interactor).needsMigration()
     }
 
     @Test fun `accepting biometric setup persists consent and proceeds`() = runTest {
@@ -1365,39 +1394,72 @@ class PinCodeViewModelTest {
         verify(biometricGate, never()).approveEnrollmentAfterPin()
     }
 
-    private suspend fun TestScope.typePinOnChangedEnrollment() {
-        given(biometricGate.enrollmentChanged()).willReturn(true)
-        given(interactor.isBiometryAvailable()).willReturn(true)
+    @Test fun `changed biometrics never stop the unlock and the typed PIN approves nothing`() = runTest {
+        // Before the update rule (2026-11-09) this waited for a Keep or Turn off answer.
+        org.mockito.Mockito.lenient().`when`(biometricGate.enrollmentChanged()).thenReturn(true)
+        org.mockito.Mockito.lenient().`when`(interactor.isBiometryEnabled()).thenReturn(true)
+        org.mockito.Mockito.lenient().`when`(interactor.isBiometryAvailable()).thenReturn(true)
+        given(interactor.isCodeSet()).willReturn(true)
+        pinCodeViewModel.startAuth(PinCodeAction.TIMEOUT_CHECK)
+        advanceUntilIdle()
+        enterCorrectPin()
+        advanceUntilIdle()
+
+        assertEquals(false, pinCodeViewModel.enrollmentChangeQuestion.value)
+        verify(mainRouter).popBackStack()
+        // Only an enrollment never approved here is approved by the PIN (the gate leaves a
+        // changed approval as it is); the changed one waits for the owner in Settings.
+        verify(biometricGate).approveFirstEnrollmentAfterPin()
+        verify(biometricGate, never()).approveEnrollmentAfterPin()
+        verify(interactor, never()).setBiometryEnabled(org.mockito.kotlin.any())
+    }
+
+    @Test fun `changed biometrics never stop a confirmation either`() = runTest {
+        org.mockito.Mockito.lenient().`when`(biometricGate.enrollmentChanged()).thenReturn(true)
+        org.mockito.Mockito.lenient().`when`(interactor.isBiometryEnabled()).thenReturn(true)
+        org.mockito.Mockito.lenient().`when`(interactor.isBiometryAvailable()).thenReturn(true)
         pinCodeViewModel.addresses = listOf("address")
         pinCodeViewModel.startAuth(PinCodeAction.OPEN_JSON)
         advanceUntilIdle()
         enterCorrectPin()
         advanceUntilIdle()
+
+        assertEquals(false, pinCodeViewModel.enrollmentChangeQuestion.value)
+        verify(mainRouter).showBackupJson(listOf("address"))
+        verify(biometricGate, never()).approveEnrollmentAfterPin()
     }
 
-    @Test fun `a changed enrollment waits for the owner and the typed PIN approves nothing`() = runTest {
-        typePinOnChangedEnrollment()
+    private suspend fun TestScope.approveBiometricsInSettings(changed: Boolean) {
+        given(biometricGate.enrollmentChanged()).willReturn(changed)
+        pinCodeViewModel.startAuth(PinCodeAction.APPROVE_BIOMETRICS)
+        advanceUntilIdle()
+        enterCorrectPin()
+        advanceUntilIdle()
+    }
+
+    @Test fun `turning biometrics on in Settings asks about a changed enrollment after the PIN`() = runTest {
+        approveBiometricsInSettings(changed = true)
 
         assertEquals(true, pinCodeViewModel.enrollmentChangeQuestion.value)
         verify(biometricGate, never()).approveEnrollmentAfterPin()
-        verify(biometricGate, never()).approveFirstEnrollmentAfterPin()
-        verify(mainRouter, never()).showBackupJson(listOf("address"))
+        verify(interactor, never()).setBiometryEnabled(org.mockito.kotlin.any())
+        verify(mainRouter, never()).popBackStack()
     }
 
-    @Test fun `keeping changed biometrics approves them and goes on`() = runTest {
-        typePinOnChangedEnrollment()
+    @Test fun `keeping changed biometrics in Settings approves and turns them on`() = runTest {
+        approveBiometricsInSettings(changed = true)
 
         pinCodeViewModel.onEnrollmentChangeKept()
         advanceUntilIdle()
 
         assertEquals(false, pinCodeViewModel.enrollmentChangeQuestion.value)
         verify(biometricGate).approveEnrollmentAfterPin()
-        verify(interactor, never()).setBiometryEnabled(false)
-        verify(mainRouter).showBackupJson(listOf("address"))
+        verify(interactor).setBiometryEnabled(true)
+        verify(mainRouter).popBackStack()
     }
 
-    @Test fun `refusing changed biometrics turns them off and goes on without approving`() = runTest {
-        typePinOnChangedEnrollment()
+    @Test fun `refusing changed biometrics in Settings keeps them off without approving`() = runTest {
+        approveBiometricsInSettings(changed = true)
 
         pinCodeViewModel.onEnrollmentChangeRefused()
         advanceUntilIdle()
@@ -1405,7 +1467,28 @@ class PinCodeViewModelTest {
         assertEquals(false, pinCodeViewModel.enrollmentChangeQuestion.value)
         verify(interactor).setBiometryEnabled(false)
         verify(biometricGate, never()).approveEnrollmentAfterPin()
-        verify(mainRouter).showBackupJson(listOf("address"))
+        verify(mainRouter).popBackStack()
+    }
+
+    @Test fun `biometrics never approved here are approved by the PIN in Settings`() = runTest {
+        approveBiometricsInSettings(changed = false)
+
+        assertEquals(false, pinCodeViewModel.enrollmentChangeQuestion.value)
+        verify(biometricGate).approveEnrollmentAfterPin()
+        verify(interactor).setBiometryEnabled(true)
+        verify(mainRouter).popBackStack()
+    }
+
+    @Test fun `a wrong PIN in Settings approves nothing`() = runTest {
+        given(interactor.checkPin("654321")).willReturn(false)
+        pinCodeViewModel.startAuth(PinCodeAction.APPROVE_BIOMETRICS)
+        advanceUntilIdle()
+        pinCodeViewModel.pinCodeNumberClicked("654321")
+        advanceUntilIdle()
+
+        verify(biometricGate, never()).approveEnrollmentAfterPin()
+        verify(interactor, never()).setBiometryEnabled(org.mockito.kotlin.any())
+        verify(mainRouter, never()).popBackStack()
     }
 
     @Test fun `an answer nobody was asked for does nothing`() = runTest {
@@ -1420,36 +1503,6 @@ class PinCodeViewModelTest {
         verify(biometricGate, never()).approveEnrollmentAfterPin()
         verify(interactor, never()).setBiometryEnabled(false)
         verify(mainRouter, never()).showBackupJson(listOf("address"))
-    }
-
-    @Test fun `with biometrics off a changed key is neither approved nor asked about`() = runTest {
-        given(biometricGate.enrollmentChanged()).willReturn(true)
-        given(interactor.isBiometryEnabled()).willReturn(false)
-        pinCodeViewModel.addresses = listOf("address")
-        pinCodeViewModel.startAuth(PinCodeAction.OPEN_JSON)
-        advanceUntilIdle()
-        enterCorrectPin()
-        advanceUntilIdle()
-
-        assertEquals(false, pinCodeViewModel.enrollmentChangeQuestion.value)
-        verify(biometricGate, never()).approveEnrollmentAfterPin()
-        verify(biometricGate, never()).approveFirstEnrollmentAfterPin()
-        verify(mainRouter).showBackupJson(listOf("address"))
-    }
-
-    @Test fun `with none enrolled now a changed key is neither approved nor asked about`() = runTest {
-        given(biometricGate.enrollmentChanged()).willReturn(true)
-        given(interactor.isBiometryAvailable()).willReturn(false)
-        pinCodeViewModel.addresses = listOf("address")
-        pinCodeViewModel.startAuth(PinCodeAction.OPEN_JSON)
-        advanceUntilIdle()
-        enterCorrectPin()
-        advanceUntilIdle()
-
-        assertEquals(false, pinCodeViewModel.enrollmentChangeQuestion.value)
-        verify(biometricGate, never()).approveEnrollmentAfterPin()
-        verify(biometricGate, never()).approveFirstEnrollmentAfterPin()
-        verify(mainRouter).showBackupJson(listOf("address"))
     }
 
     @Test fun `a new PIN after checking the current one approves no biometrics`() = runTest {
