@@ -65,7 +65,6 @@ import jp.co.soramitsu.sora.splash.domain.StartupTimeTrace
 import jp.co.soramitsu.sora.splash.presentation.recovery.SafeModeCallbacks
 import jp.co.soramitsu.sora.splash.presentation.recovery.SafeModeEvent
 import jp.co.soramitsu.sora.splash.presentation.recovery.SafeModeViewModel
-import jp.co.soramitsu.sora.splash.presentation.recovery.SafeSheetKind
 import jp.co.soramitsu.sora.splash.presentation.recovery.SplashSafeMode
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -263,7 +262,7 @@ class WalletStartupActivity : AppCompatActivity() {
                                     safeModeViewModel.supportText(labels),
                                 )
                             },
-                            onGetHelp = { safeModeViewModel.openSheet(SafeSheetKind.SUPPORT) },
+                            onGetHelp = safeModeViewModel::onGetHelp,
                             onPinDigit = safeModeViewModel::pinDigit,
                             onPinDelete = safeModeViewModel::pinDelete,
                             onBiometric = safeModeViewModel::requestBiometric,

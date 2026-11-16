@@ -685,6 +685,91 @@ class WalletUpgradeBackupTest {
         assertEquals(1, legacyAccountCount())
     }
 
+    // Update rule of 2026-11-09: Try again in the same process runs the same repair a new app
+    // start runs. It used to re-check only, so a repair that failed once on a busy disk kept the
+    // wallet behind the recovery screen until the app was restarted.
+    @Test
+    fun tryAgainInTheSameProcessRepairsAfterARepairCopyFailed() {
+        createLegacyDatabase(withAccount = true)
+        putWalletMarker()
+        assertTrue(WalletUpgradeBackup.prepare(context).isSuccess)
+        val preferences = File(context.applicationInfo.dataDir, "shared_prefs/$PREFERENCES_NAME.xml")
+        val originalPreferences = preferences.readBytes()
+        assertTrue(context.deleteDatabase(DATABASE_NAME))
+        val original = ByteArray(4096) { 0x55 }
+        context.getDatabasePath(DATABASE_NAME).writeBytes(original)
+        WalletUpgradeBackup.afterDatabaseRepairCopyForTest = { error("simulated copy failure") }
+        try {
+            WalletUpgradeBackup.simulateProcessStartForTest()
+            assertTrue(WalletUpgradeBackup.prepare(context).isFailure)
+        } finally {
+            WalletUpgradeBackup.afterDatabaseRepairCopyForTest = null
+        }
+        assertArrayEquals(original, context.getDatabasePath(DATABASE_NAME).readBytes())
+
+        assertTrue(
+            "${WalletUpgradeBackup.blockingFailure()}",
+            WalletUpgradeBackup.retry(context).isSuccess,
+        )
+        assertEquals(null, WalletUpgradeBackup.blockingFailure())
+        assertEquals(1, legacyAccountCount())
+        assertArrayEquals(originalPreferences, preferences.readBytes())
+        val repair = context.noBackupFilesDir.listFiles().orEmpty()
+            .single { it.name.startsWith("wallet-database-repair-") && it.isDirectory }
+        assertArrayEquals(original, File(repair, "original/databases/app.db").readBytes())
+    }
+
+    @Test
+    fun tryAgainInTheSameProcessFinishesAnInterruptedRepairInsteadOfAnEmptyWallet() {
+        createLegacyDatabase(withAccount = true)
+        putWalletMarker()
+        assertTrue(WalletUpgradeBackup.prepare(context).isSuccess)
+        assertTrue(context.deleteDatabase(DATABASE_NAME))
+        val original = ByteArray(4096) { 0x55 }
+        context.getDatabasePath(DATABASE_NAME).writeBytes(original)
+        // The first rename (the damaged database moved aside) succeeds, then the step fails:
+        // the database path is empty while the saved plan waits for its replacement.
+        WalletUpgradeBackup.afterSetAsideRenameForTest = { error("simulated I/O failure") }
+        try {
+            WalletUpgradeBackup.simulateProcessStartForTest()
+            assertTrue(WalletUpgradeBackup.prepare(context).isFailure)
+        } finally {
+            WalletUpgradeBackup.afterSetAsideRenameForTest = null
+        }
+        assertTrue(File(context.noBackupFilesDir, "wallet-database-repair.json").exists())
+        assertFalse(context.getDatabasePath(DATABASE_NAME).exists())
+
+        assertTrue(WalletUpgradeBackup.retry(context).isSuccess)
+        assertEquals(1, legacyAccountCount())
+        assertFalse(File(context.noBackupFilesDir, "wallet-database-repair.json").exists())
+    }
+
+    @Test
+    fun aSavedRepairPlanIsNeverAdmittedAsAnEmptyInstallation() {
+        createLegacyDatabase(withAccount = true)
+        putWalletMarker()
+        assertTrue(WalletUpgradeBackup.prepare(context).isSuccess)
+        assertTrue(context.deleteDatabase(DATABASE_NAME))
+        context.getDatabasePath(DATABASE_NAME).writeBytes(ByteArray(4096) { 0x55 })
+        WalletUpgradeBackup.afterSetAsideRenameForTest = { error("simulated I/O failure") }
+        try {
+            WalletUpgradeBackup.simulateProcessStartForTest()
+            assertTrue(WalletUpgradeBackup.prepare(context).isFailure)
+        } finally {
+            WalletUpgradeBackup.afterSetAsideRenameForTest = null
+        }
+        // Any later preparation in this process (a database admission check, for example) must
+        // not find "no database" and let Room create an empty one over the plan.
+        val again = WalletUpgradeBackup.prepare(context)
+        assertTrue(again.isFailure)
+        assertEquals(
+            "DATABASE_REPAIR_INCOMPLETE",
+            (again.exceptionOrNull() as? WalletUpgradeBackupException)?.code,
+        )
+        assertFalse(context.getDatabasePath(DATABASE_NAME).exists())
+        assertTrue(File(context.noBackupFilesDir, "wallet-database-repair.json").exists())
+    }
+
     @Test
     fun walSidecarsWithoutTheirDatabaseAreRenamedAsideNotDeleted() {
         putWalletMarker()
@@ -2804,8 +2889,11 @@ class WalletUpgradeBackupTest {
         assertTrue(WalletUpgradeBackup.canAuthorizeMigrationRetry())
     }
 
+    // Update rule of 2026-11-09: every start of the app's screens retries an interrupted
+    // verification by itself; the count is kept for support and never stops the retry (it used
+    // to stop after three and wait for Try again).
     @Test
-    fun interruptedVerificationIsRetriedAutomaticallyAtMostThreeTimes() {
+    fun interruptedVerificationIsRetriedAutomaticallyOnEveryStart() {
         val account = SoraAccountLocal(WALLET_ID, "Retained")
         createCurrentDatabase(listOf(account))
         updateCurrentDatabase(
@@ -2820,7 +2908,7 @@ class WalletUpgradeBackupTest {
             )
             """.trimIndent()
         )
-        repeat(3) { attempt ->
+        repeat(5) { attempt ->
             // A background start (worker, receiver, boot) only prepares and never runs the
             // verification, so it never uses the automatic retry budget.
             repeat(2) {
@@ -2843,15 +2931,11 @@ class WalletUpgradeBackupTest {
                 WalletUpgradeBackup.automaticMigrationRetriesUsedForTest(context),
             )
         }
-        // The fourth interrupted start shows the options; Try again still works.
+        // A sixth interrupted start still retries by itself, and Try again works as well.
         assertTrue(WalletUpgradeBackup.prepare(context).isFailure)
-        assertFalse(WalletUpgradeBackup.authorizeAutomaticMigrationRetry(context))
-        assertEquals(
-            "WALLET_MIGRATION_RECOVERY_REQUIRED",
-            WalletUpgradeBackup.startupFailureToShow(context)?.code,
-        )
-        val options = requireNotNull(WalletUpgradeBackup.recoveryOptions())
-        assertTrue(options.canRetry && options.canReadOnly && options.canSetUpAgain)
+        assertEquals(null, WalletUpgradeBackup.startupFailureToShow(context))
+        assertTrue(WalletUpgradeBackup.isAutomaticMigrationRetryAvailable(context))
+        assertTrue(WalletUpgradeBackup.prepare(context).isFailure)
         assertTrue(WalletUpgradeBackup.retry(context).isSuccess)
         assertEquals(
             WalletRecoveryCapabilityGate.Mode.MIGRATION_RETRY_AUTHORIZED,
@@ -3231,7 +3315,7 @@ class WalletUpgradeBackupTest {
     }
 
     @Test
-    fun automaticRetryThatCannotBeSavedShowsTheRecoveryOptionsAtOnce() {
+    fun automaticRetryWhoseCountCannotBeSavedStillRuns() {
         val account = SoraAccountLocal(WALLET_ID, "Retained")
         createCurrentDatabase(listOf(account))
         updateCurrentDatabase(
@@ -3252,24 +3336,12 @@ class WalletUpgradeBackupTest {
         try {
             WalletUpgradeBackup.simulateProcessStartForTest()
             assertTrue(WalletUpgradeBackup.prepare(context).isFailure)
-            // The budget is unused, so the first screen waits for the automatic retry...
+            // The count is for support only (update rule of 2026-11-09): the first screen waits
+            // for the automatic retry, and the retry runs although its count cannot be saved.
             assertEquals(null, WalletUpgradeBackup.startupFailureToShow(context))
-            assertFalse(WalletUpgradeBackup.authorizeAutomaticMigrationRetry(context))
+            assertTrue(WalletUpgradeBackup.authorizeAutomaticMigrationRetry(context))
             assertEquals(0, WalletUpgradeBackup.automaticMigrationRetriesUsedForTest(context))
-            // ...which could not happen, so the options are shown now, not after a crash.
-            assertEquals(
-                "WALLET_MIGRATION_RECOVERY_REQUIRED",
-                WalletUpgradeBackup.startupFailureToShow(context)?.code,
-            )
-            assertFalse(WalletUpgradeBackup.isAutomaticMigrationRetryAvailable(context))
-            assertEquals(
-                WalletRecoveryCapabilityGate.Mode.BLOCKED,
-                WalletRecoveryCapabilityGate.mode(),
-            )
-            val options = requireNotNull(WalletUpgradeBackup.recoveryOptions())
-            assertTrue(options.canRetry && options.canReadOnly)
-            // Try again does not need the counter.
-            assertTrue(WalletUpgradeBackup.retry(context).isSuccess)
+            assertEquals(null, WalletUpgradeBackup.blockingFailure())
             assertEquals(
                 WalletRecoveryCapabilityGate.Mode.MIGRATION_RETRY_AUTHORIZED,
                 WalletRecoveryCapabilityGate.mode(),
@@ -5077,6 +5149,10 @@ class WalletUpgradeBackupTest {
     }
 
     /** The manual recovery paths are reached after the three automatic retries are used up. */
+    /**
+     * Writes the retry count an older build stopped at. Since the update rule of 2026-11-09 the
+     * count is for support only and never stops a retry; the tests that set it keep proving that.
+     */
     private fun exhaustAutomaticRetries() {
         File(context.noBackupFilesDir, "wallet-migration-auto-retry").writeText("3")
     }

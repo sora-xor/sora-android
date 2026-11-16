@@ -96,7 +96,9 @@ object WalletUpgradeBackup {
     var afterDatabaseRepairCopyForTest: (() -> Unit)? = null
     private var consecutiveStartupFailureCode: String? = null
     private var consecutiveStartupFailures = 0
-    private const val MAX_AUTOMATIC_MIGRATION_RETRIES = 3
+
+    /** The diagnostic retry count saturates here; it never stops a retry (update rule). */
+    private const val MAX_COUNTED_AUTOMATIC_MIGRATION_RETRIES = 1_000_000
 
     /** Written by [requestSetUpAgain]; the next app process sets the old wallet files aside. */
     private const val SET_UP_AGAIN_MARKER = "wallet-set-up-again-requested"
@@ -170,6 +172,14 @@ object WalletUpgradeBackup {
     // shown at once instead of waiting for a retry that cannot happen.
     @Volatile
     private var automaticRetryFailedInProcess = false
+
+    /**
+     * Room was admitted to the database file in this process (a gated helper handed out a
+     * connection). Until then no handle can write the old file back, so Try again may run the
+     * same lost-database repair a new process runs ([retry]).
+     */
+    @Volatile
+    private var databaseOpenedInProcess = false
 
     /** Material that is set aside (never deleted) because no account row owns it. */
     @Volatile
@@ -256,7 +266,7 @@ object WalletUpgradeBackup {
         val failure = blockingFailure
         val transient = transientVerificationFailure
         val code = failure?.code ?: transient ?: inSessionRecoveryCode ?: return null
-        return WalletRecoveryOptions.forState(
+        val options = WalletRecoveryOptions.forState(
             code = code,
             transientFailure = failure == null && transient != null,
             facts = recoveryFacts.copy(
@@ -267,6 +277,10 @@ object WalletUpgradeBackup {
             availableBytes = failure?.availableBytes,
             consecutiveFailedStarts = if (code == consecutiveStartupFailureCode) consecutiveStartupFailures else 0,
         )
+        // A verification failure recorded in this process (for example a VERIFIED receipt an
+        // older build wrote with a backward clock) is re-verified from the account rows by the
+        // same authorized retry Try again runs, so it is retried by itself first.
+        return if (failure == null && transient == null) options.copy(retryAutomatically = true) else options
     }
 
     /** The wallet key cannot be used right now (missing Keystore key or busy Keystore). */
@@ -307,6 +321,7 @@ object WalletUpgradeBackup {
         processStartForTest = false
         if (firstInProcess) {
             automaticRetryFailedInProcess = false
+            databaseOpenedInProcess = false
             // Only the first preparation of a process may set wallet files aside: nothing has
             // opened the DataStore or Room yet, so no open handle can write the old data back.
             val applicationContext = context.applicationContext ?: context
@@ -395,6 +410,12 @@ object WalletUpgradeBackup {
      * Refused (SET_UP_AGAIN_INCOMPLETE, nothing checked or changed) while a confirmed "Set up
      * this device again" waits for the next app start: only a new process may set the old files
      * aside, so the app must not verify and open them in this one. The caller restarts instead.
+     *
+     * While Room has not opened the database in this process, Try again first runs the same
+     * lost-database repair as a new app start (finishing a saved repair plan, or repairing from
+     * the newest matching backup), so a repair that failed on a busy disk is not left for a
+     * restart the person does not know about, and a missing database half-way through a repair is
+     * never admitted as an empty installation.
      */
     @Synchronized
     fun retry(context: Context): Result<Unit> {
@@ -406,6 +427,18 @@ object WalletUpgradeBackup {
         if (migrationRecoverySnapshot != null && canAuthorizeMigrationRetry()) {
             val authorized = authorizeMigrationRetry(context)
             if (authorized.isSuccess) return authorized
+        }
+        if (!databaseOpenedInProcess) {
+            val applicationContext = context.applicationContext ?: context
+            runCatching { repairLostDatabaseFromMatchingBackup(applicationContext) }
+                .exceptionOrNull()?.let { error ->
+                    preparedAdmission = null
+                    migrationRecoverySnapshot = null
+                    blockingFailure = Failure(error.safeCode())
+                    recoveryFacts = RecoveryFacts(hasWalletFiles = true)
+                    WalletRecoveryCapabilityGate.enterBlocked()
+                    return Result.failure(error)
+                }
         }
         val result = prepareWithCapacityOverride(
             context = context,
@@ -428,11 +461,13 @@ object WalletUpgradeBackup {
 
     /**
      * Called once when the app's screens start, before the wallet verification runs (Splash).
-     * An interrupted or failed verification is retried automatically, at most
-     * [MAX_AUTOMATIC_MIGRATION_RETRIES] times in a row, before the recovery options are shown.
-     * Only a start that runs the verification uses this budget: background starts (workers,
-     * receivers, boot) never call this. The retry re-runs only the copy-on-write verification;
-     * account rows and encrypted preferences are never changed by it.
+     * An interrupted or failed verification is retried automatically on every such start: an
+     * update never stops at a screen that only repeats the same check (rule of 2026-11-09). The
+     * compare-and-set authorization and the validated snapshot still guard every retry; how many
+     * starts retried in a row is counted for diagnostics only, and a count that cannot be saved
+     * (a full disk) never stops the retry. Background starts (workers, receivers, boot) never
+     * call this. The retry re-runs only the copy-on-write verification; account rows and
+     * encrypted preferences are never changed by it.
      */
     @Synchronized
     fun authorizeAutomaticMigrationRetry(context: Context): Boolean {
@@ -445,31 +480,23 @@ object WalletUpgradeBackup {
             return false
         }
         val applicationContext = context.applicationContext ?: context
-        if (automaticMigrationRetriesUsed(applicationContext) >= MAX_AUTOMATIC_MIGRATION_RETRIES) {
-            return false
-        }
-        // From here on this process has tried. If the counter cannot be saved or the retry
-        // cannot be authorized, the recovery options are shown now rather than after a retry
-        // that cannot happen.
-        if (!claimMigrationRetry(applicationContext)) {
-            automaticRetryFailedInProcess = true
-            return false
-        }
+        countAutomaticMigrationRetry(applicationContext)
         if (authorizeMigrationRetry(applicationContext).isSuccess) return true
+        // The authorization itself failed (the journal or the settings changed underneath, or
+        // the database could not be written): the recovery screen retries it with its own
+        // backoff instead of waiting for a start that would fail the same way.
         automaticRetryFailedInProcess = true
         blockingFailure = failure
         WalletRecoveryCapabilityGate.enterBlocked()
         return false
     }
 
-    /** True when [authorizeAutomaticMigrationRetry] would retry. Reads one small file. */
+    /** True when [authorizeAutomaticMigrationRetry] would retry. Reads no file. */
     @Synchronized
-    fun isAutomaticMigrationRetryAvailable(context: Context): Boolean =
+    fun isAutomaticMigrationRetryAvailable(@Suppress("UNUSED_PARAMETER") context: Context): Boolean =
         !automaticRetryFailedInProcess &&
             blockingFailure?.code == "WALLET_MIGRATION_RECOVERY_REQUIRED" &&
-            migrationRecoverySnapshot != null &&
-            automaticMigrationRetriesUsed(context.applicationContext ?: context) <
-            MAX_AUTOMATIC_MIGRATION_RETRIES
+            migrationRecoverySnapshot != null
 
     /**
      * The startup failure that the first screen must show at once, or null when the start can
@@ -1299,11 +1326,13 @@ object WalletUpgradeBackup {
 
             override val readableDatabase
                 get() = requireDatabaseAccess().let {
+                    databaseOpenedInProcess = true
                     configured(openHelper.readableDatabase)
                 }
 
             override val writableDatabase
                 get() = requireDatabaseAccess().let {
+                    databaseOpenedInProcess = true
                     configured(openHelper.writableDatabase)
                 }
 
@@ -1826,6 +1855,14 @@ object WalletUpgradeBackup {
         beforeFinalSourceValidationForTest: (() -> Unit)?,
     ) {
         val database = context.getDatabasePath(DATABASE_NAME)
+        // A saved repair plan moves the database away before it moves the replacement in. Only
+        // the repair may finish it ([prepare], [retry]); until then a missing database is not an
+        // empty installation.
+        if (File(context.noBackupFilesDir, DATABASE_REPAIR_MARKER)
+                .existsNoFollowOrThrow("DATABASE_REPAIR_INCOMPLETE")
+        ) {
+            throw WalletUpgradeBackupException("DATABASE_REPAIR_INCOMPLETE")
+        }
         quarantine = WalletQuarantine.NONE
         recoveryFacts = RecoveryFacts(
             hasWalletFiles = runCatching {
@@ -2580,31 +2617,34 @@ object WalletUpgradeBackup {
         File(context.noBackupFilesDir, AUTO_RETRY_STATE_FILE)
 
     /**
-     * Claims one automatic verification retry. A user-requested retry always proceeds. Automatic
-     * retries stop after [MAX_AUTOMATIC_MIGRATION_RETRIES] consecutive attempts, after which the
-     * recovery options are shown; the count resets once the wallet verifies.
+     * How many app starts in a row retried an interrupted verification automatically, for
+     * support. It never decides whether a retry happens; an unreadable count reads as zero.
      */
     private fun automaticMigrationRetriesUsed(context: Context): Int {
         val file = automaticRetryStateFile(context)
         return if (file.existsNoFollow()) {
             runCatching {
                 file.readBoundedUtf8NoFollow(1, 16, "AUTO_RETRY_STATE_INVALID").trim().toInt()
-            }.getOrDefault(MAX_AUTOMATIC_MIGRATION_RETRIES)
+                    .coerceIn(0, MAX_COUNTED_AUTOMATIC_MIGRATION_RETRIES)
+            }.getOrDefault(0)
         } else {
             0
         }
     }
 
-    private fun claimMigrationRetry(context: Context): Boolean {
-        val used = automaticMigrationRetriesUsed(context)
-        if (used >= MAX_AUTOMATIC_MIGRATION_RETRIES) return false
-        return runCatching {
+    /** Best effort: a count that cannot be saved (for example on a full disk) is skipped. */
+    private fun countAutomaticMigrationRetry(context: Context) {
+        runCatching {
+            val used = automaticMigrationRetriesUsed(context)
             val staging = File(context.noBackupFilesDir, ".$AUTO_RETRY_STATE_FILE.tmp")
             if (staging.existsNoFollow()) Os.remove(staging.absolutePath)
-            writeDurably(staging, (used + 1).toString())
+            writeDurably(
+                staging,
+                (used + 1).coerceAtMost(MAX_COUNTED_AUTOMATIC_MIGRATION_RETRIES).toString(),
+            )
             Os.rename(staging.absolutePath, automaticRetryStateFile(context).absolutePath)
             fsyncDirectory(context.noBackupFilesDir)
-        }.isSuccess
+        }
     }
 
     private fun resetAutomaticMigrationRetries(context: Context) {

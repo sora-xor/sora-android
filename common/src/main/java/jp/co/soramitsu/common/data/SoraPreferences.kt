@@ -109,7 +109,16 @@ class SoraPreferences(
         }
     }
 
-    /** Publishes metadata only; original encrypted credentials are never rewritten or removed. */
+    /**
+     * Publishes metadata only; original encrypted credentials are never rewritten or removed.
+     *
+     * Encrypted values stored under [accountAddress] itself are accepted: SORA 2.4.x copied the
+     * release-era phrase and keys under the address before it inserted the account and saved the
+     * selection, so a process stop in between leaves exactly that shape, and this promotion is
+     * the step that run never finished (an update must not stop there). Scoped values of any
+     * other address, or a watch-only marker, still refuse it: they belong to another wallet or
+     * contradict the signing keys the caller just proved.
+     */
     suspend fun completeLegacyAccountUpgrade(accountAddress: String) {
         check(accountAddress.isNotBlank()) { "LEGACY_ACCOUNT_ADDRESS_EMPTY" }
         dataStore.edit { preferences ->
@@ -121,17 +130,22 @@ class SoraPreferences(
             check(preferences[legacyKey].isNullOrBlank() || preferences[legacyKey] == accountAddress) {
                 "LEGACY_ACCOUNT_OWNER_CONFLICT"
             }
+            val ownCopiedCredentials = WalletPreferenceKeys.encryptedCredentialPrefixes
+                .map { prefix -> prefix + accountAddress }
+                .toSet()
             check(preferences.asMap().keys.none { key ->
-                WalletPreferenceKeys.scopedEvidencePrefixes.any { prefix ->
-                    key.name.startsWith(prefix) && key.name.length > prefix.length
-                }
+                key.name !in ownCopiedCredentials &&
+                    WalletPreferenceKeys.scopedEvidencePrefixes.any { prefix ->
+                        key.name.startsWith(prefix) && key.name.length > prefix.length
+                    }
             }) { "LEGACY_ACCOUNT_SCOPED_CREDENTIAL_CONFLICT" }
             listOf(WalletPreferenceKeys.NEEDS_MIGRATION, WalletPreferenceKeys.IS_MIGRATION_FETCHED)
                 .forEach { prefix ->
                     val oldKey = booleanPreferencesKey(prefix)
-                    if (preferences.contains(oldKey)) {
-                        preferences[booleanPreferencesKey(prefix + accountAddress)] =
-                            checkNotNull(preferences[oldKey])
+                    val scopedKey = booleanPreferencesKey(prefix + accountAddress)
+                    // A value the interrupted 2.4.x run already copied stays as it is.
+                    if (preferences.contains(oldKey) && !preferences.contains(scopedKey)) {
+                        preferences[scopedKey] = checkNotNull(preferences[oldKey])
                     }
                 }
             preferences[legacyKey] = accountAddress

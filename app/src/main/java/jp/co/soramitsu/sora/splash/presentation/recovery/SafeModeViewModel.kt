@@ -192,7 +192,21 @@ class SafeModeViewModel @Inject constructor(
     private var progressJob: Job? = null
     private var progressDelayJob: Job? = null
     private var autoRetryJob: Job? = null
+
+    /** Automatic attempts in this app start; picks the pause before the next one. */
     private var automaticAttempts = 0
+
+    /** Automatic attempts of resumable (not transient) states in this app start. */
+    private var resumableAttempts = 0
+
+    /**
+     * The state being retried behind the progress screen (no panel shown), with the options
+     * [onGetHelp] shows when the person asks for them.
+     */
+    private var automaticRetry: Pair<RecoveryPanelModel, WalletRecoveryOptions>? = null
+
+    /** The person asked for the recovery options ([onGetHelp]): states show their panel again. */
+    private var optionsRequested = false
     private var awaitingNewRun = false
 
     /** When the running Try again started (uptime), for the progress screen's prompts. */
@@ -232,6 +246,13 @@ class SafeModeViewModel @Inject constructor(
             RecoveryPanelKind.RECOVERY -> WalletRecoveryEvent.PANEL_RECOVERY
             RecoveryPanelKind.RESTORE_PENDING -> WalletRecoveryEvent.PANEL_RESTORE_PENDING
         })
+        if (!optionsRequested && retriesByItself(model)) {
+            // An update never stops at "paused" for something that passes by itself (rule of
+            // 2026-11-09): the progress screen stays while the same check runs again.
+            showAutomaticRetry(model, resolved)
+            return
+        }
+        automaticRetry = null
         stopProgress()
         mutableState.update {
             it.copy(
@@ -273,22 +294,87 @@ class SafeModeViewModel @Inject constructor(
             runCatching { WalletUpgradeBackup.pendingSetUpAgainScope(context) != null }.getOrDefault(false)
 
     /**
-     * Transient states are retried automatically, up to three times with growing pauses
-     * (1, 3 and 10 s), before only the options stay (product decision; design spec 9.1-5).
+     * Whether [model] is retried without the person (update rule of 2026-11-09):
+     * - a transient state (busy Keystore, locked database, I/O) always: it passes on its own, so
+     *   the retries never stop while this screen is open;
+     * - a resumable verification or repair (a saved journal or plan the next start would resume)
+     *   [MAX_RESUMABLE_AUTOMATIC_RETRIES] times per app start; a failure that comes back right
+     *   after the authorized re-verification is not going to pass by itself, and the next app
+     *   start tries again on its own;
+     * - never storage (the screen checks again when the person comes back), keys this phone
+     *   cannot use, or a confirmed restore waiting for a restart.
+     */
+    private fun retriesByItself(model: RecoveryPanelModel): Boolean = when {
+        !model.retryAutomatically -> false
+        model.kind == RecoveryPanelKind.TRANSIENT -> true
+        model.kind == RecoveryPanelKind.RECOVERY -> resumableAttempts < MAX_RESUMABLE_AUTOMATIC_RETRIES
+        else -> false
+    }
+
+    /** The progress screen (not the panel) while [model] is retried by itself. */
+    private fun showAutomaticRetry(model: RecoveryPanelModel, options: WalletRecoveryOptions) {
+        automaticRetry = model to options
+        awaitingNewRun = true
+        val startedAt = state.value.progress?.startedAtElapsed ?: SystemClock.elapsedRealtime()
+        if (state.value.progress == null) {
+            showProgress(ProgressTitle.FINISHING, checkingDataDone = false, startedAtElapsed = startedAt)
+        }
+        mutableState.update { current ->
+            val progress = current.progress
+            current.copy(
+                visible = true,
+                panel = null,
+                running = null,
+                runningLong = false,
+                autoRetrying = false,
+                // The rows wait until the next run reports its first phase.
+                progress = progress?.let {
+                    progressFor(
+                        title = it.title,
+                        checkingData = SafeStepState.RUNNING,
+                        phase = interactor.migrationProgress.value,
+                        awaitingNewRun = true,
+                        startedAtElapsed = it.startedAtElapsed,
+                    )
+                },
+                shownAtMillis = if (current.shownAtMillis > 0) current.shownAtMillis else System.currentTimeMillis(),
+                lastAttemptCode = model.code,
+            )
+        }
+        scheduleAutomaticRetry(model)
+    }
+
+    /**
+     * Schedules the next automatic attempt for [model] (see [retriesByItself]). The pauses grow
+     * (1, 3, 10 s), then stay at 30 s. Paused while a sheet or "Show my recovery phrase" is open.
      */
     private fun scheduleAutomaticRetry(model: RecoveryPanelModel) {
         autoRetryJob?.cancel()
         // RESTORE_PENDING never retries by itself: its Try again restarts the app.
-        if (model.kind != RecoveryPanelKind.TRANSIENT || !model.retryAutomatically) return
-        if (automaticAttempts >= AUTOMATIC_RETRY_DELAYS.size) return
-        val pause = AUTOMATIC_RETRY_DELAYS[automaticAttempts]
+        if (!retriesByItself(model)) return
+        val pause = AUTOMATIC_RETRY_DELAYS[automaticAttempts.coerceAtMost(AUTOMATIC_RETRY_DELAYS.lastIndex)]
         autoRetryJob = viewModelScope.launch {
             delay(pause)
             if (state.value.running == null && state.value.sheet == null && state.value.reveal == null) {
                 automaticAttempts++
+                if (model.kind != RecoveryPanelKind.TRANSIENT) resumableAttempts++
                 runTryAgain(automatic = true)
             }
         }
+    }
+
+    /**
+     * "Get help" on the progress screen. While a state is being retried by itself, its recovery
+     * options are shown (the retries go on behind them); otherwise the support sheet opens.
+     */
+    fun onGetHelp() {
+        val retrying = automaticRetry
+        if (retrying == null) {
+            openSheet(SafeSheetKind.SUPPORT)
+            return
+        }
+        optionsRequested = true
+        showPanel(retrying.first.code, retrying.second)
     }
 
     private var pausedSincePanel = false
@@ -301,19 +387,19 @@ class SafeModeViewModel @Inject constructor(
         pausedSincePanel = true
     }
 
-    /** The storage screen checks again when the person comes back (for example from Settings). */
+    /**
+     * The storage screen checks again when the person comes back (for example from Settings);
+     * so does a state that is being retried by itself, without waiting for its pause.
+     */
     fun onResumed() {
         val returned = pausedSincePanel
         pausedSincePanel = false
         val current = state.value
-        if (
-            returned &&
-            current.visible &&
-            current.progress == null &&
-            current.panel?.kind == RecoveryPanelKind.STORAGE &&
-            current.running == null &&
-            current.reveal == null
-        ) {
+        if (!returned || !current.visible || current.running != null || current.reveal != null) return
+        val storage = current.progress == null && current.panel?.kind == RecoveryPanelKind.STORAGE
+        val retrying = current.sheet == null &&
+            (automaticRetry != null || current.panel?.let(::retriesByItself) == true)
+        if (storage || retrying) {
             runTryAgain(automatic = true)
         }
     }
@@ -358,8 +444,13 @@ class SafeModeViewModel @Inject constructor(
         if (state.value.running != null && state.value.sheet != SafeSheetKind.SUPPORT) return
         mutableState.update { it.copy(sheet = null, sheetFailure = null) }
         // A state that retries by itself continues to do so once the sheet is closed.
-        state.value.panel?.takeIf { state.value.running == null && state.value.reveal == null }
-            ?.let(::scheduleAutomaticRetry)
+        resumeAutomaticRetry()
+    }
+
+    private fun resumeAutomaticRetry() {
+        val current = state.value
+        if (current.running != null || current.sheet != null || current.reveal != null) return
+        (current.panel ?: automaticRetry?.first)?.let(::scheduleAutomaticRetry)
     }
 
     private fun runTryAgain(automatic: Boolean) {
@@ -529,7 +620,7 @@ class SafeModeViewModel @Inject constructor(
     fun technicalDetails(): List<Pair<String, String>> {
         val current = state.value
         return buildList {
-            add(DETAIL_CODE to (current.panel?.code ?: "-"))
+            add(DETAIL_CODE to (current.panel?.code ?: automaticRetry?.first?.code ?: "-"))
             current.lastAttemptCode?.let { add(DETAIL_LAST_ATTEMPT to it) }
             add(DETAIL_VERSION to "${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})")
             add(
@@ -892,7 +983,10 @@ class SafeModeViewModel @Inject constructor(
         enteredPin.clear()
         authenticated = false
         authenticating = false
+        val wasOpen = state.value.reveal != null
         mutableState.update { it.copy(reveal = null) }
+        // Retrying by itself was paused while the phrase flow was open.
+        if (wasOpen) resumeAutomaticRetry()
     }
 
     override fun onCleared() {
@@ -913,7 +1007,11 @@ class SafeModeViewModel @Inject constructor(
         const val SUPPORT_SUBJECT = "SORA wallet upgrade recovery"
         const val SILENT_UPGRADE_MILLIS = 1_500L
         const val STILL_WORKING_MILLIS = 10_000L
-        val AUTOMATIC_RETRY_DELAYS = longArrayOf(1_000L, 3_000L, 10_000L)
+        /** Pauses before each automatic attempt; the last one repeats for every later attempt. */
+        val AUTOMATIC_RETRY_DELAYS = longArrayOf(1_000L, 3_000L, 10_000L, 30_000L)
+
+        /** Automatic attempts per app start for a resumable (not transient) state. */
+        const val MAX_RESUMABLE_AUTOMATIC_RETRIES = 3
 
         @Suppress("DEPRECATION")
         val DEVICE_CREDENTIAL_AUTHENTICATORS =

@@ -377,6 +377,13 @@ class UserRepositoryImpl(
                 unrestorableLegacyWallet(owner = address)
                 return null
             }
+            // SORA 2.4.x copied these keys under the address before it saved the account; a
+            // process stop in between leaves that copy, and the promotion below finishes it. A
+            // copy that names this address but holds another address's key is not this wallet.
+            if (!scopedCopyMatches(address)) {
+                unrestorableLegacyWallet(owner = address)
+                return null
+            }
             val account = accounts.singleOrNull()
                 ?: SoraAccountLocal(address, userDatasource.getAccountName())
             if (accounts.isEmpty()) {
@@ -401,6 +408,32 @@ class UserRepositoryImpl(
         } finally {
             keys.privateKey.fill(0)
             keys.nonce.fill(0)
+        }
+    }
+
+    /**
+     * False only when keys stored under [address] decrypt to the key of another address. Missing
+     * keys match (nothing was copied); unreadable ones are left to the wallet verification, which
+     * judges the signing key per account. A Keystore or storage failure is rethrown.
+     */
+    private suspend fun scopedCopyMatches(address: String): Boolean {
+        val scoped = try {
+            credentialsDatasource.retrieveKeys(address)
+        } catch (error: CancellationException) {
+            throw error
+        } catch (error: Throwable) {
+            if (WalletStorageFailures.isTransient(error) ||
+                WalletStorageFailures.isKeyMaterialUnavailable(error)
+            ) {
+                throw error
+            }
+            null
+        } ?: return true
+        return try {
+            sora2AddressCodec.toSoraAddressOrNull(scoped.publicKey) == address
+        } finally {
+            scoped.privateKey.fill(0)
+            scoped.nonce.fill(0)
         }
     }
 

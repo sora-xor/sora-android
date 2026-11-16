@@ -161,6 +161,10 @@ class SafeModeViewModelTest {
             val collector = launch { vm.events.collect { events += it } }
 
             vm.showPanel("VERIFIED_RECEIPT_INVALID")
+            // It is retried by itself first (behind the progress screen); the person asks for
+            // the options with Get help.
+            assertNull(vm.state.value.panel)
+            vm.onGetHelp()
             val panel = requireNotNull(vm.state.value.panel)
             // The restore it offers is the one requestSetUpAgain accepts (it reads these options).
             assertEquals(SetUpAgainScope.DATABASE_ONLY, WalletUpgradeBackup.recoveryOptions()?.setUpAgainScope)
@@ -201,6 +205,7 @@ class SafeModeViewModelTest {
             Result.failure(WalletUpgradeBackupException("SET_UP_AGAIN_NOT_AVAILABLE"))
         every { interactor.recoveryOptions(any()) } answers { options(firstArg()) }
         vm.showPanel("WALLET_MIGRATION_RECOVERY_REQUIRED", options("WALLET_MIGRATION_RECOVERY_REQUIRED"))
+        vm.onGetHelp()
         vm.onAction(RecoveryAction.RESTORE_PHRASE)
         vm.confirmRestore()
         advanceUntilIdle()
@@ -221,6 +226,7 @@ class SafeModeViewModelTest {
             Result.failure(WalletUpgradeBackupException("RECOVERY_EXPORT_FAILED"))
         every { interactor.recoveryOptions(any()) } answers { options(firstArg()) }
         vm.showPanel("WALLET_MIGRATION_RECOVERY_REQUIRED", options("WALLET_MIGRATION_RECOVERY_REQUIRED"))
+        vm.onGetHelp()
         vm.onAction(RecoveryAction.EXPORT)
         vm.createExport()
         advanceUntilIdle()
@@ -238,6 +244,7 @@ class SafeModeViewModelTest {
         val events = mutableListOf<SafeModeEvent>()
         val collector = launch { vm.events.collect { events += it } }
         vm.showPanel("WALLET_MIGRATION_RECOVERY_REQUIRED", options("WALLET_MIGRATION_RECOVERY_REQUIRED"))
+        vm.onGetHelp()
         assertTrue(RecoveryAction.READ_ONLY in vm.state.value.panel!!.actions)
         vm.onAction(RecoveryAction.READ_ONLY)
         vm.confirmReadOnly()
@@ -260,6 +267,7 @@ class SafeModeViewModelTest {
             options("WALLET_MIGRATION_RECOVERY_REQUIRED"),
             canContinueLegacyWallet = false,
         )
+        vm.onGetHelp()
         assertFalse(RecoveryAction.READ_ONLY in vm.state.value.panel!!.actions)
         // A later redraw of the same screen (for example after a failed action) keeps it hidden.
         vm.showPanel("WALLET_MIGRATION_RECOVERY_REQUIRED")

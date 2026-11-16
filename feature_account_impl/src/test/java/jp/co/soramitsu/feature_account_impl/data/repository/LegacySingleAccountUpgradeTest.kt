@@ -33,7 +33,23 @@ class LegacySingleAccountUpgradeTest {
     @Test fun `interrupted metadata promotion resumes without replacing account row`() = upgrade(resume = true)
     @Test fun `failed signing proof leaves old storage and selection untouched`() = upgrade(validSignature = false)
 
-    private fun upgrade(resume: Boolean = false, validSignature: Boolean = true) = runTest {
+    // A SORA 2.4.x start stopped after it copied the keys under the address (and maybe saved the
+    // row) but before the selection: the promotion finishes it, writing no key.
+    @Test fun `interrupted 2_4 copy of the same key is finished`() = upgrade(scopedCopy = ScopedCopy.SAME_KEY)
+    @Test fun `interrupted 2_4 copy with a saved row is finished`() =
+        upgrade(resume = true, scopedCopy = ScopedCopy.SAME_KEY)
+
+    // A copy that names this address but holds another address's key is not this wallet.
+    @Test fun `a copy holding another key is never promoted`() =
+        upgrade(scopedCopy = ScopedCopy.ANOTHER_KEY)
+
+    private enum class ScopedCopy { NONE, SAME_KEY, ANOTHER_KEY }
+
+    private fun upgrade(
+        resume: Boolean = false,
+        validSignature: Boolean = true,
+        scopedCopy: ScopedCopy = ScopedCopy.NONE,
+    ) = runTest {
         // A real key pair: the upgrade computes the public key from the stored private key.
         val retained = realSr25519Keypair(ByteArray(32) { 7 })
         val publicKey = retained.publicKey
@@ -72,10 +88,24 @@ class LegacySingleAccountUpgradeTest {
         coEvery { credentials.retrieveKeys("") } answers {
             Sr25519Keypair(retained.privateKey.copyOf(), publicKey.copyOf(), retained.nonce.copyOf())
         }
+        when (scopedCopy) {
+            ScopedCopy.NONE -> coEvery { credentials.retrieveKeys(address) } returns null
+            ScopedCopy.SAME_KEY -> coEvery { credentials.retrieveKeys(address) } answers {
+                Sr25519Keypair(retained.privateKey.copyOf(), publicKey.copyOf(), retained.nonce.copyOf())
+            }
+            ScopedCopy.ANOTHER_KEY -> {
+                val another = realSr25519Keypair(ByteArray(32) { 9 })
+                every { runtime.toSoraAddressOrNull(match { it.contentEquals(another.publicKey) }) } returns
+                    "another-address"
+                coEvery { credentials.retrieveKeys(address) } answers {
+                    Sr25519Keypair(another.privateKey.copyOf(), another.publicKey.copyOf(), another.nonce.copyOf())
+                }
+            }
+        }
         val repository = UserRepositoryImpl(user, credentials, db, coroutineManager,
             mockk(), runtime, crypto)
         val result = runCatching { repository.getCurSoraAccount() }
-        if (validSignature) {
+        if (validSignature && scopedCopy != ScopedCopy.ANOTHER_KEY) {
             assertTrue(result.exceptionOrNull()?.toString(), result.isSuccess)
             assertEquals(address, result.getOrThrow().substrateAddress)
             assertEquals(expected.accountName, result.getOrThrow().accountName)
@@ -88,6 +118,7 @@ class LegacySingleAccountUpgradeTest {
         } else {
             assertTrue(result.isFailure)
             assertTrue(rows.isEmpty())
+            coVerify(exactly = 0) { accountDao.insertSoraAccount(any()) }
             assertEquals("", selected)
             coVerify(exactly = 0) { user.completeLegacyAccountUpgrade(any()) }
         }

@@ -325,6 +325,44 @@ class SplashViewModelTest {
         }
 
     @Test
+    fun `a busy disk while routing a verified wallet is read again and the wallet opens`() =
+        runTest {
+            given(interactor.getMigrationDoneAsync()).willReturn(CompletableDeferred(true))
+            given(interactor.getRegistrationState())
+                .willThrow(java.io.UncheckedIOException(java.io.IOException("busy")))
+                .willReturn(OnboardingState.REGISTRATION_FINISHED)
+            given(interactor.hasExistingWallet()).willReturn(true)
+
+            splashViewModel.nextScreen()
+            advanceUntilIdle()
+
+            assertEquals(Unit, splashViewModel.showMainScreen.getOrAwaitValue())
+            assertEquals(null, splashViewModel.showMigrationRecovery.value)
+            verify(interactor, never()).recoveryOptions(org.mockito.kotlin.any())
+        }
+
+    @Test
+    fun `routing that stays busy hands a transient code to the screen that retries by itself`() =
+        runTest {
+            given(interactor.getMigrationDoneAsync()).willReturn(CompletableDeferred(true))
+            given(interactor.getRegistrationState()).willReturn(OnboardingState.REGISTRATION_FINISHED)
+            given(interactor.hasExistingWallet()).willThrow(
+                jp.co.soramitsu.common.util.KeyMaterialUnavailableException("busy", transient = true)
+            )
+            given(interactor.recoveryOptions("KEYSTORE_UNAVAILABLE"))
+                .willReturn(options("KEYSTORE_UNAVAILABLE"))
+
+            splashViewModel.nextScreen()
+            advanceUntilIdle()
+
+            val recovery = splashViewModel.showMigrationRecovery.getOrAwaitValue()
+            assertEquals("KEYSTORE_UNAVAILABLE", recovery.code)
+            assertEquals(true, recovery.options?.retryAutomatically)
+            // The first read and three more after short pauses.
+            verify(interactor, times(4)).hasExistingWallet()
+        }
+
+    @Test
     fun `failed explicit retry remains recovery and preserves legacy option`() = runTest {
         given(interactor.retryMigration()).willReturn(false)
         given(interactor.getMigrationFailureCode()).willReturn("KEY_UNAVAILABLE")

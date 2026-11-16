@@ -80,16 +80,92 @@ class SafeModeLifecycleFlowTest {
         }
     }
     private fun SafeModeViewModel.panel(code: String = "VERIFIED_RECEIPT_INVALID") = showPanel(code, options(code))
+    /**
+     * A transient state is retried for as long as its screen exists, so a test that leaves one
+     * running closes the screen (its view model scope) before runTest drains the scheduler.
+     */
+    private fun endScreen() = store.clear()
 
-    @Test fun transientFailureRetriesAtOneThreeAndTenSecondsThenStops() = runTest {
+    // Update rule of 2026-11-09: a transient state never stops at "paused". The progress screen
+    // stays, and the same check runs again at 1, 3, 10 s and then every 30 s, without limit.
+    @Test fun transientFailureKeepsRetryingBehindTheProgressScreenAndNeverStops() = runTest {
         val vm = vm(); every { WalletUpgradeBackup.retry(any()) } returns Result.failure(WalletUpgradeBackupException("KEYSTORE_UNAVAILABLE"))
-        vm.panel("KEYSTORE_UNAVAILABLE"); advanceTimeBy(999); runCurrent(); verify(exactly = 0) { WalletUpgradeBackup.retry(any()) }
+        vm.panel("KEYSTORE_UNAVAILABLE"); runCurrent()
+        assertNull(vm.state.value.panel); assertNotNull(vm.state.value.progress); assertTrue(vm.state.value.visible)
+        advanceTimeBy(999); runCurrent(); verify(exactly = 0) { WalletUpgradeBackup.retry(any()) }
         advanceTimeBy(1); runCurrent(); verify(exactly = 1) { WalletUpgradeBackup.retry(any()) }
         advanceTimeBy(2999); runCurrent(); verify(exactly = 1) { WalletUpgradeBackup.retry(any()) }
         advanceTimeBy(1); runCurrent(); verify(exactly = 2) { WalletUpgradeBackup.retry(any()) }
         advanceTimeBy(9999); runCurrent(); verify(exactly = 2) { WalletUpgradeBackup.retry(any()) }
-        advanceTimeBy(1); runCurrent(); advanceTimeBy(60_000); runCurrent()
-        verify(exactly = 3) { WalletUpgradeBackup.retry(any()) }; assertNull(vm.state.value.running)
+        advanceTimeBy(1); runCurrent(); verify(exactly = 3) { WalletUpgradeBackup.retry(any()) }
+        advanceTimeBy(29_999); runCurrent(); verify(exactly = 3) { WalletUpgradeBackup.retry(any()) }
+        advanceTimeBy(1); runCurrent(); verify(exactly = 4) { WalletUpgradeBackup.retry(any()) }
+        advanceTimeBy(10 * 30_000L); runCurrent()
+        verify(exactly = 14) { WalletUpgradeBackup.retry(any()) }
+        // Still the progress screen, never the paused panel; the support code is kept.
+        assertNull(vm.state.value.panel); assertNotNull(vm.state.value.progress)
+        assertEquals("KEYSTORE_UNAVAILABLE", vm.technicalDetails().first { it.first == SafeModeViewModel.DETAIL_CODE }.second)
+        endScreen()
+    }
+    @Test fun transientFailureThatPassesRunsTheVerificationAgain() = runTest {
+        val vm = vm(); every { WalletUpgradeBackup.retry(any()) } returnsMany listOf(
+            Result.failure(WalletUpgradeBackupException("DATABASE_LOCKED")), Result.success(Unit),
+        )
+        vm.panel("DATABASE_LOCKED"); advanceTimeBy(1_000); runCurrent()
+        assertNull(vm.state.value.panel); assertTrue(events.isEmpty())
+        advanceTimeBy(3_000); runCurrent()
+        assertEquals(listOf(SafeModeEvent.RetryReady), events); assertNull(vm.state.value.panel)
+        assertEquals(SafeStepState.DONE, vm.state.value.progress?.checkingData)
+    }
+    @Test fun getHelpWhileRetryingShowsTheOptionsAndTheRetriesGoOn() = runTest {
+        val vm = vm(); every { WalletUpgradeBackup.retry(any()) } returns Result.failure(WalletUpgradeBackupException("KEYSTORE_UNAVAILABLE"))
+        vm.panel("KEYSTORE_UNAVAILABLE"); runCurrent(); assertNull(vm.state.value.panel)
+        vm.onGetHelp(); runCurrent()
+        assertEquals(RecoveryPanelKind.TRANSIENT, vm.state.value.panel?.kind); assertNull(vm.state.value.progress)
+        assertNull(vm.state.value.sheet)
+        advanceTimeBy(5 * 30_000L); runCurrent()
+        verify(atLeast = 5) { WalletUpgradeBackup.retry(any()) }
+        // The person asked for the options: they stay on screen while the retries go on.
+        assertEquals(RecoveryPanelKind.TRANSIENT, vm.state.value.panel?.kind)
+        endScreen()
+    }
+    @Test fun getHelpWithNothingRetryingOpensSupport() = runTest {
+        val vm = vm(); vm.showProgress(ProgressTitle.UPDATING, true); vm.onGetHelp()
+        assertEquals(SafeSheetKind.SUPPORT, vm.state.value.sheet)
+    }
+    @Test fun resumableFailureIsRetriedThreeTimesPerStartThenShowsItsOptions() = runTest {
+        val vm = vm()
+        val code = "VERIFIED_RECEIPT_INVALID"
+        val resumable = options(code).copy(retryAutomatically = true)
+        every { WalletUpgradeBackup.retry(any()) } returns Result.failure(WalletUpgradeBackupException(code))
+        every { interactor.recoveryOptions(code) } returns resumable
+        vm.showPanel(code, resumable); runCurrent()
+        assertNull(vm.state.value.panel); assertNotNull(vm.state.value.progress)
+        advanceTimeBy(1_000 + 3_000 + 10_000); runCurrent()
+        verify(exactly = 3) { WalletUpgradeBackup.retry(any()) }
+        assertEquals(RecoveryPanelKind.RECOVERY, vm.state.value.panel?.kind); assertNull(vm.state.value.progress)
+        advanceTimeBy(10 * 30_000L); runCurrent(); verify(exactly = 3) { WalletUpgradeBackup.retry(any()) }
+    }
+    @Test fun integrityFailureThatCannotPassByItselfShowsItsOptionsAtOnce() = runTest {
+        val vm = vm(); vm.panel("DATABASE_CORRUPT"); runCurrent()
+        assertEquals(RecoveryPanelKind.RECOVERY, vm.state.value.panel?.kind)
+        advanceTimeBy(120_000); runCurrent(); verify(exactly = 0) { WalletUpgradeBackup.retry(any()) }
+    }
+    @Test fun comingBackToTheAppRetriesAtOnce() = runTest {
+        val vm = vm(); every { WalletUpgradeBackup.retry(any()) } returns Result.failure(WalletUpgradeBackupException("STORAGE_IO"))
+        vm.panel("STORAGE_IO"); advanceTimeBy(1_000); runCurrent(); advanceTimeBy(3_000); runCurrent()
+        verify(exactly = 2) { WalletUpgradeBackup.retry(any()) }
+        vm.onPaused(); vm.onResumed(); runCurrent()
+        verify(exactly = 3) { WalletUpgradeBackup.retry(any()) }
+        endScreen()
+    }
+    @Test fun closingThePhraseFlowResumesRetrying() = runTest {
+        val vm = vm(); every { WalletUpgradeBackup.retry(any()) } returns Result.failure(WalletUpgradeBackupException("KEYSTORE_UNAVAILABLE"))
+        vm.panel("KEYSTORE_UNAVAILABLE"); vm.onGetHelp(); vm.startReveal(); runCurrent()
+        advanceTimeBy(60_000); runCurrent(); verify(exactly = 0) { WalletUpgradeBackup.retry(any()) }
+        vm.closeReveal(); advanceTimeBy(1_000); runCurrent()
+        verify(exactly = 1) { WalletUpgradeBackup.retry(any()) }
+        endScreen()
     }
     @Test fun openSupportPausesAutomaticRetryAndCloseResumesIt() = runTest {
         val vm = vm(); vm.panel("KEYSTORE_UNAVAILABLE"); vm.openSheet(SafeSheetKind.SUPPORT)

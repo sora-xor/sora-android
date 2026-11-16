@@ -29,6 +29,7 @@ import jp.co.soramitsu.androidfoundation.fragment.SingleLiveEvent
 import jp.co.soramitsu.androidfoundation.fragment.trigger
 import jp.co.soramitsu.common.logger.WalletDiagnostics
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
+import jp.co.soramitsu.common.util.WalletStorageFailures
 import jp.co.soramitsu.core_db.WalletRecoveryOptions
 import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
 import jp.co.soramitsu.sora.splash.domain.PendingRecoveryStartupScheduler
@@ -105,10 +106,10 @@ class SplashViewModel @Inject constructor(
                 routeAfterVerifiedWallet()
             } catch (error: CancellationException) {
                 throw error
-            } catch (_: Throwable) {
+            } catch (error: Throwable) {
                 // Startup never crashes into a loop: anything unexpected shows the recovery
                 // options (Try again, support) instead.
-                showRecoveryAfterUnexpectedError("WALLET_VERIFICATION_FAILED")
+                showRecoveryAfterUnexpectedError("WALLET_VERIFICATION_FAILED", error)
             }
         }
     }
@@ -120,16 +121,16 @@ class SplashViewModel @Inject constructor(
      */
     private suspend fun routeAfterVerifiedWallet() {
         pendingRecoveryStartupScheduler.scheduleAfterWalletMigration()
-        when (val state = interactor.getRegistrationState()) {
+        when (val state = readForRouting { interactor.getRegistrationState() }) {
             OnboardingState.REGISTRATION_FINISHED -> {
-                if (interactor.hasExistingWallet()) {
+                if (readForRouting { interactor.hasExistingWallet() }) {
                     showMainScreen.trigger()
                 } else {
                     showOnBoardingScreen.value = OnboardingState.INITIAL
                 }
             }
             OnboardingState.INITIAL -> {
-                if (interactor.hasExistingWallet()) {
+                if (readForRouting { interactor.hasExistingWallet() }) {
                     showMainScreen.trigger()
                 } else {
                     showOnBoardingScreen.value = state
@@ -137,6 +138,35 @@ class SplashViewModel @Inject constructor(
             }
         }
     }
+
+    /**
+     * One routing read after the wallet verified. A busy disk, database or Keystore is read
+     * again after a short pause; if it is still busy, the recovery screen gets a transient code
+     * and keeps retrying by itself (an update never stops for what passes on its own).
+     */
+    private suspend fun <T> readForRouting(read: suspend () -> T): T {
+        var attempt = 0
+        while (true) {
+            try {
+                return read()
+            } catch (error: CancellationException) {
+                throw error
+            } catch (error: Throwable) {
+                val code = transientRoutingCode(error) ?: throw error
+                if (attempt >= ROUTING_RETRY_DELAYS.size) throw TransientRoutingFailure(code, error)
+                delay(ROUTING_RETRY_DELAYS[attempt++])
+            }
+        }
+    }
+
+    private fun transientRoutingCode(error: Throwable): String? = when {
+        !WalletStorageFailures.isTransient(error) -> null
+        WalletStorageFailures.isKeyMaterialUnavailable(error) -> WalletRecoveryOptions.KEYSTORE_TRANSIENT
+        else -> WalletRecoveryOptions.STORAGE_IO
+    }
+
+    private class TransientRoutingFailure(val code: String, cause: Throwable) :
+        IllegalStateException(code, cause)
 
     fun continueLegacyWallet() {
         viewModelScope.launch {
@@ -175,8 +205,8 @@ class SplashViewModel @Inject constructor(
                 }
             } catch (error: CancellationException) {
                 throw error
-            } catch (_: Throwable) {
-                showRecoveryAfterUnexpectedError("WALLET_VERIFICATION_FAILED")
+            } catch (error: Throwable) {
+                showRecoveryAfterUnexpectedError("WALLET_VERIFICATION_FAILED", error)
             }
         }
     }
@@ -190,8 +220,10 @@ class SplashViewModel @Inject constructor(
             null
         } ?: interactor.currentRecoveryCode() ?: default
 
-    private suspend fun showRecoveryAfterUnexpectedError(default: String) {
-        val code = interactor.currentRecoveryCode() ?: default
+    private suspend fun showRecoveryAfterUnexpectedError(default: String, error: Throwable? = null) {
+        val code = (error as? TransientRoutingFailure)?.code
+            ?: interactor.currentRecoveryCode()
+            ?: default
         showMigrationRecovery.value = try {
             recoveryState(code)
         } catch (error: CancellationException) {
@@ -212,5 +244,10 @@ class SplashViewModel @Inject constructor(
                 ?: (options.canReadOnly && interactor.canContinueLegacyWallet()),
             options = options,
         )
+    }
+
+    private companion object {
+        /** Pauses before reading the routing facts again (about 4 s in all). */
+        val ROUTING_RETRY_DELAYS = longArrayOf(250L, 1_000L, 3_000L)
     }
 }
