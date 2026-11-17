@@ -12,6 +12,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import org.junit.Assert.assertEquals
@@ -26,11 +27,21 @@ class WhitelistTokensManagerTest {
     private val other = "0x" + "ab".repeat(32)
     private val third = "0x" + "cd".repeat(32)
     private val cache = "whitelist_tokens.json"
+    private val blacklistCache = "blacklist_tokens.json"
+    private val svg = "data:image/svg+xml,%3Csvg%2F%3E"
 
-    private fun manager(cached: String? = null): WhitelistTokensManager {
+    private fun manager(cached: String? = null, blacklist: String? = null): WhitelistTokensManager {
         every { files.readInternalFile(cache) } returns cached
         every { files.existsInternalFile(cache) } returns (cached != null)
+        every { files.readInternalFile(blacklistCache) } returns blacklist
         return WhitelistTokensManager(rest, files)
+    }
+
+    private fun ids(vararg ids: String) = JsonArray(ids.map { JsonPrimitive(it) })
+
+    // Declared after response(), so it answers the blacklist request only.
+    private fun blacklisted(answer: JsonArray) {
+        coEvery { rest.get<JsonArray>(match { it.url == "https://whitelist.polkaswap2.io/blacklist.json" }) } returns answer
     }
 
     private fun row(id: String, icon: String): JsonObject = JsonObject(mapOf(
@@ -172,5 +183,122 @@ class WhitelistTokensManagerTest {
         response(row(other, "data:image/svg-not-really,%3Csvg%2F%3E"), row(xor, "data:image/png-extra;base64,AQID"))
         manager.updateWhitelistStorage()
         assertTrue(manager.whitelistIds.isEmpty())
+    }
+
+    @Test
+    fun `the bundled blacklist applies until a list is cached or fetched`() {
+        val manager = manager()
+        assertEquals(
+            setOf(
+                "0x00b3e666ba302d608b659994fab741ba78904161e158f1421db05318588fe017",
+                "0x00dadad1a20270d9246dd7ccc92730f32565baa4265cf30a23ebd15c9235e818",
+            ),
+            manager.blacklistIds,
+        )
+        assertEquals(AssetHolder.getIds(), manager.whitelistIds)
+    }
+
+    @Test
+    fun `a cached blacklist replaces the bundled one and an empty cached one clears it`() {
+        assertEquals(setOf(other), manager(blacklist = """["$other"]""").blacklistIds)
+        assertTrue(manager(blacklist = "[]").blacklistIds.isEmpty())
+    }
+
+    @Test
+    fun `a damaged cached blacklist is ignored as a whole`() {
+        val damaged = listOf(
+            "[", "{}", "null", "[42]", "[null]", """["$other",42]""", """["0x12"]""",
+            """[["$other"]]""", """["../$other"]""", """[{"id":"$other"}]""",
+        )
+        for (cached in damaged) {
+            assertEquals(cached, WhitelistTokensManager.BUNDLED_BLACKLIST, manager(blacklist = cached).blacklistIds)
+        }
+        verify(exactly = 0) { files.writeInternalFile(any(), any()) }
+    }
+
+    @Test
+    fun `a fetched blacklist is saved in lower case and applied`() = runTest {
+        val manager = manager()
+        response()
+        blacklisted(ids("0x" + "CD".repeat(32), other))
+        manager.updateWhitelistStorage()
+        assertEquals(setOf(third, other), manager.blacklistIds)
+        verify { files.writeInternalFile(blacklistCache, """["$third","$other"]""") }
+    }
+
+    @Test
+    fun `an empty blacklist from the server is valid and clears the list`() = runTest {
+        val manager = manager()
+        response()
+        blacklisted(ids())
+        manager.updateWhitelistStorage()
+        assertTrue(manager.blacklistIds.isEmpty())
+        verify { files.writeInternalFile(blacklistCache, "[]") }
+    }
+
+    @Test
+    fun `a malformed, failed or unsaved blacklist fetch keeps the last list`() = runTest {
+        val manager = manager(blacklist = """["$other"]""")
+        response()
+        val malformed = listOf(
+            JsonArray(listOf(JsonPrimitive(third), JsonPrimitive(42))),
+            JsonArray(listOf(JsonNull)),
+            ids("0x12"),
+            JsonArray(listOf(row(third, svg))),
+        )
+        for (answer in malformed) {
+            blacklisted(answer)
+            manager.updateWhitelistStorage()
+            assertEquals(setOf(other), manager.blacklistIds)
+        }
+        verify(exactly = 0) { files.writeInternalFile(blacklistCache, any()) }
+
+        coEvery { rest.get<JsonArray>(match { it.url.endsWith("/blacklist.json") }) } throws IOException("offline")
+        manager.updateWhitelistStorage()
+        assertEquals(setOf(other), manager.blacklistIds)
+
+        blacklisted(ids(third))
+        every { files.writeInternalFile(blacklistCache, any()) } throws IOException("disk full")
+        manager.updateWhitelistStorage()
+        assertEquals(setOf(other), manager.blacklistIds)
+    }
+
+    @Test
+    fun `a failed whitelist fetch still refreshes the blacklist`() = runTest {
+        val manager = manager(stored())
+        coEvery { rest.get<JsonArray>(any()) } throws IOException("whitelist unreachable")
+        blacklisted(ids(third))
+        manager.updateWhitelistStorage()
+        assertEquals(listOf(other), manager.whitelistIds)
+        assertEquals(setOf(third), manager.blacklistIds)
+    }
+
+    @Test
+    fun `a cancelled blacklist fetch propagates cancellation without changing the list`() = runTest {
+        val manager = manager(blacklist = """["$other"]""")
+        response()
+        val cancellation = CancellationException("screen closed")
+        coEvery { rest.get<JsonArray>(match { it.url.endsWith("/blacklist.json") }) } throws cancellation
+        assertSame(cancellation, runCatching { manager.updateWhitelistStorage() }.exceptionOrNull())
+        assertEquals(setOf(other), manager.blacklistIds)
+        verify(exactly = 0) { files.writeInternalFile(blacklistCache, any()) }
+    }
+
+    @Test
+    fun `the blacklist wins over the whitelist and the built in tokens`() = runTest {
+        assertEquals(AssetHolder.getIds() - xor, manager(blacklist = """["$xor"]""").whitelistIds)
+        val bothCached = """[{"id":"$other","type":"svg"},{"id":"$third","type":"svg"}]"""
+        assertEquals(listOf(third), manager(bothCached, blacklist = """["$other"]""").whitelistIds)
+
+        val manager = manager()
+        response(row(other, svg), row(third, svg))
+        blacklisted(ids(other))
+        manager.updateWhitelistStorage()
+        assertEquals(listOf(third), manager.whitelistIds)
+
+        // A token the server takes off the blacklist is a whitelisted token again.
+        blacklisted(ids())
+        manager.updateWhitelistStorage()
+        assertEquals(listOf(other, third), manager.whitelistIds)
     }
 }
