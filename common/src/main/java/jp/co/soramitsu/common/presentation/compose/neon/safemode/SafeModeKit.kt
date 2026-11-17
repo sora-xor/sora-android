@@ -754,13 +754,3 @@ fun SafeSheet(
         }
     }
 }
-
-/** A checklist row inside a sheet: a glyph and a line of text (design spec 9.5, U11). */
-@Composable
-fun SafeChecklistRow(
-    text: String,
-    state: SafeStepState,
-    modifier: Modifier = Modifier,
-) {
-    StepList(listOf(SafeStep(text, state)), modifier)
-}

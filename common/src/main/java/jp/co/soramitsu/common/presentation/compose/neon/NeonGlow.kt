@@ -45,13 +45,7 @@ import androidx.compose.ui.graphics.shadow.Shadow as BoxShadow
 object NeonMotion {
     const val PRESS = 90
     const val FAST = 160
-    const val BASE = 240
-    const val SLOW = 320
-    const val HERO = 500
 
-    val EaseStandard = CubicBezierEasing(.2f, 0f, 0f, 1f)
-    val EaseDecel = CubicBezierEasing(.05f, .7f, .1f, 1f)
-    val EaseExit = CubicBezierEasing(.3f, 0f, 1f, 1f)
     val EaseSine = CubicBezierEasing(.37f, 0f, .63f, 1f)
 }
 

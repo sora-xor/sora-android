@@ -8,14 +8,13 @@ import org.junit.Test
 class NeonMotionTest {
 
     @Test
-    fun `durations grow from press to hero`() {
-        val durations = listOf(NeonMotion.PRESS, NeonMotion.FAST, NeonMotion.BASE, NeonMotion.SLOW, NeonMotion.HERO)
-        assertEquals(durations.sorted(), durations)
+    fun `a press is quicker than its release`() {
+        assertTrue(NeonMotion.PRESS < NeonMotion.FAST)
     }
 
     @Test
     fun `every easing starts at zero, ends at one and never runs backwards`() {
-        for (easing in listOf(NeonMotion.EaseStandard, NeonMotion.EaseDecel, NeonMotion.EaseExit, NeonMotion.EaseSine)) {
+        for (easing in listOf(NeonMotion.EaseSine)) {
             assertEquals(0f, easing.transform(0f), 1e-4f)
             assertEquals(1f, easing.transform(1f), 1e-4f)
             val samples = (0..20).map { easing.transform(it / 20f) }
