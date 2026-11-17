@@ -368,9 +368,13 @@ class PinCodeViewModel @Inject constructor(
         awaitingScreenLock = false
     }
 
+    /** A new PIN is being saved: the keypad takes nothing until the save has answered. */
+    private var savingPin = false
+
     fun pinCodeNumberClicked(
         pinCodeNumber: String,
     ) {
+        if (savingPin) return
         if (awaitingScreenLock) {
             _screenLockPromptEvent.trigger()
             return
@@ -391,7 +395,7 @@ class PinCodeViewModel @Inject constructor(
     }
 
     fun pinCodeDeleteClicked() {
-        if (inputedCode.isEmpty()) {
+        if (savingPin || inputedCode.isEmpty()) {
             return
         }
         inputedCode = inputedCode.substring(0, inputedCode.length - 1)
@@ -448,16 +452,21 @@ class PinCodeViewModel @Inject constructor(
     }
 
     private fun registerPinCode() {
+        if (savingPin) return
+        savingPin = true
         viewModelScope.launch {
             tryCatch {
                 try {
                     interactor.savePin(inputedCode, screenLockConfirmation)
                 } catch (_: ScreenLockConfirmationRequiredException) {
                     // The repository wants the phone's screen lock first (the confirmation ran
-                    // out while the PIN was typed, or this screen never asked): nothing was
-                    // saved. Ask in the system prompt, then the new PIN is chosen again.
+                    // out while the PIN was typed, was already used, or this screen never
+                    // asked): nothing was saved. Ask in the system prompt, then the new PIN is
+                    // chosen again.
                     askScreenLockBeforeNewPin()
                     return@tryCatch
+                } finally {
+                    savingPin = false
                 }
                 screenLockConfirmation = null
                 if (isChanging) {

@@ -70,6 +70,7 @@ import org.mockito.Mockito.verify
 import org.mockito.junit.MockitoJUnitRunner
 import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.argumentCaptor
+import org.mockito.kotlin.willSuspendableAnswer
 
 @ExperimentalCoroutinesApi
 @RunWith(MockitoJUnitRunner::class)
@@ -623,6 +624,34 @@ class PinCodeViewModelTest {
         assertEquals(0, model.state.checkedDotsCount)
         typeTwice(model, "123456")
         verify(interactor, never()).savePin(anyString(), anyOrNull())
+    }
+
+    // Codex review 3: while the new PIN is being written, the keypad takes nothing, so the last
+    // digit cannot be removed and typed again to send a second replacement.
+    @Test
+    fun `the keypad takes nothing while a new PIN is being saved`() = runTest {
+        val model = viewModelWithScreenLock()
+        startWithUnreadablePin(model, needsScreenLock = true)
+        given(interactor.isBiometryAvailable()).willReturn(false)
+        model.onScreenLockConfirmed(SCREEN_LOCK)
+        val writing = kotlinx.coroutines.CompletableDeferred<Unit>()
+        given(interactor.savePin(anyString(), anyOrNull())).willSuspendableAnswer { writing.await() }
+
+        typeTwice(model, "123456")
+        // The save is under way and has not answered.
+        verify(interactor, times(1)).savePin(anyString(), anyOrNull())
+        model.pinCodeDeleteClicked()
+        assertEquals(6, model.state.checkedDotsCount)
+        model.pinCodeNumberClicked("6")
+        model.pinCodeNumberClicked("1")
+        advanceUntilIdle()
+        assertEquals(6, model.state.checkedDotsCount)
+        verify(interactor, times(1)).savePin(anyString(), anyOrNull())
+
+        writing.complete(Unit)
+        advanceUntilIdle()
+        verify(interactor, times(1)).savePin(anyString(), anyOrNull())
+        verify(mainRouter).popBackStack()
     }
 
     @Test

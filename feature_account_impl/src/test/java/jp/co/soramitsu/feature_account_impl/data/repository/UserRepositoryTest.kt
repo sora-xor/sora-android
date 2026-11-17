@@ -793,6 +793,36 @@ class UserRepositoryTest {
         coVerify(exactly = 1) { userDatasource.savePin("123456") }
     }
 
+    // Codex review 3: the confirmation is taken before anything is written, so a second save
+    // that brings it while the first one is still writing is refused, and only one PIN is set.
+    @Test
+    fun `one screen lock confirmation replaces the PIN once even while the first save is writing`() = runTest {
+        phoneHasScreenLock = true
+        coEvery { userDatasource.retrievePin() } throws WalletDecryptionException("PIN_UNREADABLE")
+        val writing = kotlinx.coroutines.CompletableDeferred<Unit>()
+        coEvery { userDatasource.savePin("123456") } coAnswers { writing.await() }
+        coEvery { userDatasource.savePin("654321") } returns Unit
+        val confirmation = phoneScreenLock.confirmed()
+
+        val first = launch(UnconfinedTestDispatcher(testScheduler)) {
+            userRepository.savePin("123456", confirmation)
+        }
+        // The first save is suspended inside its write.
+        coVerify(exactly = 1) { userDatasource.savePin("123456") }
+        val second = runCatching { userRepository.savePin("654321", confirmation) }.exceptionOrNull()
+
+        assertTrue(second is ScreenLockConfirmationRequiredException)
+        writing.complete(Unit)
+        first.join()
+        coVerify(exactly = 0) { userDatasource.savePin("654321") }
+        // Done: it does not count for a later save either.
+        assertTrue(
+            runCatching { userRepository.savePin("654321", confirmation) }.exceptionOrNull()
+                is ScreenLockConfirmationRequiredException
+        )
+        coVerify(exactly = 0) { userDatasource.savePin("654321") }
+    }
+
     @Test
     fun `a PIN save that fails keeps the screen lock confirmation for the next try`() = runTest {
         phoneHasScreenLock = true

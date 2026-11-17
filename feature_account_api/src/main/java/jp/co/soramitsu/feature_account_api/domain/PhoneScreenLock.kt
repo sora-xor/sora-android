@@ -39,8 +39,9 @@ class ScreenLockConfirmationRequiredException : Exception("SCREEN_LOCK_CONFIRMAT
  * A phone without a screen lock has no stronger local proof, so nothing more is asked there.
  *
  * One instance for the whole app: the screen that shows the system prompt records its success
- * here ([confirmed]) and the repository that saves the PIN checks it ([isFresh], [use]), so a
- * save that did not come through the prompt is refused whatever the screen did.
+ * here ([confirmed]) and the repository that saves the PIN takes it for exactly one save
+ * ([reserve], then [complete] or [release]), so a save that did not come through the prompt is
+ * refused whatever the screen did, and one prompt never allows two replacements.
  */
 class PhoneScreenLock(
     private val deviceSecure: () -> Boolean,
@@ -49,6 +50,9 @@ class PhoneScreenLock(
 ) {
     private var outstanding: ScreenLockConfirmation? = null
     private var confirmedAt = 0L
+
+    /** Taken by a save that is still writing; it counts for nothing else meanwhile. */
+    private var reserved: ScreenLockConfirmation? = null
 
     /** True when the phone has a screen lock the system prompt can ask for. */
     fun isSet(): Boolean = runCatching(deviceSecure).getOrDefault(false)
@@ -78,10 +82,34 @@ class PhoneScreenLock(
         return true
     }
 
-    /** [confirmation] did its one job; it does not count again. */
+    /**
+     * Takes [confirmation] for one PIN save, before anything is written, in one step: true when
+     * it is fresh ([isFresh]) and not taken already. From then on it counts for no other save; a
+     * second save that brings it is refused while this one writes and after it succeeded.
+     */
     @Synchronized
-    fun use(confirmation: ScreenLockConfirmation?) {
-        if (confirmation != null && confirmation === outstanding) outstanding = null
+    fun reserve(confirmation: ScreenLockConfirmation?): Boolean {
+        if (confirmation == null || !isFresh(confirmation)) return false
+        reserved = confirmation
+        outstanding = null
+        return true
+    }
+
+    /** The save that took [confirmation] wrote the PIN: it does not count again. */
+    @Synchronized
+    fun complete(confirmation: ScreenLockConfirmation?) {
+        if (confirmation != null && confirmation === reserved) reserved = null
+    }
+
+    /**
+     * The save that took [confirmation] failed and wrote nothing: it counts again for the next
+     * try (within its time), unless the prompt was passed again meanwhile.
+     */
+    @Synchronized
+    fun release(confirmation: ScreenLockConfirmation?) {
+        if (confirmation == null || confirmation !== reserved) return
+        reserved = null
+        if (outstanding == null) outstanding = confirmation
     }
 
     companion object {

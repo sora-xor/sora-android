@@ -747,13 +747,22 @@ class UserRepositoryImpl(
     }
 
     override suspend fun savePin(pin: String, screenLock: ScreenLockConfirmation?) {
-        when (storedPin()) {
-            StoredPin.ABSENT -> markKeySetsOlderThanThePin()
-            StoredPin.READABLE -> Unit
-            StoredPin.UNREADABLE -> requireOwnerForPinOverUnreadable(screenLock)
+        val taken = when (storedPin()) {
+            StoredPin.ABSENT -> {
+                markKeySetsOlderThanThePin()
+                null
+            }
+            StoredPin.READABLE -> null
+            StoredPin.UNREADABLE -> takeOwnerConfirmation(screenLock)
         }
-        userDatasource.savePin(pin)
-        phoneScreenLock.use(screenLock)
+        try {
+            userDatasource.savePin(pin)
+        } catch (error: Throwable) {
+            // Nothing was written: the confirmation counts again for the next try.
+            phoneScreenLock.release(taken)
+            throw error
+        }
+        phoneScreenLock.complete(taken)
     }
 
     override suspend fun newPinNeedsScreenLock(): Boolean =
@@ -789,11 +798,14 @@ class UserRepositoryImpl(
      * and nobody typed the old PIN. The phone's own screen lock, passed just now in the system
      * prompt, is the proof that its owner chooses the new PIN. Without accounts there is nothing
      * for the PIN to open, and a phone without a screen lock has no stronger local proof, so
-     * both go on as before.
+     * both go on as before (null: nothing taken). The confirmation is taken for this one save
+     * before anything is written, so a second save that brings it is refused even while this
+     * one is still writing.
      */
-    private suspend fun requireOwnerForPinOverUnreadable(screenLock: ScreenLockConfirmation?) {
-        if (!unreadablePinGuardsAccounts()) return
-        if (!phoneScreenLock.isFresh(screenLock)) throw ScreenLockConfirmationRequiredException()
+    private suspend fun takeOwnerConfirmation(screenLock: ScreenLockConfirmation?): ScreenLockConfirmation? {
+        if (!unreadablePinGuardsAccounts()) return null
+        if (!phoneScreenLock.reserve(screenLock)) throw ScreenLockConfirmationRequiredException()
+        return screenLock
     }
 
     /**
