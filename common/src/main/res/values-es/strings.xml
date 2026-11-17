@@ -38,7 +38,6 @@
   <string name="asset_details_asset_id">ID del Activo</string>
   <string name="asset_details_liquid_balance">Balance Líquido</string>
   <string name="asset_details_recent_activity">Actividad reciente</string>
-  <string name="asset_details_token_price">Precio del token</string>
   <string name="asset_details_your_pools">Tus %spares de liquidez</string>
   <string name="asset_to_send">Activo a enviar</string>
   <string name="backup_not_enough_space_error">Backup failed. Not enough space on your Google Drive. Free some space and try again.</string>
@@ -68,7 +67,6 @@
   <string name="common_back">Atrás</string>
   <string name="common_backup">Backup</string>
   <string name="common_balance">Saldo</string>
-  <string name="common_bashkir">Baskir</string>
   <string name="common_bridged">Bridged</string>
   <string name="common_cancel">Cancelar</string>
   <string name="common_chinese">Chino</string>
@@ -83,7 +81,6 @@
   <string name="common_continue">Seguir</string>
   <string name="common_copied">Copiado al portapapeles</string>
   <string name="common_create_qr_request">Create QR-request</string>
-  <string name="common_croatian">Croata</string>
   <string name="common_currencies">Currencies</string>
   <string name="common_delete">Delete</string>
   <string name="common_disabled">Disabled</string>
@@ -97,8 +94,6 @@
   <string name="common_error_fee_rate_not_available">No se ha podido contactar con el proveedor de la retirada. Por favor, inténtelo de nuevo más tarde.</string>
   <string name="common_error_general_message">Estamos trabajando para solucionar el problema. Por favor, inténtelo de nuevo más tarde.</string>
   <string name="common_error_general_title">Error</string>
-  <string name="common_error_internal_error_title">Error interno</string>
-  <string name="common_error_invalid_parameters">Parámetros inválidos</string>
   <string name="common_error_invalid_parameters_body">Por favor, compruebe la conexión a Internet e inténtalo nuevamente más tarde.</string>
   <string name="common_error_invalid_query_format">Tu consulta es incorrecta. Inténtalo de nuevo.</string>
   <string name="common_error_invitation_accepting_window_closed">La ventana de confirmación de la invitación se cerró</string>
@@ -110,7 +105,6 @@
   <string name="common_error_network">Por favor, compruebe la conexión a Internet e inténtelo nuevamente más tarde.</string>
   <string name="common_error_no_browser_error">Please install a browser to open the link</string>
   <string name="common_error_not_enough_invitations">Lo sentimos, pero no tienes invitaciones para compartir</string>
-  <string name="common_error_not_found_title">Recurso no disponible</string>
   <string name="common_error_phone_already_exists">Lo sentimos, este número de teléfono ya está en uso. Por favor, intente con otro.</string>
   <string name="common_error_phone_already_registered">Número de teléfono ya usado durante el registro de este o de otro usuario</string>
   <string name="common_error_pincode_check_error">El código ingresado es incorrecto</string>
@@ -119,22 +113,18 @@
   <string name="common_error_seed_is_not_valid">Please make sure that your input contains 64 hex symbols.</string>
   <string name="common_error_seed_is_not_valid_title">Semilla inválida</string>
   <string name="common_error_self_invitation">No puedes usar tu código de invitación para ti mismo</string>
-  <string name="common_error_unauthorized_body">Por favor, compruebe la conexión a Internet e intente nuevamente más tarde.</string>
-  <string name="common_error_unauthorized_title">Autorización fallida</string>
   <string name="common_error_user_not_found">Tu frase semilla no es válida. Por favor, inténtelo con otra.</string>
   <string name="common_error_user_values_not_found">No se puede continuar la operación porque no se encuentran los datos de valores de usuario</string>
   <string name="common_error_votes_invalid_format">Lo sentimos, pero su cantidad de votos no se puede interpretar. Por favor, intente votar de nuevo.</string>
   <string name="common_error_votes_not_enough">Lo sentimos, pero no tienes suficientes puntos para votar.</string>
   <string name="common_error_voting_is_not_allowed">Lo sentimos, pero el proyecto ya no puede recibir votos.</string>
   <string name="common_error_wrong_user_status">No se puede continuar la operación porque el estado del usuario no es válido</string>
-  <string name="common_estonian">Estonio</string>
   <string name="common_expand">Expandir</string>
   <string name="common_explore">Explorar</string>
   <string name="common_failed">Fallido</string>
   <string name="common_farming">Farming</string>
   <string name="common_farms">Farms</string>
   <string name="common_fee">Fee</string>
-  <string name="common_filipino">Filipino</string>
   <string name="common_finnish">Finlandés</string>
   <string name="common_french">Francés</string>
   <string name="common_german">Alemán</string>
@@ -142,17 +132,9 @@
   <string name="common_google_backup_decryption_failed_2">Possibly the password you entered is invalid.</string>
   <string name="common_hebrew">Hebrew</string>
   <string name="common_hindi">Hindi</string>
-  <plurals name="common_hour">
-    <item quantity="one">hora</item>
-    <item quantity="other">horas</item>
-    <item quantity="many">de horas</item>
-  </plurals>
   <string name="common_indonesian">Indonesio</string>
   <string name="common_insufficient_balance">Insufficient balance</string>
-  <string name="common_italian">Italiano</string>
   <string name="common_japanese">Japonés</string>
-  <string name="common_khmer">Jemer</string>
-  <string name="common_korean">Coreano</string>
   <string name="common_loading">Cargando</string>
   <string name="common_malay">Malayo</string>
   <string name="common_max">max</string>
@@ -176,7 +158,6 @@
   <string name="common_remove">Remove</string>
   <string name="common_request">Request</string>
   <string name="common_russian">Ruso</string>
-  <string name="common_scan">Escanear</string>
   <string name="common_scan_qr">Escanear QR</string>
   <string name="common_search_pools">Buscar Par de liquidez</string>
   <string name="common_sec">segundo</string>
@@ -192,15 +173,11 @@
   <string name="common_sms_code_expired">El código de verificación ha caducado. Por favor intente con otro.</string>
   <string name="common_sms_code_not_correct">El código de verificación es incorrecto</string>
   <string name="common_spanish">Español</string>
-  <string name="common_spanish_colombia">Español (Colombia)</string>
   <string name="common_supply">Supply</string>
   <string name="common_supply_liquidity_title">Suministrar liquidez</string>
-  <string name="common_swedish">Sueco</string>
   <string name="common_terms_title">Términos y condiciones</string>
-  <string name="common_thai">Tailandés</string>
   <string name="common_today">Hoy</string>
   <string name="common_turkish">Turkish</string>
-  <string name="common_ukrainian">Ucraniano</string>
   <string name="common_update">Update</string>
   <string name="common_upload_from_library">Subir desde la librería</string>
   <string name="common_vietnamese">Vietnamese</string>
@@ -275,10 +252,6 @@
   <string name="import_account_not_backed_up_alert_description">If your device gets lost or stolen, you will lose your wallet and all your funds forever.</string>
   <string name="import_more_title">Import more</string>
   <string name="imported_account_title">Account imported</string>
-  <string name="invite_code_applied_body">Código aplicado con éxito</string>
-  <string name="invite_code_applied_title">¡Felicitaciones!</string>
-  <string name="invite_enter_error_already_applied">Ya has aplicado otro código de invitación</string>
-  <string name="invite_enter_error_time_is_up">Se acabó el tiempo de aplicar el código de invitación</string>
   <string name="invoice_scan_error_match">No puedes enviártelo a ti mismo</string>
   <string name="invoice_scan_error_no_info">El QR no puede ser decodificado</string>
   <string name="invoice_scan_error_user_not_found">No se pudo encontrar un usuario desde ese código QR</string>
@@ -364,30 +337,8 @@
   <string name="pool_share_title_1">Your pool share</string>
   <string name="pooled_assets">Activos en Liquidez</string>
   <string name="profile_biometry_title">Autenticación de biometría</string>
-  <plurals name="project_date_day_plurals">
-    <item quantity="one">%s día restante</item>
-    <item quantity="other">%s días restantes</item>
-    <item quantity="many">%s de días restantes</item>
-  </plurals>
-  <plurals name="project_date_hour_plurals">
-    <item quantity="one">%s hora restante</item>
-    <item quantity="other">%s horas restantes</item>
-    <item quantity="many">%s de horas restantes</item>
-  </plurals>
-  <plurals name="project_date_minute_plurals">
-    <item quantity="one">%s minuto restante</item>
-    <item quantity="other">%s minutos restantes</item>
-    <item quantity="many">%s de minutos restantes</item>
-  </plurals>
-  <plurals name="project_date_second_plurals">
-    <item quantity="one">%s segundo restante</item>
-    <item quantity="other">%s segundos restantes</item>
-    <item quantity="many">%s de segundos restantes</item>
-  </plurals>
-  <string name="project_ended_template">Terminado %s</string>
   <string name="protect_loss_access_funds">Protect yourself from losing access to your funds</string>
   <string name="qr_code">Código QR</string>
-  <string name="qr_upload">Subir desde la galería</string>
   <string name="receive_tokens">Recibir tokens</string>
   <string name="received_from_adar">Received from ADAR</string>
   <string name="recent_recipients">Destinatarios recientes</string>
@@ -435,7 +386,6 @@
   <string name="remove_pool_confirmation_description">Output is estimated. If the price changes more than %s%% your transaction will revert.</string>
   <string name="remove_pool_confirmation_title">Confirm Remove</string>
   <string name="request_supply_liquidity">You need to supply liquidity to a corresponding pool pair to start staking it for extra rewards:</string>
-  <string name="restart_required">Restart required</string>
   <string name="review">Review</string>
   <string name="route">Ruta</string>
   <string name="scan_qr_show_my_qr">Show my QR code</string>
@@ -443,8 +393,6 @@
   <string name="search_token_placeholder">Search by Asset ID, Name or Ticker Symbol</string>
   <string name="select_account_address_1">Search or add a new address</string>
   <string name="select_account_import">Select account to import</string>
-  <string name="select_asset_receive">Select Asset to Receive</string>
-  <string name="select_asset_send">Select Asset to Send</string>
   <string name="select_node_add_custom_node">Añadir Nodo personalizado</string>
   <string name="select_node_custom_node_edit_node">Editar Nodo</string>
   <string name="select_node_custom_nodes">Nodos personalizados</string>
@@ -474,7 +422,6 @@
   <string name="settings_nodes">Nodos</string>
   <string name="show_more">Enseñar más</string>
   <string name="slippage">Slippage</string>
-  <string name="something_went_wrong">Something went wrong</string>
   <string name="start_staking">Start staking</string>
   <string name="status_error">Error</string>
   <string name="status_pending">Pendiente</string>
@@ -490,9 +437,6 @@
   <string name="tutorial_privacy_policy">Política de privacidad</string>
   <string name="tutorial_terms_and_conditions_3">Términos y condiciones</string>
   <string name="tutorial_terms_and_conditions_template_1">Al continuar usted está de acuerdo con el </string>
-  <string name="unexpected_error">An unexpected error has occured.\n\nYou may troubleshoot this issue in SORA community at the @sora_happy Telegram chat.</string>
-  <string name="update_downloaded">An update for the SORA application has been downloaded and is ready to be installed.\n\nIt is important to use the latest version of the application.\n\nIn order to update the app, a restart is required.</string>
-  <string name="update_install_now">Would you like to install the update now?</string>
   <string name="wallet_backup">Wallet Backup</string>
   <string name="wallet_balance_locked">Bloqueado</string>
   <string name="wallet_balance_reserved">Reservado</string>
@@ -525,19 +469,11 @@
     <string name="safe_mode_updating_body">Tus claves permanecen en este dispositivo. Normalmente tarda menos de un minuto.</string>
     <string name="safe_mode_finishing_title">Terminando la actualización</string>
     <string name="safe_mode_finishing_body">Continuamos donde lo dejamos. Tus claves permanecen en este dispositivo.</string>
-    <string name="safe_mode_checking_title">Comprobando tu monedero</string>
-    <string name="safe_mode_checking_body">SORA está comprobando tu cuenta antes de abrir el monedero. Tus claves permanecen en este dispositivo.</string>
-    <string name="safe_mode_waiting_network_body">Continuaremos en cuanto vuelvas a tener conexión.</string>
-    <string name="safe_mode_change_node">Cambiar nodo</string>
     <string name="safe_mode_step_check_data">Comprobando los datos del monedero</string>
     <string name="safe_mode_step_storage">Actualizando el almacenamiento del monedero</string>
     <string name="safe_mode_step_accounts">Comprobando tus cuentas</string>
     <string name="safe_mode_step_accounts_progress">%1$d de %2$d</string>
     <string name="safe_mode_step_finishing">Terminando</string>
-    <string name="safe_mode_step_unlocked">Monedero desbloqueado</string>
-    <string name="safe_mode_step_network">Conectando con la red</string>
-    <string name="safe_mode_step_network_waiting">Esperando conexión</string>
-    <string name="safe_mode_step_account_check">Comprobando tu cuenta</string>
     <string name="safe_mode_step_state_done">Hecho</string>
     <string name="safe_mode_step_state_running">En curso</string>
     <string name="safe_mode_step_state_waiting">Aún no iniciado</string>
@@ -551,20 +487,10 @@
     <string name="safe_mode_learn_more">Más información</string>
     <string name="safe_mode_new_pin_title">Elige un nuevo PIN de 6 dígitos</string>
     <string name="safe_mode_new_pin_body">Así será más difícil adivinar el PIN de tu monedero. Tu monedero y tus fondos no cambian.</string>
-    <string name="safe_mode_whats_new_title">Te damos la bienvenida al nuevo SORA Wallet</string>
-    <string name="safe_mode_whats_new_body">Tu monedero se ha actualizado. Esto es lo que SORA ha comprobado.</string>
-    <string name="safe_mode_whats_new_accounts">Tus cuentas están en este dispositivo</string>
-    <string name="safe_mode_whats_new_pin">Tu monedero está bloqueado con tu PIN</string>
-    <string name="safe_mode_whats_new_balances">Saldos cargados</string>
-    <string name="safe_mode_whats_new_balances_loading">Cargando saldos</string>
-    <string name="safe_mode_whats_new_backup">Haz una copia de tu frase de recuperación</string>
-    <string name="safe_mode_back_up_now">Hacer copia ahora</string>
-    <string name="safe_mode_later">Más tarde</string>
     <string name="safe_mode_device_transfer">Tu monedero no se transferirá automáticamente a un teléfono nuevo. Conserva tu frase de recuperación o una copia en Google Drive.</string>
     <string name="safe_mode_pending_check">Todavía se está comprobando una transacción anterior. Los envíos están en pausa para evitar duplicados.</string>
     <string name="safe_mode_tap_to_reveal">Toca para mostrar</string>
     <string name="safe_mode_reveal_privacy">Asegúrate de que nadie pueda ver tu pantalla.</string>
-    <string name="safe_mode_support_no_email">No hay ninguna aplicación de correo configurada. Puedes escribir a %1$s.</string>
     <string name="safe_mode_retained_title">Monederos encontrados en este teléfono</string>
     <string name="safe_mode_retained_body">SORA encontró claves de monederos que ninguna cuenta usa en este teléfono, por ejemplo, de una configuración que no se terminó. Se han conservado y no se ha borrado nada. Puedes restaurarlos aquí.</string>
     <string name="safe_mode_retained_restore">Restaurar este monedero</string>
@@ -582,7 +508,6 @@
     <string name="account_repair_confirm">Reparar cuenta</string>
   <string name="backup_no_matching_secret">No recovery phrase or seed saved on this phone matches this account, so none is shown. The account itself still works. To back it up, export it as an encrypted JSON file. You can bring it back later from Import account, Backup file (JSON).</string>
   <string name="backup_no_matching_secret_read_only">No recovery phrase or seed saved on this phone matches this account, so none is shown. To use this account on this phone again, go to Import account and enter its recovery phrase, raw seed or backup file.</string>
-    <string name="safe_mode_whats_new_accounts_some_read_only">Cuentas que pueden enviar desde este teléfono: %1$s de %2$s. Para reparar las demás, importa sus frases de recuperación.</string>
     <string name="account_repair_title_backup">Reparar esta cuenta desde tu copia de seguridad</string>
   <string name="json_backup_invalid_title">This backup file can\'t be read</string>
   <string name="json_backup_invalid">This isn\'t an encrypted account backup (JSON) that SORA can read. Check that you chose the file you exported, or pasted all of its text. Nothing was changed.</string>
@@ -619,7 +544,6 @@
     <string name="recovery_json_no_file_picker">Este teléfono no tiene una aplicación para elegir archivos. Pega el texto de tu archivo de copia de seguridad en el campo. No se ha modificado nada.</string>
   <string name="export_json_keys_unusable_named_title">Some accounts can\'t be exported</string>
   <string name="export_json_keys_unusable_named">These accounts can\'t be exported, because the keys saved for them on this phone can\'t be used:\n\n%1$s\n\nNo file was made. Export your other accounts without them. To use these accounts on this phone again, go to Import account and enter their recovery phrase, raw seed or backup file.</string>
-    <string name="safe_mode_whats_new_batch_export">Un archivo JSON con varias cuentas creado por una versión anterior de SORA puede estar vacío. Si dependes de uno, vuelve a exportar tus cuentas desde Cuentas.</string>
   <!-- ak2-readonly-ux: read-only accounts are labelled, explained and repairable; removal shows the matching backup first -->
   <string name="failure_generic_title">This wasn\'t completed</string>
   <string name="failure_generic_message">SORA couldn\'t complete this just now. Please try again in a moment. If you were making a transaction, check Activity first, so that nothing is sent twice.</string>

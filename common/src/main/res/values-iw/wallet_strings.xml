@@ -22,7 +22,6 @@
     <string name="network_badge_mainnet">רשת ראשית</string>
     <string name="network_badge_testnet">רשת בדיקה</string>
     <string name="balance_unavailable">היתרה אינה זמינה</string>
-    <string name="copy_receive_address">העתקת כתובת לקבלה</string>
     <string name="test_networks">רשתות בדיקה</string>
     <string name="test_networks_description">מציג יתרות ועסקאות ברשת הבדיקה Taira. לנכסי רשת הבדיקה אין ערך כספי.</string>
     <string name="wallet_status_failed">לא הושלם</string>

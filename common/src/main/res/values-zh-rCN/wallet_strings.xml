@@ -23,7 +23,6 @@
     <string name="network_badge_mainnet">主网</string>
     <string name="network_badge_testnet">测试网</string>
     <string name="balance_unavailable">余额不可用</string>
-    <string name="copy_receive_address">复制收款地址</string>
     <string name="test_networks">测试网络</string>
     <string name="test_networks_description">显示Taira测试网的余额和交易。测试网资产没有货币价值。</string>
     <string name="wallet_status_failed">未完成</string>

@@ -26,7 +26,6 @@
     <string name="network_badge_mainnet">HOVEDNETT</string>
     <string name="network_badge_testnet">TESTNETT</string>
     <string name="balance_unavailable">Saldo utilgjengelig</string>
-    <string name="copy_receive_address">Kopier mottaksadresse</string>
     <string name="test_networks">Testnettverk</string>
     <string name="test_networks_description">Viser saldoer og transaksjoner på Taira-testnettet. Testnettets eiendeler har ingen pengeverdi.</string>
     <string name="wallet_status_failed">Ikke fullført</string>

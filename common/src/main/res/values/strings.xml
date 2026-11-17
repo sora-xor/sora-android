@@ -38,7 +38,6 @@
   <string name="asset_details_asset_id">Asset ID</string>
   <string name="asset_details_liquid_balance">Liquid balance</string>
   <string name="asset_details_recent_activity">Recent activity</string>
-  <string name="asset_details_token_price">Token price</string>
   <string name="asset_details_your_pools">Your %s pools</string>
   <string name="asset_to_send">Asset to send</string>
   <string name="backup_not_enough_space_error">Backup failed. Not enough space on your Google Drive. Free some space and try again.</string>
@@ -70,7 +69,6 @@
   <string name="common_back">Back</string>
   <string name="common_backup">Backup</string>
   <string name="common_balance">Balance</string>
-  <string name="common_bashkir">Bashkir</string>
   <string name="common_bridged">Bridged</string>
   <string name="common_cancel">Cancel</string>
   <string name="common_chinese">Chinese</string>
@@ -85,7 +83,6 @@
   <string name="common_continue">Continue</string>
   <string name="common_copied">Copied to Clipboard</string>
   <string name="common_create_qr_request">Create QR-request</string>
-  <string name="common_croatian">Croatian</string>
   <string name="common_currencies">Currencies</string>
   <string name="common_delete">Delete</string>
   <string name="common_disabled">Disabled</string>
@@ -99,8 +96,6 @@
   <string name="common_error_fee_rate_not_available">Can\'t contact withdrawal provider. Please, try again later.</string>
   <string name="common_error_general_message">We are working hard to fix the problem. Please, try again later.</string>
   <string name="common_error_general_title">Error</string>
-  <string name="common_error_internal_error_title">Internal error</string>
-  <string name="common_error_invalid_parameters">Invalid Parameters</string>
   <string name="common_error_invalid_parameters_body">Please, check internet connection and try again later.</string>
   <string name="common_error_invalid_query_format">Your query is wrong. Please try again.</string>
   <string name="common_error_invitation_accepting_window_closed">Invitation accepting window closed</string>
@@ -112,7 +107,6 @@
   <string name="common_error_network">Please, check internet connection and try again later.</string>
   <string name="common_error_no_browser_error">Please install a browser to open the link</string>
   <string name="common_error_not_enough_invitations">Sorry, but you don\'t have any invitations to share</string>
-  <string name="common_error_not_found_title">Resource unavailable</string>
   <string name="common_error_phone_already_exists">Sorry, this phone number is already in use. Please, try another one.</string>
   <string name="common_error_phone_already_registered">Phone number already used during registration with this or another user</string>
   <string name="common_error_pincode_check_error">Entered code is wrong</string>
@@ -121,22 +115,18 @@
   <string name="common_error_seed_is_not_valid">Please make sure that your input contains 64 hex symbols.</string>
   <string name="common_error_seed_is_not_valid_title">Seed is invalid</string>
   <string name="common_error_self_invitation">You cannot use your invitation code for yourself</string>
-  <string name="common_error_unauthorized_body">Please, check internet connection and try again later.</string>
-  <string name="common_error_unauthorized_title">Authorization Failed</string>
   <string name="common_error_user_not_found">Your passphrase is invalid. Please, try another one.</string>
   <string name="common_error_user_values_not_found">Can\'t continue operation because user values data is not found</string>
   <string name="common_error_votes_invalid_format">Sorry, but your amount of votes can\'t be interpreted. Please, try to vote again.</string>
   <string name="common_error_votes_not_enough">Sorry, but you don\'t have enough points to vote.</string>
   <string name="common_error_voting_is_not_allowed">Sorry, but the project can\'t receive votes anymore.</string>
   <string name="common_error_wrong_user_status">Can\'t continue operation because user\'s status is invalid</string>
-  <string name="common_estonian">Estonian</string>
   <string name="common_expand">Expand</string>
   <string name="common_explore">Explore</string>
   <string name="common_failed">Failed</string>
   <string name="common_farming">Farming</string>
   <string name="common_farms">Farms</string>
   <string name="common_fee">Fee</string>
-  <string name="common_filipino">Filipino</string>
   <string name="common_finnish">Finnish</string>
   <string name="common_french">French</string>
   <string name="common_german">German</string>
@@ -144,16 +134,9 @@
   <string name="common_google_backup_decryption_failed_2">Possibly the password you entered is invalid.</string>
   <string name="common_hebrew">Hebrew</string>
   <string name="common_hindi">Hindi</string>
-  <plurals name="common_hour">
-    <item quantity="one">hour</item>
-    <item quantity="other">hours</item>
-  </plurals>
   <string name="common_indonesian">Indonesian</string>
   <string name="common_insufficient_balance">Insufficient balance</string>
-  <string name="common_italian">Italian</string>
   <string name="common_japanese">Japanese</string>
-  <string name="common_khmer">Khmer</string>
-  <string name="common_korean">Korean</string>
   <string name="common_loading">Loading</string>
   <string name="common_malay">Malay</string>
   <string name="common_max">max</string>
@@ -177,7 +160,6 @@
   <string name="common_remove">Remove</string>
   <string name="common_request">Request</string>
   <string name="common_russian">Russian</string>
-  <string name="common_scan">Scan</string>
   <string name="common_scan_qr">Scan QR</string>
   <string name="common_search_pools">Search pools</string>
   <string name="common_sec">sec</string>
@@ -193,15 +175,11 @@
   <string name="common_sms_code_expired">Verification code has been expired. Please try another one.</string>
   <string name="common_sms_code_not_correct">Verification code is incorrect</string>
   <string name="common_spanish">Spanish</string>
-  <string name="common_spanish_colombia">Spanish (Colombia)</string>
   <string name="common_supply">Supply</string>
   <string name="common_supply_liquidity_title">Supply liquidity</string>
-  <string name="common_swedish">Swedish</string>
   <string name="common_terms_title">Terms and Conditions</string>
-  <string name="common_thai">Thai</string>
   <string name="common_today">Today</string>
   <string name="common_turkish">Turkish</string>
-  <string name="common_ukrainian">Ukrainian</string>
   <string name="common_update">Update</string>
   <string name="common_upload_from_library">Upload from library</string>
   <string name="common_vietnamese">Vietnamese</string>
@@ -276,10 +254,6 @@
   <string name="import_account_not_backed_up_alert_description">If your device gets lost or stolen, you will lose your wallet and all your funds forever.</string>
   <string name="import_more_title">Import more</string>
   <string name="imported_account_title">Account imported</string>
-  <string name="invite_code_applied_body">Code applied successfully</string>
-  <string name="invite_code_applied_title">Congratulations!</string>
-  <string name="invite_enter_error_already_applied">You have already applied another invitation code</string>
-  <string name="invite_enter_error_time_is_up">Time to apply invitation code is up</string>
   <string name="invoice_scan_error_match">You cannot send tokens to the same account you are currently connected to</string>
   <string name="invoice_scan_error_no_info">QR can\'t be decoded</string>
   <string name="invoice_scan_error_user_not_found">Can\'t find a user from QR</string>
@@ -362,26 +336,8 @@
   <string name="pool_share_title_1">Your pool share</string>
   <string name="pooled_assets">Pooled assets</string>
   <string name="profile_biometry_title">Biometric Auth</string>
-  <plurals name="project_date_day_plurals">
-    <item quantity="one">%s day left</item>
-    <item quantity="other">%s days left</item>
-  </plurals>
-  <plurals name="project_date_hour_plurals">
-    <item quantity="one">%s hour left</item>
-    <item quantity="other">%s hours left</item>
-  </plurals>
-  <plurals name="project_date_minute_plurals">
-    <item quantity="one">%s minute left</item>
-    <item quantity="other">%s minutes left</item>
-  </plurals>
-  <plurals name="project_date_second_plurals">
-    <item quantity="one">%s second left</item>
-    <item quantity="other">%s seconds left</item>
-  </plurals>
-  <string name="project_ended_template">Ended %s</string>
   <string name="protect_loss_access_funds">Protect yourself from losing access to your funds</string>
   <string name="qr_code">QR code</string>
-  <string name="qr_upload">From gallery</string>
   <string name="receive_tokens">Receive tokens</string>
   <string name="received_from_adar">Received from ADAR</string>
   <string name="recent_recipients">Recent recipients</string>
@@ -428,7 +384,6 @@
   <string name="remove_pool_confirmation_description">Output is estimated. If the price changes more than %s%% your transaction will revert.</string>
   <string name="remove_pool_confirmation_title">Confirm Remove</string>
   <string name="request_supply_liquidity">You need to supply liquidity to a corresponding pool pair to start staking it for extra rewards:</string>
-  <string name="restart_required">Restart required</string>
   <string name="review">Review</string>
   <string name="route">Route</string>
   <string name="scan_qr_show_my_qr">Show my QR code</string>
@@ -436,8 +391,6 @@
   <string name="search_token_placeholder">Search by Asset ID, Name or Ticker Symbol</string>
   <string name="select_account_address_1">Search or add a new address</string>
   <string name="select_account_import">Select account to import</string>
-  <string name="select_asset_receive">Select Asset to Receive</string>
-  <string name="select_asset_send">Select Asset to Send</string>
   <string name="select_node_add_custom_node">Add Custom Node</string>
   <string name="select_node_custom_node_edit_node">Edit node</string>
   <string name="select_node_custom_nodes">Custom Nodes</string>
@@ -467,7 +420,6 @@
   <string name="settings_nodes">Nodes</string>
   <string name="show_more">Show more</string>
   <string name="slippage">Slippage</string>
-  <string name="something_went_wrong">Something went wrong</string>
   <string name="start_staking">Start staking</string>
   <string name="status_error">Error</string>
   <string name="status_pending">Pending</string>
@@ -483,9 +435,6 @@
   <string name="tutorial_privacy_policy">Privacy Policy</string>
   <string name="tutorial_terms_and_conditions_3">Terms &amp; Conditions</string>
   <string name="tutorial_terms_and_conditions_template_1">By continuing you are agreeing with the </string>
-  <string name="unexpected_error">An unexpected error has occurred.\n\nYou may troubleshoot this issue in SORA community at the @sora_happy Telegram chat.</string>
-  <string name="update_downloaded">An update for the SORA application has been downloaded and is ready to be installed.\n\nIt is important to use the latest version of the application.\n\nIn order to update the app, a restart is required.</string>
-  <string name="update_install_now">Would you like to install the update now?</string>
   <string name="wallet_backup">Wallet Backup</string>
   <string name="wallet_balance_locked">Locked</string>
   <string name="wallet_balance_reserved">Reserved</string>
@@ -523,7 +472,6 @@
   <string name="network_badge_mainnet">MAINNET</string>
   <string name="network_badge_testnet">TESTNET</string>
   <string name="balance_unavailable">Balance unavailable</string>
-  <string name="copy_receive_address">Copy receive address</string>
   <string name="test_networks">Test networks</string>
   <string name="test_networks_description">Shows Taira testnet balances and transactions. Testnet assets have no monetary value.</string>
   <string name="your_pooled">Your %s pooled</string>
@@ -698,19 +646,11 @@
   <string name="safe_mode_updating_body">Your keys stay on this device. This usually takes under a minute.</string>
   <string name="safe_mode_finishing_title">Finishing your update</string>
   <string name="safe_mode_finishing_body">Picking up where we left off. Your keys stay on this device.</string>
-  <string name="safe_mode_checking_title">Checking your wallet</string>
-  <string name="safe_mode_checking_body">SORA is checking your account before opening the wallet. Your keys stay on this device.</string>
-  <string name="safe_mode_waiting_network_body">We\'ll continue as soon as you\'re back online.</string>
-  <string name="safe_mode_change_node">Change node</string>
   <string name="safe_mode_step_check_data">Checking wallet data</string>
   <string name="safe_mode_step_storage">Updating wallet storage</string>
   <string name="safe_mode_step_accounts">Checking your accounts</string>
   <string name="safe_mode_step_accounts_progress">%1$d of %2$d</string>
   <string name="safe_mode_step_finishing">Finishing up</string>
-  <string name="safe_mode_step_unlocked">Wallet unlocked</string>
-  <string name="safe_mode_step_network">Connecting to the network</string>
-  <string name="safe_mode_step_network_waiting">Waiting for network</string>
-  <string name="safe_mode_step_account_check">Checking your account</string>
   <string name="safe_mode_step_state_done">Done</string>
   <string name="safe_mode_step_state_running">In progress</string>
   <string name="safe_mode_step_state_waiting">Not started yet</string>
@@ -727,21 +667,11 @@
   <string name="safe_mode_new_pin_title">Choose a new 6-digit PIN</string>
   <!-- safe_mode_new_pin_body: verified: changing the PIN rewrites only user_pin_code; keys, accounts and addresses are untouched -->
   <string name="safe_mode_new_pin_body">This makes your wallet harder to guess. Your wallet and funds don\'t change.</string>
-  <string name="safe_mode_whats_new_title">Welcome to the new SORA Wallet</string>
-  <string name="safe_mode_whats_new_body">Your wallet was updated. Here is what SORA checked.</string>
-  <string name="safe_mode_whats_new_accounts">Your accounts are on this device</string>
-  <string name="safe_mode_whats_new_pin">Your wallet is locked with your PIN</string>
-  <string name="safe_mode_whats_new_balances">Balances loaded</string>
-  <string name="safe_mode_whats_new_balances_loading">Loading balances</string>
-  <string name="safe_mode_whats_new_backup">Back up your recovery phrase</string>
-  <string name="safe_mode_back_up_now">Back up now</string>
-  <string name="safe_mode_later">Later</string>
   <!-- safe_mode_device_transfer: verified: app/src/main/res/xml/deny_data_extraction.xml excludes all app data from cloud backup and device transfer -->
   <string name="safe_mode_device_transfer">Your wallet won\'t move to a new phone automatically. Keep your recovery phrase or a Google Drive backup.</string>
   <string name="safe_mode_pending_check">A previous transaction is still being checked. Sending is paused so nothing is sent twice.</string>
   <string name="safe_mode_tap_to_reveal">Tap to reveal</string>
   <string name="safe_mode_reveal_privacy">Make sure no one can see your screen.</string>
-  <string name="safe_mode_support_no_email">No email app is set up. You can write to %1$s.</string>
   <string name="safe_mode_retained_title">Wallets found on this phone</string>
   <!-- safe_mode_retained_body: verified: WalletQuarantine is logical only (nothing written, renamed or deleted); adoptRetainedWallet proves the keys derive the address before adding the account -->
   <string name="safe_mode_retained_body">SORA found wallet keys on this phone that no account uses, for example from an account setup that was not finished. They were kept and nothing was deleted. You can restore them here.</string>
@@ -762,7 +692,6 @@
   <!-- backup_no_matching_secret: verified: shown only when neither the stored phrase nor the stored seed re-derives the address (StoredWalletSecretsJudge); this text and the Export JSON button are used only when the stored key signs (WalletBackupMaterial.canSign), and the sr25519 JSON export is made from that key; MultiaccountInteractor.importFromJson restores that file (WalletUpgradeScenarioTest.everyBackupFormatRestoresTheSameAccount); a read-only account gets backup_no_matching_secret_read_only and no export button -->
   <string name="backup_no_matching_secret">No recovery phrase or seed saved on this phone matches this account, so none is shown. The account itself still works. To back it up, export it as an encrypted JSON file. You can bring it back later from Import account, Backup file (JSON).</string>
   <string name="backup_no_matching_secret_read_only">No recovery phrase or seed saved on this phone matches this account, so none is shown. To use this account on this phone again, go to Import account and enter its recovery phrase, raw seed or backup file.</string>
-  <string name="safe_mode_whats_new_accounts_some_read_only">Accounts that can send from this phone: %1$s of %2$s. To repair the rest, import their recovery phrase.</string>
   <string name="account_repair_title_backup">Repair this account from your backup</string>
   <string name="json_backup_invalid_title">This backup file can\'t be read</string>
   <string name="json_backup_invalid">This isn\'t an encrypted account backup (JSON) that SORA can read. Check that you chose the file you exported, or pasted all of its text. Nothing was changed.</string>
@@ -805,7 +734,6 @@
   <string name="export_json_keys_unusable_named_title">Some accounts can\'t be exported</string>
   <string name="export_json_keys_unusable_named">These accounts can\'t be exported, because the keys saved for them on this phone can\'t be used:\n\n%1$s\n\nNo file was made. Export your other accounts without them. To use these accounts on this phone again, go to Import account and enter their recovery phrase, raw seed or backup file.</string>
   <!-- safe_mode_whats_new_batch_export: evidence: the 3.8.6.3 code minified with its own R8 (8.7.18) and release rules keeps no field of JsonAccountData, so the batch export is written as {} (docs/release-3.9.0/fixes/ak1-signing-compat.md, fix round 4); shown to people with two or more accounts; confirm on the Play 3.8.6.2 binary before release (ops action) -->
-  <string name="safe_mode_whats_new_batch_export">A JSON backup file with several accounts made by an earlier version of SORA can be empty. If you rely on one, export your accounts again from Accounts.</string>
   <!-- ak2-readonly-ux: read-only accounts are labelled, explained and repairable; removal shows the matching backup first -->
   <string name="failure_generic_title">This wasn\'t completed</string>
   <!-- failure_generic_message: verified: BaseViewModel.onError shows it only for a failure that carries no text of its own (FailureNotice.GENERIC); it claims nothing about what happened, and advises the Activity check that applies when a submission's outcome is unknown -->

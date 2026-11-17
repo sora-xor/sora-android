@@ -26,7 +26,6 @@
     <string name="network_badge_mainnet">HAUPTNETZ</string>
     <string name="network_badge_testnet">TESTNETZ</string>
     <string name="balance_unavailable">Guthaben nicht verfügbar</string>
-    <string name="copy_receive_address">Empfangsadresse kopieren</string>
     <string name="test_networks">Testnetzwerke</string>
     <string name="test_networks_description">Zeigt Guthaben und Transaktionen im Taira-Testnetz. Testnetzwerte haben keinen Geldwert.</string>
     <string name="wallet_status_failed">Nicht abgeschlossen</string>

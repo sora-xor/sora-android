@@ -24,7 +24,6 @@
     <string name="network_badge_mainnet">JARINGAN UTAMA</string>
     <string name="network_badge_testnet">JARINGAN UJI</string>
     <string name="balance_unavailable">Saldo tidak tersedia</string>
-    <string name="copy_receive_address">Salin alamat penerimaan</string>
     <string name="test_networks">Jaringan uji</string>
     <string name="test_networks_description">Menampilkan saldo dan transaksi di jaringan uji Taira. Aset jaringan uji tidak memiliki nilai uang.</string>
     <string name="wallet_status_failed">Belum selesai</string>

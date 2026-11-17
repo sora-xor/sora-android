@@ -1284,8 +1284,7 @@ class UserRepositoryTest {
         val languages = mutableListOf(
             Language("ru", R.string.common_russian, R.string.common_russian_native),
             Language("en", R.string.common_english, R.string.common_english_native),
-            Language("es", R.string.common_spanish, R.string.common_spanish_native),
-            Language("ba", R.string.common_bashkir, R.string.common_bashkir_native)
+            Language("es", R.string.common_spanish, R.string.common_spanish_native)
         )
         every { languagesHolder.getLanguages() } returns (languages to 1)
         assertEquals(languages to 1, userRepository.getAvailableLanguages())

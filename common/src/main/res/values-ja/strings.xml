@@ -38,7 +38,6 @@
   <string name="asset_details_asset_id">アセットID</string>
   <string name="asset_details_liquid_balance">流動性の残高</string>
   <string name="asset_details_recent_activity">最近の履歴</string>
-  <string name="asset_details_token_price">トークン価格</string>
   <string name="asset_details_your_pools">%s プール</string>
   <string name="asset_to_send">送信するアセット</string>
   <string name="backup_not_enough_space_error">Backup failed. Not enough space on your Google Drive. Free some space and try again.</string>
@@ -68,7 +67,6 @@
   <string name="common_back">戻る</string>
   <string name="common_backup">バックアップ</string>
   <string name="common_balance">残高</string>
-  <string name="common_bashkir">バシキール語</string>
   <string name="common_bridged">Bridged</string>
   <string name="common_cancel">キャンセル</string>
   <string name="common_chinese">中国語</string>
@@ -83,7 +81,6 @@
   <string name="common_continue">続行する</string>
   <string name="common_copied">クリップボードにコピーしました</string>
   <string name="common_create_qr_request">Create QR-request</string>
-  <string name="common_croatian">クロアチア語</string>
   <string name="common_currencies">Currencies</string>
   <string name="common_delete">Delete</string>
   <string name="common_disabled">Disabled</string>
@@ -97,8 +94,6 @@
   <string name="common_error_fee_rate_not_available">出金プロバイダに接続できません。後でもう一度やり直してください</string>
   <string name="common_error_general_message">問題解決に向け鋭意対応中です。後でもう一度やり直してください</string>
   <string name="common_error_general_title">エラー</string>
-  <string name="common_error_internal_error_title">内部エラー</string>
-  <string name="common_error_invalid_parameters">無効なパラメーター</string>
   <string name="common_error_invalid_parameters_body">インターネット接続を確認し、後でもう一度やり直してください</string>
   <string name="common_error_invalid_query_format">クエリが間違っています。もう一度やり直してください</string>
   <string name="common_error_invitation_accepting_window_closed">招待承諾ウィンドウを閉じました</string>
@@ -110,7 +105,6 @@
   <string name="common_error_network">インターネット接続を確認し、後でもう一度やり直してください</string>
   <string name="common_error_no_browser_error">リンクを開くにはブラウザをインストールしてください</string>
   <string name="common_error_not_enough_invitations">申し訳ありませんが、共有できる招待枠がありません</string>
-  <string name="common_error_not_found_title">リソースが利用できません</string>
   <string name="common_error_phone_already_exists">この電話番号は既に使用されています。別のものを試してください</string>
   <string name="common_error_phone_already_registered">この電話番号は既にあなたか他のユーザーによって登録されています</string>
   <string name="common_error_pincode_check_error">入力したPINコードが間違っています</string>
@@ -119,22 +113,18 @@
   <string name="common_error_seed_is_not_valid">入力に64個の16進記号が含まれていることを確認してください</string>
   <string name="common_error_seed_is_not_valid_title">シードが無効です</string>
   <string name="common_error_self_invitation">あなたの招待コードを自分に使うことはできません</string>
-  <string name="common_error_unauthorized_body">インターネット接続を確認し、後でもう一度やり直してください</string>
-  <string name="common_error_unauthorized_title">認証できません</string>
   <string name="common_error_user_not_found">パスフレーズが無効です。別のものを試してください</string>
   <string name="common_error_user_values_not_found">ユーザーのバリューデータが検索できず、操作を続けることができません</string>
   <string name="common_error_votes_invalid_format">あなたの投票を確認することが出来ませんでした。もう一度投票してください</string>
   <string name="common_error_votes_not_enough">投票に十分な投票権を保有していません</string>
   <string name="common_error_voting_is_not_allowed">申し訳ありませんが、このプロジェクトはこれ以上投票を受け付けることができません</string>
   <string name="common_error_wrong_user_status">ユーザーのステータスが無効のため、操作を続けることができません</string>
-  <string name="common_estonian">エストニア語</string>
   <string name="common_expand">拡大</string>
   <string name="common_explore">探る</string>
   <string name="common_failed">失敗</string>
   <string name="common_farming">Farming</string>
   <string name="common_farms">Farms</string>
   <string name="common_fee">Fee</string>
-  <string name="common_filipino">フィリピン語</string>
   <string name="common_finnish">フィンランド語</string>
   <string name="common_french">フランス語</string>
   <string name="common_german">ドイツ語</string>
@@ -142,15 +132,9 @@
   <string name="common_google_backup_decryption_failed_2">Possibly the password you entered is invalid.</string>
   <string name="common_hebrew">Hebrew</string>
   <string name="common_hindi">Hindi</string>
-  <plurals name="common_hour">
-    <item quantity="other">時間</item>
-  </plurals>
   <string name="common_indonesian">インドネシア語</string>
   <string name="common_insufficient_balance">残高不足</string>
-  <string name="common_italian">イタリア語</string>
   <string name="common_japanese">日本語</string>
-  <string name="common_khmer">クメール語</string>
-  <string name="common_korean">韓国語</string>
   <string name="common_loading">読み込み中</string>
   <string name="common_malay">マレー語</string>
   <string name="common_max">max</string>
@@ -174,7 +158,6 @@
   <string name="common_remove">削除</string>
   <string name="common_request">Request</string>
   <string name="common_russian">ロシア語</string>
-  <string name="common_scan">スキャン</string>
   <string name="common_scan_qr">QRをスキャン</string>
   <string name="common_search_pools">プールを検索</string>
   <string name="common_sec">秒</string>
@@ -190,15 +173,11 @@
   <string name="common_sms_code_expired">認証コードが期限切れです。他のコードで試してください</string>
   <string name="common_sms_code_not_correct">認証コードが正しくありません</string>
   <string name="common_spanish">スペイン語</string>
-  <string name="common_spanish_colombia">スペイン語 (コロンビア)</string>
   <string name="common_supply">供給</string>
   <string name="common_supply_liquidity_title">供給流動性</string>
-  <string name="common_swedish">スウェーデン語</string>
   <string name="common_terms_title">規約と条件</string>
-  <string name="common_thai">タイ語</string>
   <string name="common_today">今日</string>
   <string name="common_turkish">トルコ語</string>
-  <string name="common_ukrainian">ウクライナ語</string>
   <string name="common_update">更新</string>
   <string name="common_upload_from_library">ライブラリからアップロード</string>
   <string name="common_vietnamese">Vietnamese</string>
@@ -273,10 +252,6 @@
   <string name="import_account_not_backed_up_alert_description">If your device gets lost or stolen, you will lose your wallet and all your funds forever.</string>
   <string name="import_more_title">Import more</string>
   <string name="imported_account_title">Account imported</string>
-  <string name="invite_code_applied_body">コードの適用に成功しました</string>
-  <string name="invite_code_applied_title">おめでとうございます！</string>
-  <string name="invite_enter_error_already_applied">別の招待コードをすでに適用しています</string>
-  <string name="invite_enter_error_time_is_up">招待コードの利用期限が過ぎました</string>
   <string name="invoice_scan_error_match">自分自身に送ることはできません</string>
   <string name="invoice_scan_error_no_info">QRコードを読み取れません</string>
   <string name="invoice_scan_error_user_not_found">QRコードからユーザーを見つけることができません。</string>
@@ -363,22 +338,8 @@
   <string name="pool_share_title_1">プールシェア</string>
   <string name="pooled_assets">プールされたアセット</string>
   <string name="profile_biometry_title">生体認証</string>
-  <plurals name="project_date_day_plurals">
-    <item quantity="other">残り%s日</item>
-  </plurals>
-  <plurals name="project_date_hour_plurals">
-    <item quantity="other">残り%s時間</item>
-  </plurals>
-  <plurals name="project_date_minute_plurals">
-    <item quantity="other">残り%s分</item>
-  </plurals>
-  <plurals name="project_date_second_plurals">
-    <item quantity="other">残り%s秒</item>
-  </plurals>
-  <string name="project_ended_template">%sに終了しました</string>
   <string name="protect_loss_access_funds">Protect yourself from losing access to your funds</string>
   <string name="qr_code">QRコード</string>
-  <string name="qr_upload">ギャラリーからアップロード</string>
   <string name="receive_tokens">トークンを受け取る</string>
   <string name="received_from_adar">Received from ADAR</string>
   <string name="recent_recipients">最近の受信者</string>
@@ -424,7 +385,6 @@
   <string name="remove_pool_confirmation_description">表示は推定です。価格が%s%%以上変化した場合、取引は元に戻ります</string>
   <string name="remove_pool_confirmation_title">解除の確認</string>
   <string name="request_supply_liquidity">You need to supply liquidity to a corresponding pool pair to start staking it for extra rewards:</string>
-  <string name="restart_required">再起動が必要</string>
   <string name="review">レビュー</string>
   <string name="route">ルート</string>
   <string name="scan_qr_show_my_qr">Show my QR code</string>
@@ -432,8 +392,6 @@
   <string name="search_token_placeholder">Search by Asset ID, Name or Ticker Symbol</string>
   <string name="select_account_address_1">検索または新規アドレスを追加</string>
   <string name="select_account_import">Select account to import</string>
-  <string name="select_asset_receive">受け取るアセットの選択</string>
-  <string name="select_asset_send">送信するアセットの選択</string>
   <string name="select_node_add_custom_node">カスタムノードの追加</string>
   <string name="select_node_custom_node_edit_node">ノードの編集</string>
   <string name="select_node_custom_nodes">カスタムノード</string>
@@ -463,7 +421,6 @@
   <string name="settings_nodes">ノード</string>
   <string name="show_more">さらに表示</string>
   <string name="slippage">スリッページ</string>
-  <string name="something_went_wrong">Something went wrong</string>
   <string name="start_staking">Start staking</string>
   <string name="status_error">エラー</string>
   <string name="status_pending">処理中</string>
@@ -479,9 +436,6 @@
   <string name="tutorial_privacy_policy">個人情報保護方針</string>
   <string name="tutorial_terms_and_conditions_3">規約と条件</string>
   <string name="tutorial_terms_and_conditions_template_1">続行することにより、同意したことになります</string>
-  <string name="unexpected_error">An unexpected error has occured.\n\nYou may troubleshoot this issue in SORA community at the @sora_happy Telegram chat.</string>
-  <string name="update_downloaded">SORAアプリのアップデートがダウンロードされ、インストールできるようになりました。\n\n最新バージョンのアプリを使用することが重要です。\n\nアプリをアップデートするためには再起動が必要です。</string>
-  <string name="update_install_now">今すぐアップデートをインストールしますか？</string>
   <string name="wallet_backup">Wallet Backup</string>
   <string name="wallet_balance_locked">ロック済み</string>
   <string name="wallet_balance_reserved">予約済み</string>
@@ -514,19 +468,11 @@
   <string name="safe_mode_updating_body">鍵はこの端末に保存されたままです。通常は1分以内に完了します。</string>
   <string name="safe_mode_finishing_title">更新を完了しています</string>
   <string name="safe_mode_finishing_body">中断したところから再開しています。鍵はこの端末に保存されたままです。</string>
-  <string name="safe_mode_checking_title">ウォレットを確認しています</string>
-  <string name="safe_mode_checking_body">ウォレットを開く前に、SORAがアカウントを確認しています。鍵はこの端末に保存されたままです。</string>
-  <string name="safe_mode_waiting_network_body">オンラインに戻りしだい続行します。</string>
-  <string name="safe_mode_change_node">ノードを変更</string>
   <string name="safe_mode_step_check_data">ウォレットデータの確認</string>
   <string name="safe_mode_step_storage">ウォレットの保存データの更新</string>
   <string name="safe_mode_step_accounts">アカウントの確認</string>
   <string name="safe_mode_step_accounts_progress">%2$d件中%1$d件</string>
   <string name="safe_mode_step_finishing">仕上げ</string>
-  <string name="safe_mode_step_unlocked">ウォレットのロック解除</string>
-  <string name="safe_mode_step_network">ネットワークへの接続</string>
-  <string name="safe_mode_step_network_waiting">ネットワークを待っています</string>
-  <string name="safe_mode_step_account_check">アカウントの確認</string>
   <string name="safe_mode_step_state_done">完了</string>
   <string name="safe_mode_step_state_running">処理中</string>
   <string name="safe_mode_step_state_waiting">未開始</string>
@@ -540,20 +486,10 @@
   <string name="safe_mode_learn_more">詳しく見る</string>
   <string name="safe_mode_new_pin_title">新しい6桁のPINを設定</string>
   <string name="safe_mode_new_pin_body">PINが推測されにくくなります。ウォレットと資産は変わりません。</string>
-  <string name="safe_mode_whats_new_title">新しいSORA Walletへようこそ</string>
-  <string name="safe_mode_whats_new_body">ウォレットの更新が完了しました。SORAが確認した内容は次のとおりです。</string>
-  <string name="safe_mode_whats_new_accounts">アカウントはこの端末にあります</string>
-  <string name="safe_mode_whats_new_pin">ウォレットはPINでロックされています</string>
-  <string name="safe_mode_whats_new_balances">残高を読み込みました</string>
-  <string name="safe_mode_whats_new_balances_loading">残高を読み込んでいます</string>
-  <string name="safe_mode_whats_new_backup">リカバリーフレーズをバックアップしてください</string>
-  <string name="safe_mode_back_up_now">今すぐバックアップ</string>
-  <string name="safe_mode_later">後で</string>
   <string name="safe_mode_device_transfer">ウォレットは新しいスマートフォンに自動では移行されません。リカバリーフレーズまたはGoogleドライブのバックアップを保管してください。</string>
   <string name="safe_mode_pending_check">以前のトランザクションを確認しています。二重に送金されないよう、送金を一時停止しています。</string>
   <string name="safe_mode_tap_to_reveal">タップして表示</string>
   <string name="safe_mode_reveal_privacy">周りから画面が見えないことを確認してください。</string>
-  <string name="safe_mode_support_no_email">メールアプリが設定されていません。%1$s までご連絡ください。</string>
   <string name="safe_mode_retained_title">この端末で見つかったウォレット</string>
   <string name="safe_mode_retained_body">どのアカウントにも使われていないウォレットの鍵がこの端末で見つかりました（完了しなかったアカウント作成など）。鍵は保持されており、何も削除されていません。ここで復元できます。</string>
   <string name="safe_mode_retained_restore">このウォレットを復元</string>
@@ -571,7 +507,6 @@
   <string name="account_repair_confirm">アカウントを修復</string>
   <string name="backup_no_matching_secret">この端末に保存されているリカバリーフレーズやシードの中に、このアカウントに一致するものがないため、表示していません。アカウント自体は引き続き使用できます。バックアップするには、暗号化されたJSONファイルとしてエクスポートしてください。あとで「アカウントをインポート」の「バックアップファイル（JSON）」から復元できます。</string>
   <string name="backup_no_matching_secret_read_only">この端末に保存されているリカバリーフレーズやシードの中に、このアカウントに一致するものがないため、表示していません。この端末でこのアカウントを再び使うには、「アカウントをインポート」でリカバリーフレーズ、Raw Seed、またはバックアップファイルを入力してください。</string>
-  <string name="safe_mode_whats_new_accounts_some_read_only">この端末から送金できるアカウント: %2$s個中%1$s個。残りのアカウントは、リカバリーフレーズをインポートすると修復できます。</string>
   <string name="account_repair_title_backup">バックアップでこのアカウントを修復</string>
   <string name="json_backup_invalid_title">このバックアップファイルは読み取れません</string>
   <string name="json_backup_invalid">SORAで読み取れる暗号化アカウントバックアップ（JSON）ではありません。エクスポートしたファイルを選んだか、内容をすべて貼り付けたかをご確認ください。何も変更されていません。</string>
@@ -608,7 +543,6 @@
   <string name="recovery_json_no_file_picker">この端末にはファイルを選ぶためのアプリがありません。代わりに、バックアップファイルの内容を入力欄に貼り付けてください。何も変更されていません。</string>
   <string name="export_json_keys_unusable_named_title">エクスポートできないアカウントがあります</string>
   <string name="export_json_keys_unusable_named">次のアカウントは、この端末に保存されている鍵を使用できないため、エクスポートできません。\n\n%1$s\n\nファイルは作成されていません。これらを除いて、ほかのアカウントをエクスポートしてください。これらのアカウントをこの端末で再び使うには、「アカウントをインポート」でリカバリーフレーズ、Raw Seed、またはバックアップファイルを入力してください。</string>
-  <string name="safe_mode_whats_new_batch_export">以前のバージョンのSORAで作成した、複数のアカウントを含むJSONバックアップファイルは、中身が空の場合があります。そのファイルをバックアップにしている場合は、「アカウント」からもう一度エクスポートしてください。</string>
   <!-- ak2-readonly-ux: read-only accounts are labelled, explained and repairable; removal shows the matching backup first -->
   <string name="failure_generic_title">完了できませんでした</string>
   <string name="failure_generic_message">ただいまこの操作を完了できませんでした。しばらくしてからもう一度お試しください。トランザクションの途中だった場合は、二重に送信しないよう、先に「履歴」を確認してください。</string>

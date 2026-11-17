@@ -4,27 +4,16 @@
     <string name="common_english_native" translatable="false">English</string>
     <string name="common_akkadian_native" translatable="false">lišānum akkadītum labīrtum</string>
     <string name="common_egyptian_native" translatable="false">𓌃𓂧𓅱𓀁 𓈖 𓆎𓅓𓏏𓊖</string>
-    <string name="common_khmer_native" translatable="false">ខ្មែរ</string>
     <string name="common_chinese_taiwan_native" translatable="false">中國台灣</string>
     <string name="common_arab_native" translatable="false">عرب</string>
-    <string name="common_croatian_native" translatable="false">Hrvatski</string>
-    <string name="common_spanish_colombia_native" translatable="false">Español (Colombia)</string>
-    <string name="common_estonian_native" translatable="false">Eestlane</string>
-    <string name="common_filipino_native" translatable="false">Pilipino</string>
     <string name="common_finnish_native" translatable="false">Suomalainen</string>
     <string name="common_indonesian_native" translatable="false">Indonesia</string>
-    <string name="common_korean_native" translatable="false">한국어</string>
     <string name="common_malay_native" translatable="false">Bahasa Melayu</string>
-    <string name="common_swedish_native" translatable="false">Svenska</string>
-    <string name="common_thai_native" translatable="false">ไทย</string>
     <string name="common_turkish_native" translatable="false">Türk</string>
     <string name="common_spanish_native" translatable="false">Español</string>
-    <string name="common_bashkir_native" translatable="false">Башҡортостан</string>
     <string name="common_french_native" translatable="false">Français</string>
     <string name="common_japanese_native" translatable="false">日本語</string>
     <string name="common_chinese_native" translatable="false">中国語</string>
-    <string name="common_ukrainian_native" translatable="false">Українська</string>
-    <string name="common_italian_native" translatable="false">Italiano</string>
     <string name="common_german_native" translatable="false">Deutsch</string>
     <string name="common_hebrew_native" translatable="false">עִברִית</string>
     <string name="common_persian_native" translatable="false">زبان فارسی</string>

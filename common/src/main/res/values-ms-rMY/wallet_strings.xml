@@ -22,7 +22,6 @@
     <string name="network_badge_mainnet">RANGKAIAN UTAMA</string>
     <string name="network_badge_testnet">RANGKAIAN UJIAN</string>
     <string name="balance_unavailable">Baki tidak tersedia</string>
-    <string name="copy_receive_address">Salin alamat penerimaan</string>
     <string name="test_networks">Rangkaian ujian</string>
     <string name="test_networks_description">Memaparkan baki dan transaksi di rangkaian ujian Taira. Aset rangkaian ujian tidak mempunyai nilai wang.</string>
     <string name="wallet_status_failed">Belum selesai</string>

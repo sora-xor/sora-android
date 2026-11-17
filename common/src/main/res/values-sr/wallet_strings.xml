@@ -24,7 +24,6 @@
     <string name="network_badge_mainnet">ГЛАВНА МРЕЖА</string>
     <string name="network_badge_testnet">ПРОБНА МРЕЖА</string>
     <string name="balance_unavailable">Стање није доступно</string>
-    <string name="copy_receive_address">Копирај адресу за пријем</string>
     <string name="test_networks">Пробне мреже</string>
     <string name="test_networks_description">Приказује стања и трансакције на пробној мрежи Taira. Средства на пробној мрежи немају новчану вредност.</string>
     <string name="wallet_status_failed">Није завршено</string>

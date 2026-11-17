@@ -35,7 +35,6 @@
   <string name="asset_details_asset_id">Šum makkūrim</string>
   <string name="asset_details_liquid_balance">Kaspum petûm</string>
   <string name="asset_details_recent_activity">Epšētū eḫrētum</string>
-  <string name="asset_details_token_price">Šīm kaspim</string>
   <string name="asset_details_your_pools">Būrūka %s</string>
   <string name="asset_to_send">Makkūrum ana šapārim</string>
   <string name="backup_not_enough_space_error">Ṭuppum šanûm ul eppeš. Ina Google Drive ašrum ul mādu. Ašram peti u šanītam epuš</string>
@@ -66,7 +65,6 @@
   <string name="common_back">Ana pānim târum</string>
   <string name="common_backup">Ṭuppum šanûm</string>
   <string name="common_balance">Kaspum ša ibassi</string>
-  <string name="common_bashkir">Lišān Bašqirim</string>
   <string name="common_bridged">Ina titurrim šūbul</string>
   <string name="common_cancel">Ezēbum</string>
   <string name="common_chinese">Lišān Ṣīnim</string>
@@ -81,7 +79,6 @@
   <string name="common_continue">Alākum</string>
   <string name="common_copied">Ana ṭuppim qātim nussiḫ</string>
   <string name="common_create_qr_request">Ṭuppam ša šuālim QR banûm</string>
-  <string name="common_croatian">Lišān Ḫurwātim</string>
   <string name="common_currencies">Kaspū mātātim</string>
   <string name="common_delete">Nasāḫum</string>
   <string name="common_disabled">Paṭir</string>
@@ -95,8 +92,6 @@
   <string name="common_error_fee_rate_not_available">Nādin kaspim ša šūṣîm ul innamir. Arki šanītam epuš</string>
   <string name="common_error_general_message">Ana ḫiṭītim paṭārim danniš nipallaḫ. Arki šanītam epuš</string>
   <string name="common_error_general_title">Ḫiṭītum</string>
-  <string name="common_error_internal_error_title">Ḫiṭītum qerbum</string>
-  <string name="common_error_invalid_parameters">Šīmātum ul kīnāt</string>
   <string name="common_error_invalid_parameters_body">Rikis ḫarrānim rabîm bāri u arki šanītam epuš</string>
   <string name="common_error_invalid_query_format">Šaʾaltuka ul kīnam. Šanītam epuš</string>
   <string name="common_error_invitation_accepting_window_closed">Bāb maḫār qerītim edēl</string>
@@ -108,7 +103,6 @@
   <string name="common_error_network">Rikis ḫarrānim rabîm bāri u arki šanītam epuš</string>
   <string name="common_error_no_browser_error">Pātiḫ ḫarrānim ana petê rikissim šukni</string>
   <string name="common_error_not_enough_invitations">Qerītū ana nadānim ul mādu</string>
-  <string name="common_error_not_found_title">Makkūrum lā bašûm</string>
   <string name="common_error_phone_already_exists">Šum ṭuppim qātim annûm ina qāti šanîm šaknum. Šumam šanâm epuš</string>
   <string name="common_error_phone_already_registered">Šum ṭuppim qātim annûm ana šumika ū šum awīlim šanîm šaknum ša pānim</string>
   <string name="common_error_pincode_check_error">Kunukkum ša taškun ul kīnum</string>
@@ -117,22 +111,18 @@
   <string name="common_error_seed_is_not_valid">Ša tušērubu 64 kunukkātim hex liškun</string>
   <string name="common_error_seed_is_not_valid_title">Zēr niṣirtim ul kīnum</string>
   <string name="common_error_self_invitation">Kunuk qerītika ana ramānika ul teleqqe</string>
-  <string name="common_error_unauthorized_body">Rikis ḫarrānim rabîm bāri u arki šanītam epuš</string>
-  <string name="common_error_unauthorized_title">Kunuk šumim ul ikšud</string>
   <string name="common_error_user_not_found">Ṣerret awātika ul kīnam. Šanītam šanîtam epuš</string>
   <string name="common_error_user_values_not_found">Šiprum ul illak aššum ṭuppū šīmāt awīlim ul innamrū</string>
   <string name="common_error_votes_invalid_format">Minât ṭēmīka ul tappallas. Šanītam ṭēmam idin</string>
   <string name="common_error_votes_not_enough">Ṭēmūka ana nadān ṭēmim ul mādu</string>
   <string name="common_error_voting_is_not_allowed">Šiprum annûm ṭēmī ul immaḫḫar</string>
   <string name="common_error_wrong_user_status">Šiprum ul illak aššum ṭēm awīlim ul kīnum</string>
-  <string name="common_estonian">Lišān Estonim</string>
   <string name="common_expand">Ruppušum</string>
   <string name="common_explore">Baqārum</string>
   <string name="common_failed">Ul ikšud</string>
   <string name="common_farming">Errešūtum</string>
   <string name="common_farms">Eqlū</string>
   <string name="common_fee">Miksum</string>
-  <string name="common_filipino">Lišān Filipīnim</string>
   <string name="common_finnish">Lišān Finnim</string>
   <string name="common_french">Lišān Parsaʾim</string>
   <string name="common_german">Lišān Germānim</string>
@@ -140,16 +130,9 @@
   <string name="common_google_backup_decryption_failed_2">Awāt pītim ša taškun ul kīnam assum</string>
   <string name="common_hebrew">Lišān Ibrîm</string>
   <string name="common_hindi">Lišān Hindim</string>
-  <plurals name="common_hour">
-    <item quantity="one">bērum</item>
-    <item quantity="other">bērū</item>
-  </plurals>
   <string name="common_indonesian">Lišān Indūnīsim</string>
   <string name="common_insufficient_balance">Kaspum ša ibassi ul mādu</string>
-  <string name="common_italian">Lišān Itālim</string>
   <string name="common_japanese">Lišān Yāpānim</string>
-  <string name="common_khmer">Lišān Ḫimirim</string>
-  <string name="common_korean">Lišān Kurîm</string>
   <string name="common_malay">Lišān Malayim</string>
   <string name="common_max">rabûm</string>
   <string name="common_min">ṣeḫrum</string>
@@ -171,7 +154,6 @@
   <string name="common_remove">Nasāḫum</string>
   <string name="common_request">Šuālum</string>
   <string name="common_russian">Lišān Rūsim</string>
-  <string name="common_scan">Šasûm</string>
   <string name="common_scan_qr">QR šasûm</string>
   <string name="common_search_pools">Būrī baqārum</string>
   <string name="common_sec">kappat īnim</string>
@@ -187,15 +169,11 @@
   <string name="common_sms_code_expired">Adān kunuk SMS iqti. Kunukkam šanâm epuš</string>
   <string name="common_sms_code_not_correct">Kunuk SMS ul kīnum</string>
   <string name="common_spanish">Lišān Ispānim</string>
-  <string name="common_spanish_colombia">Lišān Ispānim ša Colombia</string>
   <string name="common_supply">Nadānum</string>
   <string name="common_supply_liquidity_title">Mê kaspim nadānum</string>
-  <string name="common_swedish">Lišān Swēdim</string>
   <string name="common_terms_title">Šīmātum u rikisū</string>
-  <string name="common_thai">Lišān Tayim</string>
   <string name="common_today">Ūmam annâm</string>
   <string name="common_turkish">Lišān Turkim</string>
-  <string name="common_ukrainian">Lišān Ukrānim</string>
   <string name="common_update">Edēšum</string>
   <string name="common_upload_from_library">Ištu bīt ṭuppī wabālum</string>
   <string name="common_vietnamese">Lišān Viyetnamim</string>
@@ -270,10 +248,6 @@
   <string name="import_account_not_backed_up_alert_description">Šumma unūtka iḫḫaliq ū iššariq, bīt kaspika u kaspūka kalūšunu ana dārîm iḫḫaliqū</string>
   <string name="import_more_title">Mādam šūrubum</string>
   <string name="imported_account_title">Nikkassum šūrub</string>
-  <string name="invite_code_applied_body">Kunukkum damqiš šaknum</string>
-  <string name="invite_code_applied_title">Lū šulmum!</string>
-  <string name="invite_enter_error_already_applied">Kunuk qerītim šanîm taškun ša pānim</string>
-  <string name="invite_enter_error_time_is_up">Adān šakān kunuk qerītim iqti</string>
   <string name="invoice_scan_error_match">Kaspī ana nikkassim ša ittišu inanna tarkusu ul tušappar</string>
   <string name="invoice_scan_error_no_info">Kunukkum QR ul peta</string>
   <string name="invoice_scan_error_user_not_found">Awīlam ina QR ul ammar</string>
@@ -353,26 +327,8 @@
   <string name="pool_share_title_1">Zittat būrtika</string>
   <string name="pooled_assets">Makkūrū ša būrtim</string>
   <string name="profile_biometry_title">Kunuk zumrim</string>
-  <plurals name="project_date_day_plurals">
-    <item quantity="one">%s ūmum itešši</item>
-    <item quantity="other">%s ūmū iteššû</item>
-  </plurals>
-  <plurals name="project_date_hour_plurals">
-    <item quantity="one">%s bērum itešši</item>
-    <item quantity="other">%s bērū iteššû</item>
-  </plurals>
-  <plurals name="project_date_minute_plurals">
-    <item quantity="one">%s daqīqum itešši</item>
-    <item quantity="other">%s daqīqū iteššû</item>
-  </plurals>
-  <plurals name="project_date_second_plurals">
-    <item quantity="one">%s kappat īnim itešši</item>
-    <item quantity="other">%s kappāt īnim iteššû</item>
-  </plurals>
-  <string name="project_ended_template">Iqti %s</string>
   <string name="protect_loss_access_funds">Ramānka ištu petê kaspīka ḫalāqim uṣur</string>
   <string name="qr_code">Kunukkum QR</string>
-  <string name="qr_upload">Ištu bīt ṣalmī</string>
   <string name="receive_tokens">Kaspī maḫārum</string>
   <string name="received_from_adar">Ištu ADAR maḫir</string>
   <string name="recent_recipients">Maḫirū eḫrūtum</string>
@@ -419,7 +375,6 @@
   <string name="remove_pool_confirmation_description">Minât šūṣîm mašḫat. Šumma šīmum eli %s%% ištanî, tērtum ana arki itâr</string>
   <string name="remove_pool_confirmation_title">Nasāḫam kunnûm</string>
   <string name="request_supply_liquidity">Ana zittat būr tappêm rakāsim u qīšātim šanîtim, mê kaspim tanaddin:</string>
-  <string name="restart_required">Šurrûm šanûm baʾi</string>
   <string name="review">Baqārum</string>
   <string name="route">Ḫarrānum</string>
   <string name="scan_qr_show_my_qr">Kunuk QR-ya kullum</string>
@@ -427,8 +382,6 @@
   <string name="search_token_placeholder">Ina šum makkūrim, šumim ū kunuk šīmtim baqārum</string>
   <string name="select_account_address_1">Ašram baqārum ū eššam waṣābum</string>
   <string name="select_account_import">Nikkassam ana šūrubim ḫayyārum</string>
-  <string name="select_asset_receive">Makkūram ana maḫārim ḫayyārum</string>
-  <string name="select_asset_send">Makkūram ana šapārim ḫayyārum</string>
   <string name="select_node_add_custom_node">Bābam ša qātika waṣābum</string>
   <string name="select_node_custom_node_edit_node">Bābam šanûm</string>
   <string name="select_node_custom_nodes">Bābū ša qātika</string>
@@ -458,7 +411,6 @@
   <string name="settings_nodes">Bābū</string>
   <string name="show_more">Mādam kullum</string>
   <string name="slippage">Šanīt šīmim</string>
-  <string name="something_went_wrong">Mimma lemniš illik</string>
   <string name="start_staking">Rakāsam šurrûm</string>
   <string name="status_error">Ḫiṭītum</string>
   <string name="status_pending">Ul gamir</string>
@@ -473,9 +425,6 @@
   <string name="tutorial_privacy_policy">Dīn niṣirtim</string>
   <string name="tutorial_terms_and_conditions_3">Šīmātum u rikisū</string>
   <string name="tutorial_terms_and_conditions_template_1">Ina alākim annâtim taleqqe: </string>
-  <string name="unexpected_error">Ḫiṭītum ša ul taṣbat īpuš.\n\nIna puḫur SORA ša @sora_happy ina Telegram ṭēmam šuʾal</string>
-  <string name="update_downloaded">Edēšum ša ṭuppim SORA šapil u ana šakānim kun.\n\nṢalam eššam ša ṭuppim epēš danniš baʾi.\n\nAna ṭuppam edēšim šurrûm šanûm baʾi</string>
-  <string name="update_install_now">Edēšam inanna tašakkan?</string>
   <string name="wallet_backup">Ṭuppum šanûm ša bīt kaspim</string>
   <string name="wallet_balance_locked">Kaṣir</string>
   <string name="wallet_balance_reserved">Naṣir</string>
@@ -512,7 +461,6 @@
   <string name="network_badge_mainnet">ḪARRĀNUM KĪNUM</string>
   <string name="network_badge_testnet">ḪARRĀNUM NISSATIM</string>
   <string name="balance_unavailable">Kaspum ša ibassi ul innamir</string>
-  <string name="copy_receive_address">Ašar maḫārim nasāḫum</string>
   <string name="test_networks">Ḫarrānū nissātim</string>
   <string name="test_networks_description">Kaspī u tērtī ša ḫarrān nissātim Taira ukallam. Makkūrū ša nissātim šīm kaspim ul išû</string>
   <string name="wallet_receive_xor">XOR maḫārum</string>

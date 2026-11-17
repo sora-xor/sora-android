@@ -24,7 +24,6 @@
     <string name="network_badge_mainnet">ƏSAS ŞƏBƏKƏ</string>
     <string name="network_badge_testnet">SINAQ ŞƏBƏKƏSİ</string>
     <string name="balance_unavailable">Balans əlçatan deyil</string>
-    <string name="copy_receive_address">Qəbul ünvanını köçür</string>
     <string name="test_networks">Sınaq şəbəkələri</string>
     <string name="test_networks_description">Taira sınaq şəbəkəsindəki balansları və əməliyyatları göstərir. Sınaq aktivlərinin pul dəyəri yoxdur.</string>
     <string name="wallet_status_failed">Tamamlanmayıb</string>

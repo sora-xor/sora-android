@@ -22,7 +22,6 @@
     <string name="network_badge_mainnet">ОСНОВНАЯ СЕТЬ</string>
     <string name="network_badge_testnet">ТЕСТОВАЯ СЕТЬ</string>
     <string name="balance_unavailable">Баланс недоступен</string>
-    <string name="copy_receive_address">Копировать адрес получения</string>
     <string name="test_networks">Тестовые сети</string>
     <string name="test_networks_description">Показывает балансы и транзакции тестовой сети Taira. Тестовые активы не имеют денежной стоимости.</string>
     <string name="wallet_status_failed">Не завершено</string>

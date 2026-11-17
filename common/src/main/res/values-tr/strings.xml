@@ -38,7 +38,6 @@
   <string name="asset_details_asset_id">Asset ID</string>
   <string name="asset_details_liquid_balance">Liquid balance</string>
   <string name="asset_details_recent_activity">Recent activity</string>
-  <string name="asset_details_token_price">Token price</string>
   <string name="asset_details_your_pools">Your %s pools</string>
   <string name="asset_to_send">Asset to send</string>
   <string name="backup_not_enough_space_error">Backup failed. Not enough space on your Google Drive. Free some space and try again.</string>
@@ -68,7 +67,6 @@
   <string name="common_back">Back</string>
   <string name="common_backup">Backup</string>
   <string name="common_balance">Bakiye</string>
-  <string name="common_bashkir">Başkurtça</string>
   <string name="common_bridged">Bridged</string>
   <string name="common_cancel">İptal</string>
   <string name="common_chinese">Çince</string>
@@ -83,7 +81,6 @@
   <string name="common_continue">Devam et</string>
   <string name="common_copied">Panoya Kopyalandı</string>
   <string name="common_create_qr_request">Create QR-request</string>
-  <string name="common_croatian">Hırvatça</string>
   <string name="common_currencies">Currencies</string>
   <string name="common_delete">Delete</string>
   <string name="common_disabled">Disabled</string>
@@ -97,8 +94,6 @@
   <string name="common_error_fee_rate_not_available">Dijital varlık çekme sağlayıcısıyla iletişim kurulamıyor. Lütfen daha sonra tekrar deneyin.</string>
   <string name="common_error_general_message">Bu sorunu çözmek için sıkı çalışıyoruz. Lütfen daha sonra tekrar deneyin.</string>
   <string name="common_error_general_title">Hata</string>
-  <string name="common_error_internal_error_title">Dahili hata</string>
-  <string name="common_error_invalid_parameters">Geçersiz Parametre</string>
   <string name="common_error_invalid_parameters_body">Lütfen internet bağlantısını kontrol edin ve daha sonra tekrar deneyin.</string>
   <string name="common_error_invalid_query_format">Sorgunuz yanlış. Lütfen tekrar deneyin.</string>
   <string name="common_error_invitation_accepting_window_closed">Davet kabul penceresi kapatıldı</string>
@@ -110,7 +105,6 @@
   <string name="common_error_network">Lütfen internet bağlantısını kontrol edin ve daha sonra tekrar deneyin.</string>
   <string name="common_error_no_browser_error">Please install a browser to open the link</string>
   <string name="common_error_not_enough_invitations">Maalesef paylaşacak herhangi bir davetiyen yok</string>
-  <string name="common_error_not_found_title">Kaynak kullanılamıyor</string>
   <string name="common_error_phone_already_exists">Üzgünüz, bu telefon numarası zaten kullanılıyor. Lütfen başka bir numara deneyin.</string>
   <string name="common_error_phone_already_registered">Bu telefon numarası bu veya bir başka kullanıcı tarafından kayıt esnasında kullanılmış.</string>
   <string name="common_error_pincode_check_error">Girilen kod yanlış</string>
@@ -119,22 +113,18 @@
   <string name="common_error_seed_is_not_valid">Lütfen girdinin 64 hex sembolü içerdiğinden emin olun.</string>
   <string name="common_error_seed_is_not_valid_title">Seed is invalid</string>
   <string name="common_error_self_invitation">Davet kodunuzu kendiniz için kullanamazsınız</string>
-  <string name="common_error_unauthorized_body">Lütfen internet bağlantısını kontrol edin ve daha sonra tekrar deneyin.</string>
-  <string name="common_error_unauthorized_title">Yetkilendirme Başarısız</string>
   <string name="common_error_user_not_found">Hatılatıcı Dizi geçersiz. Lütfen başka bir Dizi deneyin.</string>
   <string name="common_error_user_values_not_found">Kullanıcı değerleri verisi bulunamadığı için işleme devam edilemiyor</string>
   <string name="common_error_votes_invalid_format">Maalesef oy miktarınız yorumlanamıyor. Lütfen tekrar oy vermeyi deneyin.</string>
   <string name="common_error_votes_not_enough">Üzgünüz, oy vermek için yeterli puanınız yok.</string>
   <string name="common_error_voting_is_not_allowed">Üzgünüz, fakat bu proje artık oy alamaz.</string>
   <string name="common_error_wrong_user_status">Kullanıcının durumu geçersiz olduğundan işleme devam edilemiyor</string>
-  <string name="common_estonian">Estonyaca</string>
   <string name="common_expand">Expand</string>
   <string name="common_explore">Explore</string>
   <string name="common_failed">Başarısız</string>
   <string name="common_farming">Farming</string>
   <string name="common_farms">Farms</string>
   <string name="common_fee">Fee</string>
-  <string name="common_filipino">Filipince</string>
   <string name="common_finnish">Fince</string>
   <string name="common_french">Fransızca</string>
   <string name="common_german">Almanca</string>
@@ -142,16 +132,9 @@
   <string name="common_google_backup_decryption_failed_2">Possibly the password you entered is invalid.</string>
   <string name="common_hebrew">Hebrew</string>
   <string name="common_hindi">Hindi</string>
-  <plurals name="common_hour">
-    <item quantity="one">saat</item>
-    <item quantity="other">saat</item>
-  </plurals>
   <string name="common_indonesian">Endonezce</string>
   <string name="common_insufficient_balance">Yetersiz bakiye</string>
-  <string name="common_italian">İtalyanca</string>
   <string name="common_japanese">Japonca</string>
-  <string name="common_khmer">Kmerce</string>
-  <string name="common_korean">Korece</string>
   <string name="common_loading">Yükleniyor</string>
   <string name="common_malay">Malayca</string>
   <string name="common_max">max</string>
@@ -175,7 +158,6 @@
   <string name="common_remove">Kaldırmak</string>
   <string name="common_request">Request</string>
   <string name="common_russian">Rusça</string>
-  <string name="common_scan">Tarama</string>
   <string name="common_scan_qr">Scan QR</string>
   <string name="common_search_pools">Search pools</string>
   <string name="common_sec">sn</string>
@@ -191,15 +173,11 @@
   <string name="common_sms_code_expired">Doğrulama kodunun süresi doldu. Lütfen başka bir kod deneyin.</string>
   <string name="common_sms_code_not_correct">Doğrulama kodu yanlış</string>
   <string name="common_spanish">İspanyolca</string>
-  <string name="common_spanish_colombia">İspanyolca (Kolombiya)</string>
   <string name="common_supply">Arz</string>
   <string name="common_supply_liquidity_title">Supply liquidity</string>
-  <string name="common_swedish">İsveççe</string>
   <string name="common_terms_title">Kullanım Şartları ve Koşulları</string>
-  <string name="common_thai">Tayca</string>
   <string name="common_today">Bugün</string>
   <string name="common_turkish">Türkçe</string>
-  <string name="common_ukrainian">Ukraynaca</string>
   <string name="common_update">Güncelle</string>
   <string name="common_upload_from_library">Upload from library</string>
   <string name="common_vietnamese">Vietnamese</string>
@@ -274,10 +252,6 @@
   <string name="import_account_not_backed_up_alert_description">If your device gets lost or stolen, you will lose your wallet and all your funds forever.</string>
   <string name="import_more_title">Import more</string>
   <string name="imported_account_title">Account imported</string>
-  <string name="invite_code_applied_body">Kod başarıyla uygulandı</string>
-  <string name="invite_code_applied_title">Tebrikler!</string>
-  <string name="invite_enter_error_already_applied">Başka bir davet kodu uygulanmış</string>
-  <string name="invite_enter_error_time_is_up">Davet kodunu uygulama süresi doldu</string>
   <string name="invoice_scan_error_match">Kendinize gönderemezsiniz.</string>
   <string name="invoice_scan_error_no_info">QR kodu çözülemiyor</string>
   <string name="invoice_scan_error_user_not_found">QR\'dan bir kullanıcı bulunamadı</string>
@@ -362,26 +336,8 @@
   <string name="pool_share_title_1">Havuzdaki payınız</string>
   <string name="pooled_assets">Pooled assets</string>
   <string name="profile_biometry_title">Biyometrik doğrulama</string>
-  <plurals name="project_date_day_plurals">
-    <item quantity="one">gün kaldı</item>
-    <item quantity="other">gün kaldı</item>
-  </plurals>
-  <plurals name="project_date_hour_plurals">
-    <item quantity="one">saat kaldı</item>
-    <item quantity="other">saat kaldı</item>
-  </plurals>
-  <plurals name="project_date_minute_plurals">
-    <item quantity="one">dakika kaldı</item>
-    <item quantity="other">dakika kaldı</item>
-  </plurals>
-  <plurals name="project_date_second_plurals">
-    <item quantity="one">saniye kaldı</item>
-    <item quantity="other">saniye kaldı</item>
-  </plurals>
-  <string name="project_ended_template">%s Sona erdi</string>
   <string name="protect_loss_access_funds">Protect yourself from losing access to your funds</string>
   <string name="qr_code">QR Kodu</string>
-  <string name="qr_upload">Galeriden</string>
   <string name="receive_tokens">Receive tokens</string>
   <string name="received_from_adar">Received from ADAR</string>
   <string name="recent_recipients">Recent recipients</string>
@@ -428,7 +384,6 @@
   <string name="remove_pool_confirmation_description">Çıktı tahminidir. Fiyat %s%% değerden fazla değişirse, işleminiz geri döner.</string>
   <string name="remove_pool_confirmation_title">Kaldırmayı Onayla</string>
   <string name="request_supply_liquidity">You need to supply liquidity to a corresponding pool pair to start staking it for extra rewards:</string>
-  <string name="restart_required">Yeniden başlatma gerekli</string>
   <string name="review">Review</string>
   <string name="route">Route</string>
   <string name="scan_qr_show_my_qr">Show my QR code</string>
@@ -436,8 +391,6 @@
   <string name="search_token_placeholder">Search by Asset ID, Name or Ticker Symbol</string>
   <string name="select_account_address_1">Yeni bir adres arayın veya ekleyin</string>
   <string name="select_account_import">Select account to import</string>
-  <string name="select_asset_receive">Alınacak Varlığı Seçin</string>
-  <string name="select_asset_send">Gönderilecek Varlığı Seçin</string>
   <string name="select_node_add_custom_node">Add Custom Node</string>
   <string name="select_node_custom_node_edit_node">Edit node</string>
   <string name="select_node_custom_nodes">Custom Nodes</string>
@@ -467,7 +420,6 @@
   <string name="settings_nodes">Nodes</string>
   <string name="show_more">Show more</string>
   <string name="slippage">Slippage</string>
-  <string name="something_went_wrong">Something went wrong</string>
   <string name="start_staking">Start staking</string>
   <string name="status_error">Hata</string>
   <string name="status_pending">Bekliyor</string>
@@ -483,9 +435,6 @@
   <string name="tutorial_privacy_policy">Gizlilik Politikası</string>
   <string name="tutorial_terms_and_conditions_3">Şartlar ve Koşullar</string>
   <string name="tutorial_terms_and_conditions_template_1">By continuing you are agreeing with the </string>
-  <string name="unexpected_error">An unexpected error has occured.\n\nYou may troubleshoot this issue in SORA community at the @sora_happy Telegram chat.</string>
-  <string name="update_downloaded">SORA uygulaması için bir güncelleme indirildi ve yüklenmek için hazır.\n\nUygulamanın son sürümünü kullanmak önemlidir.\n\nUygulamayı güncellemek için yeniden başlatma gereklidir.</string>
-  <string name="update_install_now">Güncellemeyi şimdi yüklemek Istiyor musunuz?</string>
   <string name="wallet_backup">Wallet Backup</string>
   <string name="wallet_balance_locked">Kilitli</string>
   <string name="wallet_balance_reserved">Rezerve edilmiş</string>
@@ -517,19 +466,11 @@
     <string name="safe_mode_updating_body">Anahtarlarınız bu cihazda kalır. Bu genellikle bir dakikadan kısa sürer.</string>
     <string name="safe_mode_finishing_title">Güncellemeniz tamamlanıyor</string>
     <string name="safe_mode_finishing_body">Kaldığımız yerden devam ediyoruz. Anahtarlarınız bu cihazda kalır.</string>
-    <string name="safe_mode_checking_title">Cüzdanınız denetleniyor</string>
-    <string name="safe_mode_checking_body">SORA, cüzdanı açmadan önce hesabınızı denetliyor. Anahtarlarınız bu cihazda kalır.</string>
-    <string name="safe_mode_waiting_network_body">Yeniden çevrimiçi olduğunuzda devam edeceğiz.</string>
-    <string name="safe_mode_change_node">Düğümü değiştir</string>
     <string name="safe_mode_step_check_data">Cüzdan verileri denetleniyor</string>
     <string name="safe_mode_step_storage">Cüzdan depolama alanı güncelleniyor</string>
     <string name="safe_mode_step_accounts">Hesaplarınız denetleniyor</string>
     <string name="safe_mode_step_accounts_progress">%1$d / %2$d</string>
     <string name="safe_mode_step_finishing">Tamamlanıyor</string>
-    <string name="safe_mode_step_unlocked">Cüzdanın kilidi açıldı</string>
-    <string name="safe_mode_step_network">Ağa bağlanılıyor</string>
-    <string name="safe_mode_step_network_waiting">Ağ bekleniyor</string>
-    <string name="safe_mode_step_account_check">Hesabınız denetleniyor</string>
     <string name="safe_mode_step_state_done">Bitti</string>
     <string name="safe_mode_step_state_running">Devam ediyor</string>
     <string name="safe_mode_step_state_waiting">Henüz başlamadı</string>
@@ -543,20 +484,10 @@
     <string name="safe_mode_learn_more">Daha fazla bilgi</string>
     <string name="safe_mode_new_pin_title">Yeni bir 6 haneli PIN seçin</string>
     <string name="safe_mode_new_pin_body">Bu, cüzdanınızın PIN’inin tahmin edilmesini zorlaştırır. Cüzdanınız ve varlıklarınız değişmez.</string>
-    <string name="safe_mode_whats_new_title">Yeni SORA Wallet’a hoş geldiniz</string>
-    <string name="safe_mode_whats_new_body">Cüzdanınız güncellendi. SORA’nın denetledikleri şunlar.</string>
-    <string name="safe_mode_whats_new_accounts">Hesaplarınız bu cihazda</string>
-    <string name="safe_mode_whats_new_pin">Cüzdanınız PIN’inizle kilitli</string>
-    <string name="safe_mode_whats_new_balances">Bakiyeler yüklendi</string>
-    <string name="safe_mode_whats_new_balances_loading">Bakiyeler yükleniyor</string>
-    <string name="safe_mode_whats_new_backup">Kurtarma ifadenizi yedekleyin</string>
-    <string name="safe_mode_back_up_now">Şimdi yedekle</string>
-    <string name="safe_mode_later">Daha sonra</string>
     <string name="safe_mode_device_transfer">Cüzdanınız yeni bir telefona otomatik olarak taşınmaz. Kurtarma ifadenizi veya Google Drive yedeğinizi saklayın.</string>
     <string name="safe_mode_pending_check">Önceki bir işlem hâlâ denetleniyor. Hiçbir şeyin iki kez gönderilmemesi için gönderme duraklatıldı.</string>
     <string name="safe_mode_tap_to_reveal">Göstermek için dokunun</string>
     <string name="safe_mode_reveal_privacy">Ekranınızı kimsenin görmediğinden emin olun.</string>
-    <string name="safe_mode_support_no_email">Bir e-posta uygulaması ayarlanmamış. %1$s adresine yazabilirsiniz.</string>
     <string name="safe_mode_retained_title">Bu telefonda bulunan cüzdanlar</string>
     <string name="safe_mode_retained_body">SORA, bu telefonda hiçbir hesabın kullanmadığı cüzdan anahtarları buldu. Bunlar örneğin tamamlanmamış bir hesap kurulumundan kalmış olabilir. Korundular ve hiçbir şey silinmedi. Bunları buradan geri yükleyebilirsiniz.</string>
     <string name="safe_mode_retained_restore">Bu cüzdanı geri yükle</string>
@@ -574,7 +505,6 @@
     <string name="account_repair_confirm">Hesabı onar</string>
   <string name="backup_no_matching_secret">No recovery phrase or seed saved on this phone matches this account, so none is shown. The account itself still works. To back it up, export it as an encrypted JSON file. You can bring it back later from Import account, Backup file (JSON).</string>
   <string name="backup_no_matching_secret_read_only">No recovery phrase or seed saved on this phone matches this account, so none is shown. To use this account on this phone again, go to Import account and enter its recovery phrase, raw seed or backup file.</string>
-    <string name="safe_mode_whats_new_accounts_some_read_only">Bu telefondan gönderim yapabilen hesaplar: %1$s / %2$s. Kalanları onarmak için kurtarma ifadelerini içe aktarın.</string>
     <string name="account_repair_title_backup">Bu hesabı yedeğinizden onarın</string>
   <string name="json_backup_invalid_title">This backup file can\'t be read</string>
   <string name="json_backup_invalid">This isn\'t an encrypted account backup (JSON) that SORA can read. Check that you chose the file you exported, or pasted all of its text. Nothing was changed.</string>
@@ -611,7 +541,6 @@
     <string name="recovery_json_no_file_picker">Bu telefonda dosya seçmek için bir uygulama yok. Bunun yerine yedek dosyanızın metnini alana yapıştırın. Hiçbir şey değiştirilmedi.</string>
   <string name="export_json_keys_unusable_named_title">Some accounts can\'t be exported</string>
   <string name="export_json_keys_unusable_named">These accounts can\'t be exported, because the keys saved for them on this phone can\'t be used:\n\n%1$s\n\nNo file was made. Export your other accounts without them. To use these accounts on this phone again, go to Import account and enter their recovery phrase, raw seed or backup file.</string>
-    <string name="safe_mode_whats_new_batch_export">Eski bir SORA sürümünde birden çok hesapla oluşturulmuş JSON yedek dosyası boş olabilir. Böyle bir yedeğe güveniyorsanız Hesaplar bölümünden hesaplarınızı yeniden dışa aktarın.</string>
   <!-- ak2-readonly-ux: read-only accounts are labelled, explained and repairable; removal shows the matching backup first -->
   <string name="failure_generic_title">This wasn\'t completed</string>
   <string name="failure_generic_message">SORA couldn\'t complete this just now. Please try again in a moment. If you were making a transaction, check Activity first, so that nothing is sent twice.</string>

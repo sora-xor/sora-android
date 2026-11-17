@@ -22,7 +22,6 @@
     <string name="network_badge_mainnet">الشبكة الرئيسية</string>
     <string name="network_badge_testnet">شبكة الاختبار</string>
     <string name="balance_unavailable">الرصيد غير متاح</string>
-    <string name="copy_receive_address">نسخ عنوان الاستلام</string>
     <string name="test_networks">شبكات الاختبار</string>
     <string name="test_networks_description">يعرض أرصدة شبكة اختبار Taira ومعاملاتها. أصول شبكة الاختبار ليست لها قيمة نقدية.</string>
     <string name="wallet_status_failed">لم يكتمل</string>

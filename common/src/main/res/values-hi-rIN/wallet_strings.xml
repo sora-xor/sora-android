@@ -23,7 +23,6 @@
     <string name="network_badge_mainnet">मुख्य नेटवर्क</string>
     <string name="network_badge_testnet">परीक्षण नेटवर्क</string>
     <string name="balance_unavailable">शेष राशि उपलब्ध नहीं है</string>
-    <string name="copy_receive_address">प्राप्ति का पता कॉपी करें</string>
     <string name="test_networks">परीक्षण नेटवर्क</string>
     <string name="test_networks_description">Taira परीक्षण नेटवर्क की शेष राशि और लेन-देन दिखाता है। परीक्षण नेटवर्क की संपत्तियों का कोई मौद्रिक मूल्य नहीं है।</string>
     <string name="wallet_status_failed">पूरा नहीं हुआ</string>

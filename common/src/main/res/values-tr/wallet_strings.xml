@@ -24,7 +24,6 @@
     <string name="network_badge_mainnet">ANA AĞ</string>
     <string name="network_badge_testnet">TEST AĞI</string>
     <string name="balance_unavailable">Bakiye kullanılamıyor</string>
-    <string name="copy_receive_address">Alım adresini kopyala</string>
     <string name="test_networks">Test ağları</string>
     <string name="test_networks_description">Taira test ağındaki bakiyeleri ve işlemleri gösterir. Test ağı varlıklarının parasal değeri yoktur.</string>
     <string name="wallet_status_failed">Tamamlanmadı</string>

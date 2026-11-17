@@ -22,7 +22,6 @@
     <string name="network_badge_mainnet">RÉSEAU PRINCIPAL</string>
     <string name="network_badge_testnet">RÉSEAU DE TEST</string>
     <string name="balance_unavailable">Solde indisponible</string>
-    <string name="copy_receive_address">Copier l’adresse de réception</string>
     <string name="test_networks">Réseaux de test</string>
     <string name="test_networks_description">Affiche les soldes et transactions du réseau de test Taira. Les actifs de test n’ont aucune valeur monétaire.</string>
     <string name="wallet_status_failed">Non terminé</string>

@@ -24,7 +24,6 @@
     <string name="network_badge_mainnet">HOOFDNETWERK</string>
     <string name="network_badge_testnet">TESTNETWERK</string>
     <string name="balance_unavailable">Saldo niet beschikbaar</string>
-    <string name="copy_receive_address">Ontvangstadres kopiëren</string>
     <string name="test_networks">Testnetwerken</string>
     <string name="test_networks_description">Toont saldi en transacties op het Taira-testnetwerk. Testnetwerkactiva hebben geen geldwaarde.</string>
     <string name="wallet_status_failed">Niet voltooid</string>

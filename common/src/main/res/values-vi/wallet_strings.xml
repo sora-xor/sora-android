@@ -22,7 +22,6 @@
     <string name="network_badge_mainnet">MẠNG CHÍNH</string>
     <string name="network_badge_testnet">MẠNG THỬ NGHIỆM</string>
     <string name="balance_unavailable">Không có thông tin số dư</string>
-    <string name="copy_receive_address">Sao chép địa chỉ nhận</string>
     <string name="test_networks">Mạng thử nghiệm</string>
     <string name="test_networks_description">Hiển thị số dư và giao dịch trên mạng thử nghiệm Taira. Tài sản thử nghiệm không có giá trị tiền tệ.</string>
     <string name="wallet_status_failed">Chưa hoàn tất</string>

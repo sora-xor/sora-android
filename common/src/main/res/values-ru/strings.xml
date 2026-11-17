@@ -38,7 +38,6 @@
   <string name="asset_details_asset_id">Asset ID</string>
   <string name="asset_details_liquid_balance">Ликвидный баланс</string>
   <string name="asset_details_recent_activity">Recent activity</string>
-  <string name="asset_details_token_price">Token price</string>
   <string name="asset_details_your_pools">Your %s pools</string>
   <string name="asset_to_send">Отправляемый ассет</string>
   <string name="backup_not_enough_space_error">Backup failed. Not enough space on your Google Drive. Free some space and try again.</string>
@@ -68,7 +67,6 @@
   <string name="common_back">Назад</string>
   <string name="common_backup">Резервная копия</string>
   <string name="common_balance">Баланс</string>
-  <string name="common_bashkir">Башкирский</string>
   <string name="common_bridged">Мост</string>
   <string name="common_cancel">Отмена</string>
   <string name="common_chinese">Китайский</string>
@@ -83,7 +81,6 @@
   <string name="common_continue">Продолжить</string>
   <string name="common_copied">Скопировано в буфер обмена</string>
   <string name="common_create_qr_request">Создать QR-запрос</string>
-  <string name="common_croatian">Хорватский</string>
   <string name="common_currencies">Токены</string>
   <string name="common_delete">Удалить</string>
   <string name="common_disabled">Отключено</string>
@@ -97,8 +94,6 @@
   <string name="common_error_fee_rate_not_available">Не удается связаться с провайдером для вывода средств. Пожалуйста, попробуйте позже.</string>
   <string name="common_error_general_message">Мы уже решаем эту проблему. Пожалуйста, попробуйте позже.</string>
   <string name="common_error_general_title">Ошибка</string>
-  <string name="common_error_internal_error_title">Внутренняя ошибка</string>
-  <string name="common_error_invalid_parameters">Неверные параметры</string>
   <string name="common_error_invalid_parameters_body">Пожалуйста, проверьте подключение к Интернету и повторите попытку.</string>
   <string name="common_error_invalid_query_format">Ваш запрос некорректен. Попробуйте еще раз.</string>
   <string name="common_error_invitation_accepting_window_closed">Время для ввода кода приглашения истекло</string>
@@ -110,7 +105,6 @@
   <string name="common_error_network">Пожалуйста, проверьте подключение к Интернету и повторите попытку.</string>
   <string name="common_error_no_browser_error">Пожалуйста, установите браузер, чтобы открыть ссылку</string>
   <string name="common_error_not_enough_invitations">Извините, но у Вас не осталось кодов приглашения</string>
-  <string name="common_error_not_found_title">Ресурс недоступен</string>
   <string name="common_error_phone_already_exists">Извините, этот номер телефона уже используется. Пожалуйста, попробуйте другой.</string>
   <string name="common_error_phone_already_registered">Номер телефона уже используется другим пользователем</string>
   <string name="common_error_pincode_check_error">Введен неверный код</string>
@@ -119,22 +113,18 @@
   <string name="common_error_seed_is_not_valid">Пожалуйста, убедитесь, что ваш ввод содержит 64 hex символов.</string>
   <string name="common_error_seed_is_not_valid_title">Неверный RAW сид</string>
   <string name="common_error_self_invitation">Вы не можете использовать собственный код приглашения</string>
-  <string name="common_error_unauthorized_body">Пожалуйста, проверьте подключение к Интернету и повторите попытку.</string>
-  <string name="common_error_unauthorized_title">Ошибка авторизации</string>
   <string name="common_error_user_not_found">Ваша парольная фраза недействительна. Пожалуйста, попробуйте другую.</string>
   <string name="common_error_user_values_not_found">Не удается продолжить операцию, поскольку данные о пользователе не найдены</string>
   <string name="common_error_votes_invalid_format">Извините, введено некорректное количество голосов. Пожалуйста, попробуйте проголосовать снова.</string>
   <string name="common_error_votes_not_enough">Недостаточно голосов</string>
   <string name="common_error_voting_is_not_allowed">Извините, но проект больше не может получать голоса.</string>
   <string name="common_error_wrong_user_status">Не удается продолжить операцию, поскольку статус пользователя некорректен</string>
-  <string name="common_estonian">Эстонский</string>
   <string name="common_expand">Развернуть</string>
   <string name="common_explore">Explore</string>
   <string name="common_failed">Ошибка</string>
   <string name="common_farming">Фарминг</string>
   <string name="common_farms">Фермы</string>
   <string name="common_fee">Комиссия</string>
-  <string name="common_filipino">Филиппинский</string>
   <string name="common_finnish">Финский</string>
   <string name="common_french">Французский</string>
   <string name="common_german">Немецкий</string>
@@ -142,18 +132,9 @@
   <string name="common_google_backup_decryption_failed_2">Возможно, введенный вами пароль неверен.</string>
   <string name="common_hebrew">Иврит</string>
   <string name="common_hindi">Хинди</string>
-  <plurals name="common_hour" tools:ignore="ImpliedQuantity">
-    <item quantity="one">час</item>
-    <item quantity="few">часа</item>
-    <item quantity="many">часов</item>
-    <item quantity="other">часов</item>
-  </plurals>
   <string name="common_indonesian">Индонезийский</string>
   <string name="common_insufficient_balance">Недостаточный баланс</string>
-  <string name="common_italian">Итальянский</string>
   <string name="common_japanese">Японский</string>
-  <string name="common_khmer">Кхмерский</string>
-  <string name="common_korean">Корейский</string>
   <string name="common_loading">Загрузка</string>
   <string name="common_malay">Малайзийский</string>
   <string name="common_max">max</string>
@@ -177,7 +158,6 @@
   <string name="common_remove">Удалить</string>
   <string name="common_request">Запрос</string>
   <string name="common_russian">Русский</string>
-  <string name="common_scan">Сканировать</string>
   <string name="common_scan_qr">Сканировать QR-код</string>
   <string name="common_search_pools">Search pools</string>
   <string name="common_sec">сек</string>
@@ -193,15 +173,11 @@
   <string name="common_sms_code_expired">Срок действия кода истек. Пожалуйста, попробуйте другой.</string>
   <string name="common_sms_code_not_correct">Неверный код подтверждения</string>
   <string name="common_spanish">Испанский</string>
-  <string name="common_spanish_colombia">Испанский (Колумбия)</string>
   <string name="common_supply">Добавить</string>
   <string name="common_supply_liquidity_title">Добавить ликвидность</string>
-  <string name="common_swedish">Шведский</string>
   <string name="common_terms_title">Условия и положения</string>
-  <string name="common_thai">Тайский</string>
   <string name="common_today">Сегодня</string>
   <string name="common_turkish">Турецкий</string>
-  <string name="common_ukrainian">Украинский</string>
   <string name="common_update">Обновление</string>
   <string name="common_upload_from_library">Загрузить из библиотеки</string>
   <string name="common_vietnamese">Вьетнамский</string>
@@ -276,10 +252,6 @@
   <string name="import_account_not_backed_up_alert_description">Если ваше устройство будет потеряно или украдено, вы навсегда потеряете свой кошелек и все свои средства.</string>
   <string name="import_more_title">Импортировать еще</string>
   <string name="imported_account_title">Аккаунт импортирован</string>
-  <string name="invite_code_applied_body">Код успешно применен</string>
-  <string name="invite_code_applied_title">Поздравляем!</string>
-  <string name="invite_enter_error_already_applied">Вы уже применили другой код приглашения</string>
-  <string name="invite_enter_error_time_is_up">Время возможности ввода кода приглашения истекло</string>
   <string name="invoice_scan_error_match">Вы не можете отправить токены на активный в данный момент аккаунт</string>
   <string name="invoice_scan_error_no_info">Не удается декодировать QR</string>
   <string name="invoice_scan_error_user_not_found">Не удается найти пользователя</string>
@@ -366,34 +338,8 @@
   <string name="pool_share_title_1">Ваша доля в пуле</string>
   <string name="pooled_assets">Активы в пулах</string>
   <string name="profile_biometry_title">Вход по биометрии</string>
-  <plurals name="project_date_day_plurals">
-    <item quantity="one">остался %s день</item>
-    <item quantity="few">осталось %s дня</item>
-    <item quantity="many">осталось %s дней</item>
-    <item quantity="other">осталось %s дней</item>
-  </plurals>
-  <plurals name="project_date_hour_plurals">
-    <item quantity="one">остался %s час</item>
-    <item quantity="few">осталось %s часа</item>
-    <item quantity="many">осталось %s часов</item>
-    <item quantity="other">осталось %s часов</item>
-  </plurals>
-  <plurals name="project_date_minute_plurals">
-    <item quantity="one">осталась %s минута</item>
-    <item quantity="few">осталось %s минуты</item>
-    <item quantity="many">осталось %s минут</item>
-    <item quantity="other">осталось %s минут</item>
-  </plurals>
-  <plurals name="project_date_second_plurals">
-    <item quantity="one">осталась %s секунда</item>
-    <item quantity="few">осталось %s секунды</item>
-    <item quantity="many">осталось %s секунд</item>
-    <item quantity="other">осталось %s секунд</item>
-  </plurals>
-  <string name="project_ended_template">Завершился %s</string>
   <string name="protect_loss_access_funds">Защитите себя от потери доступа к своим средствам</string>
   <string name="qr_code">QR код</string>
-  <string name="qr_upload">Из галереи</string>
   <string name="receive_tokens">Получить токены</string>
   <string name="received_from_adar">Получено от ADAR</string>
   <string name="recent_recipients">Недавние получатели</string>
@@ -442,7 +388,6 @@
   <string name="remove_pool_confirmation_description">Результат оценивается. Если цена изменится более чем на %s%% ваша транзакция будет отменена.</string>
   <string name="remove_pool_confirmation_title">Подтвердить Удалить</string>
   <string name="request_supply_liquidity">Вам необходимо обеспечить ликвидность соответствующей пары пула, чтобы начать делать на нее ставки для получения дополнительных вознаграждений:</string>
-  <string name="restart_required">Требуется перезапуск</string>
   <string name="review">Обзор</string>
   <string name="route">Путь</string>
   <string name="scan_qr_show_my_qr">Показать мой QR-код</string>
@@ -450,8 +395,6 @@
   <string name="search_token_placeholder">Поиск по идентификатору токена, названию или тикеру</string>
   <string name="select_account_address_1">Поиск или добавление нового адреса</string>
   <string name="select_account_import">Выберите аккаунт для импорта</string>
-  <string name="select_asset_receive">Выбор ассета для получения</string>
-  <string name="select_asset_send">Выбор ассета для отправки</string>
   <string name="select_node_add_custom_node">Добавить ноду</string>
   <string name="select_node_custom_node_edit_node">Изменить ноду</string>
   <string name="select_node_custom_nodes">Пользовательские ноды</string>
@@ -481,7 +424,6 @@
   <string name="settings_nodes">Ноды</string>
   <string name="show_more">Show more</string>
   <string name="slippage">Проскальзывание</string>
-  <string name="something_went_wrong">Что-то пошло не так</string>
   <string name="start_staking">Начать стейкинг</string>
   <string name="status_error">Ошибка</string>
   <string name="status_pending">В обработке</string>
@@ -497,9 +439,6 @@
   <string name="tutorial_privacy_policy">Политикой конфиденциальности</string>
   <string name="tutorial_terms_and_conditions_3">Условиями использования</string>
   <string name="tutorial_terms_and_conditions_template_1">By continuing you are agreeing with the </string>
-  <string name="unexpected_error">Произошла непредвиденная ошибка.\n\nВы можете решить эту проблему в сообществе SORA в Telegram чате @sora_happy.</string>
-  <string name="update_downloaded">Обновление для приложения SORA было загружено и готово к установке. \n\n Важно использовать последнюю версию приложения. \n\n Чтобы обновить приложение, требуется перезагрузка.</string>
-  <string name="update_install_now">Хотите установить обновление сейчас?</string>
   <string name="wallet_backup">Сделайте резервную копию</string>
   <string name="wallet_balance_locked">Заблокировано</string>
   <string name="wallet_balance_reserved">Резерв</string>
@@ -532,19 +471,11 @@
     <string name="safe_mode_updating_body">Ваши ключи останутся на этом устройстве. Обычно это занимает меньше минуты.</string>
     <string name="safe_mode_finishing_title">Завершаем обновление</string>
     <string name="safe_mode_finishing_body">Продолжаем с того места, где остановились. Ваши ключи останутся на этом устройстве.</string>
-    <string name="safe_mode_checking_title">Проверяем ваш кошелёк</string>
-    <string name="safe_mode_checking_body">SORA проверяет аккаунт перед открытием кошелька. Ваши ключи останутся на этом устройстве.</string>
-    <string name="safe_mode_waiting_network_body">Мы продолжим, как только появится подключение к интернету.</string>
-    <string name="safe_mode_change_node">Сменить узел</string>
     <string name="safe_mode_step_check_data">Проверяем данные кошелька</string>
     <string name="safe_mode_step_storage">Обновляем хранилище кошелька</string>
     <string name="safe_mode_step_accounts">Проверяем ваши аккаунты</string>
     <string name="safe_mode_step_accounts_progress">%1$d из %2$d</string>
     <string name="safe_mode_step_finishing">Завершаем</string>
-    <string name="safe_mode_step_unlocked">Кошелёк разблокирован</string>
-    <string name="safe_mode_step_network">Подключаемся к сети</string>
-    <string name="safe_mode_step_network_waiting">Ожидаем подключения</string>
-    <string name="safe_mode_step_account_check">Проверяем ваш аккаунт</string>
     <string name="safe_mode_step_state_done">Готово</string>
     <string name="safe_mode_step_state_running">Выполняется</string>
     <string name="safe_mode_step_state_waiting">Ещё не начато</string>
@@ -558,20 +489,10 @@
     <string name="safe_mode_learn_more">Подробнее</string>
     <string name="safe_mode_new_pin_title">Выберите новый PIN из 6 цифр</string>
     <string name="safe_mode_new_pin_body">Так PIN вашего кошелька будет сложнее угадать. Кошелёк и средства не изменятся.</string>
-    <string name="safe_mode_whats_new_title">Добро пожаловать в новый SORA Wallet</string>
-    <string name="safe_mode_whats_new_body">Ваш кошелёк обновлён. Вот что проверила SORA.</string>
-    <string name="safe_mode_whats_new_accounts">Ваши аккаунты находятся на этом устройстве</string>
-    <string name="safe_mode_whats_new_pin">Кошелёк защищён вашим PIN</string>
-    <string name="safe_mode_whats_new_balances">Балансы загружены</string>
-    <string name="safe_mode_whats_new_balances_loading">Загружаем балансы</string>
-    <string name="safe_mode_whats_new_backup">Сохраните фразу восстановления</string>
-    <string name="safe_mode_back_up_now">Создать резервную копию</string>
-    <string name="safe_mode_later">Позже</string>
     <string name="safe_mode_device_transfer">Кошелёк не перенесётся на новый телефон автоматически. Сохраните фразу восстановления или резервную копию в Google Drive.</string>
     <string name="safe_mode_pending_check">Предыдущая транзакция ещё проверяется. Отправка приостановлена, чтобы ничего не отправилось дважды.</string>
     <string name="safe_mode_tap_to_reveal">Нажмите, чтобы показать</string>
     <string name="safe_mode_reveal_privacy">Убедитесь, что никто не видит ваш экран.</string>
-    <string name="safe_mode_support_no_email">Почтовое приложение не настроено. Вы можете написать на %1$s.</string>
     <string name="safe_mode_retained_title">Кошельки, найденные на этом телефоне</string>
     <string name="safe_mode_retained_body">SORA нашла на этом телефоне ключи кошельков, которые не использует ни один аккаунт, например после незавершённой настройки. Они сохранены, ничего не удалено. Вы можете восстановить эти кошельки здесь.</string>
     <string name="safe_mode_retained_restore">Восстановить этот кошелёк</string>
@@ -589,7 +510,6 @@
     <string name="account_repair_confirm">Восстановить ключи аккаунта</string>
   <string name="backup_no_matching_secret">No recovery phrase or seed saved on this phone matches this account, so none is shown. The account itself still works. To back it up, export it as an encrypted JSON file. You can bring it back later from Import account, Backup file (JSON).</string>
   <string name="backup_no_matching_secret_read_only">No recovery phrase or seed saved on this phone matches this account, so none is shown. To use this account on this phone again, go to Import account and enter its recovery phrase, raw seed or backup file.</string>
-    <string name="safe_mode_whats_new_accounts_some_read_only">Аккаунты, которые могут отправлять с этого телефона: %1$s из %2$s. Для остальных импортируйте их фразы восстановления.</string>
     <string name="account_repair_title_backup">Восстановить ключи аккаунта из резервной копии</string>
   <string name="json_backup_invalid_title">This backup file can\'t be read</string>
   <string name="json_backup_invalid">This isn\'t an encrypted account backup (JSON) that SORA can read. Check that you chose the file you exported, or pasted all of its text. Nothing was changed.</string>
@@ -626,7 +546,6 @@
     <string name="recovery_json_no_file_picker">На телефоне нет приложения для выбора файла. Вставьте текст файла резервной копии в поле. Ничего не изменено.</string>
   <string name="export_json_keys_unusable_named_title">Some accounts can\'t be exported</string>
   <string name="export_json_keys_unusable_named">These accounts can\'t be exported, because the keys saved for them on this phone can\'t be used:\n\n%1$s\n\nNo file was made. Export your other accounts without them. To use these accounts on this phone again, go to Import account and enter their recovery phrase, raw seed or backup file.</string>
-    <string name="safe_mode_whats_new_batch_export">JSON-файл резервной копии с несколькими аккаунтами, созданный старой версией SORA, может быть пустым. Если вы рассчитываете на такую копию, экспортируйте аккаунты заново из раздела «Аккаунты».</string>
   <!-- ak2-readonly-ux: read-only accounts are labelled, explained and repairable; removal shows the matching backup first -->
   <string name="failure_generic_title">This wasn\'t completed</string>
   <string name="failure_generic_message">SORA couldn\'t complete this just now. Please try again in a moment. If you were making a transaction, check Activity first, so that nothing is sent twice.</string>

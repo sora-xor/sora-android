@@ -22,7 +22,6 @@
     <string name="network_badge_mainnet">メインネット</string>
     <string name="network_badge_testnet">テストネット</string>
     <string name="balance_unavailable">残高を取得できません</string>
-    <string name="copy_receive_address">受取アドレスをコピー</string>
     <string name="test_networks">テストネットワーク</string>
     <string name="test_networks_description">Tairaテストネットの残高と取引を表示します。テストネットの資産に金銭的価値はありません。</string>
     <string name="wallet_status_failed">未完了</string>

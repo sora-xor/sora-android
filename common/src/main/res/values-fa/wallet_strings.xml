@@ -24,7 +24,6 @@
     <string name="network_badge_mainnet">شبکه اصلی</string>
     <string name="network_badge_testnet">شبکه آزمایشی</string>
     <string name="balance_unavailable">موجودی در دسترس نیست</string>
-    <string name="copy_receive_address">کپی نشانی دریافت</string>
     <string name="test_networks">شبکه‌های آزمایشی</string>
     <string name="test_networks_description">موجودی و تراکنش‌های شبکه آزمایشی Taira را نشان می‌دهد. دارایی‌های آزمایشی ارزش پولی ندارند.</string>
     <string name="wallet_status_failed">تکمیل نشده</string>
