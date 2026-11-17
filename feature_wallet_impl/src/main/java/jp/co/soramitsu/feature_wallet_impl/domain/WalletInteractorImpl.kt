@@ -74,7 +74,7 @@ class WalletInteractorImpl(
                 soraAccount.substrateAddress
         ) { "MIGRATION_SELECTED_WALLET_CHANGED" }
         val keypair = credentialsRepository.retrieveKeyPair(soraAccount)
-        return try {
+        val outcome = try {
             sora2TransactionOutcome {
                 walletRepository.migrate(
                     irohaData.address,
@@ -88,13 +88,28 @@ class WalletInteractorImpl(
             keypair.privateKey.fill(0)
             keypair.nonce.fill(0)
         }
+        claimDoneWhenConfirmed(outcome, soraAccount)
+        return outcome
     }
 
-    override suspend fun checkSubmittedClaim(txHash: String?): TransactionOutcome? =
-        walletRepository.checkSubmittedClaim(
-            walletId = userRepository.getCurSoraAccount().substrateAddress,
+    override suspend fun checkSubmittedClaim(txHash: String?): TransactionOutcome? {
+        val soraAccount = userRepository.getCurSoraAccount()
+        val outcome = walletRepository.checkSubmittedClaim(
+            walletId = soraAccount.substrateAddress,
             txHash = txHash,
         )
+        claimDoneWhenConfirmed(outcome, soraAccount)
+        return outcome
+    }
+
+    /**
+     * The network confirmed the claim of [account]: it is no longer pending for that account
+     * (the one that sent it, whichever account is selected now), so the wallet home's "Claim"
+     * entry goes. Only a confirmation counts; a claim that waits or failed stays pending.
+     */
+    private suspend fun claimDoneWhenConfirmed(outcome: TransactionOutcome?, account: SoraAccount) {
+        if (outcome is TransactionOutcome.Confirmed) userRepository.saveNeedsMigration(false, account)
+    }
 
     override suspend fun getContacts(query: String): List<String>? {
         val curAccount = userRepository.getCurSoraAccount().substrateAddress
