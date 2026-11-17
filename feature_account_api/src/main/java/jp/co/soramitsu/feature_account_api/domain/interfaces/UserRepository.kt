@@ -124,7 +124,18 @@ interface UserRepository {
 
     suspend fun getAccountNameForMigration(): String
 
+    /**
+     * Saves what a claim check found for [soraAccount]. "Pending" is not saved once the account's
+     * claim was confirmed ([markClaimConfirmed]): a check that read the network before the
+     * confirmation and answers after it cannot bring the claim back.
+     */
     suspend fun saveNeedsMigration(it: Boolean, soraAccount: SoraAccount)
+
+    /**
+     * The network confirmed [soraAccount]'s claim (or already had it). Done for good: a claim is
+     * made once. Its flag is cleared and stays cleared, whatever an older check saves later.
+     */
+    suspend fun markClaimConfirmed(soraAccount: SoraAccount)
 
     suspend fun needsMigration(soraAccount: SoraAccount): Boolean
 

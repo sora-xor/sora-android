@@ -793,6 +793,44 @@ class UserRepositoryTest {
         coVerify(exactly = 1) { userDatasource.savePin("123456") }
     }
 
+    // Codex re-review 4: the claim check at unlock (PinCodeInteractor.needsMigration) reads the
+    // network for a pending claim. If the claim is confirmed while that read is under way, its
+    // late "still pending" must not bring the Claim entry back.
+    @Test
+    fun `a claim confirmed while an older claim check reads the network stays done`() = runTest {
+        val account = SoraAccount("accountAddress", "accountName")
+        val needs = mutableMapOf<String, Boolean>()
+        val fetched = mutableMapOf<String, Boolean>()
+        coEvery { userDatasource.saveNeedsMigration(any(), any()) } answers { needs[secondArg()] = firstArg() }
+        coEvery { userDatasource.needsMigration(any()) } answers { needs[firstArg()] ?: false }
+        coEvery { userDatasource.saveIsMigrationFetched(any(), any()) } answers { fetched[secondArg()] = firstArg() }
+        coEvery { userDatasource.isMigrationStatusFetched(any()) } answers { fetched[firstArg()] ?: false }
+        // A claim this phone knows is pending.
+        needs[account.substrateAddress] = true
+        fetched[account.substrateAddress] = true
+        val network = kotlinx.coroutines.CompletableDeferred<Boolean>()
+
+        val olderCheck = launch(UnconfinedTestDispatcher(testScheduler)) {
+            // A pending claim counts as not fetched, so the check asks the network ...
+            assertFalse(userRepository.isMigrationFetched(account))
+            val stillPending = network.await()
+            userRepository.saveNeedsMigration(stillPending, account)
+            userRepository.saveIsMigrationFetched(true, account)
+        }
+        // ... the claim is confirmed meanwhile, and the network's older answer comes after.
+        userRepository.markClaimConfirmed(account)
+        network.complete(true)
+        olderCheck.join()
+
+        assertFalse(userRepository.needsMigration(account))
+        // Checked and done: a later check reads this answer instead of the network.
+        assertTrue(userRepository.isMigrationFetched(account))
+        // Another account's pending claim is still saved as it is found.
+        val other = SoraAccount("otherAddress", "other")
+        userRepository.saveNeedsMigration(true, other)
+        assertTrue(userRepository.needsMigration(other))
+    }
+
     // Codex review 3: the confirmation is taken before anything is written, so a second save
     // that brings it while the first one is still writing is refused, and only one PIN is set.
     @Test

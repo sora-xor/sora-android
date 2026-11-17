@@ -93,6 +93,8 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 @Singleton
 class UserRepositorySr25519Crypto @Inject constructor() : StoredKeyCrypto {
@@ -1765,8 +1767,31 @@ class UserRepositoryImpl(
         return userDatasource.getAccountName()
     }
 
+    /** Guards the claim flags: a check's answer and a confirmation never interleave. */
+    private val claimFlagLock = Mutex()
+
+    /**
+     * Accounts whose claim the network confirmed in this process. A confirmation also stores the
+     * flag as checked and done, so a later start reads that answer and never asks the network:
+     * only a check that was already running here can be older than the confirmation.
+     */
+    private val confirmedClaims = mutableSetOf<String>()
+
     override suspend fun saveNeedsMigration(it: Boolean, soraAccount: SoraAccount) {
-        userDatasource.saveNeedsMigration(it, soraAccount.substrateAddress)
+        claimFlagLock.withLock {
+            // A claim the network confirmed stays done: the claim check started at unlock may
+            // have read "pending" just before the confirmation and only answer now.
+            if (it && soraAccount.substrateAddress in confirmedClaims) return
+            userDatasource.saveNeedsMigration(it, soraAccount.substrateAddress)
+        }
+    }
+
+    override suspend fun markClaimConfirmed(soraAccount: SoraAccount) {
+        claimFlagLock.withLock {
+            confirmedClaims += soraAccount.substrateAddress
+            userDatasource.saveNeedsMigration(false, soraAccount.substrateAddress)
+            userDatasource.saveIsMigrationFetched(true, soraAccount.substrateAddress)
+        }
     }
 
     override suspend fun needsMigration(soraAccount: SoraAccount): Boolean {

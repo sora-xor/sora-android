@@ -66,7 +66,7 @@ class WalletInteractorImpl(
         // Re-read the authoritative account-bound state before touching the SORA2 signing key;
         // a stale local/fetched flag is never authority to submit a duplicate claim.
         if (!walletRepository.needsMigration(irohaData.address)) {
-            userRepository.saveNeedsMigration(false, soraAccount)
+            userRepository.markClaimConfirmed(soraAccount)
             return null
         }
         check(
@@ -105,10 +105,11 @@ class WalletInteractorImpl(
     /**
      * The network confirmed the claim of [account]: it is no longer pending for that account
      * (the one that sent it, whichever account is selected now), so the wallet home's "Claim"
-     * entry goes. Only a confirmation counts; a claim that waits or failed stays pending.
+     * entry goes, and an older claim check cannot bring it back ([UserRepository.markClaimConfirmed]).
+     * Only a confirmation counts; a claim that waits or failed stays pending.
      */
     private suspend fun claimDoneWhenConfirmed(outcome: TransactionOutcome?, account: SoraAccount) {
-        if (outcome is TransactionOutcome.Confirmed) userRepository.saveNeedsMigration(false, account)
+        if (outcome is TransactionOutcome.Confirmed) userRepository.markClaimConfirmed(account)
     }
 
     override suspend fun getContacts(query: String): List<String>? {
