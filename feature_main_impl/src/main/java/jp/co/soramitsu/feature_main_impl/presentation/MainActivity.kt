@@ -104,15 +104,14 @@ class MainActivity :
         private const val ANIM_DURATION = 150L
         private const val REQUEST_CODE_UPDATE = 1233
 
-        fun start(context: Context) = start(context, pinnedTask = pinnedScreen(context))
-
         /**
-         * Opens the wallet in a task of its own. [pinnedTask] is the screen that opens it when
-         * its task is pinned (screen pinning, lock task mode): such a task can be neither left
-         * nor cleared, so the wallet opens on top in it and that screen closes. Without this a
-         * pinned app that the startup screen checked again stayed on the startup screen.
+         * Opens the wallet in a task of its own. When the task of the screen that opens it is
+         * pinned (screen pinning, lock task mode), that task can be neither left nor cleared, so
+         * the wallet opens on top in it and that screen closes. Without this a pinned app that
+         * the startup screen checked again stayed on the startup screen.
          */
-        fun start(context: Context, pinnedTask: Activity?) {
+        fun start(context: Context) {
+            val pinnedTask = pinnedScreen(context)
             val intent = Intent(context, MainActivity::class.java).apply {
                 flags = if (pinnedTask != null) 0 else Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             }
