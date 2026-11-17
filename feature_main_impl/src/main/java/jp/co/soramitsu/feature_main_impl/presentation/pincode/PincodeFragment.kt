@@ -40,7 +40,6 @@ import jp.co.soramitsu.common.base.SoraBaseFragment
 import jp.co.soramitsu.common.base.theOnlyRoute
 import jp.co.soramitsu.common.domain.BottomBarController
 import jp.co.soramitsu.common.io.MainThreadExecutor
-import jp.co.soramitsu.common.presentation.compose.neon.safemode.SafeModeSupport
 import jp.co.soramitsu.common.presentation.args.addresses
 import jp.co.soramitsu.common.presentation.view.SoraProgressDialog
 import jp.co.soramitsu.common.util.ext.runDelayed
@@ -214,17 +213,6 @@ class PincodeFragment : SoraBaseFragment<PinCodeViewModel>() {
         runCatching { prompt.authenticate(ScreenLockPrompt.promptInfo(title, description)) }
     }
 
-    private fun contactSupport() {
-        val context = context ?: return
-        if (!SafeModeSupport.email(context, "SORA wallet check", "")) {
-            Toast.makeText(
-                context,
-                getString(jp.co.soramitsu.common.R.string.safe_mode_support_no_email, SafeModeSupport.EMAIL),
-                Toast.LENGTH_LONG,
-            ).show()
-        }
-    }
-
     override fun onPause() {
         super.onPause()
         fingerprintWrapper.cancel()
@@ -280,9 +268,7 @@ class PincodeFragment : SoraBaseFragment<PinCodeViewModel>() {
                 onBiometricClick = fingerprintWrapper::toggleScanner,
                 onDeleteClick = viewModel::pinCodeDeleteClicked,
                 onWrongPinAnimationEnd = viewModel::onWrongPinAnimationEnd,
-                onSwitchNode = viewModel::onSwitchNode,
                 onNewPinContinue = viewModel::setNewLengthPinCodeClicked,
-                onGetHelp = ::contactSupport,
             )
         }
     }

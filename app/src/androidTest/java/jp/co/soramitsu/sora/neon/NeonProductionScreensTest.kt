@@ -155,7 +155,7 @@ class NeonProductionScreensTest {
                         PinCodeScreenState(toolbarTitleString = "Create a 6-digit PIN", maxDotsCount = count,
                             checkedDotsCount = digits.length, isBackButtonVisible = digits.isNotEmpty()),
                         onNumClick = { if (digits.length < count) digits += it }, onBiometricClick = {},
-                        onDeleteClick = { digits = digits.dropLast(1) }, onWrongPinAnimationEnd = {}, onSwitchNode = {},
+                        onDeleteClick = { digits = digits.dropLast(1) }, onWrongPinAnimationEnd = {},
                     )
                 }
             }
@@ -179,17 +179,15 @@ class NeonProductionScreensTest {
         }
     }
 
-    @Test fun reducedMotionErrorCompletesOnceAndOfflineCheckReplacesKeypad() {
+    @Test fun reducedMotionErrorCompletesOnce() {
         var wrong by mutableStateOf(false)
-        var migrating by mutableStateOf(false)
         var completed = 0
         rule.setContent {
             SoraAppTheme(darkTheme = true) {
                 CompositionLocalProvider(LocalFx provides minimal) {
                     PincodeScreen(
                         PinCodeScreenState(toolbarTitleString = "Enter PIN", checkedDotsCount = 6,
-                            enableShakeAnimation = wrong, migrating = migrating, checkNeedsNetwork = true,
-                            isConnected = false), {}, {}, {}, { completed++; wrong = false }, {},
+                            enableShakeAnimation = wrong), {}, {}, {}, { completed++; wrong = false },
                     )
                 }
             }
@@ -199,11 +197,6 @@ class NeonProductionScreensTest {
         rule.mainClock.advanceTimeBy(700)
         rule.runOnIdle { assertEquals(1, completed) }
         rule.mainClock.autoAdvance = true
-        rule.runOnIdle { migrating = true }
-        val waiting = context.getString(jp.co.soramitsu.common.R.string.safe_mode_waiting_network_body)
-        rule.onNodeWithText(waiting).assertExists()
-        rule.onNodeWithTag("$PACKAGE_ID:id/1").assertDoesNotExist()
-        capture("pin-offline-check")
     }
 
     @Test fun ordinaryBackupIsSecureVeiledAndHidesAgainOnPause() {

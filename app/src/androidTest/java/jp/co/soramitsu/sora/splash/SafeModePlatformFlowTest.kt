@@ -46,27 +46,6 @@ class SafeModePlatformFlowTest {
         every { packages.getPackageInfo("fixture.wallet", 0) } returns info
     }
     @After fun cleanup() { app.deleteSharedPreferences(preferenceName) }
-    @Test fun freshInstallDoesNotShowUpgradeWelcome() {
-        info.lastUpdateTime = info.firstInstallTime; assertFalse(UpgradeWelcome.isPending(context))
-    }
-    @Test fun updatedInstallDoesNotRequireAWelcomeAcknowledgement() {
-        assertFalse(UpgradeWelcome.isPending(context)); assertFalse(UpgradeWelcome.isPending(context))
-        assertTrue(preferences.all.isEmpty())
-        verify(exactly = 0) { packages.getPackageInfo(any<String>(), any<Int>()) }
-    }
-    @Test fun markingWelcomeDonePersistsAndSkipsPackageInspection() {
-        UpgradeWelcome.markDone(context); clearMocks(packages, answers = false)
-        assertFalse(UpgradeWelcome.isPending(context)); verify(exactly = 0) { packages.getPackageInfo(any<String>(), any<Int>()) }
-        assertEquals(mapOf("upgrade_welcome_3_9_done" to true), preferences.all)
-    }
-    @Test fun welcomeInspectionFailureDoesNotPreventWalletEntry() {
-        every { packages.getPackageInfo("fixture.wallet", 0) } throws PackageManager.NameNotFoundException()
-        assertFalse(UpgradeWelcome.isPending(context))
-    }
-    @Test fun unreadableWelcomePreferencesDoNotPreventWalletEntry() {
-        preferencesFailure = SecurityException("preferences unavailable")
-        assertFalse(UpgradeWelcome.isPending(context)); UpgradeWelcome.markDone(context)
-    }
     @Test fun supportEmailEncodesSubjectAndBodyWithoutChangingTheirContents() {
         val subject = "Wallet & backup? 日本語"; val body = "public diagnostic\nvalue=1&another=two#end"
         assertTrue(SafeModeSupport.email(context, subject, body))

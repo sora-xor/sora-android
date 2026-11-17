@@ -24,7 +24,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import jp.co.soramitsu.common.presentation.compose.neon.safemode.AccountCheckProgress
 import jp.co.soramitsu.common.presentation.compose.neon.safemode.DeviceTransferNotice
 import jp.co.soramitsu.common.presentation.compose.neon.safemode.LegacyPinUpgradePanel
 import jp.co.soramitsu.common.presentation.compose.neon.safemode.PendingCheckCard
@@ -34,8 +33,6 @@ import jp.co.soramitsu.common.presentation.compose.neon.safemode.ReadOnlyReason
 import jp.co.soramitsu.common.presentation.compose.neon.safemode.SafeModeScreen
 import jp.co.soramitsu.common.presentation.compose.neon.safemode.SafeStepState
 import jp.co.soramitsu.common.presentation.compose.neon.safemode.TechnicalDetail
-import jp.co.soramitsu.common.presentation.compose.neon.safemode.UpgradeCompleteChecks
-import jp.co.soramitsu.common.presentation.compose.neon.safemode.UpgradeCompleteSheet
 import jp.co.soramitsu.core_db.RecoveryFacts
 import jp.co.soramitsu.core_db.WalletRecoveryOptions
 import jp.co.soramitsu.sora.BuildConfig
@@ -60,9 +57,6 @@ enum class SafeModePreviewState {
     U1_UPDATING,
     U1_STILL_WORKING,
     U1_GET_HELP,
-    U1_PIN_CHECK,
-    U1_PIN_CHECK_OFFLINE,
-    U2_WAITING_FOR_NETWORK,
     U4_FREE_SPACE,
     U5_FINISHING,
     U6_RECOVERY,
@@ -88,8 +82,6 @@ enum class SafeModePreviewState {
     U9_READ_ONLY_HOME,
     U9_LEARN_MORE,
     U10_NEW_PIN,
-    U11_UPGRADE_COMPLETE,
-    U11_UPGRADE_COMPLETE_BACKED_UP,
     U12_DEVICE_TRANSFER,
     U13_PENDING_CHECK,
 }
@@ -234,28 +226,6 @@ object SafeModePreviewData {
 @Composable
 fun SafeModePreview(preview: SafeModePreviewState, callbacks: SafeModeCallbacks = SafeModeCallbacks()) {
     when (preview) {
-        SafeModePreviewState.U1_PIN_CHECK -> AccountCheckProgress(
-            connected = true,
-            onSwitchNode = {},
-            onGetHelp = {},
-            silentMillis = 0,
-            fixedElapsedMillis = 0,
-        )
-        // Offline, but this account is checked on the phone: no network copy (design spec 9.1-2).
-        SafeModePreviewState.U1_PIN_CHECK_OFFLINE -> AccountCheckProgress(
-            connected = false,
-            needsNetwork = false,
-            onSwitchNode = {},
-            onGetHelp = {},
-            silentMillis = 0,
-            fixedElapsedMillis = 0,
-        )
-        SafeModePreviewState.U2_WAITING_FOR_NETWORK -> AccountCheckProgress(
-            connected = false,
-            onSwitchNode = {},
-            onGetHelp = {},
-            fixedElapsedMillis = 0,
-        )
         SafeModePreviewState.U9_READ_ONLY_HOME,
         SafeModePreviewState.U9_LEARN_MORE -> SafeModeScreen {
             ReadOnlyBanner(onTryAgain = {}, onLearnMore = {})
@@ -266,20 +236,6 @@ fun SafeModePreview(preview: SafeModePreviewState, callbacks: SafeModeCallbacks 
             }
         }
         SafeModePreviewState.U10_NEW_PIN -> SafeModeScreen { LegacyPinUpgradePanel(onContinue = {}) }
-        SafeModePreviewState.U11_UPGRADE_COMPLETE,
-        SafeModePreviewState.U11_UPGRADE_COMPLETE_BACKED_UP -> {
-            SafeModeScreen { }
-            UpgradeCompleteSheet(
-                checks = UpgradeCompleteChecks(
-                    accountsOnDevice = true,
-                    protectedByPin = true,
-                    balancesLoaded = true,
-                    needsBackup = preview == SafeModePreviewState.U11_UPGRADE_COMPLETE,
-                ),
-                onBackUpNow = {},
-                onClose = {},
-            )
-        }
         SafeModePreviewState.U12_DEVICE_TRANSFER -> SafeModeScreen { DeviceTransferNotice() }
         SafeModePreviewState.U13_PENDING_CHECK -> SafeModeScreen { PendingCheckCard(onOptions = {}) }
         else -> SplashSafeMode(

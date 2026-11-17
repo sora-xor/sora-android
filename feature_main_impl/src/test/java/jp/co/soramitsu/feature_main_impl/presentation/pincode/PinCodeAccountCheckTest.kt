@@ -30,13 +30,11 @@ import jp.co.soramitsu.androidfoundation.testing.MainCoroutineRule
 import jp.co.soramitsu.feature_main_api.domain.model.PinCodeAction
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_main_impl.domain.PinCodeInteractor
-import jp.co.soramitsu.sora.substrate.substrate.ConnectionManager
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.assertFalse
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestRule
@@ -65,9 +63,6 @@ class PinCodeAccountCheckTest {
         coEvery { it.needsMigration() } returns false
     }
     private val mainRouter = mockk<MainRouter>(relaxed = true)
-    private val connectionManager = mockk<ConnectionManager>().also {
-        every { it.connectionState } returns connection
-    }
     private val resourceManager = mockk<ResourceManager>().also {
         every { it.getString(any()) } returns "Enter your PIN"
     }
@@ -80,7 +75,6 @@ class PinCodeAccountCheckTest {
         mockk(relaxed = true),
         mockk(relaxed = true),
         mockk(relaxed = true),
-        connectionManager,
     )
 
     private fun kotlinx.coroutines.test.TestScope.unlock(vm: PinCodeViewModel) {
@@ -111,8 +105,6 @@ class PinCodeAccountCheckTest {
         unlock(vm)
         // The wallet is open while the check still waits for the network.
         verify(exactly = 1) { mainRouter.popBackStack() }
-        assertFalse(vm.state.migrating)
-        assertFalse(vm.state.checkNeedsNetwork)
         // Coming back online answers it in the background; nothing navigates again.
         connection.value = true
         networkAnswer.complete(true)

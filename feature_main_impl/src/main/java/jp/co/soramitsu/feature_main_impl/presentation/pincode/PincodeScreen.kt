@@ -72,7 +72,6 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import jp.co.soramitsu.common.presentation.compose.neon.ProtectWalletSecrets
 import jp.co.soramitsu.common.presentation.compose.neon.NeumorphicSurface
-import jp.co.soramitsu.common.presentation.compose.neon.safemode.AccountCheckProgress
 import jp.co.soramitsu.common.presentation.compose.neon.safemode.LegacyPinUpgradePanel
 import jp.co.soramitsu.common.presentation.compose.neon.safemode.SafeModeScreen
 import jp.co.soramitsu.common.presentation.compose.theme.neon.LocalFx
@@ -95,23 +94,11 @@ fun PincodeScreen(
     onBiometricClick: () -> Unit,
     onDeleteClick: () -> Unit,
     onWrongPinAnimationEnd: () -> Unit,
-    onSwitchNode: () -> Unit,
     onNewPinContinue: () -> Unit = {},
-    onGetHelp: () -> Unit = {},
 ) {
     ProtectWalletSecrets()
     if (pinCodeScreenState.isLengthInfoAlertVisible) {
         SafeModeScreen { LegacyPinUpgradePanel(onContinue = onNewPinContinue) }
-        return
-    }
-    if (pinCodeScreenState.migrating) {
-        AccountCheckProgress(
-            connected = pinCodeScreenState.isConnected,
-            needsNetwork = pinCodeScreenState.checkNeedsNetwork,
-            onSwitchNode = onSwitchNode,
-            onGetHelp = onGetHelp,
-            silentMillis = 0,
-        )
         return
     }
     val n = MaterialTheme.neon

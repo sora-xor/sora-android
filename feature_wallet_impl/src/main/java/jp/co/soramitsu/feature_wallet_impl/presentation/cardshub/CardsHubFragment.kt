@@ -47,15 +47,8 @@ import jp.co.soramitsu.common.base.theOnlyRoute
 import jp.co.soramitsu.common.domain.BottomBarController
 import jp.co.soramitsu.common.presentation.compose.neon.safemode.ReadOnlyBanner
 import jp.co.soramitsu.common.presentation.compose.neon.safemode.ReadOnlyLearnMoreSheet
-import jp.co.soramitsu.common.presentation.compose.neon.safemode.UpgradeCompleteChecks
-import jp.co.soramitsu.common.presentation.compose.neon.safemode.UpgradeCompleteSheet
-import jp.co.soramitsu.common.presentation.compose.neon.safemode.UpgradeWelcome
-import jp.co.soramitsu.common.presentation.compose.neon.safemode.WalletSessionState
 import jp.co.soramitsu.common.presentation.compose.neon.safemode.WalletUpgradeRetry
 import jp.co.soramitsu.common.presentation.compose.neon.safemode.rememberReadOnlyBrowsing
-import jp.co.soramitsu.common.presentation.compose.neon.safemode.rememberWalletReadOnly
-import jp.co.soramitsu.common_wallet.presentation.compose.states.BackupWalletState
-import jp.co.soramitsu.common_wallet.presentation.compose.states.CardsState
 import jp.co.soramitsu.feature_wallet_impl.presentation.portfolio.PortfolioRoutes
 import jp.co.soramitsu.feature_wallet_impl.presentation.portfolio.PortfolioViewModel
 
@@ -148,7 +141,6 @@ class CardsHubFragment : SoraBaseFragment<CardsHubViewModel>() {
                     viewModel.nexusPortfolio.collectAsStateWithLifecycle().value
                 val sora2Portfolio =
                     viewModel.sora2Portfolio.collectAsStateWithLifecycle().value
-                UpgradeSheets(state = state, onBackUpNow = viewModel::onBackupBannerClick)
                 PortfolioHomeHost(
                     scrollState = homeScrollState,
                     navController = navController,
@@ -205,39 +197,4 @@ internal fun ReadOnlyHomeBanner() {
             onClose = { learnMore = false },
         )
     }
-}
-
-/**
- * U11 (design spec 9.2, 9.1-7): once, after the upgrade succeeded, after the PIN and never in
- * read-only mode. Each tick is a real check: the selected account exists on this device, the
- * wallet was unlocked with the PIN, and the balance list has loaded. When some accounts cannot
- * sign on this phone, the sheet says how many can and how to repair the others.
- */
-@Composable
-private fun UpgradeSheets(state: CardsState, onBackUpNow: () -> Unit) {
-    val context = LocalContext.current
-    var pending by remember { mutableStateOf(UpgradeWelcome.isPending(context)) }
-    val unlocked by WalletSessionState.unlocked.collectAsStateWithLifecycle()
-    val readOnly = rememberWalletReadOnly()
-    // The account counts are read first, so the sheet never claims more than was checked.
-    if (!pending || !unlocked || readOnly || state.accountAddress.isBlank() || state.accountCount == 0) return
-    UpgradeCompleteSheet(
-        checks = UpgradeCompleteChecks(
-            accountsOnDevice = true,
-            protectedByPin = true,
-            balancesLoaded = !state.loading,
-            needsBackup = state.cards.any { it is BackupWalletState },
-            accountCount = state.accountCount,
-            signingAccountCount = state.signingAccountCount,
-        ),
-        onBackUpNow = {
-            UpgradeWelcome.markDone(context)
-            pending = false
-            onBackUpNow()
-        },
-        onClose = {
-            UpgradeWelcome.markDone(context)
-            pending = false
-        },
-    )
 }

@@ -57,7 +57,6 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.LayoutDirection
-import androidx.core.content.edit
 import androidx.core.net.toUri
 import androidx.compose.ui.unit.dp
 import jp.co.soramitsu.common.R
@@ -120,26 +119,6 @@ object WalletSessionState {
 
     fun markReturnedFromBackground() {
         returnsFromBackground++
-    }
-}
-
-/**
- * Compatibility gate for the former automatic upgrade-complete sheet. A successful update
- * now opens the wallet immediately after its normal PIN unlock, without an acknowledgement.
- * Explicit safety-surface previews and the legacy UI marker remain available.
- */
-object UpgradeWelcome {
-    private const val FILE = "sora_upgrade_welcome"
-    private const val KEY_DONE = "upgrade_welcome_3_9_done"
-
-    /** Existing home routes must never turn an app update into a confirmation step. */
-    fun isPending(@Suppress("UNUSED_PARAMETER") context: Context): Boolean = false
-
-    /** Shown, or not needed (a new wallet set up on this version). */
-    fun markDone(context: Context) {
-        runCatching {
-            context.getSharedPreferences(FILE, Context.MODE_PRIVATE).edit { putBoolean(KEY_DONE, true) }
-        }
     }
 }
 
@@ -345,119 +324,6 @@ fun LegacyPinUpgradePanel(onContinue: () -> Unit, modifier: Modifier = Modifier)
             variant = NeonVariant.Safe,
             onClick = onContinue,
         )
-    }
-}
-
-/**
- * The real checks behind the upgrade-complete sheet (U11). A row shows ✓ only when its check is
- * true; [balancesLoaded] false shows a running row ("Loading balances") instead.
- */
-data class UpgradeCompleteChecks(
-    val accountsOnDevice: Boolean,
-    val protectedByPin: Boolean,
-    val balancesLoaded: Boolean,
-    val needsBackup: Boolean,
-    /** Accounts listed in the app. 0 when the count is not known. */
-    val accountCount: Int = 0,
-    /**
-     * How many of them can sign on this phone. When it is lower than [accountCount] the sheet
-     * says so instead of showing a plain tick, and says how to repair the others.
-     */
-    val signingAccountCount: Int = 0,
-) {
-    /**
-     * A person with several accounts can hold a JSON backup file of several accounts made by an
-     * earlier version. Built for release (minified), the code up to 3.8.6.3 writes that file
-     * without its content (see `JsonAccountsEncoder.generate`), so the sheet asks for a new
-     * export. The app cannot know whether such a file was made, so the note is shown to
-     * everyone it can concern: people with two or more accounts.
-     */
-    val mayHoldEmptyBatchExport: Boolean get() = accountCount >= BATCH_EXPORT_MIN_ACCOUNTS
-
-    private companion object {
-        const val BATCH_EXPORT_MIN_ACCOUNTS = 2
-    }
-}
-
-/**
- * U11 (design spec 9.2, 9.1-7): shown once, only after a successful upgrade, never over the PIN
- * and never in read-only mode (the caller decides when).
- */
-@Composable
-fun UpgradeCompleteSheet(
-    checks: UpgradeCompleteChecks,
-    onBackUpNow: () -> Unit,
-    onClose: () -> Unit,
-) {
-    val n = MaterialTheme.neon
-    SafeSheet(
-        title = stringResource(R.string.safe_mode_whats_new_title),
-        onClose = onClose,
-        footer = {
-            if (checks.needsBackup) {
-                SafeAction(
-                    text = stringResource(R.string.safe_mode_back_up_now),
-                    variant = NeonVariant.Safe,
-                    onClick = onBackUpNow,
-                )
-                SafeAction(
-                    text = stringResource(R.string.safe_mode_later),
-                    variant = NeonVariant.Tertiary,
-                    onClick = onClose,
-                )
-            } else {
-                SafeAction(
-                    text = stringResource(R.string.common_continue),
-                    variant = NeonVariant.Safe,
-                    onClick = onClose,
-                )
-            }
-        },
-    ) {
-        Text(
-            text = stringResource(R.string.safe_mode_whats_new_body),
-            style = MaterialTheme.customTypography.paragraphM,
-            color = n.textSecondary,
-        )
-        val steps = buildList {
-            if (checks.accountsOnDevice) {
-                add(SafeStep(stringResource(R.string.safe_mode_whats_new_accounts), SafeStepState.DONE))
-            }
-            if (checks.signingAccountCount < checks.accountCount) {
-                add(
-                    SafeStep(
-                        stringResource(
-                            R.string.safe_mode_whats_new_accounts_some_read_only,
-                            checks.signingAccountCount.toString(),
-                            checks.accountCount.toString(),
-                        ),
-                        SafeStepState.NEEDS_ACTION,
-                    ),
-                )
-            }
-            if (checks.protectedByPin) {
-                add(SafeStep(stringResource(R.string.safe_mode_whats_new_pin), SafeStepState.DONE))
-            }
-            add(
-                if (checks.balancesLoaded) {
-                    SafeStep(stringResource(R.string.safe_mode_whats_new_balances), SafeStepState.DONE)
-                } else {
-                    SafeStep(stringResource(R.string.safe_mode_whats_new_balances_loading), SafeStepState.RUNNING)
-                },
-            )
-            if (checks.needsBackup) {
-                add(SafeStep(stringResource(R.string.safe_mode_whats_new_backup), SafeStepState.NEEDS_ACTION))
-            }
-            if (checks.mayHoldEmptyBatchExport) {
-                add(
-                    SafeStep(
-                        stringResource(R.string.safe_mode_whats_new_batch_export),
-                        SafeStepState.NEEDS_ACTION,
-                    ),
-                )
-            }
-        }
-        StepList(steps)
     }
 }
 

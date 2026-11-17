@@ -43,7 +43,6 @@ import jp.co.soramitsu.feature_main_impl.domain.MainInteractor
 import jp.co.soramitsu.feature_main_impl.domain.PinCodeInteractor
 import jp.co.soramitsu.feature_main_impl.domain.WalletRemovalBriefing
 import jp.co.soramitsu.feature_select_node_api.SelectNodeRouter
-import jp.co.soramitsu.sora.substrate.substrate.ConnectionManager
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -96,9 +95,6 @@ class PinCodeViewModelTest {
     lateinit var selectNodeRouter: SelectNodeRouter
 
     @Mock
-    lateinit var connectionManager: ConnectionManager
-
-    @Mock
     lateinit var progress: WithProgress
 
     @Mock
@@ -123,7 +119,6 @@ class PinCodeViewModelTest {
         given(resourceManager.getString(R.string.pincode_confirm_your_pin_code)).willReturn(
             confirmTitle
         )
-        given(connectionManager.connectionState).willReturn(connected)
 
         given(interactor.isBiometryEnabled()).willReturn(true)
         given(interactor.needsMigration()).willReturn(false)
@@ -139,7 +134,6 @@ class PinCodeViewModelTest {
                 selectNodeRouter,
                 progress,
                 vibrator,
-                connectionManager,
                 biometricGate,
             )
     }
@@ -441,7 +435,7 @@ class PinCodeViewModelTest {
     /** The screen as the app builds it: with the phone's screen lock to ask. */
     private fun viewModelWithScreenLock() = PinCodeViewModel(
         interactor, mainInteractor, mainRouter, resourceManager, selectNodeRouter, progress,
-        vibrator, connectionManager, biometricGate, null, phoneScreenLock,
+        vibrator, biometricGate, null, phoneScreenLock,
     )
 
     private fun PinCodeViewModel.countScreenLockPrompts(): () -> Int {
@@ -692,8 +686,6 @@ class PinCodeViewModelTest {
         verify(interactor, times(2)).checkPin("123456")
         verify(mainRouter).popBackStack()
         verify(interactor).needsMigration()
-        assertEquals(false, pinCodeViewModel.state.migrating)
-        assertEquals(false, pinCodeViewModel.state.checkNeedsNetwork)
     }
 
     @Test
@@ -709,7 +701,6 @@ class PinCodeViewModelTest {
         advanceUntilIdle()
         verify(interactor).savePin("123456")
         verify(mainRouter).popBackStack()
-        assertEquals(false, pinCodeViewModel.state.migrating)
     }
 
     @Test
@@ -1481,7 +1472,6 @@ class PinCodeViewModelTest {
         advanceUntilIdle()
         verify(mainRouter).popBackStack()
         verify(mainRouter, never()).showClaim()
-        assertFalse(pinCodeViewModel.state.migrating)
     }
 
     @Test fun `migration check failure leaves optional claim for next unlock and opens wallet`() = runTest {
@@ -1545,8 +1535,6 @@ class PinCodeViewModelTest {
         assertFalse(pinCodeViewModel.state.isBiometricButtonVisible)
         pinCodeViewModel.changeFingerPrintButtonVisibility(true)
         assertFalse(pinCodeViewModel.state.isBiometricButtonVisible)
-        pinCodeViewModel.onSwitchNode()
-        verify(selectNodeRouter).showSelectNode()
         pinCodeViewModel.popBackToAccountList()
         verify(mainRouter).popBackStackToAccountList()
     }

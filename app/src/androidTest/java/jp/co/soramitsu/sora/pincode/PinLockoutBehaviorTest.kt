@@ -14,8 +14,6 @@ import jp.co.soramitsu.feature_main_impl.domain.MainInteractor
 import jp.co.soramitsu.feature_main_impl.domain.PinCodeInteractor
 import jp.co.soramitsu.feature_main_impl.presentation.pincode.PinCodeViewModel
 import jp.co.soramitsu.feature_select_node_api.SelectNodeRouter
-import jp.co.soramitsu.sora.substrate.substrate.ConnectionManager
-import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.Test
 import org.junit.Assert.*
 import org.junit.runner.RunWith
@@ -39,9 +37,8 @@ class PinLockoutBehaviorTest {
             every { getString(any()) } answers { instrumentation.targetContext.getString(firstArg()) }
             every { getString(R.string.pin_locked_for_title, any()) } returns "Locked"
         }
-        val connection = mockk<ConnectionManager> { every { connectionState } returns MutableStateFlow(true) }
         return PinCodeViewModel(interactor, mockk<MainInteractor>(relaxed = true), mockk<MainRouter>(relaxed = true), resource,
-            mockk<SelectNodeRouter>(relaxed = true), mockk<WithProgress>(relaxed = true), mockk<DeviceVibrator>(relaxed = true), connection)
+            mockk<SelectNodeRouter>(relaxed = true), mockk<WithProgress>(relaxed = true), mockk<DeviceVibrator>(relaxed = true))
     }
     @Test fun eachPersistedLockoutDurationBlocksDigitsUntilItsRealTimerExpires() {
         for ((attempts, minutes) in listOf(3 to 1, 4 to 5, 5 to 15, 6 to 30)) {

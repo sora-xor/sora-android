@@ -6,9 +6,6 @@ import jp.co.soramitsu.sora.testutil.NativeDisplayCapture
 
 import android.app.Activity
 import android.app.Instrumentation
-import android.content.ClipData
-import android.content.ClipboardManager
-import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Color
@@ -41,7 +38,6 @@ import jp.co.soramitsu.feature_multiaccount_impl.presentation.OnboardingActivity
 import jp.co.soramitsu.feature_wallet_impl.data.nexus.*
 import jp.co.soramitsu.feature_wallet_impl.domain.CardsHubInteractorImpl
 import jp.co.soramitsu.feature_wallet_impl.presentation.cardshub.*
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.runBlocking
@@ -504,13 +500,6 @@ class WalletUxAcceptanceTest {
                     }
                     found
                 }
-                // The device may not reach the selected RPC. Supply only the connection
-                // observation to the actual PIN model; its local migration admission still runs.
-                instrumentation.runOnMainSync {
-                    val delegate = pin.viewModel.javaClass.getDeclaredField("state\$delegate")
-                        .apply { isAccessible = true }.get(pin.viewModel) as MutableState<jp.co.soramitsu.feature_main_impl.presentation.pincode.PinCodeScreenState>
-                    delegate.value = delegate.value.copy(isConnected = true)
-                }
                 repeat(2) {
                     instrumentation.runOnMainSync {
                         repeat(pin.viewModel.state.maxDotsCount) { pin.viewModel.pinCodeNumberClicked("1") }
@@ -521,8 +510,6 @@ class WalletUxAcceptanceTest {
                 // fully instrumented suite on a busy host; it took 28 s for the whole class alone.
                 waitUntil(timeoutMillis = 60_000) { findText("Wallet") != null }
                 capture("normal-sample-wallet-home")
-                // A wallet set up on this version never gets the one-time upgrade-complete sheet.
-                assertNull(findText(context.getString(jp.co.soramitsu.common.R.string.safe_mode_whats_new_title)))
                 instrumentation.runOnMainSync {
                     val fab = main.findViewById<android.view.View>(jp.co.soramitsu.feature_main_impl.R.id.fabMain)
                     val location = IntArray(2); fab.getLocationOnScreen(location)

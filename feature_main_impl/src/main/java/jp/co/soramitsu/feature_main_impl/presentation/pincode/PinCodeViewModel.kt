@@ -54,14 +54,11 @@ import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_main_impl.domain.MainInteractor
 import jp.co.soramitsu.feature_main_impl.domain.PinCodeInteractor
 import jp.co.soramitsu.feature_select_node_api.SelectNodeRouter
-import jp.co.soramitsu.sora.substrate.substrate.ConnectionManager
 import kotlin.coroutines.EmptyCoroutineContext
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
 @HiltViewModel
@@ -73,7 +70,6 @@ class PinCodeViewModel @Inject constructor(
     private val selectNodeRouter: SelectNodeRouter,
     private val progress: WithProgress,
     private val deviceVibrator: DeviceVibrator,
-    connectionManager: ConnectionManager,
     private val biometricGate: BiometricUnlockGate = BiometricUnlockGate(),
     /** Runs the claim check after the PIN screen has closed; null in tests (the screen's scope). */
     private val coroutineManager: CoroutineManager? = null,
@@ -170,15 +166,6 @@ class PinCodeViewModel @Inject constructor(
 
             }
         }
-
-        connectionManager.connectionState
-            .catch { onError(it) }
-            .onEach {
-                state = state.copy(
-                    isConnected = it
-                )
-            }
-            .launchIn(viewModelScope)
 
         viewModelScope.launch {
             tryCatch {
@@ -944,10 +931,6 @@ class PinCodeViewModel @Inject constructor(
                 proceed()
             }
         }
-    }
-
-    fun onSwitchNode() {
-        selectNodeRouter.showSelectNode()
     }
 
     private var proceeded = false

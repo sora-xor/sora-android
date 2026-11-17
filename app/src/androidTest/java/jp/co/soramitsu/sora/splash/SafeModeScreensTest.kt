@@ -39,8 +39,6 @@ import androidx.compose.ui.test.performScrollTo
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import jp.co.soramitsu.common.presentation.compose.neon.safemode.SafeModeTags
-import jp.co.soramitsu.common.presentation.compose.neon.safemode.UpgradeCompleteChecks
-import jp.co.soramitsu.common.presentation.compose.neon.safemode.UpgradeCompleteSheet
 import jp.co.soramitsu.common.presentation.compose.theme.SoraAppTheme
 import jp.co.soramitsu.sora.R
 import jp.co.soramitsu.sora.debug.SafeModePreview
@@ -193,18 +191,6 @@ class SafeModeScreensTest {
     }
 
     @Test
-    fun waitingForNetworkOffersChangeNode() {
-        rule.setContent {
-            SoraAppTheme(darkTheme = true) {
-                SafeModePreview(SafeModePreviewState.U2_WAITING_FOR_NETWORK)
-            }
-        }
-        rule.onNodeWithText(context.getString(CommonR.string.safe_mode_step_network_waiting)).assertExists()
-        rule.onNode(hasText(context.getString(CommonR.string.safe_mode_change_node)).and(hasClickAction()))
-            .performScrollTo().assertIsEnabled()
-    }
-
-    @Test
     fun aRestoreWaitingForARestartOffersTheRestartAndNoOtherRestore() {
         rule.setContent {
             SoraAppTheme(darkTheme = true) {
@@ -276,51 +262,6 @@ class SafeModeScreensTest {
         rule.onNodeWithText(context.getString(R.string.recovery_wallet_older)).assertDoesNotExist()
         rule.onNodeWithText(context.getString(R.string.recovery_phrase_unchecked)).assertDoesNotExist()
         rule.onAllNodesWithText(SafeModePreviewData.samplePhrase.first(), substring = true).assertCountEquals(0)
-    }
-
-    @Test
-    fun upgradeSheetAsksPeopleWithSeveralAccountsForANewBatchBackupFile() {
-        var accounts by mutableStateOf(2)
-        rule.setContent {
-            SoraAppTheme(darkTheme = true) {
-                UpgradeCompleteSheet(
-                    checks = UpgradeCompleteChecks(
-                        accountsOnDevice = true,
-                        protectedByPin = true,
-                        balancesLoaded = true,
-                        needsBackup = false,
-                        accountCount = accounts,
-                        signingAccountCount = accounts,
-                    ),
-                    onBackUpNow = {},
-                    onClose = {},
-                )
-            }
-        }
-        val note = context.getString(CommonR.string.safe_mode_whats_new_batch_export)
-        // Several accounts: a batch backup file made by an earlier version can be empty.
-        rule.onNodeWithText(context.getString(CommonR.string.safe_mode_whats_new_title)).assertExists()
-        rule.onNodeWithText(note).assertExists()
-        rule.onNodeWithText(context.getString(CommonR.string.common_continue)).assertExists()
-
-        // One account cannot have made such a file: nothing is asked.
-        accounts = 1
-        rule.waitForIdle()
-        rule.onNodeWithText(context.getString(CommonR.string.safe_mode_whats_new_title)).assertExists()
-        rule.onNodeWithText(note).assertDoesNotExist()
-    }
-
-    @Test
-    fun offlineCheckOnThePhoneNeverSaysItWaitsForTheNetwork() {
-        rule.setContent {
-            SoraAppTheme(darkTheme = true) {
-                SafeModePreview(SafeModePreviewState.U1_PIN_CHECK_OFFLINE)
-            }
-        }
-        rule.onNodeWithText(context.getString(CommonR.string.safe_mode_checking_title)).assertExists()
-        rule.onNodeWithText(context.getString(CommonR.string.safe_mode_step_network_waiting)).assertDoesNotExist()
-        rule.onNodeWithText(context.getString(CommonR.string.safe_mode_waiting_network_body)).assertDoesNotExist()
-        rule.onNodeWithText(context.getString(CommonR.string.safe_mode_change_node)).assertDoesNotExist()
     }
 
     @Test

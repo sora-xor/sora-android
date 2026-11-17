@@ -12,10 +12,8 @@ import jp.co.soramitsu.feature_main_api.domain.model.PinCodeAction
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_main_impl.domain.PinCodeInteractor
 import jp.co.soramitsu.feature_main_impl.domain.WalletRemovalBriefing
-import jp.co.soramitsu.sora.substrate.substrate.ConnectionManager
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -36,16 +34,13 @@ class PinCodeRemovalLifecycleTest {
         coEvery { it.isBiometryEnabled() } returns false
         coEvery { it.walletRemovalBriefing(listOf("wallet")) } coAnswers { pendingBriefing.await() }
     }
-    private val connection = mockk<ConnectionManager>().also {
-        every { it.connectionState } returns MutableStateFlow(true)
-    }
     private val resources = mockk<ResourceManager>().also {
         every { it.getString(any()) } returns "Enter your PIN"
     }
     private val viewModel by lazy {
         PinCodeViewModel(
             interactor, mockk(relaxed = true), router, resources, mockk(relaxed = true),
-            mockk(relaxed = true), mockk(relaxed = true), connection, mockk(relaxed = true),
+            mockk(relaxed = true), mockk(relaxed = true), mockk(relaxed = true),
         )
     }
 
