@@ -19,6 +19,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import io.mockk.*
 import jp.co.soramitsu.androidfoundation.fragment.SingleLiveEvent
 import jp.co.soramitsu.common.account.WalletRecoveryCapabilityGate
+import jp.co.soramitsu.common.account.WalletStartupPass
 import jp.co.soramitsu.common.presentation.compose.neon.safemode.WalletUpgradeRetry
 import jp.co.soramitsu.core_db.*
 import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
@@ -292,6 +293,25 @@ class SplashActivityFlowTest {
         instrumentation.runOnMainSync { recovery.value = WalletMigrationRecoveryUiState("FIXTURE_VERIFY", true, options) }; drainMainQueue()
         verify { safeModel.showPanel("FIXTURE_VERIFY", options, true, unattended = false) }
         verify(exactly = 0) { safeModel.showPanel(any(), any(), any(), unattended = true) }
+    }
+    // The wallet's main screen opens only in a process that came through this screen
+    // (WalletStartupPass); the pass is given at the moment the wallet or onboarding opens.
+    @Test fun thePassIsGivenWhenTheWalletOpensAndNotWhileAStartIsHeldAtRecovery() {
+        WalletStartupPass.revokeForTest()
+        launch(); assertFalse(WalletStartupPass.isGranted())
+        every { WalletUpgradeBackup.blockingFailure() } returns WalletUpgradeBackup.Failure("FIXTURE_BLOCKED")
+        instrumentation.runOnMainSync { main.value = Unit }; drainMainQueue()
+        instrumentation.runOnMainSync { recovery.value = WalletMigrationRecoveryUiState("FIXTURE_VERIFY", false) }; drainMainQueue()
+        assertFalse(WalletStartupPass.isGranted())
+        every { WalletUpgradeBackup.blockingFailure() } returns null
+        instrumentation.runOnMainSync { main.value = Unit }; drainMainQueue()
+        assertTrue(WalletStartupPass.isGranted())
+        verify(exactly = 1) { mainStarter.start(any()) }
+    }
+    @Test fun thePassIsGivenWhenOnboardingOpens() {
+        WalletStartupPass.revokeForTest()
+        launch(); instrumentation.runOnMainSync { onboarding.value = OnboardingState.INITIAL }; drainMainQueue()
+        assertTrue(WalletStartupPass.isGranted())
     }
     @Test fun completedProgressTickDefersMainNavigationBriefly() {
         launch(); every { safeModel.markProgressFinished() } returns true

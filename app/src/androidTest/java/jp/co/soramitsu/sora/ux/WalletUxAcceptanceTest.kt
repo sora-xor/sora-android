@@ -459,6 +459,10 @@ class WalletUxAcceptanceTest {
         val previousDisclaimer = runBlocking { preferences.getBooleanSnapshot(setOf(disclaimerKey))[disclaimerKey] }
         runBlocking { preferences.putBoolean(disclaimerKey, true) }
         var createdMain: jp.co.soramitsu.feature_main_impl.presentation.MainActivity? = null
+        // Onboarding is opened here directly; in the app the startup screen opens it and gives
+        // this process its pass then, so the main screen that follows opens in place.
+        val passBefore = jp.co.soramitsu.common.account.WalletStartupPass.isGranted()
+        jp.co.soramitsu.common.account.WalletStartupPass.grant()
         try {
             ActivityScenario.launch(OnboardingActivity::class.java).use { scenario ->
                 waitUntil { findText("Create account") != null }
@@ -544,6 +548,7 @@ class WalletUxAcceptanceTest {
             }
         } finally {
             instrumentation.runOnMainSync { createdMain?.finish() }
+            if (!passBefore) jp.co.soramitsu.common.account.WalletStartupPass.revokeForTest()
             runBlocking {
                 if (previousDisclaimer == null) preferences.clear(disclaimerKey)
                 else preferences.putBoolean(disclaimerKey, previousDisclaimer)

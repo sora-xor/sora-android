@@ -35,6 +35,18 @@ class WalletEntryIntentContractTest {
         assertEquals("jp.co.soramitsu.feature_main_impl.ACTION_INVITE", context.started.action)
         assertNotNull(context.options)
     }
+    // A pinned task (screen pinning, lock task mode) can be neither left nor cleared: the wallet
+    // opens in it on top of the startup screen, which closes. Otherwise the start stays where it is.
+    @Test fun aPinnedTaskOpensTheWalletInItselfAndClosesTheScreenThatOpenedIt() {
+        val startup = io.mockk.mockk<android.app.Activity>(relaxed = true)
+        MainActivity.start(context, pinnedTask = startup)
+        assertEquals(MainActivity::class.java.name, context.started.component!!.className)
+        assertEquals(0, context.started.flags); assertNull(context.started.action); assertNotNull(context.options)
+        io.mockk.verify(exactly = 1) { startup.finish() }
+        // Not pinned (or not started from a screen): a task of its own, as on every start.
+        MainActivity.start(context, pinnedTask = null)
+        assertEquals(clearTask, context.started.flags)
+    }
     @Test fun languageAndNewAccountRestartsCarryDistinctActionsInANewTask() {
         MainActivity.restartAfterLanguageChange(context)
         assertEquals(clearTask, context.started.flags)

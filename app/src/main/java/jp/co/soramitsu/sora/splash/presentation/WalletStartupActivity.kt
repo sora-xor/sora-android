@@ -51,6 +51,7 @@ import java.io.File
 import javax.inject.Inject
 import jp.co.soramitsu.androidfoundation.intent.restartApplication
 import jp.co.soramitsu.common.account.WalletRecoveryCapabilityGate
+import jp.co.soramitsu.common.account.WalletStartupPass
 import jp.co.soramitsu.common.domain.DarkThemeManager
 import jp.co.soramitsu.common.presentation.compose.neon.safemode.TechnicalDetail
 import jp.co.soramitsu.common.presentation.compose.neon.safemode.WalletUpgradeRetry
@@ -384,6 +385,8 @@ class WalletStartupActivity : AppCompatActivity() {
      */
     private fun afterVerification(navigate: () -> Unit) {
         progressWatchdog?.cancel()
+        // This process has been through the startup checks: the wallet's main screen may open.
+        WalletStartupPass.grant()
         safeModeViewModel.onVerificationRouted()
         if (safeModeViewModel.markProgressFinished()) {
             lifecycleScope.launch {

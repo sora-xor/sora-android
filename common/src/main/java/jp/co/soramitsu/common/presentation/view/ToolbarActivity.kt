@@ -33,7 +33,19 @@ abstract class ToolbarActivity<T : BaseViewModel, VB : ViewBinding> : AppCompatA
 
     protected lateinit var binding: VB
 
+    /**
+     * Asked before anything of this screen is made or restored. False when the screen must not
+     * start here; the implementation has then sent the person on and finished this activity,
+     * and no view, fragment or view model is created.
+     */
+    protected open fun mayStart(): Boolean = true
+
     override fun onCreate(savedInstanceState: Bundle?) {
+        if (!mayStart()) {
+            // No saved state either: none of the old screens comes back.
+            super.onCreate(null)
+            return
+        }
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
         binding = layoutResource()

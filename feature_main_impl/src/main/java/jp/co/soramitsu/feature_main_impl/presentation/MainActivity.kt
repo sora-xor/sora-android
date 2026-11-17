@@ -23,6 +23,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import jp.co.soramitsu.ui_core.lit.LitDome
 import jp.co.soramitsu.ui_core.sacred.TenmonFlight
+import android.app.Activity
+import android.app.ActivityManager
 import android.app.ActivityOptions
 import android.content.ComponentCallbacks2
 import android.content.Context
@@ -48,6 +50,7 @@ import dev.chrisbanes.insetter.applyInsetter
 import dev.chrisbanes.insetter.windowInsetTypesOf
 import java.util.Date
 import javax.inject.Inject
+import jp.co.soramitsu.common.account.WalletStartupPass
 import jp.co.soramitsu.common.domain.BarsColorHandler
 import jp.co.soramitsu.common.domain.BottomBarController
 import jp.co.soramitsu.common.domain.DarkThemeManager
@@ -101,9 +104,17 @@ class MainActivity :
         private const val ANIM_DURATION = 150L
         private const val REQUEST_CODE_UPDATE = 1233
 
-        fun start(context: Context) {
+        fun start(context: Context) = start(context, pinnedTask = pinnedScreen(context))
+
+        /**
+         * Opens the wallet in a task of its own. [pinnedTask] is the screen that opens it when
+         * its task is pinned (screen pinning, lock task mode): such a task can be neither left
+         * nor cleared, so the wallet opens on top in it and that screen closes. Without this a
+         * pinned app that the startup screen checked again stayed on the startup screen.
+         */
+        fun start(context: Context, pinnedTask: Activity?) {
             val intent = Intent(context, MainActivity::class.java).apply {
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                flags = if (pinnedTask != null) 0 else Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             }
             val options = ActivityOptions.makeCustomAnimation(
                 context,
@@ -111,6 +122,13 @@ class MainActivity :
                 android.R.anim.fade_out
             )
             context.startActivity(intent, options.toBundle())
+            pinnedTask?.finish()
+        }
+
+        private fun pinnedScreen(context: Context): Activity? {
+            val activity = context as? Activity ?: return null
+            val state = activity.getSystemService(ActivityManager::class.java)?.lockTaskModeState
+            return activity.takeIf { state != null && state != ActivityManager.LOCK_TASK_MODE_NONE }
         }
 
         fun startWithInvite(context: Context) {
@@ -171,6 +189,22 @@ class MainActivity :
     override fun layoutResource() = ActivityMainBinding.inflate(layoutInflater)
 
     private var restoredFromSavedState = false
+
+    /**
+     * The wallet opens only in a process that came through the startup screen
+     * ([WalletStartupPass]). Android can start this screen directly in a new process: the task
+     * comes back from Recents after an update, or is restored after the process was killed. Such
+     * a start goes to the startup screen first, exactly like a start from the launcher, so the
+     * upgrade checks, the wallet verification and its repairs cannot be skipped. The PIN is
+     * asked there as on every start; a restart that would have skipped it is not honoured.
+     */
+    override fun mayStart(): Boolean {
+        if (WalletStartupPass.isGranted()) return true
+        TrustedMainRestart.consume(intent?.action)
+        WalletStartupPass.openStartup(this)
+        finish()
+        return false
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         restoredFromSavedState = savedInstanceState != null
