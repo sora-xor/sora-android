@@ -121,7 +121,7 @@ dependencies {
             because("Fix insecure temporary-directory handling (CVE-2023-2976)")
         }
     }
-    api(project(":network"))
+    api(libs.xnetworkingLibDep)
 
     implementation(libs.activityKtxDep)
     implementation(libs.coreKtxDep)

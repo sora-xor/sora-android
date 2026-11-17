@@ -68,7 +68,6 @@ dependencies {
     implementation(project(":sorasubstrate"))
     implementation(project(":feature_wallet_api"))
     implementation(project(":feature_blockexplorer_api"))
-    implementation(project(":network"))
 
     implementation(libs.navigationFragmentDep)
     implementation(libs.navigationUiDep)

@@ -79,7 +79,6 @@ dependencies {
     implementation(project(":feature_referral_api"))
     implementation(project(":feature_blockexplorer_api"))
     implementation(project(":sorasubstrate"))
-    implementation(project(":network"))
 
     implementation(libs.appcompatDep)
     implementation(libs.materialDep)

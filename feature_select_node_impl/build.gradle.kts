@@ -75,7 +75,6 @@ dependencies {
     implementation(project(":feature_blockexplorer_api"))
     implementation(project(":core_db"))
     implementation(project(":sorasubstrate"))
-    implementation(project(":network"))
 
     implementation(libs.appcompatDep)
     implementation(libs.materialDep)

@@ -71,7 +71,6 @@ android {
 dependencies {
     implementation(project(":common"))
     implementation(project(":core_db"))
-    implementation(project(":network"))
 
     implementation(libs.appcompatDep)
     implementation(libs.materialDep)

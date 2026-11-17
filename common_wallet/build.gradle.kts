@@ -75,7 +75,6 @@ dependencies {
     implementation(project(":common"))
     implementation(project(":feature_blockexplorer_api"))
     implementation(project(":core_db"))
-    implementation(project(":network"))
 
     implementation(libs.coreKtxDep)
     implementation(libs.materialDep)

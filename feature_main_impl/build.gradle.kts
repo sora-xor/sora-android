@@ -76,7 +76,6 @@ dependencies {
     implementation(project(":feature_blockexplorer_api"))
     implementation(project(":feature_main_api"))
     implementation(project(":feature_account_api"))
-    implementation(project(":feature_ethereum_api"))
     implementation(project(":feature_wallet_api"))
     implementation(project(":feature_polkaswap_api"))
     implementation(project(":feature_multiaccount_api"))

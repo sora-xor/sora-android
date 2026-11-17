@@ -81,7 +81,6 @@ dependencies {
     implementation(project(":sorasubstrate"))
     implementation(project(":feature_main_api"))
     implementation(project(":feature_blockexplorer_api"))
-    implementation(project(":network"))
 
     implementation(project(":xsubstrate"))
     implementation(project(":xcrypto"))

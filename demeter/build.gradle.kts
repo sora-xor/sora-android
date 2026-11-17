@@ -77,7 +77,6 @@ dependencies {
     implementation(project(":feature_assets_api"))
     implementation(project(":feature_polkaswap_api"))
     implementation(project(":sorasubstrate"))
-    implementation(project(":network"))
 
     implementation(libs.timberDep)
 

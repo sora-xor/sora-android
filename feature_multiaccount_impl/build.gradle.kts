@@ -77,7 +77,6 @@ dependencies {
     implementation(project(":common"))
     implementation(project(":feature_assets_api"))
     implementation(project(":feature_account_api"))
-    implementation(project(":feature_ethereum_api"))
     implementation(project(":feature_wallet_api"))
     implementation(project(":feature_multiaccount_api"))
     implementation(project(":feature_main_api"))

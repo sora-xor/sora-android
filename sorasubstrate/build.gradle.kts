@@ -68,7 +68,6 @@ dependencies {
     implementation(project(":common_wallet"))
     implementation(project(":core_db"))
     implementation(project(":feature_blockexplorer_api"))
-    implementation(project(":network"))
 
     implementation(project(":xsubstrate"))
     implementation(project(":xcrypto"))

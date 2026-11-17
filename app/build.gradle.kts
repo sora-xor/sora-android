@@ -352,7 +352,6 @@ dependencies {
     implementation(project(":feature_referral_impl"))
     implementation(project(":feature_account_api"))
     implementation(project(":feature_account_impl"))
-    implementation(project(":feature_ethereum_api"))
     implementation(project(":feature_polkaswap_api"))
     implementation(project(":feature_polkaswap_impl"))
     implementation(project(":feature_wallet_api"))
@@ -363,7 +362,6 @@ dependencies {
     implementation(project(":feature_blockexplorer_impl"))
     implementation(project(":feature_ecosystem_impl"))
     implementation(project(":sorasubstrate"))
-    implementation(project(":network"))
 
     implementation(libs.appcompatDep)
     implementation(libs.appcompatResDep)
@@ -455,13 +453,11 @@ dependencies {
     kover(project(":feature_polkaswap_api"))
     kover(project(":feature_polkaswap_impl"))
     kover(project(":feature_referral_impl"))
-    kover(project(":feature_ethereum_api"))
     kover(project(":feature_wallet_api"))
     kover(project(":feature_wallet_impl"))
     kover(project(":feature_select_node_api"))
     kover(project(":feature_select_node_impl"))
     kover(project(":sorasubstrate"))
-    kover(project(":network"))
     kover(project(":xbackup"))
 }
 

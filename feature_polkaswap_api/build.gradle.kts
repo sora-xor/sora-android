@@ -68,7 +68,6 @@ dependencies {
     implementation(project(":common"))
     implementation(project(":common_wallet"))
     implementation(project(":sorasubstrate"))
-    implementation(project(":network"))
 
     implementation(project(":xsubstrate"))
 
