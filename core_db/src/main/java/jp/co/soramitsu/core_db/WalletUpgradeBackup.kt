@@ -6,6 +6,7 @@ import android.database.DatabaseErrorHandler
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteReadOnlyDatabaseException
 import android.os.Build
+import android.os.Looper
 import android.os.StatFs
 import android.system.ErrnoException
 import android.system.Os
@@ -351,12 +352,10 @@ object WalletUpgradeBackup {
                     }
                 }
                 performPendingSetUpAgain(applicationContext)
-                // An explicit reset/return must never be reversed by automatic recovery.
-                if (!hadExplicitRequest) {
-                    withDisposableStorageReclaimed(applicationContext, null) {
-                        repairLostDatabaseFromMatchingBackup(applicationContext)
-                    }.getOrThrow()
-                }
+                // An explicit reset/return must never be reversed by automatic recovery. Runs on
+                // the main thread at app start: a repair short of space stops here, with the
+                // database closed, and the storage step gives back cache on a worker (retry).
+                if (!hadExplicitRequest) repairLostDatabaseFromMatchingBackup(applicationContext)
             }
             setUpAgain.exceptionOrNull()?.let { error ->
                 preparedAdmission = null
@@ -452,10 +451,13 @@ object WalletUpgradeBackup {
                     return Result.failure(error)
                 }
         }
+        // Try again and the storage step run on a worker: here, and only here, cache is given
+        // back when the space is short ([withDisposableStorageReclaimed]).
         val result = prepareWithCapacityOverride(
             context = context,
             availableBackupBytesOverride = null,
             retainStartupAdmission = false,
+            reclaimDisposableStorage = true,
         )
         val failure = blockingFailure
         if (
@@ -764,7 +766,8 @@ object WalletUpgradeBackup {
     /**
      * As [prepareWithAvailableBackupBytesForTest], on a phone whose cache folder can still be
      * emptied: when [availableBackupBytes] is too little, the app's own cache is given back (as
-     * [prepare] does) and the check runs once more with what that really freed added.
+     * [retry] does, off the main thread only) and the check runs once more with what that really
+     * freed added.
      */
     @VisibleForTesting
     @Synchronized
@@ -778,6 +781,7 @@ object WalletUpgradeBackup {
             availableBackupBytesOverride = availableBackupBytes,
             beforeFinalSourceValidationForTest = null,
             retainStartupAdmission = false,
+            reclaimDisposableStorage = true,
         )
     }
 
@@ -801,6 +805,11 @@ object WalletUpgradeBackup {
      * bytes to assume: null for the real probe, or the test's figure, raised on the second run
      * by what was actually deleted. Wallet files, backups and files set aside by a repair are
      * never deleted to make room.
+     *
+     * Never on the main thread: walking the cache and `StorageManager.allocateBytes` can take
+     * long on a slow or full phone (Android requires a worker for the latter), and the app start
+     * prepares on the main thread. There the shortage is returned as it is, the database stays
+     * closed, and the storage step does this on a worker ([retry]).
      */
     private fun <T> withDisposableStorageReclaimed(
         context: Context,
@@ -810,6 +819,7 @@ object WalletUpgradeBackup {
         val first = runCatching { work(availableBackupBytesOverride) }
         val shortage = first.exceptionOrNull() ?: return first
         if (shortage.safeCode() !in STORAGE_SHORTAGE_CODES) return first
+        if (Looper.getMainLooper().isCurrentThread) return first
         fun freeNow(): Long = runCatching { StatFs(context.noBackupFilesDir.absolutePath).availableBytes }.getOrDefault(0L)
         val freeBefore = if (availableBackupBytesOverride == null) freeNow() else 0L
         val freed = runCatching {
@@ -840,7 +850,7 @@ object WalletUpgradeBackup {
         availableBackupBytesOverride: Long?,
         beforeFinalSourceValidationForTest: (() -> Unit)? = null,
         retainStartupAdmission: Boolean,
-        reclaimDisposableStorage: Boolean = true,
+        reclaimDisposableStorage: Boolean = false,
     ): Result<Unit> {
         preparedAdmission = null
         transientVerificationFailure = null

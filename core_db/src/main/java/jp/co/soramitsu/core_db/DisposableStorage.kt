@@ -91,12 +91,17 @@ internal object DisposableStorage {
 
     /**
      * Asks Android to make [bytes] free on the volume that holds [directory]. Android does that
-     * by clearing cached files (of any app; caches are disposable by contract). True when it
-     * says the space is there. Never throws; a phone that cannot do it answers false.
+     * by clearing cached files (of any app; caches are disposable by contract), this app's cache
+     * folder included. True when it says the space is there. Never throws; a phone that cannot
+     * do it answers false.
+     *
+     * Not asked while a recovery file the person made for support is in the cache folder
+     * ([holdsRecoveryExport]): Android's clearing does not know to keep it, and it may be on its
+     * way to another app. Only the app's own giving back ([reclaimCache], which keeps it) runs then.
      */
     fun askSystemFor(context: Context, directory: File, bytes: Long): Boolean = try {
         val storage = context.getSystemService(StorageManager::class.java)
-        if (storage == null || bytes <= 0L) {
+        if (storage == null || bytes <= 0L || holdsRecoveryExport(context.cacheDir)) {
             false
         } else {
             storage.allocateBytes(storage.getUuidForPath(directory), bytes)
@@ -106,4 +111,23 @@ internal object DisposableStorage {
         // IOException: not that much can be freed. Anything else: this phone cannot do it.
         false
     }
+
+    /**
+     * True when [cacheDirectory] holds a recovery file ([RECOVERY_EXPORTS]: a finished archive or
+     * one being written), or when that cannot be known.
+     */
+    fun holdsRecoveryExport(cacheDirectory: File): Boolean = runCatching {
+        val exports = File(cacheDirectory, RECOVERY_EXPORTS).toPath()
+        if (!Files.exists(exports, LinkOption.NOFOLLOW_LINKS)) return@runCatching false
+        Files.newDirectoryStream(exports).use { entries ->
+            entries.any { entry ->
+                val name = entry.fileName?.toString().orEmpty()
+                RECOVERY_ARCHIVE_PREFIXES.any(name::startsWith) &&
+                    Files.isRegularFile(entry, LinkOption.NOFOLLOW_LINKS)
+            }
+        }
+    }.getOrDefault(true)
+
+    /** The recovery archive, and its staging copy while it is written (`WalletUpgradeBackup`). */
+    private val RECOVERY_ARCHIVE_PREFIXES = listOf("sora-wallet-recovery-", ".sora-wallet-recovery-")
 }

@@ -241,6 +241,8 @@ class SafeModeLifecycleFlowTest {
         assertTrue(events.isEmpty()); verify(exactly = 0) { WalletUpgradeBackup.authorizeSafeReadOnly(any()) }
     }
     @Test fun storageKeysAndPendingRestoreNeverOpenReadOnlyByThemselves() = runTest {
+        // Storage first gives back cache on a worker (Codex review 4); here that is not enough.
+        every { WalletUpgradeBackup.retry(any()) } returns Result.failure(WalletUpgradeBackupException("INSUFFICIENT_BACKUP_STORAGE"))
         val storage = vm(); storage.unattendedPanel("INSUFFICIENT_BACKUP_STORAGE"); runCurrent()
         assertEquals(RecoveryPanelKind.STORAGE, storage.state.value.panel?.kind)
         val keys = vm(); keys.unattendedPanel("KEYSTORE_KEY_UNAVAILABLE"); runCurrent()
@@ -573,6 +575,35 @@ class SafeModeLifecycleFlowTest {
     }
     @Test fun theSafeModePromptAllowsTheScreenLockAloneNeverABiometric() {
         assertEquals(BiometricManager.Authenticators.DEVICE_CREDENTIAL, SafeModeViewModel.DEVICE_CREDENTIAL_AUTHENTICATORS)
+    }
+
+    // Codex review 4: the app start may not walk the cache or ask Android for space (main
+    // thread). A storage state nobody asked for runs the check again on a worker first, which
+    // gives back cache; the progress screen stays, and the storage screen comes only if the
+    // space is still too little. Never a question while that runs, never a loop.
+    @Test fun lowStorageAtTheStartIsGivenBackOnAWorkerBeforeAnyStorageScreen() = runTest {
+        val vm = vm(); vm.showPanel("INSUFFICIENT_BACKUP_STORAGE", options("INSUFFICIENT_BACKUP_STORAGE"), unattended = true)
+        // Before the worker ran: the progress screen, no panel, no question.
+        assertNull(vm.state.value.panel); assertNotNull(vm.state.value.progress); assertNull(vm.state.value.sheet)
+        verify(exactly = 0) { WalletUpgradeBackup.retry(any()) }
+        runCurrent()
+        verify(exactly = 1) { WalletUpgradeBackup.retry(any()) }
+        assertEquals(listOf(SafeModeEvent.RetryReady), events)
+        assertNull(vm.state.value.panel)
+    }
+    @Test fun storageStillTooLittleAfterGivingBackShowsTheStorageScreenOnceAndNoLoop() = runTest {
+        every { WalletUpgradeBackup.retry(any()) } returns Result.failure(WalletUpgradeBackupException("INSUFFICIENT_BACKUP_STORAGE"))
+        val vm = vm(); vm.showPanel("INSUFFICIENT_BACKUP_STORAGE", options("INSUFFICIENT_BACKUP_STORAGE"), unattended = true); runCurrent()
+        verify(exactly = 1) { WalletUpgradeBackup.retry(any()) }
+        assertEquals(RecoveryPanelKind.STORAGE, vm.state.value.panel?.kind); assertNull(vm.state.value.progress)
+        advanceTimeBy(10 * 60_000L); runCurrent()
+        verify(exactly = 1) { WalletUpgradeBackup.retry(any()) }
+        assertTrue(events.isEmpty())
+    }
+    @Test fun aStorageScreenThePersonAskedForIsShownAtOnce() = runTest {
+        val vm = vm(); vm.showPanel("INSUFFICIENT_BACKUP_STORAGE", options("INSUFFICIENT_BACKUP_STORAGE")); runCurrent()
+        assertEquals(RecoveryPanelKind.STORAGE, vm.state.value.panel?.kind)
+        verify(exactly = 0) { WalletUpgradeBackup.retry(any()) }
     }
 
     @Test fun revealedWalletCanBeHiddenAndReturnToListThenClose() = runTest {

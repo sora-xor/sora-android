@@ -229,6 +229,12 @@ class SafeModeViewModel @Inject constructor(
     /** Read-only was entered (or tried) without the person once; a second time shows the options. */
     private var readOnlyEntryTried = false
 
+    /** Cache was given back once for a storage state nobody asked for; next time, the screen. */
+    private var storageGiveBackTried = false
+
+    private fun givesBackStorageByItself(model: RecoveryPanelModel): Boolean =
+        model.kind == RecoveryPanelKind.STORAGE && !storageGiveBackTried && !personInvolved
+
     // ---- panel ------------------------------------------------------------------------------
 
     /**
@@ -268,6 +274,16 @@ class SafeModeViewModel @Inject constructor(
         }
         if (unattended && entersReadOnlyByItself(model)) {
             enterReadOnlyByItself(model, resolved)
+            return
+        }
+        if (unattended && givesBackStorageByItself(model)) {
+            // Too little space at the app start, where nothing may walk the cache or ask
+            // Android for space (the main thread). The same check runs again on a worker, which
+            // gives back what is held only as a cache first ([WalletUpgradeBackup.retry]); the
+            // progress screen stays meanwhile. The storage screen only if still too little.
+            storageGiveBackTried = true
+            showAutomaticRetry(model, resolved)
+            runTryAgain(automatic = true)
             return
         }
         automaticRetry = null

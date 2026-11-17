@@ -835,6 +835,7 @@ class WalletUpgradeBackupTest {
 
     @Test
     fun askingAndroidForSpaceAnswersWithoutThrowing() {
+        emptyCacheFolder()
         // Plenty is free on the test device: a small request is granted at once.
         assertTrue(DisposableStorage.askSystemFor(context, context.noBackupFilesDir, 1_024L * 1_024L))
         // More than the volume holds cannot be freed: the answer is no, never an exception.
@@ -842,8 +843,11 @@ class WalletUpgradeBackupTest {
         assertFalse(DisposableStorage.askSystemFor(context, context.noBackupFilesDir, 0L))
     }
 
+    // Codex review 4: the app start prepares on the main thread, so a repair short of space stops
+    // there with the database closed and the cache untouched; the storage step (Try again's
+    // retry, on a worker) gives back the cache and finishes the repair in the same process.
     @Test
-    fun aRepairThatRanOutOfSpaceGivesBackTheCacheAndFinishesInTheSameStart() {
+    fun aRepairThatRanOutOfSpaceAtTheStartIsFinishedByTheStorageStepAfterGivingBackTheCache() {
         emptyCacheFolder()
         createLegacyDatabase(withAccount = true)
         putWalletMarker()
@@ -853,29 +857,79 @@ class WalletUpgradeBackupTest {
         context.getDatabasePath(DATABASE_NAME).writeBytes(original)
         // Real bytes, so giving them back really frees space on the volume.
         File(context.cacheDir, "image_cache").mkdirs()
-        File(context.cacheDir, "image_cache/big.0").outputStream().use { out ->
+        val big = File(context.cacheDir, "image_cache/big.0")
+        big.outputStream().use { out ->
             val block = ByteArray(1_024 * 1_024) { 0x33 }
             repeat(48) { out.write(block) }
             out.fd.sync()
         }
         var failures = 0
         WalletUpgradeBackup.afterDatabaseRepairCopyForTest = {
-            // The copy hits a full disk once.
-            if (failures++ == 0) throw ErrnoException("write", OsConstants.ENOSPC)
+            // The copy hits a full disk at the start and once more in the storage step, until
+            // the cache is given back.
+            if (failures++ < 2) throw ErrnoException("write", OsConstants.ENOSPC)
         }
         try {
             WalletUpgradeBackup.simulateProcessStartForTest()
-            val result = WalletUpgradeBackup.prepare(context)
+            // The start: short of space, nothing given back, the database stays closed.
+            assertTrue(WalletUpgradeBackup.prepare(context).isFailure)
+            assertEquals(WalletRecoveryOptions.STORAGE_FULL, WalletUpgradeBackup.blockingFailure()?.code)
+            assertTrue(big.exists())
+            // The storage step, on a worker (this test thread): gives back the cache, repairs.
+            val result = WalletUpgradeBackup.retry(context)
             assertTrue("${WalletUpgradeBackup.blockingFailure()}", result.isSuccess)
         } finally {
             WalletUpgradeBackup.afterDatabaseRepairCopyForTest = null
         }
         assertEquals(null, WalletUpgradeBackup.blockingFailure())
         assertEquals(1, legacyAccountCount())
-        assertFalse(File(context.cacheDir, "image_cache/big.0").exists())
+        assertFalse(big.exists())
         val repair = context.noBackupFilesDir.listFiles().orEmpty()
             .single { it.name.startsWith("wallet-database-repair-") && it.isDirectory }
         assertArrayEquals(original, File(repair, "original/databases/app.db").readBytes())
+    }
+
+    // Codex review 4: walking the cache and asking Android for space never run on the main
+    // thread, whoever calls; there the shortage is answered as it is.
+    @Test
+    fun theCacheIsNeverGivenBackOnTheMainThread() {
+        emptyCacheFolder()
+        createLegacyDatabase(withAccount = true)
+        putWalletMarker()
+        assertTrue(WalletUpgradeBackup.prepareWithAvailableBackupBytesForTest(context, 0L).isFailure)
+        val required = requireNotNull(WalletUpgradeBackup.blockingFailure()?.requiredBytes)
+        val images = cacheFile("image_cache/a1b2c3.0", required + 65_536)
+
+        var onMain: Result<Unit>? = null
+        InstrumentationRegistry.getInstrumentation().runOnMainSync {
+            onMain = WalletUpgradeBackup.prepareAfterReclaimingCacheForTest(context, 0L)
+        }
+
+        assertTrue(requireNotNull(onMain).isFailure)
+        assertEquals("INSUFFICIENT_BACKUP_STORAGE", WalletUpgradeBackup.blockingFailure()?.code)
+        assertTrue(images.exists())
+        // Off the main thread, where the storage step runs, the same call gives it back.
+        assertTrue(WalletUpgradeBackup.prepareAfterReclaimingCacheForTest(context, 0L).isSuccess)
+        assertFalse(images.exists())
+    }
+
+    // Codex review 5: Android's own clearing of cached files does not know to keep a recovery
+    // file the person made; while one is in the cache folder, Android is not asked.
+    @Test
+    fun androidIsNotAskedForSpaceWhileARecoveryFileIsInTheCache() {
+        emptyCacheFolder()
+        assertFalse(DisposableStorage.holdsRecoveryExport(context.cacheDir))
+        val export = cacheFile("wallet-recovery-exports/sora-wallet-recovery-1-fixture.zip", 2_048)
+        assertTrue(DisposableStorage.holdsRecoveryExport(context.cacheDir))
+
+        assertFalse(DisposableStorage.askSystemFor(context, context.noBackupFilesDir, 1_024L * 1_024L))
+
+        assertEquals(2_048L, export.length())
+        // Only a lock or other working file there: Android may be asked again.
+        assertTrue(export.delete())
+        cacheFile("wallet-recovery-exports/.recovery-publication.lock", 0)
+        assertFalse(DisposableStorage.holdsRecoveryExport(context.cacheDir))
+        assertTrue(DisposableStorage.askSystemFor(context, context.noBackupFilesDir, 1_024L * 1_024L))
     }
 
     @Test
