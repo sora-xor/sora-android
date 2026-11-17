@@ -54,6 +54,11 @@ class PincodeFragment : SoraBaseFragment<PinCodeViewModel>() {
 
     companion object {
         private const val DATA_CLEAR_DELAY = 500L
+
+        /** The phone's screen lock, or a biometric that stands for it (as Safe Mode asks). */
+        private const val SCREEN_LOCK_AUTHENTICATORS =
+            BiometricManager.Authenticators.BIOMETRIC_WEAK or
+                BiometricManager.Authenticators.DEVICE_CREDENTIAL
     }
 
     private val fingerprintWrapper: FingerprintWrapper by lazy {
@@ -137,6 +142,7 @@ class PincodeFragment : SoraBaseFragment<PinCodeViewModel>() {
                 null
             }
         }
+        viewModel.screenLockPromptEvent.observe { confirmScreenLock() }
         viewModel.resetApplicationEvent.observe {
             runDelayed(DATA_CLEAR_DELAY) {
                 requireContext().restartApplication()
@@ -178,6 +184,31 @@ class PincodeFragment : SoraBaseFragment<PinCodeViewModel>() {
             (activity as? MainActivity)?.checkInviteAction()
         }
 
+    }
+
+    /**
+     * The phone's own screen lock (PIN, pattern, password, or a biometric that stands for it) in
+     * the system prompt, before a new PIN replaces one that cannot be read. Built for each
+     * request: androidx keeps one callback per activity, and this fragment's fingerprint prompt
+     * set its own.
+     */
+    private fun confirmScreenLock() {
+        val prompt = BiometricPrompt(
+            this,
+            MainThreadExecutor(),
+            object : BiometricPrompt.AuthenticationCallback() {
+                override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
+                    viewModel.onScreenLockConfirmed()
+                }
+            },
+        )
+        val info = BiometricPrompt.PromptInfo.Builder()
+            .setTitle(getString(R.string.pincode_set_your_pin_code))
+            .setDescription(getString(R.string.account_repair_screen_lock_body))
+            .setAllowedAuthenticators(SCREEN_LOCK_AUTHENTICATORS)
+            .build()
+        // A prompt that cannot be shown changes nothing: touching the keypad asks again.
+        runCatching { prompt.authenticate(info) }
     }
 
     private fun contactSupport() {

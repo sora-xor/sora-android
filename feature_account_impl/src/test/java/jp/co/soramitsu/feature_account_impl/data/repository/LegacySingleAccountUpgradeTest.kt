@@ -13,6 +13,7 @@ import jp.co.soramitsu.core_db.dao.GlobalCardsHubDao
 import jp.co.soramitsu.core_db.dao.AccountDao
 import jp.co.soramitsu.core_db.dao.WalletIdentityDao
 import jp.co.soramitsu.core_db.model.SoraAccountLocal
+import jp.co.soramitsu.feature_account_api.domain.PhoneScreenLock
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsDatasource
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserDatasource
 import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
@@ -103,7 +104,7 @@ class LegacySingleAccountUpgradeTest {
             }
         }
         val repository = UserRepositoryImpl(user, credentials, db, coroutineManager,
-            mockk(), runtime, crypto)
+            mockk(), runtime, crypto, PhoneScreenLock({ false }, { 0L }))
         val result = runCatching { repository.getCurSoraAccount() }
         if (validSignature && scopedCopy != ScopedCopy.ANOTHER_KEY) {
             assertTrue(result.exceptionOrNull()?.toString(), result.isSuccess)

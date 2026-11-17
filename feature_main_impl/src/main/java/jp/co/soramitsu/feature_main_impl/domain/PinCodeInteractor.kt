@@ -20,6 +20,7 @@ limitations under the License.
 package jp.co.soramitsu.feature_main_impl.domain
 
 import javax.inject.Inject
+import jp.co.soramitsu.feature_account_api.domain.ScreenLockConfirmation
 import jp.co.soramitsu.feature_account_api.domain.WalletPinVerifier
 import jp.co.soramitsu.common.account.RecoveryPhrase
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsRepository
@@ -79,9 +80,19 @@ class PinCodeInteractor @Inject constructor(
         private const val LEGACY_SORA_MNEMONIC_WORD_COUNT = 15
     }
 
-    suspend fun savePin(pin: String) {
-        return userRepository.savePin(pin)
+    /**
+     * Saves the PIN. [screenLock] is the phone's screen-lock confirmation when the stored PIN
+     * could not be read ([newPinNeedsScreenLock]); the repository refuses the save without it.
+     */
+    suspend fun savePin(pin: String, screenLock: ScreenLockConfirmation? = null) {
+        return userRepository.savePin(pin, screenLock)
     }
+
+    /**
+     * True when the stored PIN cannot be read while accounts are on the phone, and the phone has
+     * a screen lock: a new PIN is then the phone owner's to choose, after the system prompt.
+     */
+    suspend fun newPinNeedsScreenLock(): Boolean = userRepository.newPinNeedsScreenLock()
 
     suspend fun checkPin(code: String) = pinVerifier.verify(code)
 

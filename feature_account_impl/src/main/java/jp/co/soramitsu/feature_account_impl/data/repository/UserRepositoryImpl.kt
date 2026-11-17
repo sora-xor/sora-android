@@ -49,6 +49,9 @@ import jp.co.soramitsu.common.data.WalletPreferenceKeys
 import jp.co.soramitsu.common.util.WalletDecryptionException
 import jp.co.soramitsu.common.util.WalletStorageFailures
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialField
+import jp.co.soramitsu.feature_account_api.domain.PhoneScreenLock
+import jp.co.soramitsu.feature_account_api.domain.ScreenLockConfirmation
+import jp.co.soramitsu.feature_account_api.domain.ScreenLockConfirmationRequiredException
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsDatasource
 import jp.co.soramitsu.feature_account_api.domain.interfaces.StoredCredential
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserDatasource
@@ -125,6 +128,7 @@ class UserRepositoryImpl(
     private val languagesHolder: LanguagesHolder,
     private val sora2AddressCodec: Sora2AddressCodec,
     private val userRepositorySr25519Crypto: UserRepositorySr25519Crypto,
+    private val phoneScreenLock: PhoneScreenLock,
 ) : UserRepository {
 
     private companion object {
@@ -741,9 +745,54 @@ class UserRepositoryImpl(
         }
     }
 
-    override suspend fun savePin(pin: String) {
-        markKeySetsOlderThanThePin()
+    override suspend fun savePin(pin: String, screenLock: ScreenLockConfirmation?) {
+        when (storedPin()) {
+            StoredPin.ABSENT -> markKeySetsOlderThanThePin()
+            StoredPin.READABLE -> Unit
+            StoredPin.UNREADABLE -> requireOwnerForPinOverUnreadable(screenLock)
+        }
         userDatasource.savePin(pin)
+        phoneScreenLock.use(screenLock)
+    }
+
+    override suspend fun newPinNeedsScreenLock(): Boolean =
+        storedPin() == StoredPin.UNREADABLE && unreadablePinGuardsAccounts()
+
+    private enum class StoredPin { ABSENT, READABLE, UNREADABLE }
+
+    /**
+     * What is stored as the app PIN. Throws when that is not known right now (a busy disk or
+     * Keystore): no PIN is saved then, and the person tries again. [StoredPin.UNREADABLE] is a
+     * PIN that is there and stays unreadable (damaged data).
+     */
+    private suspend fun storedPin(): StoredPin = try {
+        if (userDatasource.retrievePin().isNotEmpty()) StoredPin.READABLE else StoredPin.ABSENT
+    } catch (error: CancellationException) {
+        throw error
+    } catch (error: Throwable) {
+        if (
+            WalletStorageFailures.isTransient(error) ||
+            WalletStorageFailures.isKeyMaterialUnavailable(error)
+        ) {
+            throw error
+        }
+        StoredPin.UNREADABLE
+    }
+
+    /** A stored PIN nobody can check any more stands between the phone's holder and accounts. */
+    private suspend fun unreadablePinGuardsAccounts(): Boolean =
+        phoneScreenLock.isSet() && walletAccounts().isNotEmpty()
+
+    /**
+     * A new PIN in place of a stored one that cannot be read opens every account on the phone,
+     * and nobody typed the old PIN. The phone's own screen lock, passed just now in the system
+     * prompt, is the proof that its owner chooses the new PIN. Without accounts there is nothing
+     * for the PIN to open, and a phone without a screen lock has no stronger local proof, so
+     * both go on as before.
+     */
+    private suspend fun requireOwnerForPinOverUnreadable(screenLock: ScreenLockConfirmation?) {
+        if (!unreadablePinGuardsAccounts()) return
+        if (!phoneScreenLock.isFresh(screenLock)) throw ScreenLockConfirmationRequiredException()
     }
 
     /**
@@ -755,25 +804,10 @@ class UserRepositoryImpl(
      *
      * Changing a PIN (the old one was just entered) marks nothing. Neither does a new PIN in
      * place of a stored one that cannot be read: that state comes from damaged data, not from a
-     * hand-over, and marking then could leave a wallet without a phrase with no way back.
+     * hand-over, and marking then could leave a wallet without a phrase with no way back. That
+     * PIN is the phone owner's instead ([requireOwnerForPinOverUnreadable]).
      */
     private suspend fun markKeySetsOlderThanThePin() {
-        val pinStored = try {
-            userDatasource.retrievePin().isNotEmpty()
-        } catch (error: CancellationException) {
-            throw error
-        } catch (error: Throwable) {
-            if (
-                WalletStorageFailures.isTransient(error) ||
-                WalletStorageFailures.isKeyMaterialUnavailable(error)
-            ) {
-                // Not known right now: the PIN is not saved either, and the person tries again.
-                throw error
-            }
-            // A PIN is stored; it cannot be read.
-            true
-        }
-        if (pinStored) return
         val accounts = walletAccounts().map(SoraAccountLocal::substrateAddress).toSet()
         // The release-era unsuffixed set is in use when its recorded owner is an account.
         val releaseEraInUse = credentialsDatasource.getAddress().let { it.isNotBlank() && it in accounts }

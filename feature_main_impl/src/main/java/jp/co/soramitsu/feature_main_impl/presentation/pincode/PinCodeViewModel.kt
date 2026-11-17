@@ -29,6 +29,9 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.util.Date
 import javax.inject.Inject
+import jp.co.soramitsu.feature_account_api.domain.PhoneScreenLock
+import jp.co.soramitsu.feature_account_api.domain.ScreenLockConfirmation
+import jp.co.soramitsu.feature_account_api.domain.ScreenLockConfirmationRequiredException
 import jp.co.soramitsu.feature_account_api.domain.WalletPinLockedException
 import javax.crypto.Cipher
 import jp.co.soramitsu.common.security.BiometricUnlockGate
@@ -75,6 +78,8 @@ class PinCodeViewModel @Inject constructor(
     private val biometricGate: BiometricUnlockGate = BiometricUnlockGate(),
     /** Runs the claim check after the PIN screen has closed; null in tests (the screen's scope). */
     private val coroutineManager: CoroutineManager? = null,
+    /** Records the system screen-lock prompt's success; null where no such prompt can be shown. */
+    private val phoneScreenLock: PhoneScreenLock? = null,
 ) : BaseViewModel(), WithProgress by progress {
 
     internal var state by mutableStateOf(
@@ -138,6 +143,17 @@ class PinCodeViewModel @Inject constructor(
      */
     private val _enrollmentChangeQuestion = MutableLiveData(false)
     val enrollmentChangeQuestion: LiveData<Boolean> = _enrollmentChangeQuestion
+
+    /**
+     * The stored PIN cannot be read while accounts are on the phone: before a new PIN is
+     * chosen, the phone's own screen lock is asked for in the system prompt. Each event shows
+     * that prompt once. Until it is passed, the keypad takes no digit; touching it asks again,
+     * so cancelling the prompt never ends anywhere, and Back leaves the app as on any unlock.
+     */
+    private val _screenLockPromptEvent = SingleLiveEvent<Unit>()
+    val screenLockPromptEvent: LiveData<Unit> = _screenLockPromptEvent
+    private var awaitingScreenLock = false
+    private var screenLockConfirmation: ScreenLockConfirmation? = null
 
     private val _resetApplicationEvent = SingleLiveEvent<Unit>()
     val resetApplicationEvent: LiveData<Unit> = _resetApplicationEvent
@@ -279,19 +295,11 @@ class PinCodeViewModel @Inject constructor(
                             showFingerPrintEventLiveData.value = false
                         }
                     } catch (t: Throwable) {
-                        onError(t)
                         if (t is KeyMaterialUnavailableException || WalletStorageFailures.isTransient(t)) {
-                            // The stored PIN exists but cannot be read right now (busy or missing
-                            // Keystore key, a busy disk). Keep asking for the existing PIN;
-                            // offering to create a new one would replace the stored PIN (and
-                            // saving it would fail the same way).
-                            state = state.copy(
-                                toolbarTitleString = resourceManager.getString(R.string.pincode_enter_pin_code),
-                                isBackButtonVisible = false
-                            )
-                            showFingerPrintEventLiveData.value = biometricAllowed
+                            onError(t)
+                            keepAskingForTheStoredPin()
                         } else {
-                            action = PinCodeAction.CREATE_PIN_CODE
+                            offerNewPinOverUnreadable(t)
                         }
                     }
                 }
@@ -299,9 +307,73 @@ class PinCodeViewModel @Inject constructor(
         }
     }
 
+    /**
+     * The stored PIN exists but cannot be read right now (busy or missing Keystore key, a busy
+     * disk). Keep asking for the existing PIN; offering to create a new one would replace the
+     * stored PIN (and saving it would fail the same way).
+     */
+    private fun keepAskingForTheStoredPin() {
+        state = state.copy(
+            toolbarTitleString = resourceManager.getString(R.string.pincode_enter_pin_code),
+            isBackButtonVisible = false
+        )
+        showFingerPrintEventLiveData.value = biometricAllowed
+    }
+
+    /**
+     * The stored PIN is there and stays unreadable (damaged data), so a new one is set. With
+     * accounts on a phone that has a screen lock, the phone's owner proves it first in the
+     * system prompt: a new PIN opens every account, and nobody typed the old one. A phone
+     * without a screen lock has no stronger proof to give, so the new PIN is offered as before.
+     */
+    private suspend fun offerNewPinOverUnreadable(cause: Throwable) {
+        val needsScreenLock = try {
+            phoneScreenLock != null && interactor.newPinNeedsScreenLock()
+        } catch (error: CancellationException) {
+            throw error
+        } catch (error: Throwable) {
+            // Whether accounts are on the phone is not known right now.
+            onError(error)
+            keepAskingForTheStoredPin()
+            return
+        }
+        action = PinCodeAction.CREATE_PIN_CODE
+        state = state.copy(
+            maxDotsCount = PinCodeInteractor.PINCODE_LENGTH,
+            toolbarTitleString = resourceManager.getString(R.string.pincode_set_your_pin_code),
+            isBackButtonVisible = false
+        )
+        showFingerPrintEventLiveData.value = false
+        if (!needsScreenLock) {
+            onError(cause)
+            return
+        }
+        // No message of the app's own: the system prompt says what is asked and why.
+        jp.co.soramitsu.common.logger.WalletDiagnostics.recordException(cause)
+        // The screen came back (it was rebuilt) after the prompt was passed: not asked twice.
+        if (screenLockConfirmation != null) return
+        awaitingScreenLock = true
+        _screenLockPromptEvent.trigger()
+    }
+
+    /**
+     * The system prompt reported success: the phone's owner is here and chooses the new PIN.
+     * A prompt that closes any other way (cancelled, failed, not shown) changes nothing, and
+     * the next touch of the keypad shows it again.
+     */
+    fun onScreenLockConfirmed() {
+        if (!awaitingScreenLock) return
+        screenLockConfirmation = phoneScreenLock?.confirmed()
+        awaitingScreenLock = false
+    }
+
     fun pinCodeNumberClicked(
         pinCodeNumber: String,
     ) {
+        if (awaitingScreenLock) {
+            _screenLockPromptEvent.trigger()
+            return
+        }
         if (!buttonsDisabled) {
             if (inputedCode.length >= state.maxDotsCount) {
                 return
@@ -377,7 +449,16 @@ class PinCodeViewModel @Inject constructor(
     private fun registerPinCode() {
         viewModelScope.launch {
             tryCatch {
-                interactor.savePin(inputedCode)
+                try {
+                    interactor.savePin(inputedCode, screenLockConfirmation)
+                } catch (_: ScreenLockConfirmationRequiredException) {
+                    // The repository wants the phone's screen lock first (the confirmation ran
+                    // out while the PIN was typed, or this screen never asked): nothing was
+                    // saved. Ask in the system prompt, then the new PIN is chosen again.
+                    askScreenLockBeforeNewPin()
+                    return@tryCatch
+                }
+                screenLockConfirmation = null
                 if (isChanging) {
                     // Checking the current PIN already settled the biometrics.
                     _pincodeChangedEvent.trigger()
@@ -396,6 +477,22 @@ class PinCodeViewModel @Inject constructor(
                 }
             }
         }
+    }
+
+    private fun askScreenLockBeforeNewPin() {
+        tempCode = ""
+        inputedCode = ""
+        screenLockConfirmation = null
+        state = state.copy(
+            toolbarTitleString = resourceManager.getString(
+                if (isChanging) R.string.pincode_enter_new_pin_code else R.string.pincode_set_your_pin_code
+            ),
+            isBackButtonVisible = false,
+            checkedDotsCount = 0,
+        )
+        if (phoneScreenLock == null) return
+        awaitingScreenLock = true
+        _screenLockPromptEvent.trigger()
     }
 
     private suspend fun checkPinCode() {

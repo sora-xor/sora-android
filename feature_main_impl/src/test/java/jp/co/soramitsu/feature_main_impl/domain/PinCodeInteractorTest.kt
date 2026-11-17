@@ -82,6 +82,23 @@ class PinCodeInteractorTest {
     }
 
     @Test
+    fun `the screen lock confirmation reaches the repository with the new pin`() = runTest {
+        val confirmation = jp.co.soramitsu.feature_account_api.domain.PhoneScreenLock({ true }, { 0L }).confirmed()
+
+        interactor.savePin(pin, confirmation)
+
+        verify(userRepository).savePin(pin, confirmation)
+    }
+
+    @Test
+    fun `whether a new pin needs the screen lock is the repository's answer`() = runTest {
+        given(userRepository.newPinNeedsScreenLock()).willReturn(true)
+        assertEquals(true, interactor.newPinNeedsScreenLock())
+        given(userRepository.newPinNeedsScreenLock()).willReturn(false)
+        assertEquals(false, interactor.newPinNeedsScreenLock())
+    }
+
+    @Test
     fun `wallet deletion preview called`() = runTest {
         val preview = deletionPreview()
         given(userRepository.createWalletDeletionPreview(listOf("address")))

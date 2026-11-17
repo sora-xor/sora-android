@@ -28,7 +28,11 @@ import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.interfaces.WithProgress
 import jp.co.soramitsu.common.presentation.compose.neon.safemode.WalletSessionState
 import jp.co.soramitsu.common.util.KeyMaterialUnavailableException
+import jp.co.soramitsu.common.util.WalletDecryptionException
 import jp.co.soramitsu.common.vibration.DeviceVibrator
+import jp.co.soramitsu.feature_account_api.domain.PhoneScreenLock
+import jp.co.soramitsu.feature_account_api.domain.ScreenLockConfirmation
+import jp.co.soramitsu.feature_account_api.domain.ScreenLockConfirmationRequiredException
 import jp.co.soramitsu.feature_account_api.domain.model.WalletDeletionPreview
 import jp.co.soramitsu.feature_account_api.domain.model.WalletDeletionResult
 import jp.co.soramitsu.feature_account_api.domain.model.WalletDeletionScope
@@ -65,6 +69,7 @@ import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mockito.junit.MockitoJUnitRunner
 import org.mockito.kotlin.anyOrNull
+import org.mockito.kotlin.argumentCaptor
 
 @ExperimentalCoroutinesApi
 @RunWith(MockitoJUnitRunner::class)
@@ -276,7 +281,7 @@ class PinCodeViewModelTest {
 
     @Test
     fun `pin code entered correctly second time while creating`() = runTest {
-        given(interactor.savePin(anyString())).willReturn(Unit)
+        given(interactor.savePin(anyString(), anyOrNull())).willReturn(Unit)
         given(interactor.isBiometryAvailable()).willReturn(true)
 
         pinCodeViewModel.startAuth(PinCodeAction.CREATE_PIN_CODE)
@@ -404,7 +409,7 @@ class PinCodeViewModelTest {
             advanceUntilIdle()
 
             verify(interactor).checkPin(anyString())
-            verify(interactor, never()).savePin(anyString())
+            verify(interactor, never()).savePin(anyString(), anyOrNull())
         }
 
     @Test
@@ -424,8 +429,179 @@ class PinCodeViewModelTest {
 
             // The typed PIN is checked against the stored one, not saved as a new PIN.
             verify(interactor).checkPin(anyString())
-            verify(interactor, never()).savePin(anyString())
+            verify(interactor, never()).savePin(anyString(), anyOrNull())
         }
+
+    // ---- a stored PIN that cannot be read (damaged data), audit item 16 ----------------------
+
+    private var elapsedMillis = 1_000_000L
+    private val phoneScreenLock = PhoneScreenLock(deviceSecure = { true }, elapsedMillis = { elapsedMillis })
+
+    /** The screen as the app builds it: with the phone's screen lock to ask. */
+    private fun viewModelWithScreenLock() = PinCodeViewModel(
+        interactor, mainInteractor, mainRouter, resourceManager, selectNodeRouter, progress,
+        vibrator, connectionManager, biometricGate, null, phoneScreenLock,
+    )
+
+    private fun PinCodeViewModel.countScreenLockPrompts(): () -> Int {
+        var shown = 0
+        screenLockPromptEvent.observeForever { shown++ }
+        return { shown }
+    }
+
+    private suspend fun TestScope.startWithUnreadablePin(model: PinCodeViewModel, needsScreenLock: Boolean) {
+        given(interactor.isCodeSet()).willAnswer { throw WalletDecryptionException("PIN_UNREADABLE") }
+        given(interactor.newPinNeedsScreenLock()).willReturn(needsScreenLock)
+        model.startAuth(PinCodeAction.TIMEOUT_CHECK)
+        advanceUntilIdle()
+    }
+
+    private fun TestScope.typeTwice(model: PinCodeViewModel, pin: String) {
+        repeat(2) {
+            pin.forEach { model.pinCodeNumberClicked(it.toString()) }
+            advanceUntilIdle()
+        }
+    }
+
+    @Test
+    fun `an unreadable stored PIN with accounts asks for the phone's screen lock before any new PIN`() =
+        runTest {
+            val model = viewModelWithScreenLock()
+            val prompts = model.countScreenLockPrompts()
+
+            startWithUnreadablePin(model, needsScreenLock = true)
+
+            // The system prompt is asked for at once, with no message of the app's own over it.
+            assertEquals(1, prompts())
+            assertEquals(setupTitle, model.state.toolbarTitleString)
+            assertNull(model.errorLiveData.value)
+            assertNull(model.alertDialogLiveData.value)
+            assertNull(model.errorFromResourceLiveData.value)
+            // Until it is passed the keypad takes no digit and no PIN can be saved.
+            typeTwice(model, "123456")
+            assertEquals(0, model.state.checkedDotsCount)
+            verify(interactor, never()).savePin(anyString(), anyOrNull())
+            verify(interactor, never()).checkPin(anyString())
+            verify(mainRouter, never()).popBackStack()
+        }
+
+    @Test
+    fun `cancelling the screen lock prompt returns to it at the next touch and Back leaves the app`() =
+        runTest {
+            val model = viewModelWithScreenLock()
+            val prompts = model.countScreenLockPrompts()
+            startWithUnreadablePin(model, needsScreenLock = true)
+            assertEquals(1, prompts())
+
+            // The prompt was cancelled: nothing reaches the view model. Each touch asks again.
+            model.pinCodeNumberClicked("1")
+            assertEquals(2, prompts())
+            model.pinCodeNumberClicked("2")
+            assertEquals(3, prompts())
+            assertEquals(0, model.state.checkedDotsCount)
+
+            model.onBackPressed()
+            assertNotNull(model.closeAppLiveData.value)
+            verify(interactor, never()).savePin(anyString(), anyOrNull())
+        }
+
+    @Test
+    fun `after the screen lock the owner's new PIN is saved with that confirmation and opens the wallet`() =
+        runTest {
+            val model = viewModelWithScreenLock()
+            val prompts = model.countScreenLockPrompts()
+            startWithUnreadablePin(model, needsScreenLock = true)
+            given(interactor.isBiometryAvailable()).willReturn(false)
+
+            model.onScreenLockConfirmed()
+            typeTwice(model, "123456")
+
+            val confirmation = argumentCaptor<ScreenLockConfirmation>()
+            verify(interactor).savePin(org.mockito.kotlin.eq("123456"), confirmation.capture())
+            // The one the system prompt's success made, still good for the repository.
+            assertTrue(phoneScreenLock.isFresh(confirmation.firstValue))
+            assertEquals(1, prompts())
+            verify(mainRouter).popBackStack()
+        }
+
+    @Test
+    fun `a phone without a screen lock is offered the new PIN as before`() = runTest {
+        val model = viewModelWithScreenLock()
+        val prompts = model.countScreenLockPrompts()
+        startWithUnreadablePin(model, needsScreenLock = false)
+        given(interactor.isBiometryAvailable()).willReturn(false)
+
+        assertEquals(0, prompts())
+        assertEquals(setupTitle, model.state.toolbarTitleString)
+        typeTwice(model, "123456")
+
+        verify(interactor).savePin("123456", null)
+        verify(mainRouter).popBackStack()
+    }
+
+    @Test
+    fun `while the accounts cannot be read the stored PIN keeps being asked for`() = runTest {
+        val model = viewModelWithScreenLock()
+        val prompts = model.countScreenLockPrompts()
+        given(interactor.isCodeSet()).willAnswer { throw WalletDecryptionException("PIN_UNREADABLE") }
+        given(interactor.newPinNeedsScreenLock())
+            .willThrow(java.io.UncheckedIOException(java.io.IOException("busy")))
+
+        model.startAuth(PinCodeAction.TIMEOUT_CHECK)
+        advanceUntilIdle()
+
+        assertEquals(enterPincode, model.state.toolbarTitleString)
+        assertEquals(0, prompts())
+        typeTwice(model, "123456")
+        verify(interactor, never()).savePin(anyString(), anyOrNull())
+    }
+
+    @Test
+    fun `a new PIN the repository refuses asks for the screen lock and is chosen again after it`() =
+        runTest {
+            // The repository is the rule: a save it refuses (the confirmation ran out while the
+            // PIN was typed) saves nothing, and the same system prompt is the way on.
+            val model = viewModelWithScreenLock()
+            val prompts = model.countScreenLockPrompts()
+            startWithUnreadablePin(model, needsScreenLock = true)
+            given(interactor.isBiometryAvailable()).willReturn(false)
+            model.onScreenLockConfirmed()
+            var refused = true
+            given(interactor.savePin(anyString(), anyOrNull()))
+                .willAnswer { if (refused) throw ScreenLockConfirmationRequiredException() }
+
+            typeTwice(model, "123456")
+
+            assertEquals(2, prompts())
+            assertEquals(setupTitle, model.state.toolbarTitleString)
+            assertEquals(0, model.state.checkedDotsCount)
+            verify(mainRouter, never()).popBackStack()
+            assertNull(model.errorLiveData.value)
+            // Not passed yet: the keypad asks again instead of taking digits.
+            model.pinCodeNumberClicked("1")
+            assertEquals(3, prompts())
+
+            refused = false
+            model.onScreenLockConfirmed()
+            typeTwice(model, "654321")
+
+            verify(interactor).savePin(org.mockito.kotlin.eq("654321"), org.mockito.kotlin.isNotNull())
+            verify(mainRouter).popBackStack()
+        }
+
+    @Test
+    fun `a screen lock success nobody asked for confirms nothing`() = runTest {
+        val model = viewModelWithScreenLock()
+        given(interactor.isCodeSet()).willReturn(false)
+        given(interactor.isBiometryAvailable()).willReturn(false)
+        model.startAuth(PinCodeAction.TIMEOUT_CHECK)
+        advanceUntilIdle()
+
+        model.onScreenLockConfirmed()
+        typeTwice(model, "123456")
+
+        verify(interactor).savePin("123456", null)
+    }
 
     @Test
     fun `pin code entered correct with TIMEOUT_CHECK action`() = runTest {
@@ -1164,7 +1340,7 @@ class PinCodeViewModelTest {
         pinCodeViewModel.pinCodeNumberClicked("654321")
         advanceUntilIdle()
         assertEquals("Confirm new PIN", pinCodeViewModel.state.toolbarTitleString)
-        verify(interactor, never()).savePin(anyString())
+        verify(interactor, never()).savePin(anyString(), anyOrNull())
         pinCodeViewModel.pinCodeNumberClicked("654321")
         advanceUntilIdle()
         verify(interactor).savePin("654321")
@@ -1186,7 +1362,7 @@ class PinCodeViewModelTest {
         verify(interactor).checkPin("1234")
         verify(mainRouter).popBackStack()
         assertFalse(pinCodeViewModel.state.isLengthInfoAlertVisible)
-        verify(interactor, never()).savePin(anyString())
+        verify(interactor, never()).savePin(anyString(), anyOrNull())
         assertNull(pinCodeViewModel.closeAppLiveData.value)
     }
 
@@ -1217,7 +1393,7 @@ class PinCodeViewModelTest {
         pinCodeViewModel.onBackPressed()
         verify(mainRouter).popBackStack()
         assertNull(pinCodeViewModel.closeAppLiveData.value)
-        verify(interactor, never()).savePin(anyString())
+        verify(interactor, never()).savePin(anyString(), anyOrNull())
     }
 
     @Test fun `optional PIN change can be canceled after authenticating the old PIN`() = runTest {
@@ -1230,7 +1406,7 @@ class PinCodeViewModelTest {
         advanceUntilIdle()
         pinCodeViewModel.onBackPressed()
         verify(mainRouter).popBackStack()
-        verify(interactor, never()).savePin(anyString())
+        verify(interactor, never()).savePin(anyString(), anyOrNull())
     }
 
     @Test fun `JSON export receives all authorized addresses after authentication`() = runTest {

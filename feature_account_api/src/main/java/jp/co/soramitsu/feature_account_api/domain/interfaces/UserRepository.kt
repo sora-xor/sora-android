@@ -70,7 +70,23 @@ interface UserRepository {
 
     suspend fun getRegistrationState(): OnboardingState
 
-    suspend fun savePin(pin: String)
+    /**
+     * Saves the app PIN. In place of a stored PIN that cannot be read while accounts are on the
+     * phone, a phone with a screen lock saves it only with a fresh [screenLock] confirmation
+     * from the system prompt and otherwise throws
+     * [jp.co.soramitsu.feature_account_api.domain.ScreenLockConfirmationRequiredException].
+     */
+    suspend fun savePin(
+        pin: String,
+        screenLock: jp.co.soramitsu.feature_account_api.domain.ScreenLockConfirmation? = null,
+    )
+
+    /**
+     * True when a new PIN can be saved only after the phone's screen lock was passed: a PIN is
+     * stored but cannot be read, accounts are on the phone, and the phone has a screen lock.
+     * Throws when the stored PIN or the accounts cannot be looked at right now.
+     */
+    suspend fun newPinNeedsScreenLock(): Boolean
 
     suspend fun retrievePin(): String
 

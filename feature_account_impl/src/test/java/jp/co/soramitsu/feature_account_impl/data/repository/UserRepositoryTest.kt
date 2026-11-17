@@ -59,6 +59,8 @@ import jp.co.soramitsu.common.data.WalletPreferenceKeys
 import jp.co.soramitsu.core_db.WalletQuarantine
 import jp.co.soramitsu.core_db.WalletUpgradeBackup
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialField
+import jp.co.soramitsu.feature_account_api.domain.PhoneScreenLock
+import jp.co.soramitsu.feature_account_api.domain.ScreenLockConfirmationRequiredException
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsDatasource
 import jp.co.soramitsu.feature_account_api.domain.interfaces.StoredCredential
 import jp.co.soramitsu.feature_account_api.domain.model.RetainedWallet
@@ -231,8 +233,17 @@ class UserRepositoryTest {
             languagesHolder,
             runtimeManager,
             userRepositorySr25519Crypto,
+            phoneScreenLock,
         )
     }
+
+    /** The phone's screen lock as the repository sees it; off unless a test turns it on. */
+    private var phoneHasScreenLock = false
+    private var elapsedMillis = 1_000_000L
+    private val phoneScreenLock = PhoneScreenLock(
+        deviceSecure = { phoneHasScreenLock },
+        elapsedMillis = { elapsedMillis },
+    )
 
     @Test
     fun `get Selected Language`() = runTest {
@@ -681,6 +692,141 @@ class UserRepositoryTest {
 
         coVerify { userDatasource.savePin("123456") }
         coVerify(exactly = 0) { credentialsDatasource.markKeySetsNeedingPhrase(any()) }
+    }
+
+    @Test
+    fun `a new PIN over an unreadable one with accounts needs the phone's screen lock`() = runTest {
+        phoneHasScreenLock = true
+        coEvery { userDatasource.retrievePin() } throws WalletDecryptionException("PIN_UNREADABLE")
+        coEvery { userDatasource.savePin(any()) } returns Unit
+
+        assertTrue(userRepository.newPinNeedsScreenLock())
+        // Whatever the screen did: without the system prompt's confirmation nothing is saved.
+        val refused = runCatching { userRepository.savePin("123456") }.exceptionOrNull()
+
+        assertTrue(refused is ScreenLockConfirmationRequiredException)
+        coVerify(exactly = 0) { userDatasource.savePin(any()) }
+        coVerify(exactly = 0) { credentialsDatasource.markKeySetsNeedingPhrase(any()) }
+    }
+
+    @Test
+    fun `the screen lock just passed lets the owner set a new PIN over an unreadable one once`() = runTest {
+        phoneHasScreenLock = true
+        coEvery { userDatasource.retrievePin() } throws WalletDecryptionException("PIN_UNREADABLE")
+        coEvery { userDatasource.savePin(any()) } returns Unit
+        val confirmation = phoneScreenLock.confirmed()
+
+        userRepository.savePin("123456", confirmation)
+
+        coVerify(exactly = 1) { userDatasource.savePin("123456") }
+        // Damaged data, not a hand-over: the owner's accounts and key sets are not marked.
+        coVerify(exactly = 0) { credentialsDatasource.markKeySetsNeedingPhrase(any()) }
+        // The confirmation did its one job.
+        val again = runCatching { userRepository.savePin("654321", confirmation) }.exceptionOrNull()
+        assertTrue(again is ScreenLockConfirmationRequiredException)
+        coVerify(exactly = 0) { userDatasource.savePin("654321") }
+    }
+
+    @Test
+    fun `a screen lock confirmation that is old or not the latest saves no PIN`() = runTest {
+        phoneHasScreenLock = true
+        coEvery { userDatasource.retrievePin() } throws WalletDecryptionException("PIN_UNREADABLE")
+        coEvery { userDatasource.savePin(any()) } returns Unit
+
+        val old = phoneScreenLock.confirmed()
+        elapsedMillis += PhoneScreenLock.VALID_MILLIS + 1
+        assertTrue(
+            runCatching { userRepository.savePin("123456", old) }.exceptionOrNull()
+                is ScreenLockConfirmationRequiredException
+        )
+
+        val superseded = phoneScreenLock.confirmed()
+        val latest = phoneScreenLock.confirmed()
+        assertTrue(
+            runCatching { userRepository.savePin("123456", superseded) }.exceptionOrNull()
+                is ScreenLockConfirmationRequiredException
+        )
+        // One made by another phone-lock object (not this app's) is nothing either.
+        val foreign = PhoneScreenLock({ true }, { elapsedMillis }).confirmed()
+        assertTrue(
+            runCatching { userRepository.savePin("123456", foreign) }.exceptionOrNull()
+                is ScreenLockConfirmationRequiredException
+        )
+        coVerify(exactly = 0) { userDatasource.savePin(any()) }
+
+        userRepository.savePin("123456", latest)
+        coVerify(exactly = 1) { userDatasource.savePin("123456") }
+    }
+
+    @Test
+    fun `a PIN save that fails keeps the screen lock confirmation for the next try`() = runTest {
+        phoneHasScreenLock = true
+        coEvery { userDatasource.retrievePin() } throws WalletDecryptionException("PIN_UNREADABLE")
+        coEvery { userDatasource.savePin("123456") } throws java.io.IOException("disk full") andThen Unit
+        val confirmation = phoneScreenLock.confirmed()
+
+        assertTrue(
+            runCatching { userRepository.savePin("123456", confirmation) }.exceptionOrNull()
+                is java.io.IOException
+        )
+        userRepository.savePin("123456", confirmation)
+
+        coVerify(exactly = 2) { userDatasource.savePin("123456") }
+    }
+
+    @Test
+    fun `without accounts an unreadable PIN guards nothing and a new one is saved`() = runTest {
+        phoneHasScreenLock = true
+        coEvery { accountDao.getAccounts() } returns emptyList()
+        coEvery { userDatasource.retrievePin() } throws WalletDecryptionException("PIN_UNREADABLE")
+        coEvery { userDatasource.savePin("123456") } returns Unit
+
+        assertFalse(userRepository.newPinNeedsScreenLock())
+        userRepository.savePin("123456")
+
+        coVerify(exactly = 1) { userDatasource.savePin("123456") }
+    }
+
+    @Test
+    fun `a phone without a screen lock sets a new PIN over an unreadable one as before`() = runTest {
+        phoneHasScreenLock = false
+        coEvery { userDatasource.retrievePin() } throws WalletDecryptionException("PIN_UNREADABLE")
+        coEvery { userDatasource.savePin("123456") } returns Unit
+
+        assertFalse(userRepository.newPinNeedsScreenLock())
+        userRepository.savePin("123456")
+
+        coVerify(exactly = 1) { userDatasource.savePin("123456") }
+    }
+
+    @Test
+    fun `a readable or missing PIN never asks for the screen lock`() = runTest {
+        phoneHasScreenLock = true
+        coEvery { userDatasource.savePin(any()) } returns Unit
+        coEvery { credentialsDatasource.getAddress() } returns ""
+        coEvery { credentialsDatasource.markKeySetsNeedingPhrase(any()) } returns Unit
+
+        coEvery { userDatasource.retrievePin() } returns "0000"
+        assertFalse(userRepository.newPinNeedsScreenLock())
+        userRepository.savePin("123456")
+
+        coEvery { userDatasource.retrievePin() } returns ""
+        assertFalse(userRepository.newPinNeedsScreenLock())
+        userRepository.savePin("654321")
+
+        coVerify(exactly = 1) { userDatasource.savePin("123456") }
+        coVerify(exactly = 1) { userDatasource.savePin("654321") }
+    }
+
+    @Test
+    fun `whether the screen lock is needed is not guessed while the PIN cannot be looked at`() = runTest {
+        phoneHasScreenLock = true
+        coEvery { userDatasource.retrievePin() } throws
+            KeyMaterialUnavailableException("KEYSTORE_UNAVAILABLE", transient = true)
+
+        val error = runCatching { userRepository.newPinNeedsScreenLock() }.exceptionOrNull()
+
+        assertTrue(error is KeyMaterialUnavailableException)
     }
 
     @Test

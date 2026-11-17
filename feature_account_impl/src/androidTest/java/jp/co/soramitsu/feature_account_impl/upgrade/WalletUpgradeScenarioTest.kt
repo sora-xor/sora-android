@@ -45,6 +45,7 @@ import jp.co.soramitsu.core_db.WalletSigningGate
 import jp.co.soramitsu.core_db.WalletUpgradeBackup
 import jp.co.soramitsu.core_db.model.SoraAccountLocal
 import jp.co.soramitsu.core_db.model.WalletMigrationIds
+import jp.co.soramitsu.feature_account_api.domain.PhoneScreenLock
 import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
 import jp.co.soramitsu.feature_account_api.domain.model.RepairPinLockedException
 import jp.co.soramitsu.feature_account_api.domain.model.RetainedWallet
@@ -3471,6 +3472,7 @@ class WalletUpgradeScenarioTest {
                 LanguagesHolder(),
                 codec,
                 UserRepositorySr25519Crypto(),
+                PhoneScreenLock({ false }, { 0L }),
             )
         }
         private val migrationManager by lazy {
