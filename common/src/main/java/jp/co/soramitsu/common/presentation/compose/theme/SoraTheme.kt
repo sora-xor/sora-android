@@ -27,7 +27,6 @@ import androidx.compose.material.Shapes
 import androidx.compose.material.Typography
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.unit.dp
 import jp.co.soramitsu.common.presentation.compose.theme.neon.LocalFx
 import jp.co.soramitsu.common.presentation.compose.theme.neon.LocalNeon
@@ -35,7 +34,6 @@ import jp.co.soramitsu.common.presentation.compose.theme.neon.NeonClassicDark
 import jp.co.soramitsu.common.presentation.compose.theme.neon.NeonClassicDarkHighContrast
 import jp.co.soramitsu.common.presentation.compose.theme.neon.NeonClassicLight
 import jp.co.soramitsu.common.presentation.compose.theme.neon.NeonClassicLightHighContrast
-import jp.co.soramitsu.common.presentation.compose.theme.neon.NeonEffectsPreference
 import jp.co.soramitsu.common.presentation.compose.theme.neon.rememberFxPolicy
 import jp.co.soramitsu.common.presentation.compose.theme.tokens.DayThemeColors
 import jp.co.soramitsu.ui_core.lit.LitDay
@@ -85,17 +83,16 @@ import jp.co.soramitsu.ui_core.theme.opacities
  *   night palettes.
  * - `MaterialTheme.neon` ([LocalNeon]) carries the tokens that have no slot. The classic set
  *   fills them with the same palette: solid surfaces, no glass, glow, aurora or neumorphic depth.
- * - [LocalFx] carries the effect tier for this device and the "Reduce effects" setting.
+ * - [LocalFx] carries the effect tier for this device and the system's motion setting.
  * - Under the system high-contrast setting (API 34+), tertiary text uses the secondary colour
  *   and hairlines are twice as strong, in the ui-core slots and the neon tokens alike.
  */
 @Composable
 fun SoraAppTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    reduceEffects: Boolean = NeonEffectsPreference.reduceEffects.collectAsState().value,
     content: @Composable () -> Unit,
 ) {
-    val fx = rememberFxPolicy(reduceEffects)
+    val fx = rememberFxPolicy()
     val highContrast = fx.highContrast
     AppTheme(
         darkTheme = darkTheme,

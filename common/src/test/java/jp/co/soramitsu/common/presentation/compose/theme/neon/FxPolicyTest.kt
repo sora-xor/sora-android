@@ -33,8 +33,16 @@ class FxPolicyTest {
         lowRam: Boolean = false,
         mem: Long = 8 * gib,
         powerSave: Boolean = false,
-        reduce: Boolean = false,
-    ) = resolveFxTier(sdk, lowRam, mem, powerSave, reduce)
+    ) = resolveFxTier(sdk, lowRam, mem, powerSave)
+
+    private val phone = DeviceFxSignals(
+        sdkInt = 35,
+        isLowRamDevice = false,
+        totalMemBytes = 8 * gib,
+        powerSave = false,
+        animatorsEnabled = true,
+        highContrast = false,
+    )
 
     @Test
     fun `modern phone gets full effects`() {
@@ -51,13 +59,12 @@ class FxPolicyTest {
     }
 
     @Test
-    fun `api 26 and 27, low ram, under 1_8 GiB or the setting give minimal effects`() {
+    fun `api 26 and 27, low ram or under 1_8 GiB give minimal effects`() {
         assertEquals(FxTier.MINIMAL, tier(sdk = 26))
         assertEquals(FxTier.MINIMAL, tier(sdk = 27))
         assertEquals(FxTier.MINIMAL, tier(lowRam = true))
         assertEquals(FxTier.MINIMAL, tier(mem = gib))
-        assertEquals(FxTier.MINIMAL, tier(reduce = true))
-        assertEquals(FxTier.MINIMAL, tier(sdk = 36, mem = 16 * gib, reduce = true))
+        assertEquals(FxTier.MINIMAL, tier(sdk = 36, mem = 16 * gib, lowRam = true))
     }
 
     @Test
@@ -66,33 +73,55 @@ class FxPolicyTest {
     }
 
     @Test
-    fun `the classic design draws no glow on any tier`() {
-        val signals = DeviceFxSignals(
-            sdkInt = 35,
-            isLowRamDevice = false,
-            totalMemBytes = 8 * gib,
-            powerSave = false,
-            animatorsEnabled = true,
-            highContrast = false,
-        )
-        val full = FxPolicy.from(signals, reduceEffects = false)
+    fun `a modern phone with motion on gets every live effect and no glow`() {
+        val full = FxPolicy.from(phone)
         assertEquals(FxTier.FULL, full.tier)
-        assertFalse(full.glows)
-        assertTrue(full.shadows)
+        assertFalse(full.reduceMotion)
+        assertTrue(full.litMotion)
         assertTrue(full.loops)
+        assertTrue(full.shadows)
+        assertFalse(full.glows)
+        assertFalse(full.highContrast)
+    }
 
-        val noMotion = FxPolicy.from(signals.copy(animatorsEnabled = false), reduceEffects = false)
-        assertTrue(noMotion.reduceMotion)
-        assertFalse(noMotion.loops)
+    @Test
+    fun `the system's remove animations setting turns off all motion but keeps the tier`() {
+        val still = FxPolicy.from(phone.copy(animatorsEnabled = false))
+        assertEquals(FxTier.FULL, still.tier)
+        assertTrue(still.reduceMotion)
+        assertFalse(still.litMotion)
+        assertFalse(still.loops)
+        assertTrue(still.shadows)
+    }
 
-        val reduced = FxPolicy.from(signals, reduceEffects = true)
-        assertEquals(FxTier.MINIMAL, reduced.tier)
-        assertTrue(reduced.reduceMotion)
-        assertFalse(reduced.loops)
-        assertFalse(reduced.shadows)
+    @Test
+    fun `power save keeps loops and shadows but stops decorative motion`() {
+        val saving = FxPolicy.from(phone.copy(powerSave = true))
+        assertEquals(FxTier.REDUCED, saving.tier)
+        assertFalse(saving.reduceMotion)
+        assertFalse(saving.litMotion)
+        assertTrue(saving.loops)
+        assertTrue(saving.shadows)
+    }
 
-        val contrast = FxPolicy.from(signals.copy(highContrast = true), reduceEffects = false)
-        assertTrue(contrast.highContrast)
-        assertFalse(contrast.glows)
+    @Test
+    fun `a low ram phone draws flat and still`() {
+        val small = FxPolicy.from(phone.copy(isLowRamDevice = true))
+        assertEquals(FxTier.MINIMAL, small.tier)
+        assertFalse(small.reduceMotion)
+        assertFalse(small.litMotion)
+        assertFalse(small.loops)
+        assertFalse(small.shadows)
+    }
+
+    @Test
+    fun `high contrast comes from the system`() {
+        assertTrue(FxPolicy.from(phone.copy(highContrast = true)).highContrast)
+    }
+
+    @Test
+    fun `the retired reduce effects value changes nothing`() {
+        assertEquals(FxPolicy.from(phone), FxPolicy.from(phone, reduceEffects = true))
+        assertFalse(NeonEffectsPreference.reduceEffects.value)
     }
 }

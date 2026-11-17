@@ -23,7 +23,6 @@ class AppSettingsStateFlowTest {
     private val theme = MutableSharedFlow<DarkThemeManager.DarkModeSettings>(replay = 1).apply {
         tryEmit(DarkThemeManager.DarkModeSettings(false, true))
     }
-    private val effects = MutableStateFlow(false)
     private val features = MutableStateFlow(ProductionFeatureState(true, true, false, false, true, false, false))
     private val router = mockk<MainRouter>(relaxed = true)
     private val darkManager = mockk<DarkThemeManager>()
@@ -32,10 +31,8 @@ class AppSettingsStateFlowTest {
     @Before fun setup() {
         mockkObject(WalletDiagnostics); every { WalletDiagnostics.recordException(any()) } just Runs
         every { darkManager.mutableDarkThemeSharedFlow } returns theme
-        every { darkManager.reduceEffectsFlow } returns effects
         coEvery { darkManager.setDarkThemeEnabled(any()) } coAnswers { theme.emit(DarkThemeManager.DarkModeSettings(false, firstArg())) }
         coEvery { darkManager.setSystemDrivenUiEnabled(any()) } coAnswers { theme.emit(DarkThemeManager.DarkModeSettings(firstArg(), false)) }
-        coEvery { darkManager.setReduceEffects(any()) } answers { effects.value = firstArg() }
         every { featureManager.observeState() } returns features
         coEvery { featureManager.getState() } answers { features.value }
         coEvery { featureManager.setTairaVisible(any()) } answers { features.value = features.value.copy(tairaVisible = firstArg()) }
@@ -79,10 +76,6 @@ class AppSettingsStateFlowTest {
         val vm = vm(); runCurrent(); val previous = vm.state; vm.toggleDarkMode(false); runCurrent(); assertEquals(previous, vm.state)
         verify(exactly = 0) { WalletDiagnostics.recordException(any()) }
     }
-    @Test fun reducedEffectsChoiceFollowsSavedFlow() = runTest {
-        val vm = vm(); runCurrent(); vm.toggleReduceEffects(true); runCurrent(); assertTrue(vm.state.reduceEffectsChecked)
-        effects.value = false; runCurrent(); assertFalse(vm.state.reduceEffectsChecked)
-    }
     @Test fun unavailableTestNetworkCannotBeEnabledByHandler() = runTest {
         features.value = features.value.copy(tairaAvailable = false); val vm = vm(); runCurrent(); vm.toggleTestNetworks(true); runCurrent()
         coVerify(exactly = 0) { featureManager.setTairaVisible(any()) }; assertFalse(vm.state.testNetworksChecked)
@@ -115,7 +108,7 @@ class AppSettingsStateFlowTest {
     }
     @Test fun clearingViewModelStopsPreferenceObservers() = runTest {
         val vm = vm(); runCurrent(); val previous = vm.state; store.clear()
-        effects.value = true; theme.emit(DarkThemeManager.DarkModeSettings(true, false)); features.value = features.value.copy(tairaVisible = true); runCurrent()
+        theme.emit(DarkThemeManager.DarkModeSettings(true, false)); features.value = features.value.copy(tairaVisible = true); runCurrent()
         assertEquals(previous, vm.state)
     }
 }

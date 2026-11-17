@@ -262,7 +262,9 @@ class NeonProductionScreensTest {
         var system by mutableStateOf(false)
         val actions = mutableListOf<String>()
         rule.setContent {
-            SoraAppTheme(darkTheme = dark, reduceEffects = true) {
+            SoraAppTheme(darkTheme = dark) {
+                // Still and flat, as on a device with animations removed, so the captures are stable.
+                CompositionLocalProvider(LocalFx provides LocalFx.current.copy(tier = FxTier.MINIMAL, reduceMotion = true)) {
                 Box(Modifier.fillMaxSize()) {
                     NeonBackground()
                     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(top = 64.dp)) {
@@ -271,6 +273,7 @@ class NeonProductionScreensTest {
                     else AppSettingsScreen(system, dark, false, false,
                         { system = it; dark = false }, { dark = it; system = false }, {})
                     }
+                }
                 }
             }
         }

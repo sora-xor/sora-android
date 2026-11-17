@@ -18,7 +18,6 @@ import com.airbnb.lottie.LottieAnimationView
 import jp.co.soramitsu.core_db.AppDatabase
 import jp.co.soramitsu.feature_main_impl.presentation.MainActivity
 import jp.co.soramitsu.sora.R
-import jp.co.soramitsu.sora.SoraApp
 import jp.co.soramitsu.sora.splash.presentation.SplashActivity
 import kotlinx.coroutines.runBlocking
 import org.json.JSONObject
@@ -36,8 +35,6 @@ import java.io.File
 class SplashAnimationTest {
     private val instrumentation = InstrumentationRegistry.getInstrumentation()
     private val context get() = instrumentation.targetContext
-    private val app get() = context.applicationContext as SoraApp
-    private var previousReduceEffects: Boolean? = null
     private val opened = mutableListOf<Activity>()
     private val output get() = File(context.getExternalFilesDir(null), "splash-motion").apply { mkdirs() }
 
@@ -46,12 +43,10 @@ class SplashAnimationTest {
         val accounts = runBlocking { AppDatabase.get(context).accountDao().getAccounts() }
         check(accounts.single().substrateAddress == "cnT65V7vJnPkR2Y2AxXwV1Bpcbab7vNaHGd3ZxXjrTpPuxvj2")
         instrumentation.runOnMainSync { HardwareRenderer.setDrawingEnabled(true) }
-        previousReduceEffects = app.darkThemeManager.reduceEffectsFlow.value
     }
 
-    @After fun restorePreference() {
+    @After fun closeOpenedActivities() {
         opened.forEach { activity -> instrumentation.runOnMainSync { activity.finish() } }
-        previousReduceEffects?.let { runBlocking { app.darkThemeManager.setReduceEffects(it) } }
     }
 
     @Test fun launchWindowIsNeutralBeforeTheSavedThemeLoads() {
@@ -73,7 +68,6 @@ class SplashAnimationTest {
     }
 
     @Test fun readyStartupUsesThePlatformAppropriateIntroduction() {
-        runBlocking { app.darkThemeManager.setReduceEffects(false) }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             launchAndMeasure("system-splash", pauseRenderer = false) { animation, _ ->
                 instrumentation.runOnMainSync {
@@ -99,18 +93,7 @@ class SplashAnimationTest {
         assertTrue("Fast verification must not cut the animation to 500 ms", elapsed >= 2200)
     }
 
-    @Test fun reducedEffectsBypassesSplashMotion() {
-        runBlocking { app.darkThemeManager.setReduceEffects(true) }
-        launchAndMeasure("reduced", pauseRenderer = false) { animation, _ ->
-            instrumentation.runOnMainSync {
-                assertTrue("Reduced effects must not play splash motion", !animation.isAnimating)
-                assertTrue("Reduced effects must show the static exit frame", animation.progress >= 0.89f)
-            }
-        }
-    }
-
     @Test fun pausedRendererCannotHoldStartupIndefinitely() {
-        runBlocking { app.darkThemeManager.setReduceEffects(false) }
         val elapsed = launchAndMeasure("renderer-fallback", pauseRenderer = true)
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
             assertTrue("The paused legacy renderer should exercise the bounded fallback", elapsed >= 3500)
@@ -143,7 +126,6 @@ class SplashAnimationTest {
                 File(output, "$name.json").writeText(JSONObject().apply {
                     put("elapsedMillis", elapsed)
                     put("nextActivity", next.javaClass.name)
-                    put("reduceEffects", app.darkThemeManager.reduceEffectsFlow.value)
                     put("rendererPausedByTest", pauseRenderer)
                 }.toString(2))
                 return elapsed

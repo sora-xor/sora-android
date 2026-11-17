@@ -79,20 +79,30 @@ data class FxPolicy(
         /** Safe default used before a device has been measured (and in previews). */
         val Default = FxPolicy(FxTier.REDUCED, reduceMotion = false, highContrast = false)
 
-        fun from(signals: DeviceFxSignals, reduceEffects: Boolean): FxPolicy {
+        /**
+         * Motion follows the system only: Remove animations (animator duration scale 0) turns
+         * off all decorative and looping motion; the tier comes from the device.
+         */
+        fun from(signals: DeviceFxSignals): FxPolicy {
             val tier = resolveFxTier(
                 sdkInt = signals.sdkInt,
                 isLowRamDevice = signals.isLowRamDevice,
                 totalMemBytes = signals.totalMemBytes,
                 powerSave = signals.powerSave,
-                reduceEffects = reduceEffects,
             )
             return FxPolicy(
                 tier = tier,
-                reduceMotion = reduceEffects || !signals.animatorsEnabled,
+                reduceMotion = !signals.animatorsEnabled,
                 highContrast = signals.highContrast,
             )
         }
+
+        /**
+         * Transitional: MainActivity still passes the retired "Reduce effects" value, which is
+         * always false now. Removed with that call.
+         */
+        fun from(signals: DeviceFxSignals, @Suppress("UNUSED_PARAMETER") reduceEffects: Boolean): FxPolicy =
+            from(signals)
     }
 }
 
@@ -111,12 +121,10 @@ fun resolveFxTier(
     isLowRamDevice: Boolean,
     totalMemBytes: Long,
     powerSave: Boolean,
-    reduceEffects: Boolean,
 ): FxTier {
     val memKnown = totalMemBytes > 0
     return when {
-        reduceEffects ||
-            sdkInt < Build.VERSION_CODES.P ||
+        sdkInt < Build.VERSION_CODES.P ||
             isLowRamDevice ||
             (memKnown && totalMemBytes < REDUCED_MIN_MEM_BYTES) -> FxTier.MINIMAL
 
@@ -197,25 +205,16 @@ internal object DeviceFxMonitor {
 }
 
 /**
- * The in-app "Reduce effects" switch (Settings, Appearance). Persisted by
- * [jp.co.soramitsu.common.domain.DarkThemeManager] under its own key `neon_reduce_effects`;
- * this holder only shares the current value with every `SoraAppTheme`.
+ * Transitional: the retired in-app "Reduce effects" switch, always false. The value the 3.9.2
+ * open-testing build stored under `neon_reduce_effects` stays on the phone and is no longer
+ * read. MainActivity and the splash still collect this; it goes with those reads.
  */
 object NeonEffectsPreference {
-
-    const val KEY = "neon_reduce_effects"
-
-    private val state = MutableStateFlow(false)
-
-    val reduceEffects: StateFlow<Boolean> = state.asStateFlow()
-
-    fun update(reduceEffects: Boolean) {
-        state.value = reduceEffects
-    }
+    val reduceEffects: StateFlow<Boolean> = MutableStateFlow(false).asStateFlow()
 }
 
 @Composable
-fun rememberFxPolicy(reduceEffects: Boolean): FxPolicy {
+fun rememberFxPolicy(): FxPolicy {
     val context = LocalContext.current.applicationContext
     val signals by remember(context) { DeviceFxMonitor.signals(context) }.collectAsState()
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -226,5 +225,5 @@ fun rememberFxPolicy(reduceEffects: Boolean): FxPolicy {
         lifecycleOwner.lifecycle.addObserver(observer)
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
-    return remember(signals, reduceEffects) { FxPolicy.from(signals, reduceEffects) }
+    return remember(signals) { FxPolicy.from(signals) }
 }

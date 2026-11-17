@@ -139,19 +139,10 @@ class DarkThemeManager @Inject constructor(
                 .equals(AppCompatDelegate.MODE_NIGHT_YES)
         )
 
-    /**
-     * The in-app "Reduce effects" switch (SORA Neon). Stored under its own key; the theme keys
-     * above are never touched by it.
-     */
+    /** Transitional: the retired "Reduce effects" switch, always false; the splash still reads it. */
     val reduceEffectsFlow: StateFlow<Boolean> = NeonEffectsPreference.reduceEffects
 
     fun updateUiModeFromCache() {
-        coroutineManager.applicationScope.launch {
-            runCatching {
-                soraPreferences.getBoolean(field = NeonEffectsPreference.KEY, defaultValue = false)
-            }.onSuccess(NeonEffectsPreference::update)
-                .onFailure { Timber.w(it, "Could not read the reduce effects setting") }
-        }
         coroutineManager.applicationScope.launch {
             mutableDarkThemeSharedFlow.emit(
                 value = DarkModeSettings(
@@ -198,13 +189,6 @@ class DarkThemeManager @Inject constructor(
                 isSystemDrivenUiEnabled = newDarkModeValue,
                 isDarkModeEnabled = false
             )
-        )
-    }
-
-    suspend fun setReduceEffects(enabled: Boolean) {
-        soraPreferences.putBoolean(NeonEffectsPreference.KEY, enabled)
-        NeonEffectsPreference.update(
-            soraPreferences.getBoolean(NeonEffectsPreference.KEY, false) // double check, as above
         )
     }
 
