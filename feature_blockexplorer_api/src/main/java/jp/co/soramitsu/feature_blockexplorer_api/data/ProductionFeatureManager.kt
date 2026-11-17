@@ -5,7 +5,6 @@ import javax.inject.Singleton
 import jp.co.soramitsu.common.data.SoraPreferences
 import jp.co.soramitsu.common.nexus.NexusNetworks
 import jp.co.soramitsu.common.nexus.WalletNetworkId
-import jp.co.soramitsu.common.util.ReleaseSurfacePolicy
 import jp.co.soramitsu.feature_blockexplorer_api.data.models.EmergencyFeatureFlags
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
@@ -51,31 +50,19 @@ internal object TairaVisibilityPolicy {
 /**
  * Decides which optional features are shown, applying remotely supplied emergency kill switches.
  *
- * - [ReleaseSurfacePolicy] decides which builds offer test networks, the Nexus portfolio and
- *   Polkamarkt at all. On the SORA Nexus line every flavor offers them; where a build does not
- *   (the 3.9.x store policy's production flavor), the PI flags cannot switch them on.
- * - Where they are offered, the PI indexer flags decide. An unreachable indexer, or an older one
+ * - Every build offers test networks, the Nexus portfolio and Polkamarkt; the PI indexer flags
+ *   decide whether they are shown. An unreachable indexer, or an older one
  *   without capability flags, keeps the last complete flag set, or the tester defaults before
  *   any was cached. A rejected `mobileConfig` turns features off for that read, quietly instead
  *   of showing an error, and is not cached.
  * - A remote default update never overwrites a user's explicit test-network choice.
  */
 @Singleton
-class ProductionFeatureManager internal constructor(
+class ProductionFeatureManager @Inject constructor(
     private val preferences: SoraPreferences,
     private val indexerClient: PolkaswapIndexerClient,
-    private val surfaces: ReleaseSurfacePolicy.Surfaces,
 ) {
-    @Inject
-    constructor(
-        preferences: SoraPreferences,
-        indexerClient: PolkaswapIndexerClient,
-    ) : this(preferences, indexerClient, ReleaseSurfacePolicy.current)
-
-    private val testNetworksAllowed: Boolean
-        get() = surfaces.testNetworks && surfaces.nexusPortfolio
-
-    /** The flag set of the last successful PI read, before [ReleaseSurfacePolicy] is applied. */
+    /** The flag set of the last successful PI read. */
     private val remoteConfigFlags = MutableStateFlow<EmergencyFeatureFlags?>(null)
 
     suspend fun getStateForNetwork(network: WalletNetworkId): ProductionFeatureState =
@@ -125,7 +112,7 @@ class ProductionFeatureManager internal constructor(
         } else {
             INCOMPLETE_CACHE_FLAGS
         }
-        val flags = remoteFlags.allowedBy(surfaces)
+        val flags = remoteFlags
         val explicitTairaPreference = preferences
             .getBooleanSnapshot(TAIRA_EXPLICIT_PREFERENCE_KEYS)[TAIRA_VISIBLE]
         val tairaVisibility = TairaVisibilityPolicy.resolve(
@@ -147,9 +134,8 @@ class ProductionFeatureManager internal constructor(
                     reportedConfig != null &&
                     flags.polkamarktVisible &&
                     flags.polkamarktMutationsAvailable,
-            tairaAvailable = testNetworksAllowed &&
-                NexusNetworks.find(WalletNetworkId.TAIRA) != null,
-            tairaVisible = testNetworksAllowed && tairaVisibility.visible,
+            tairaAvailable = NexusNetworks.find(WalletNetworkId.TAIRA) != null,
+            tairaVisible = tairaVisibility.visible,
             tairaPreferenceIsExplicit = tairaVisibility.preferenceIsExplicit,
         )
     }
@@ -177,7 +163,7 @@ class ProductionFeatureManager internal constructor(
         // DataStore and this flow may deliver independently. Only the exact remotely validated
         // flag snapshot can authorize capabilities; an older cached snapshot never borrows it.
         val remoteAvailable = snapshot[PI_FLAGS_CACHED] == true && remoteFlags == cachedFlags
-        val flags = cachedFlags.allowedBy(surfaces)
+        val flags = cachedFlags
         val visibility = TairaVisibilityPolicy.resolve(
             flags.nexusAvailable, flags.tairaDefaultVisible, snapshot[TAIRA_VISIBLE],
         )
@@ -188,21 +174,11 @@ class ProductionFeatureManager internal constructor(
             polkamarktVisible = flags.polkamarktVisible,
             polkamarktMutationsAvailable = LOCAL_POLKAMARKT_MUTATIONS_QUALIFIED && remoteAvailable &&
                 flags.polkamarktVisible && flags.polkamarktMutationsAvailable,
-            tairaAvailable = testNetworksAllowed && WalletNetworkId.TAIRA in NexusNetworks.liveIds,
-            tairaVisible = testNetworksAllowed && visibility.visible,
+            tairaAvailable = WalletNetworkId.TAIRA in NexusNetworks.liveIds,
+            tairaVisible = visibility.visible,
             tairaPreferenceIsExplicit = visibility.preferenceIsExplicit,
         )
     }.distinctUntilChanged()
-
-    private fun EmergencyFeatureFlags.allowedBy(
-        surfaces: ReleaseSurfacePolicy.Surfaces,
-    ): EmergencyFeatureFlags = EmergencyFeatureFlags(
-        nexusAvailable = surfaces.nexusPortfolio && nexusAvailable,
-        nexusSendsAvailable = surfaces.nexusPortfolio && nexusSendsAvailable,
-        polkamarktVisible = surfaces.polkamarkt && polkamarktVisible,
-        polkamarktMutationsAvailable = surfaces.polkamarkt && polkamarktMutationsAvailable,
-        tairaDefaultVisible = surfaces.testNetworks && tairaDefaultVisible,
-    )
 
     private suspend fun cache(flags: EmergencyFeatureFlags) {
         // DataStore commits this map in one edit. Readers therefore observe the
