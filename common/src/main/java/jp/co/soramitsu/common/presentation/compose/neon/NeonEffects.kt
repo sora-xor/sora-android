@@ -36,23 +36,18 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.draw.dropShadow
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.ImageShader
-import androidx.compose.ui.graphics.Outline
-import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.ShaderBrush
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.semantics.clearAndSetSemantics
-import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import jp.co.soramitsu.ui_core.lit.litPlate
-import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import kotlin.math.roundToInt
 import kotlin.random.Random
@@ -115,33 +110,6 @@ fun NeonBackground(modifier: Modifier = Modifier, safe: Boolean = false) {
 }
 
 /**
- * Restrained 24 dp grid for hero surfaces only (Splash, Welcome, HeroCard; design spec 4.2.3).
- * Fades radially from the top-end corner through a brush, so there is no mask or offscreen layer.
- */
-fun Modifier.neonGrid(n: NeonTokens, enabled: Boolean, cell: Dp = 24.dp): Modifier =
-    if (!enabled) {
-        this
-    } else {
-        drawWithCache {
-            val center = Offset(size.width * .85f, 0f)
-            val radius = (size.width * 1.1f).coerceAtLeast(1f)
-            val minor = Brush.radialGradient(listOf(n.gridMinor, n.gridMinor.copy(alpha = 0f)), center, radius)
-            val major = Brush.radialGradient(listOf(n.gridMajor, n.gridMajor.copy(alpha = 0f)), center, radius)
-            val step = cell.toPx().coerceAtLeast(1f)
-            val xs = generateSequence(0f) { it + step }.takeWhile { it <= size.width }.toList()
-            val ys = generateSequence(0f) { it + step }.takeWhile { it <= size.height }.toList()
-            onDrawBehind {
-                xs.forEachIndexed { i, x ->
-                    drawLine(if (i % 4 == 0) major else minor, Offset(x + .5f, 0f), Offset(x + .5f, size.height), 1f)
-                }
-                ys.forEachIndexed { i, y ->
-                    drawLine(if (i % 4 == 0) major else minor, Offset(0f, y + .5f), Offset(size.width, y + .5f), 1f)
-                }
-            }
-        }
-    }
-
-/**
  * "Fake glass" for cards and panels (design spec 4.3.1): translucent fill, a top sheen and a
  * gradient hairline, with no runtime blur. Falls back to the opaque `glass.solid` on MINIMAL,
  * under high contrast, or when [opaqueColor] is given (secrets and review surfaces).
@@ -183,38 +151,6 @@ fun Modifier.neonChrome(n: NeonTokens, visibility: () -> Float): Modifier = draw
             alpha = a,
         )
     }
-}
-
-/**
- * The HeroCard silhouette: rounded corners with a 14 dp 45-degree cut at the top-right corner
- * (design spec 6). The cut is a brand mark and is not mirrored in RTL.
- */
-class ChamferShape(private val radius: Dp = 28.dp, private val cut: Dp = 14.dp) : Shape {
-    override fun createOutline(size: Size, layoutDirection: LayoutDirection, density: Density): Outline {
-        val r = with(density) { radius.toPx() }.coerceAtMost(minOf(size.width, size.height) / 2f)
-        val c = with(density) { cut.toPx() }.coerceAtMost(minOf(size.width, size.height) / 2f)
-        val w = size.width
-        val h = size.height
-        return Outline.Generic(
-            Path().apply {
-                moveTo(r, 0f)
-                lineTo(w - c, 0f)
-                lineTo(w, c)
-                lineTo(w, h - r)
-                arcTo(Rect(w - 2 * r, h - 2 * r, w, h), 0f, 90f, false)
-                lineTo(r, h)
-                arcTo(Rect(0f, h - 2 * r, 2 * r, h), 90f, 90f, false)
-                lineTo(0f, r)
-                arcTo(Rect(0f, 0f, 2 * r, 2 * r), 180f, 90f, false)
-                close()
-            },
-        )
-    }
-
-    override fun equals(other: Any?): Boolean =
-        other is ChamferShape && other.radius == radius && other.cut == cut
-
-    override fun hashCode(): Int = 31 * radius.hashCode() + cut.hashCode()
 }
 
 /**

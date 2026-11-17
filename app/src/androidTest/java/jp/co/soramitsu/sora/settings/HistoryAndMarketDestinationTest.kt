@@ -110,8 +110,5 @@ class HistoryAndMarketDestinationTest {
         compose.onNodeWithText("Reset runtime").performClick()
         compose.onNodeWithText("Change google account").performClick()
         compose.runOnIdle { verify(exactly = 1) { vm.onResetRuntimeClick(); vm.onChangeGoogleAccount(any()) } }
-        compose.onNodeWithText("SORA Neon components").performClick()
-        compose.onNodeWithText("Close").performClick()
-        compose.onNodeWithText("Reset runtime").assertIsDisplayed()
     }
 }

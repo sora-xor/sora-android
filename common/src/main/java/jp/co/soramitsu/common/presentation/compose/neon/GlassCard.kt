@@ -137,12 +137,10 @@ fun ContentCardEndless(
 )
 
 /** Balance/receive hero. The classic design has none: it is a plain card. */
-@Suppress("UNUSED_PARAMETER")
 @Composable
 fun HeroCard(
     modifier: Modifier = Modifier,
     onClick: (() -> Unit)? = null,
-    grid: Boolean = true,
     content: @Composable BoxScope.() -> Unit,
 ) = ContentCard(modifier = modifier, onClick = onClick, content = content)
 
