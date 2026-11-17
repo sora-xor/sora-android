@@ -283,6 +283,52 @@ class SplashActivityFlowTest {
         verify(exactly = 1) { safeModel.startRetryFromHome() }
         verify(exactly = 0) { splashModel.start() }
     }
+    // Codex re-review 2: the storage step gives back cache on a worker while it holds the backup's
+    // lock. Recreating the startup screen (rotation) meanwhile must not wait for that lock on the
+    // main thread. The real WalletUpgradeBackup answers here; the test holds its lock as a parked
+    // storage step does (core_db's WalletUpgradeBackupTest parks the real one).
+    @Test fun recreatingTheStartupScreenNeverWaitsForAStorageStepHoldingTheBackupLock() {
+        unmockkObject(WalletUpgradeBackup)
+        try {
+            launch()
+            val held = java.util.concurrent.CountDownLatch(1)
+            val release = java.util.concurrent.CountDownLatch(1)
+            val storageStep = kotlin.concurrent.thread(name = "parked-storage-step") {
+                synchronized(WalletUpgradeBackup) {
+                    held.countDown()
+                    release.await(60, java.util.concurrent.TimeUnit.SECONDS)
+                }
+            }
+            try {
+                assertTrue(held.await(10, java.util.concurrent.TimeUnit.SECONDS))
+                val recreation = kotlin.concurrent.thread(name = "recreate") { scenario!!.recreate() }
+                recreation.join(15_000)
+                assertFalse("the startup screen waited for the storage step's lock", recreation.isAlive)
+                assertEquals(Lifecycle.State.RESUMED, scenario!!.state)
+            } finally {
+                release.countDown()
+                storageStep.join(15_000)
+            }
+        } finally {
+            mockkObject(WalletUpgradeBackup)
+        }
+    }
+    // Codex re-review 2: recreated while the recovery screen shows (here: the storage step runs
+    // behind its progress screen), the activity decides nothing again: no second panel, which
+    // would drop the progress screen of a step still running.
+    @Test fun recreationWhileTheRecoveryScreenShowsDecidesNothingAgain() {
+        every { WalletUpgradeBackup.startupFailureToShow(any()) } returns
+            WalletUpgradeBackup.Failure("INSUFFICIENT_BACKUP_STORAGE")
+        launch()
+        verify(exactly = 1) { safeModel.showPanel("INSUFFICIENT_BACKUP_STORAGE", any(), any(), unattended = true) }
+        safe.value = SafeModeUiState(visible = true)
+
+        scenario!!.recreate(); drainMainQueue()
+
+        verify(exactly = 1) { safeModel.showPanel(any(), any(), any(), any()) }
+        verify(exactly = 1) { WalletUpgradeBackup.startupFailureToShow(any()) }
+        assertEquals(Lifecycle.State.RESUMED, scenario!!.state)
+    }
     // Audit item 13: "Try upgrade again" from the read-only home gets its answer on the panel;
     // only a start nobody asked anything in may open the wallet read-only by itself.
     @Test fun retryFromHomeThatFailsShowsItsPanelAsAnAnswerNotAsAnUnattendedStart() {

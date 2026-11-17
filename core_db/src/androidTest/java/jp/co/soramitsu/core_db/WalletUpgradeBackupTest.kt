@@ -913,6 +913,60 @@ class WalletUpgradeBackupTest {
         assertFalse(images.exists())
     }
 
+    // Codex re-review 2: the storage step gives back cache with this object's lock held (that
+    // keeps it apart from a recovery export being written). What the screens read on the main
+    // thread must answer meanwhile, without that lock.
+    @Test
+    fun nothingTheScreensReadWaitsWhileTheStorageStepGivesBackCache() {
+        emptyCacheFolder()
+        createLegacyDatabase(withAccount = true)
+        putWalletMarker()
+        assertTrue(WalletUpgradeBackup.prepareWithAvailableBackupBytesForTest(context, 0L).isFailure)
+        val required = requireNotNull(WalletUpgradeBackup.blockingFailure()?.requiredBytes)
+        val images = cacheFile("image_cache/a1b2c3.0", required + 65_536)
+        val parked = java.util.concurrent.CountDownLatch(1)
+        val release = java.util.concurrent.CountDownLatch(1)
+        WalletUpgradeBackup.whileReclaimingCacheForTest = {
+            parked.countDown()
+            release.await(60, java.util.concurrent.TimeUnit.SECONDS)
+        }
+        var stepResult: Result<Unit>? = null
+        val storageStep = kotlin.concurrent.thread(name = "storage-step") {
+            stepResult = WalletUpgradeBackup.prepareAfterReclaimingCacheForTest(context, 0L)
+        }
+        try {
+            assertTrue(parked.await(30, java.util.concurrent.TimeUnit.SECONDS))
+            // The step really holds the lock while it is parked.
+            val probe = kotlin.concurrent.thread(name = "lock-probe") { synchronized(WalletUpgradeBackup) {} }
+            val deadline = SystemClock.elapsedRealtime() + 5_000
+            while (probe.state != Thread.State.BLOCKED && SystemClock.elapsedRealtime() < deadline) Thread.sleep(10)
+            assertEquals(Thread.State.BLOCKED, probe.state)
+
+            val answered = java.util.concurrent.CountDownLatch(1)
+            val reads = kotlin.concurrent.thread(name = "screen-reads") {
+                WalletUpgradeBackup.startupFailureToShow(context)
+                WalletUpgradeBackup.isAutomaticMigrationRetryAvailable(context)
+                WalletUpgradeBackup.recoveryOptions()
+                WalletUpgradeBackup.blockingFailure()
+                WalletUpgradeBackup.recoveryFacts()
+                answered.countDown()
+            }
+            assertTrue(
+                "a screen read waited for the storage step",
+                answered.await(5, java.util.concurrent.TimeUnit.SECONDS),
+            )
+            reads.join(1_000)
+            assertTrue(images.exists())
+        } finally {
+            release.countDown()
+            storageStep.join(60_000)
+            WalletUpgradeBackup.whileReclaimingCacheForTest = null
+        }
+        // Released, the step gives back the cache and goes on.
+        assertTrue("${WalletUpgradeBackup.blockingFailure()}", requireNotNull(stepResult).isSuccess)
+        assertFalse(images.exists())
+    }
+
     // Codex review 5: Android's own clearing of cached files does not know to keep a recovery
     // file the person made; while one is in the cache folder, Android is not asked.
     @Test
