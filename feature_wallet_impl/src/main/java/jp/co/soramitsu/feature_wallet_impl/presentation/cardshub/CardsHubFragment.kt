@@ -19,53 +19,20 @@ limitations under the License.
 
 package jp.co.soramitsu.feature_wallet_impl.presentation.cardshub
 
-import android.graphics.Color
 import android.os.Bundle
 import android.view.View
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.ScrollState
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.AlertDialog
-import androidx.compose.material.Card
-import androidx.compose.material.CircularProgressIndicator
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.OutlinedTextField
-import androidx.compose.material.Text
-import androidx.compose.material.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalUriHandler
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -78,11 +45,6 @@ import jp.co.soramitsu.androidfoundation.intent.ShareUtil
 import jp.co.soramitsu.common.base.SoraBaseFragment
 import jp.co.soramitsu.common.base.theOnlyRoute
 import jp.co.soramitsu.common.domain.BottomBarController
-import jp.co.soramitsu.common.nexus.WalletNetworkAction
-import jp.co.soramitsu.common.nexus.WalletNetworkChoice
-import jp.co.soramitsu.common.nexus.WalletNetworkId
-import jp.co.soramitsu.common.presentation.compose.neon.safemode.AccountReadOnlyNotice
-import jp.co.soramitsu.common.presentation.compose.neon.safemode.LocalSelectedAccountReadOnly
 import jp.co.soramitsu.common.presentation.compose.neon.safemode.ReadOnlyBanner
 import jp.co.soramitsu.common.presentation.compose.neon.safemode.ReadOnlyLearnMoreSheet
 import jp.co.soramitsu.common.presentation.compose.neon.safemode.UpgradeCompleteChecks
@@ -92,36 +54,17 @@ import jp.co.soramitsu.common.presentation.compose.neon.safemode.WalletSessionSt
 import jp.co.soramitsu.common.presentation.compose.neon.safemode.WalletUpgradeRetry
 import jp.co.soramitsu.common.presentation.compose.neon.safemode.rememberReadOnlyBrowsing
 import jp.co.soramitsu.common.presentation.compose.neon.safemode.rememberWalletReadOnly
-import jp.co.soramitsu.common.util.QrCodeGenerator
-import jp.co.soramitsu.common.util.ReleaseSurfacePolicy
-import jp.co.soramitsu.common.util.StringPair
-import jp.co.soramitsu.common_wallet.presentation.compose.components.PoolsList
-import jp.co.soramitsu.common_wallet.presentation.compose.states.AssetCardState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.BackupWalletState
-import jp.co.soramitsu.common_wallet.presentation.compose.states.BasicBannerCardState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.CardsState
-import jp.co.soramitsu.common_wallet.presentation.compose.states.FavoriteAssetsCardState
-import jp.co.soramitsu.common_wallet.presentation.compose.states.FavoritePoolsCardState
-import jp.co.soramitsu.common_wallet.presentation.compose.states.ReferralState
-import jp.co.soramitsu.common_wallet.presentation.compose.states.TitledAmountCardState
-import jp.co.soramitsu.feature_wallet_impl.data.nexus.NexusPortfolioBalance
 import jp.co.soramitsu.feature_wallet_impl.presentation.portfolio.PortfolioRoutes
 import jp.co.soramitsu.feature_wallet_impl.presentation.portfolio.PortfolioViewModel
-import jp.co.soramitsu.common.presentation.compose.neon.BleachedButton
-import jp.co.soramitsu.ui_core.component.button.properties.Order
-import jp.co.soramitsu.ui_core.component.button.properties.Size
-import jp.co.soramitsu.ui_core.resources.Dimens
-import jp.co.soramitsu.ui_core.theme.customColors
 
 @AndroidEntryPoint
 class CardsHubFragment : SoraBaseFragment<CardsHubViewModel>() {
 
     override val viewModel: CardsHubViewModel by viewModels()
 
-    // The Portfolio view (portfolio-view SPEC) is the Wallet tab's home in every build, production
-    // included. With the policy's constant off, the classic home below is drawn exactly as in
-    // 3.8.6 and this view model is never made.
-    private val portfolioView = ReleaseSurfacePolicy.portfolioView
+    // The Portfolio view (portfolio-view SPEC) is the Wallet tab's home in every build.
     private val portfolioViewModel: PortfolioViewModel by viewModels()
 
     @javax.inject.Inject
@@ -169,11 +112,11 @@ class CardsHubFragment : SoraBaseFragment<CardsHubViewModel>() {
     override fun onStart() {
         super.onStart()
         // The dashboard reads and ticks only while it is on screen.
-        if (portfolioView) portfolioViewModel.setVisible(true)
+        portfolioViewModel.setVisible(true)
     }
 
     override fun onStop() {
-        if (portfolioView) portfolioViewModel.setVisible(false)
+        portfolioViewModel.setVisible(false)
         super.onStop()
     }
 
@@ -181,8 +124,7 @@ class CardsHubFragment : SoraBaseFragment<CardsHubViewModel>() {
         // A network's XOR pages and "Where it lives" are pushed screens: like the SORA2 detail
         // screens, without the bottom bar.
         val bar = activity as? BottomBarController ?: return
-        val pushed = destination in NexusRoutes.pushed ||
-            (portfolioView && destination == PortfolioRoutes.TOKEN)
+        val pushed = destination in NexusRoutes.pushed || destination == PortfolioRoutes.TOKEN
         if (pushed) bar.hideBottomBar() else bar.showBottomBar()
     }
 
@@ -193,7 +135,6 @@ class CardsHubFragment : SoraBaseFragment<CardsHubViewModel>() {
         composable(
             route = theOnlyRoute,
         ) { entry ->
-            val onQrClick: () -> Unit = viewModel::openQrCodeFlow
             // The home keeps its own scroll position under the pages pushed over it; those pages
             // scroll with the toolbar's state, as the SORA2 screens do.
             val homeScrollState = rememberScrollState()
@@ -208,40 +149,15 @@ class CardsHubFragment : SoraBaseFragment<CardsHubViewModel>() {
                 val sora2Portfolio =
                     viewModel.sora2Portfolio.collectAsStateWithLifecycle().value
                 UpgradeSheets(state = state, onBackUpNow = viewModel::onBackupBannerClick)
-                if (portfolioView) {
-                    PortfolioHomeHost(
-                        scrollState = homeScrollState,
-                        navController = navController,
-                        portfolio = portfolioViewModel,
-                        hub = viewModel,
-                        state = state,
-                        sora2Portfolio = sora2Portfolio,
-                        nexusPortfolio = nexusPortfolio,
-                    )
-                } else {
-                    CardsMainScreen(
-                        scrollState = homeScrollState,
-                        state = state,
-                        sora2Portfolio = sora2Portfolio,
-                        nexusPortfolio = nexusPortfolio,
-                        onAccountClick = viewModel::onAccountClick,
-                        onQrClick = onQrClick,
-                        onAssetClick = viewModel::onAssetClick,
-                        onPoolClick = viewModel::onPoolClick,
-                        onOpenFullCardClick = viewModel::onOpenFullCard,
-                        onReferralClick = viewModel::onStartReferral,
-                        onReferralClose = viewModel::onRemoveReferralCard,
-                        onBackupBannerClick = viewModel::onBackupBannerClick,
-                        onEdit = viewModel::onEditViewClick,
-                        onSora2Receive = viewModel::openSora2Receive,
-                        onSora2Send = viewModel::openSora2Send,
-                        networkChoices = viewModel::networkChoices,
-                        onNexusOpen = navController::openNexusAsset,
-                        onNexusReceive = navController::openNexusReceive,
-                        onNexusSend = viewModel::openNexusSend,
-                        isNexusBalanceCurrent = viewModel::isCurrentNexusBalance,
-                    )
-                }
+                PortfolioHomeHost(
+                    scrollState = homeScrollState,
+                    navController = navController,
+                    portfolio = portfolioViewModel,
+                    hub = viewModel,
+                    state = state,
+                    sora2Portfolio = sora2Portfolio,
+                    nexusPortfolio = nexusPortfolio,
+                )
             }
         }
         nexusPages(
@@ -250,159 +166,19 @@ class CardsHubFragment : SoraBaseFragment<CardsHubViewModel>() {
             scrollState = scrollState,
             onScanRecipient = ::scanNexusRecipient,
         )
-        if (portfolioView) {
-            composable(
-                route = PortfolioRoutes.TOKEN,
-                arguments = PortfolioRoutes.tokenArguments,
-            ) { entry ->
-                FollowNexusSend(viewModel, entry, navController)
-                PortfolioWhereItLivesHost(
-                    tokenId = entry.arguments?.getString(PortfolioRoutes.TOKEN_ARG).orEmpty(),
-                    navController = navController,
-                    portfolio = portfolioViewModel,
-                    hub = viewModel,
-                    holdingKey = entry.arguments?.getString(PortfolioRoutes.HOLDING_ARG),
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun CardsMainScreen(
-    scrollState: ScrollState,
-    state: CardsState,
-    sora2Portfolio: Sora2PortfolioBalance?,
-    nexusPortfolio: List<NexusPortfolioBalance>,
-    onAccountClick: () -> Unit,
-    onQrClick: () -> Unit,
-    onAssetClick: (String) -> Unit,
-    onPoolClick: (StringPair) -> Unit,
-    onOpenFullCardClick: (AssetCardState) -> Unit,
-    onReferralClick: () -> Unit,
-    onReferralClose: () -> Unit,
-    onBackupBannerClick: () -> Unit,
-    onEdit: () -> Unit,
-    onSora2Receive: (String) -> Unit,
-    onSora2Send: (String) -> Unit,
-    networkChoices: (WalletNetworkAction) -> List<WalletNetworkChoice>,
-    onNexusOpen: (NexusPortfolioBalance) -> Unit,
-    onNexusReceive: (NexusPortfolioBalance) -> Unit,
-    onNexusSend: (NexusPortfolioBalance) -> Unit,
-    isNexusBalanceCurrent: (NexusPortfolioBalance) -> Boolean,
-) {
-    // One wallet: other networks' XOR are rows of the asset list, and Send and Receive ask which
-    // network only when there is a choice. There is no network mode to switch. A row opens that
-    // network's XOR page, drawn as the SORA2 asset page.
-    val walletNetworks = nexusPortfolio.filter { it.walletId == sora2Portfolio?.address }
-    // The selected account cannot sign on this phone: its name carries the Read-only chip, and
-    // the notice below says why and offers the repair (Account options).
-    val accountReadOnly = LocalSelectedAccountReadOnly.current
-    TopBar(
-        account = state.curAccount,
-        onAccountClick = onAccountClick,
-        onQrClick = onQrClick,
-        readOnly = accountReadOnly,
-    )
-    Spacer(modifier = Modifier.size(size = 16.dp))
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(scrollState)
-            .padding(horizontal = Dimens.x2),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        ReadOnlyHomeBanner()
-        if (accountReadOnly) {
-            AccountReadOnlyNotice(
-                modifier = Modifier.padding(bottom = 16.dp),
-                onRepair = onBackupBannerClick,
+        composable(
+            route = PortfolioRoutes.TOKEN,
+            arguments = PortfolioRoutes.tokenArguments,
+        ) { entry ->
+            FollowNexusSend(viewModel, entry, navController)
+            PortfolioWhereItLivesHost(
+                tokenId = entry.arguments?.getString(PortfolioRoutes.TOKEN_ARG).orEmpty(),
+                navController = navController,
+                portfolio = portfolioViewModel,
+                hub = viewModel,
+                holdingKey = entry.arguments?.getString(PortfolioRoutes.HOLDING_ARG),
             )
         }
-        WalletSendReceive(
-            modifier = Modifier.padding(bottom = 16.dp),
-            xorIcon = sora2Portfolio?.xorIcon,
-            networkChoices = networkChoices,
-            onOpen = { action, choice ->
-                if (choice.id == WalletNetworkId.SORA2) {
-                    if (action == WalletNetworkAction.SEND) onSora2Send(choice.address)
-                    else onSora2Receive(choice.address)
-                } else {
-                    walletNetworks.firstOrNull {
-                        it.networkId == choice.id && it.address == choice.address && isNexusBalanceCurrent(it)
-                    }?.let { balance ->
-                        if (action == WalletNetworkAction.SEND) onNexusSend(balance)
-                        else onNexusReceive(balance)
-                    }
-                }
-            },
-        )
-        if (state.loading) {
-            CircularProgressIndicator(
-                color = MaterialTheme.customColors.fgPrimary,
-            )
-        }
-        // The 3.8.6 order, as stored: invite and backup cards above the assets.
-        state.cards.forEach { cardState ->
-            when (cardState) {
-                is TitledAmountCardState -> {
-                    CommonHubCard(
-                        title = cardState.title,
-                        amount = cardState.amount,
-                        onOpenFullCardClick = { onOpenFullCardClick.invoke(cardState.state) },
-                        collapseState = cardState.collapsedState,
-                        onCollapseClick = cardState.onCollapseClick
-                    ) {
-                        when (cardState.state) {
-                            is FavoriteAssetsCardState -> {
-                                AssetsCard(
-                                    cardState.state as FavoriteAssetsCardState,
-                                    onAssetClick,
-                                )
-                                NetworkAssetRows(
-                                    balances = walletNetworks.filter(isNexusBalanceCurrent),
-                                    xorIcon = sora2Portfolio?.xorIcon,
-                                    xorName = sora2Portfolio?.xorName,
-                                    onOpen = onNexusOpen,
-                                )
-                            }
-                            is FavoritePoolsCardState -> PoolsList(
-                                (cardState.state as FavoritePoolsCardState).state,
-                                onPoolClick,
-                            )
-                        }
-                    }
-                }
-
-                is BasicBannerCardState -> {
-                    when (cardState) {
-                        BackupWalletState -> {
-                            BackupCard(
-                                onStartClicked = onBackupBannerClick,
-                            )
-                        }
-                        ReferralState -> {
-                            ReferralCard(
-                                onStartClicked = onReferralClick,
-                                onCloseCard = onReferralClose,
-                            )
-                        }
-                    }
-                }
-            }
-            Spacer(modifier = Modifier.size(size = 16.dp))
-        }
-
-        if (state.cards.isNotEmpty())
-            BleachedButton(
-                modifier = Modifier
-                    .padding(bottom = Dimens.x4)
-                    .align(Alignment.CenterHorizontally),
-                size = Size.Small,
-                order = Order.SECONDARY,
-                text = stringResource(id = R.string.edit_view),
-                onClick = onEdit,
-            )
     }
 }
 
@@ -464,43 +240,4 @@ private fun UpgradeSheets(state: CardsState, onBackUpNow: () -> Unit) {
             pending = false
         },
     )
-}
-
-@Composable
-@Preview
-private fun PreviewCardsMainScreen() {
-    Column {
-        CardsMainScreen(
-            scrollState = rememberScrollState(),
-            state = CardsState(
-                curAccount = "cnVko",
-                accountAddress = "",
-                loading = true,
-                cards = listOf(
-                    ReferralState, BackupWalletState,
-                ),
-            ),
-            sora2Portfolio = Sora2PortfolioBalance(
-                address = "cnVkoSora2Address",
-                xorQuantity = "10",
-            ),
-            nexusPortfolio = emptyList(),
-            onAccountClick = {},
-            onQrClick = {},
-            onAssetClick = {},
-            onPoolClick = {},
-            onOpenFullCardClick = {},
-            onReferralClick = {},
-            onReferralClose = {},
-            onBackupBannerClick = {},
-            onEdit = {},
-            onSora2Receive = {},
-            onSora2Send = {},
-            networkChoices = { emptyList() },
-            onNexusOpen = {},
-            onNexusReceive = {},
-            onNexusSend = {},
-            isNexusBalanceCurrent = { true },
-        )
-    }
 }

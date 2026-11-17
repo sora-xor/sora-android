@@ -238,9 +238,6 @@ class WalletUxAcceptanceTest {
                 fragment = CardsHubFragment()
                 CardsHubFragment::class.java.getDeclaredField("viewModel\$delegate").apply { isAccessible = true }
                     .set(fragment, lazyOf(vm))
-                // Only the home's view model is doubled here, not the Portfolio view's.
-                CardsHubFragment::class.java.getDeclaredField("portfolioView").apply { isAccessible = true }
-                    .setBoolean(fragment, false)
                 activity.supportFragmentManager.beginTransaction().add(fragment, "ux-scanner-contract")
                     .setMaxLifecycle(fragment, Lifecycle.State.CREATED).commitNow()
                 // Only activate its result callback. No mocked fragment view or wallet navigation is installed.
@@ -304,9 +301,6 @@ class WalletUxAcceptanceTest {
                 fragment = CardsHubFragment()
                 CardsHubFragment::class.java.getDeclaredField("viewModel\$delegate").apply { isAccessible = true }
                     .set(fragment, lazyOf(vm))
-                // Only the home's view model is doubled here, not the Portfolio view's.
-                CardsHubFragment::class.java.getDeclaredField("portfolioView").apply { isAccessible = true }
-                    .setBoolean(fragment, false)
                 activity.supportFragmentManager.beginTransaction().add(fragment, "ux-denied-scanner")
                     .setMaxLifecycle(fragment, Lifecycle.State.CREATED).commitNow()
                 (fragment.lifecycle as LifecycleRegistry).handleLifecycleEvent(Lifecycle.Event.ON_START)
@@ -398,9 +392,9 @@ class WalletUxAcceptanceTest {
         }
     }
 
-    @Test fun sendAndReceiveAskWhichNetworkOnlyWhenThereIsAChoice() {
+    @Test fun networkPickerListsEveryNetworkAndOpensThePickedOne() {
         val taira = sampleNetwork()
-        val opened = mutableListOf<Pair<WalletNetworkAction, WalletNetworkId>>()
+        val picked = mutableListOf<WalletNetworkChoice>()
         val directory = WalletNetworkDirectory.current
         fun choices(action: WalletNetworkAction, withTaira: Boolean) = WalletNetworkChoices.make(
             action = action,
@@ -410,42 +404,43 @@ class WalletUxAcceptanceTest {
             canSend = { it != WalletNetworkId.MINAMOTO },
             directory = directory,
         )
-        val withTaira = mutableStateOf(true)
+        val asking = mutableStateOf<WalletNetworkAction?>(WalletNetworkAction.RECEIVE)
         ActivityScenario.launch(OnboardingActivity::class.java).use { scenario ->
             scenario.onActivity { activity ->
                 activity.setContent {
                     SoraAppTheme {
-                        WalletSendReceive(
-                            networkChoices = { choices(it, withTaira.value) },
-                            onOpen = { action, choice -> opened += action to choice.id },
-                        )
+                        asking.value?.let { action ->
+                            NetworkPickerSheet(
+                                action = action,
+                                choices = choices(action, withTaira = true),
+                                onPick = { choice -> picked += choice; asking.value = null },
+                                onClose = { asking.value = null },
+                            )
+                        }
                     }
                 }
             }
-            waitUntil { findText("Receive") != null }
-            clickText("Receive")
             waitUntil { findText("Receive on") != null }
             assertNotNull(findText("Main"))
             assertNotNull(findText("Coming soon"))
             assertNotNull(findText("Testnet"))
             capture("network-choice-receive")
             clickText("Taira")
-            waitUntil { opened.isNotEmpty() }
-            assertEquals(WalletNetworkAction.RECEIVE to WalletNetworkId.TAIRA, opened.last())
-            // The sample Taira address contains "Send": wait until the sheet has closed.
+            waitUntil { picked.isNotEmpty() }
+            assertEquals(WalletNetworkId.TAIRA, picked.last().id)
             waitUntil { findText("Receive on") == null }
-            clickText("Send")
+            instrumentation.runOnMainSync { asking.value = WalletNetworkAction.SEND }
             waitUntil { findText("Send on") != null }
             assertNotNull(findText("Sending on SORA Nexus starts when the network launches."))
             capture("network-choice-send")
             clickText("Close")
             waitUntil { findText("Send on") == null }
-            // Without Taira only SORA2 is live: Send opens it straight away.
-            withTaira.value = false
-            instrumentation.waitForIdleSync()
-            clickText("Send")
-            waitUntil { opened.size == 2 }
-            assertEquals(WalletNetworkAction.SEND to WalletNetworkId.SORA2, opened.last())
+            assertEquals(1, picked.size)
+            // Without Taira only SORA2 is live: there is nothing to ask, Send opens it straight away.
+            assertEquals(
+                WalletNetworkId.SORA2,
+                WalletNetworkChoices.onlyChoice(choices(WalletNetworkAction.SEND, withTaira = false))?.id,
+            )
         }
     }
 
