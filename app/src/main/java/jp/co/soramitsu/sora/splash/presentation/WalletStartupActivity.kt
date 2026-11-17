@@ -167,11 +167,6 @@ class WalletStartupActivity : AppCompatActivity() {
                 delay(ANIMATION_FALLBACK_MILLIS)
                 if (!isSafeModeVisible()) goNext()
             }
-            lifecycleScope.launch {
-                darkThemeManager.reduceEffectsFlow.collect { reduced ->
-                    if (reduced && !isSafeModeVisible()) finishSplashWithoutMotion()
-                }
-            }
         } else {
             showRecovery(startupFailure.code)
         }
@@ -352,8 +347,7 @@ class WalletStartupActivity : AppCompatActivity() {
     }
 
     private fun shouldReduceSplashMotion(): Boolean =
-        Build.VERSION.SDK_INT >= Build.VERSION_CODES.S ||
-            darkThemeManager.reduceEffectsFlow.value || !ValueAnimator.areAnimatorsEnabled()
+        Build.VERSION.SDK_INT >= Build.VERSION_CODES.S || !ValueAnimator.areAnimatorsEnabled()
 
     private fun finishSplashWithoutMotion() {
         viewBinding.animationView.removeUpdateListener(animatorUpdateListener)

@@ -54,15 +54,9 @@ import jp.co.soramitsu.common.account.WalletStartupPass
 import jp.co.soramitsu.common.domain.BarsColorHandler
 import jp.co.soramitsu.common.domain.BottomBarController
 import jp.co.soramitsu.common.domain.DarkThemeManager
-import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.repeatOnLifecycle
-import androidx.lifecycle.Lifecycle
-import kotlinx.coroutines.launch
 import jp.co.soramitsu.common.presentation.compose.neon.safemode.WalletSessionState
 import jp.co.soramitsu.common.presentation.compose.theme.neon.FxPolicy
-import jp.co.soramitsu.common.presentation.compose.theme.neon.FxTier
 import jp.co.soramitsu.common.presentation.compose.theme.neon.DeviceFxSignals
-import jp.co.soramitsu.common.presentation.compose.theme.neon.NeonEffectsPreference
 import jp.co.soramitsu.common.presentation.view.ToolbarActivity
 import jp.co.soramitsu.common.util.DebounceClickHandler
 import jp.co.soramitsu.common.util.ext.attrColor
@@ -252,11 +246,6 @@ class MainActivity :
                 info.className = android.widget.Button::class.java.name
             }
         })
-        lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
-                NeonEffectsPreference.reduceEffects.collect { updateSwapEffects() }
-            }
-        }
         // The Polkaswap button: a white ceramic dome standing in the bar, under the pink flower.
         binding.fabDome.setContent { LitDome(lit = Color(0xFFFFFFFF), deep = Color(0xFFD8D1CC), diameter = 56.dp) }
         binding.fabMain.setOnClickListener {
@@ -294,7 +283,7 @@ class MainActivity :
 
         // The flight through the gate of heaven: once for each start of the app, over the first screen.
         if (!restoredFromSavedState) {
-            TenmonFlight.launchOnce(this, FxPolicy.from(DeviceFxSignals.read(this), NeonEffectsPreference.reduceEffects.value).litMotion)
+            TenmonFlight.launchOnce(this, FxPolicy.from(DeviceFxSignals.read(this)).litMotion)
         }
     }
 
@@ -453,13 +442,6 @@ class MainActivity :
 
         timeInBackground = null
         super.onResume()
-        updateSwapEffects()
-    }
-
-    private fun updateSwapEffects() {
-        val policy = FxPolicy.from(DeviceFxSignals.read(this), NeonEffectsPreference.reduceEffects.value)
-        requireBinding()?.fabMain?.setBackgroundResource(
-            if (policy.glows && policy.tier != FxTier.MINIMAL) R.drawable.bg_neon_swap_glow else 0)
     }
 
     private fun idleTimePassedFrom(timeInBackground: Date): Boolean {

@@ -73,14 +73,13 @@ class FxPolicyTest {
     }
 
     @Test
-    fun `a modern phone with motion on gets every live effect and no glow`() {
+    fun `a modern phone with motion on gets every live effect`() {
         val full = FxPolicy.from(phone)
         assertEquals(FxTier.FULL, full.tier)
         assertFalse(full.reduceMotion)
         assertTrue(full.litMotion)
         assertTrue(full.loops)
         assertTrue(full.shadows)
-        assertFalse(full.glows)
         assertFalse(full.highContrast)
     }
 
@@ -117,11 +116,5 @@ class FxPolicyTest {
     @Test
     fun `high contrast comes from the system`() {
         assertTrue(FxPolicy.from(phone.copy(highContrast = true)).highContrast)
-    }
-
-    @Test
-    fun `the retired reduce effects value changes nothing`() {
-        assertEquals(FxPolicy.from(phone), FxPolicy.from(phone, reduceEffects = true))
-        assertFalse(NeonEffectsPreference.reduceEffects.value)
     }
 }

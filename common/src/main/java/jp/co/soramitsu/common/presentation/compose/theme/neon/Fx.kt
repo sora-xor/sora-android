@@ -60,12 +60,6 @@ data class FxPolicy(
     val reduceMotion: Boolean,
     val highContrast: Boolean,
 ) {
-    /**
-     * The classic SORA design draws no glow on any tier. Only the bottom bar's Polkaswap button
-     * still reads this; it goes with that branch.
-     */
-    val glows: Boolean get() = false
-
     /** Neumorphic shadows and the light-theme card shadow. */
     val shadows: Boolean get() = tier != FxTier.MINIMAL
 
@@ -96,13 +90,6 @@ data class FxPolicy(
                 highContrast = signals.highContrast,
             )
         }
-
-        /**
-         * Transitional: MainActivity still passes the retired "Reduce effects" value, which is
-         * always false now. Removed with that call.
-         */
-        fun from(signals: DeviceFxSignals, @Suppress("UNUSED_PARAMETER") reduceEffects: Boolean): FxPolicy =
-            from(signals)
     }
 }
 
@@ -202,15 +189,6 @@ internal object DeviceFxMonitor {
         val target = synchronized(this) { flow } ?: return
         target.value = DeviceFxSignals.read(context.applicationContext)
     }
-}
-
-/**
- * Transitional: the retired in-app "Reduce effects" switch, always false. The value the 3.9.2
- * open-testing build stored under `neon_reduce_effects` stays on the phone and is no longer
- * read. MainActivity and the splash still collect this; it goes with those reads.
- */
-object NeonEffectsPreference {
-    val reduceEffects: StateFlow<Boolean> = MutableStateFlow(false).asStateFlow()
 }
 
 @Composable

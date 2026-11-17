@@ -28,7 +28,6 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import jp.co.soramitsu.androidfoundation.coroutine.CoroutineManager
 import jp.co.soramitsu.common.data.SoraPreferences
-import jp.co.soramitsu.common.presentation.compose.theme.neon.NeonEffectsPreference
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -138,9 +137,6 @@ class DarkThemeManager @Inject constructor(
             initialValue = AppCompatDelegate.getDefaultNightMode()
                 .equals(AppCompatDelegate.MODE_NIGHT_YES)
         )
-
-    /** Transitional: the retired "Reduce effects" switch, always false; the splash still reads it. */
-    val reduceEffectsFlow: StateFlow<Boolean> = NeonEffectsPreference.reduceEffects
 
     fun updateUiModeFromCache() {
         coroutineManager.applicationScope.launch {
