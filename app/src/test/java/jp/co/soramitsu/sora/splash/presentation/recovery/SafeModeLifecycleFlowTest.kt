@@ -45,6 +45,9 @@ class SafeModeLifecycleFlowTest {
     private val events = mutableListOf<SafeModeEvent>()
     private val SCREEN_LOCK = androidx.biometric.BiometricPrompt.AUTHENTICATION_RESULT_TYPE_DEVICE_CREDENTIAL
     private val BIOMETRIC = androidx.biometric.BiometricPrompt.AUTHENTICATION_RESULT_TYPE_BIOMETRIC
+    private val KEYGUARD_PRE_R = jp.co.soramitsu.feature_main_impl.presentation.pincode.ScreenLockPrompt.SCREEN_LOCK_OR_SYSTEM_BIOMETRIC_PRE_R
+    private val ANDROID_10 = 29
+    private val ANDROID_11 = 30
     private class QueuedDispatcher : CoroutineDispatcher() {
         private val queue = ArrayDeque<Runnable>()
         override fun dispatch(context: CoroutineContext, block: Runnable) { queue.addLast(block) }
@@ -535,7 +538,7 @@ class SafeModeLifecycleFlowTest {
         assertFalse((vm.state.value.reveal as RevealUi.Auth).biometric)
         vm.requestBiometric(); runCurrent()
         assertTrue(events.isEmpty())
-        vm.onAuthenticated(SCREEN_LOCK); runCurrent()
+        vm.onAuthenticated(SCREEN_LOCK, ANDROID_11); runCurrent()
         assertTrue(vm.state.value.reveal is RevealUi.Auth)
         coVerify(exactly = 0) { credentials.retrieveMnemonic(any()) }
     }
@@ -565,11 +568,31 @@ class SafeModeLifecycleFlowTest {
         every { credentials.convertRetainedSoraPassphraseToSeed(any()) } returns "01"
         val vm = vm(); vm.startReveal(); runCurrent()
         vm.requestBiometric(); runCurrent()
-        vm.onAuthenticated(BIOMETRIC); runCurrent()
+        vm.onAuthenticated(BIOMETRIC, ANDROID_11); runCurrent()
         assertTrue(vm.state.value.reveal is RevealUi.Auth)
         coVerify(exactly = 0) { credentials.retrieveMnemonic(any()) }
         vm.requestBiometric(); runCurrent()
-        vm.onAuthenticated(SCREEN_LOCK); runCurrent()
+        vm.onAuthenticated(SCREEN_LOCK, ANDROID_11); runCurrent()
+        assertFalse(vm.state.value.reveal is RevealUi.Auth)
+        coVerify(exactly = 1) { credentials.retrieveMnemonic(any()) }
+    }
+    // Codex re-review 1: on Android 11 and later Keyguard's result reveals nothing; on Android 8
+    // to 10 it is the system's confirmation there (platform limit) and reveals.
+    @Test fun keyguardsResultRevealsOnlyOnAndroid8To10() = runTest {
+        deviceCredentialAvailable()
+        coEvery { user.retrievePin() } returns ""
+        coEvery { credentials.retrieveMnemonic(any()) } returns "public fixture words"
+        every { credentials.convertRetainedSoraPassphraseToSeed(any()) } returns "01"
+        val vm = vm(); vm.startReveal(); runCurrent()
+        vm.requestBiometric(); runCurrent()
+        vm.onAuthenticated(KEYGUARD_PRE_R, ANDROID_11); runCurrent()
+        assertTrue(vm.state.value.reveal is RevealUi.Auth)
+        coVerify(exactly = 0) { credentials.retrieveMnemonic(any()) }
+        vm.requestBiometric(); runCurrent()
+        vm.onAuthenticated(BIOMETRIC, ANDROID_10); runCurrent()
+        assertTrue(vm.state.value.reveal is RevealUi.Auth)
+        vm.requestBiometric(); runCurrent()
+        vm.onAuthenticated(KEYGUARD_PRE_R, ANDROID_10); runCurrent()
         assertFalse(vm.state.value.reveal is RevealUi.Auth)
         coVerify(exactly = 1) { credentials.retrieveMnemonic(any()) }
     }

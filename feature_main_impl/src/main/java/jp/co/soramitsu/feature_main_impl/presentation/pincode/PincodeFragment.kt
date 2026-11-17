@@ -58,11 +58,15 @@ class PincodeFragment : SoraBaseFragment<PinCodeViewModel>() {
         private const val DATA_CLEAR_DELAY = 500L
     }
 
-    /** Keyguard's screen-lock confirmation, on Android 8 to 10 ([ScreenLockPrompt]). */
+    /**
+     * Keyguard's confirmation, on Android 8 to 10 only. Platform limit: it may accept the
+     * phone's fingerprint too, and says so in its result's name ([ScreenLockPrompt]); Android 11
+     * and later ask for the device credential alone and never accept this result.
+     */
     private val keyguardConfirmation =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == Activity.RESULT_OK) {
-                viewModel.onScreenLockConfirmed(ScreenLockPrompt.KEYGUARD_CONFIRMED)
+                viewModel.onScreenLockConfirmed(ScreenLockPrompt.SCREEN_LOCK_OR_SYSTEM_BIOMETRIC_PRE_R)
             }
         }
 
@@ -192,8 +196,9 @@ class PincodeFragment : SoraBaseFragment<PinCodeViewModel>() {
     }
 
     /**
-     * The phone's own screen lock (its PIN, pattern or password, never a biometric) in the
-     * system prompt, before a new PIN replaces one that cannot be read ([ScreenLockPrompt]).
+     * The phone's own screen lock (its PIN, pattern or password; on Android 11 and later never
+     * a biometric, on Android 8 to 10 Keyguard's confirmation, a platform limit) in the system
+     * prompt, before a new PIN replaces one that cannot be read ([ScreenLockPrompt]).
      * Built for each request: androidx keeps one callback per activity, and this fragment's
      * fingerprint prompt set its own. A prompt that cannot be shown changes nothing: touching
      * the keypad asks again.

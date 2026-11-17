@@ -966,15 +966,16 @@ class SafeModeViewModel @Inject constructor(
 
     /**
      * A system callback can only complete the explicit no-wallet-PIN recovery flow, and only
-     * with the phone's screen lock itself ([authenticationType], see [ScreenLockPrompt]): a
-     * fingerprint or face reveals nothing.
+     * with the system's own confirmation ([ScreenLockPrompt.accepts]): on Android 11 and later
+     * the device credential alone, so a fingerprint or face reveals nothing; on Android 8 to 10
+     * Keyguard's confirmation, which may accept a fingerprint (platform limit).
      */
-    fun onAuthenticated(authenticationType: Int) {
+    fun onAuthenticated(authenticationType: Int, sdkInt: Int = android.os.Build.VERSION.SDK_INT) {
         val auth = state.value.reveal as? RevealUi.Auth ?: return
         val wasAuthenticating = authenticating
         authenticating = false
         if (!wasAuthenticating || !auth.noPin || auth.loading || auth.error != null) return
-        if (!ScreenLockPrompt.isScreenLock(authenticationType)) return
+        if (!ScreenLockPrompt.accepts(authenticationType, sdkInt)) return
         revealAfterVerifiedPin()
     }
 
@@ -1125,8 +1126,9 @@ class SafeModeViewModel @Inject constructor(
 
         /**
          * "Show my recovery phrase" with no app PIN stored: the phone's screen lock alone is the
-         * proof, never a fingerprint or face ([ScreenLockPrompt]). Android 8 to 10 use Keyguard's
-         * confirmation instead, since their prompt cannot take the device credential alone.
+         * proof on Android 11 and later, never a fingerprint or face ([ScreenLockPrompt]).
+         * Android 8 to 10 use Keyguard's confirmation instead, since their prompt cannot take the
+         * device credential alone (platform limit: Keyguard may accept a fingerprint there).
          */
         const val DEVICE_CREDENTIAL_AUTHENTICATORS = ScreenLockPrompt.AUTHENTICATORS
 

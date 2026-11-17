@@ -463,11 +463,15 @@ class WalletStartupActivity : AppCompatActivity() {
         }
     }
 
-    /** Keyguard's screen-lock confirmation, on Android 8 to 10 ([ScreenLockPrompt]). */
+    /**
+     * Keyguard's confirmation, on Android 8 to 10 only. Platform limit: it may accept the
+     * phone's fingerprint too, and says so in its result's name ([ScreenLockPrompt]); Android 11
+     * and later ask for the device credential alone and never accept this result.
+     */
     private val keyguardConfirmation =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == RESULT_OK) {
-                safeModeViewModel.onAuthenticated(ScreenLockPrompt.KEYGUARD_CONFIRMED)
+                safeModeViewModel.onAuthenticated(ScreenLockPrompt.SCREEN_LOCK_OR_SYSTEM_BIOMETRIC_PRE_R)
             } else {
                 safeModeViewModel.onAuthenticationEnded()
             }
