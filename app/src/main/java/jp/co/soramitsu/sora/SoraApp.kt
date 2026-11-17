@@ -151,7 +151,7 @@ open class SoraApp : Application(), Configuration.Provider, ImageLoaderFactory {
     }
 
     private fun initLogger() {
-        val verbose = BuildUtils.isBuildType(BuildType.FIREBASE, BuildType.DEBUG) || BuildUtils.isFlavors(Flavor.DEVELOP)
+        val verbose = BuildUtils.isBuildType(BuildType.DEBUG) || BuildUtils.isFlavors(Flavor.DEVELOP)
         installWalletLogTree(verbose)
         if (verbose) {
             try {

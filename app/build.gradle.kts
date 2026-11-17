@@ -5,7 +5,6 @@ import java.nio.file.Paths
 import java.nio.file.attribute.PosixFilePermission
 
 plugins {
-    id("maven-publish")
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.baselineProfile)
     alias(libs.plugins.serialization)
@@ -115,16 +114,6 @@ android {
                 "proguard-rules.pro"
             )
         }
-        create("firebasedebug") {
-            initWith(getByName("debug"))
-            matchingFallbacks += listOf("debug")
-            versionNameSuffix = "-firebase"
-            signingConfig = signingConfigs.getByName("cidebug")
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
-        }
         create("benchmarkRelease") {
             initWith(getByName("release"))
             signingConfig = signingConfigs.getByName("cidebug")
@@ -182,7 +171,6 @@ android {
             dimension = "default"
             applicationIdSuffix = ".develop"
             resValue("string", "app_name", "SORA Develop")
-            manifestPlaceholders["pathPrefix"] = "/dev/#/referral"
             manifestPlaceholders["appIcon"] = "@mipmap/ic_dev_launcher"
             manifestPlaceholders["roundedIcon"] = "@mipmap/ic_dev_launcher"
         }
@@ -191,7 +179,6 @@ android {
             dimension = "default"
             applicationIdSuffix = ".communitytesting"
             resValue("string", "app_name", "Soralution")
-            manifestPlaceholders["pathPrefix"] = "/tst/#/referral"
             manifestPlaceholders["appIcon"] = "@mipmap/ic_soralution_launcher"
             manifestPlaceholders["roundedIcon"] = "@mipmap/ic_soralution_launcher_rounded"
         }
@@ -199,7 +186,6 @@ android {
         create("production") {
             dimension = "default"
             resValue("string", "app_name", "SORA")
-            manifestPlaceholders["pathPrefix"] = "/#/referral"
             manifestPlaceholders["appIcon"] = "@mipmap/ic_prod_launcher"
             manifestPlaceholders["roundedIcon"] = "@mipmap/ic_prod_launcher_rounded"
         }
@@ -210,7 +196,6 @@ android {
             testApplicationId = "jp.co.soramitsu.sora.qualification.test"
             matchingFallbacks += listOf("production")
             resValue("string", "app_name", "SORA Migration Qualification")
-            manifestPlaceholders["pathPrefix"] = "/qualification/#/referral"
             manifestPlaceholders["appIcon"] = "@mipmap/ic_prod_launcher"
             manifestPlaceholders["roundedIcon"] = "@mipmap/ic_prod_launcher_rounded"
         }
@@ -452,7 +437,6 @@ dependencies {
     kover(project(":feature_referral_impl"))
     kover(project(":feature_polkaswap_api"))
     kover(project(":feature_polkaswap_impl"))
-    kover(project(":feature_referral_impl"))
     kover(project(":feature_wallet_api"))
     kover(project(":feature_wallet_impl"))
     kover(project(":feature_select_node_api"))

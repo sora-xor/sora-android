@@ -15,7 +15,6 @@ workManager = "2.11.0"
 coil = "2.7.0"
 svg = "1.4"
 jdenticon = "1.1"
-archFragmentTest = "1.8.9"
 mockk = "1.14.3"
 truth = "1.4.2"
 mockitoKotlin = "6.1.0"
@@ -84,7 +83,6 @@ coroutineAndroidDep = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-andro
 coroutineTestDep = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutines" }
 daggerDep = { module = "com.google.dagger:hilt-android", version.ref = "dagger" }
 hiltCompilerDep = { module = "com.google.dagger:hilt-compiler", version.ref = "dagger" }
-hiltUiTestDep = { module = "com.google.dagger:hilt-android-testing", version.ref = "dagger" }
 hiltNavComposeDep = { module = "androidx.hilt:hilt-navigation-compose", version.ref = "hiltCompose" }
 hiltWorkManagerDep = { module = "androidx.hilt:hilt-work", version.ref = "hiltWorkManager" }
 hiltWorkManagerCompilerDep = { module = "androidx.hilt:hilt-compiler", version.ref = "hiltWorkManager" }
@@ -116,7 +114,6 @@ coilDep = { module = "io.coil-kt:coil", version.ref = "coil" }
 coilSvgDep = { module = "io.coil-kt:coil-svg", version.ref = "coil" }
 coilComposeDep = { module = "io.coil-kt:coil-compose", version.ref = "coil" }
 coreKtxDep = { module = "androidx.core:core-ktx", version.ref = "coreKtx" }
-archFragmentTestDep = { module = "androidx.fragment:fragment-testing", version.ref = "archFragmentTest" }
 mockkDep = { module = "io.mockk:mockk", version.ref = "mockk" }
 mockkAndroidDep = { module = "io.mockk:mockk-android", version.ref = "mockk" }
 truthDep = { module = "com.google.truth:truth", version.ref = "truth" }
@@ -152,7 +149,6 @@ composeUiTestJunit4Dep = { group = "androidx.compose.ui", name = "ui-test-junit4
 #espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espresso-core" }
 lifecycleProcessDep = { group = "androidx.lifecycle", name = "lifecycle-process", version.ref = "archComponents" }
 viewmodelKtxDep = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-ktx", version.ref = "archComponents" }
-livedataKtxDep = { group = "androidx.lifecycle", name = "lifecycle-livedata-ktx", version.ref = "archComponents" }
 runtimeKtxDep = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "archComponents" }
 fragmentKtxDep = { group = "androidx.fragment", name = "fragment-ktx", version.ref = "fragmentKtx" }
 permissionsRuntimeDep = { module = "com.guolindev.permissionx:permissionx", version.ref = "permission" }

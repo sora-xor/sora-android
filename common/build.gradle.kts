@@ -2,7 +2,6 @@ import java.io.FileInputStream
 import java.util.Properties
 
 plugins {
-    id("maven-publish")
     alias(libs.plugins.androidLibrary)
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.serialization)
@@ -20,10 +19,6 @@ fun secret(name: String): String {
         }
     }
     return pr?.getProperty(name) ?: System.getenv(name).orEmpty()
-}
-
-fun maybeWrapQuotes(s: String): String {
-    return if (s.startsWith("\"")) s else "\"" + s + "\""
 }
 
 kotlin {

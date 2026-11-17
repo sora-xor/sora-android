@@ -90,11 +90,9 @@ dependencies {
 
     implementation(libs.navigationFragmentDep)
 
-    implementation(libs.insetterDep)
 
     implementation(libs.timberDep)
 
-    implementation(libs.lottieDep)
 
     implementation(libs.coilDep)
     implementation(libs.coilComposeDep)

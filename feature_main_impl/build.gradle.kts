@@ -133,7 +133,6 @@ dependencies {
 
     implementation(libs.lifecycleProcessDep)
 
-    implementation(libs.insetterDep)
 
     testImplementation(project(":test_data"))
     testImplementation(libs.coroutineTestDep)

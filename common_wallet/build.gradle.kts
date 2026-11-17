@@ -1,5 +1,4 @@
 plugins {
-    id("maven-publish")
     alias(libs.plugins.androidLibrary)
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.serialization)
