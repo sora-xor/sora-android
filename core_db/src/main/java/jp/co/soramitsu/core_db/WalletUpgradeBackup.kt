@@ -76,6 +76,12 @@ object WalletUpgradeBackup {
     private const val MAX_PREFERENCE_KEY_LENGTH = 1_024
     private const val MAX_WALLET_ID_LENGTH = 256
     private const val MINIMUM_FREE_SPACE_HEADROOM = 16L * 1_024L * 1_024L
+
+    /** The states the storage screen is for: too little free space to go on safely. */
+    private val STORAGE_SHORTAGE_CODES = setOf("INSUFFICIENT_BACKUP_STORAGE", WalletRecoveryOptions.STORAGE_FULL)
+
+    /** What Android is asked to free when a shortage did not say how much it needs. */
+    private const val DEFAULT_SPACE_REQUEST_BYTES = 64L * 1_024L * 1_024L
     private const val BACKUP_SPACE_MULTIPLIER = 2L
     // A keys-only backup copies the encrypted preferences and wrapped-key files only. Room still
     // needs room for its own migration, so the database size is counted twice on top.
@@ -346,7 +352,11 @@ object WalletUpgradeBackup {
                 }
                 performPendingSetUpAgain(applicationContext)
                 // An explicit reset/return must never be reversed by automatic recovery.
-                if (!hadExplicitRequest) repairLostDatabaseFromMatchingBackup(applicationContext)
+                if (!hadExplicitRequest) {
+                    withDisposableStorageReclaimed(applicationContext, null) {
+                        repairLostDatabaseFromMatchingBackup(applicationContext)
+                    }.getOrThrow()
+                }
             }
             setUpAgain.exceptionOrNull()?.let { error ->
                 preparedAdmission = null
@@ -430,7 +440,9 @@ object WalletUpgradeBackup {
         }
         if (!databaseOpenedInProcess) {
             val applicationContext = context.applicationContext ?: context
-            runCatching { repairLostDatabaseFromMatchingBackup(applicationContext) }
+            withDisposableStorageReclaimed(applicationContext, null) {
+                repairLostDatabaseFromMatchingBackup(applicationContext)
+            }
                 .exceptionOrNull()?.let { error ->
                     preparedAdmission = null
                     migrationRecoverySnapshot = null
@@ -745,6 +757,27 @@ object WalletUpgradeBackup {
             availableBackupBytesOverride = availableBackupBytes,
             beforeFinalSourceValidationForTest = null,
             retainStartupAdmission = false,
+            reclaimDisposableStorage = false,
+        )
+    }
+
+    /**
+     * As [prepareWithAvailableBackupBytesForTest], on a phone whose cache folder can still be
+     * emptied: when [availableBackupBytes] is too little, the app's own cache is given back (as
+     * [prepare] does) and the check runs once more with what that really freed added.
+     */
+    @VisibleForTesting
+    @Synchronized
+    fun prepareAfterReclaimingCacheForTest(
+        context: Context,
+        availableBackupBytes: Long,
+    ): Result<Unit> {
+        require(availableBackupBytes >= 0L)
+        return prepareWithCapacityOverride(
+            context = context,
+            availableBackupBytesOverride = availableBackupBytes,
+            beforeFinalSourceValidationForTest = null,
+            retainStartupAdmission = false,
         )
     }
 
@@ -758,13 +791,56 @@ object WalletUpgradeBackup {
         availableBackupBytesOverride = null,
         beforeFinalSourceValidationForTest = beforeFinalSourceValidation,
         retainStartupAdmission = false,
+        reclaimDisposableStorage = false,
     )
+
+    /**
+     * Runs [work] and, when it stops for lack of free space, gives back what is held only as a
+     * cache ([DisposableStorage]) and runs it once more, so the storage screen is shown only
+     * when the space is still too little (update rule of 2026-11-09). [work] gets the free
+     * bytes to assume: null for the real probe, or the test's figure, raised on the second run
+     * by what was actually deleted. Wallet files, backups and files set aside by a repair are
+     * never deleted to make room.
+     */
+    private fun <T> withDisposableStorageReclaimed(
+        context: Context,
+        availableBackupBytesOverride: Long?,
+        work: (availableBackupBytes: Long?) -> T,
+    ): Result<T> {
+        val first = runCatching { work(availableBackupBytesOverride) }
+        val shortage = first.exceptionOrNull() ?: return first
+        if (shortage.safeCode() !in STORAGE_SHORTAGE_CODES) return first
+        fun freeNow(): Long = runCatching { StatFs(context.noBackupFilesDir.absolutePath).availableBytes }.getOrDefault(0L)
+        val freeBefore = if (availableBackupBytesOverride == null) freeNow() else 0L
+        val freed = runCatching {
+            DisposableStorage.reclaimCache(
+                cacheDirectory = context.cacheDir,
+                walletLocations = listOfNotNull(
+                    context.noBackupFilesDir,
+                    context.filesDir,
+                    context.getDatabasePath(DATABASE_NAME).parentFile,
+                    File(context.dataDir, "shared_prefs"),
+                ),
+            )
+        }.getOrDefault(0L)
+        if (availableBackupBytesOverride != null) {
+            if (freed <= 0L) return first
+            return runCatching { work(saturatingAdd(availableBackupBytesOverride, freed)) }
+        }
+        val required = (shortage as? WalletUpgradeBackupException)?.requiredBytes
+            ?.takeIf { it > 0L } ?: DEFAULT_SPACE_REQUEST_BYTES
+        if (freeNow() < required) DisposableStorage.askSystemFor(context, context.noBackupFilesDir, required)
+        // Nothing more is free than before: the same check would only fail the same way.
+        if (freeNow() <= freeBefore) return first
+        return runCatching { work(null) }
+    }
 
     private fun prepareWithCapacityOverride(
         context: Context,
         availableBackupBytesOverride: Long?,
         beforeFinalSourceValidationForTest: (() -> Unit)? = null,
         retainStartupAdmission: Boolean,
+        reclaimDisposableStorage: Boolean = true,
     ): Result<Unit> {
         preparedAdmission = null
         transientVerificationFailure = null
@@ -776,12 +852,17 @@ object WalletUpgradeBackup {
         // by a valid base context.
         val applicationContext = context.applicationContext ?: context
         preparedContext = java.lang.ref.WeakReference(applicationContext)
-        val result = runCatching {
+        val prepareOnce = { available: Long? ->
             prepareOrThrow(
                 context = applicationContext,
-                availableBackupBytesOverride = availableBackupBytesOverride,
+                availableBackupBytesOverride = available,
                 beforeFinalSourceValidationForTest = beforeFinalSourceValidationForTest,
             )
+        }
+        val result = if (reclaimDisposableStorage) {
+            withDisposableStorageReclaimed(applicationContext, availableBackupBytesOverride, prepareOnce)
+        } else {
+            runCatching { prepareOnce(availableBackupBytesOverride) }
         }
         val failure = result.exceptionOrNull()?.let { error ->
             Failure(

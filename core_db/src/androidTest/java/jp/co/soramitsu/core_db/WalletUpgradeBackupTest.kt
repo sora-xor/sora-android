@@ -719,6 +719,165 @@ class WalletUpgradeBackupTest {
         assertArrayEquals(original, File(repair, "original/databases/app.db").readBytes())
     }
 
+    // Audit item 9, update rule of 2026-11-09: before the storage screen asks the person for
+    // space, what the app holds only as a cache is given back and the check runs once more.
+    private fun cacheFile(path: String, bytes: Long): File =
+        File(context.cacheDir, path).also { file ->
+            file.parentFile!!.mkdirs()
+            java.io.RandomAccessFile(file, "rw").use { it.setLength(bytes) }
+        }
+
+    private fun emptyCacheFolder() {
+        // Links first and as links: deleteRecursively would walk into what one points to.
+        context.cacheDir.listFiles().orEmpty().forEach { entry ->
+            if (java.nio.file.Files.isSymbolicLink(entry.toPath())) entry.delete() else entry.deleteRecursively()
+        }
+    }
+
+    @Test
+    fun lowStorageGivesBackTheAppCacheAndGoesOnWithoutTheStorageScreen() {
+        emptyCacheFolder()
+        createLegacyDatabase(withAccount = true)
+        putWalletMarker()
+        val database = context.getDatabasePath(DATABASE_NAME)
+        // What this upgrade needs when nothing is free, as the storage screen would show it.
+        assertTrue(WalletUpgradeBackup.prepareWithAvailableBackupBytesForTest(context, 0L).isFailure)
+        assertEquals("INSUFFICIENT_BACKUP_STORAGE", WalletUpgradeBackup.blockingFailure()?.code)
+        val required = requireNotNull(WalletUpgradeBackup.blockingFailure()?.requiredBytes)
+        val images = cacheFile("image_cache/a1b2c3.0", required)
+        val icon = cacheFile("0x0200000000000000000000000000000000000000000000000000000000000000.svg", 4_096)
+        val staleCopy = cacheFile("wallet-journal-replay-00000000-0000-0000-0000-000000000000/app.db", 8_192)
+        val export = cacheFile("wallet-recovery-exports/sora-recovery.zip", 2_048)
+        // A link in the cache folder is removed as a link; what it points to is not followed.
+        val link = File(context.cacheDir, "link-to-wallet-database")
+        Os.symlink(database.path, link.path)
+        val databaseBefore = database.readBytes()
+        val preferencesBefore = context.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE).all
+
+        val result = WalletUpgradeBackup.prepareAfterReclaimingCacheForTest(context, 0L)
+
+        assertTrue("${WalletUpgradeBackup.blockingFailure()}", result.isSuccess)
+        assertEquals(null, WalletUpgradeBackup.blockingFailure())
+        assertFalse(images.exists()); assertFalse(icon.exists())
+        // Folders stay for whoever made them; the upgrade's own stale working copy goes entirely.
+        assertTrue(images.parentFile!!.isDirectory)
+        assertFalse(staleCopy.parentFile!!.exists())
+        assertFalse(java.nio.file.Files.exists(link.toPath(), java.nio.file.LinkOption.NOFOLLOW_LINKS))
+        // A recovery file the person made for support is not a cache.
+        assertEquals(2_048L, export.length())
+        // No wallet file was given up for space: the database, the preferences, and the backup
+        // the upgrade made with the room it got.
+        assertArrayEquals(databaseBefore, database.readBytes())
+        assertEquals(1, legacyAccountCount())
+        assertEquals(preferencesBefore, context.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE).all)
+        assertTrue(
+            context.noBackupFilesDir.listFiles().orEmpty()
+                .any { it.name.startsWith(BACKUP_PREFIX) && it.isDirectory }
+        )
+    }
+
+    @Test
+    fun lowStorageThatTheCacheCannotCoverStillAsksForSpaceAndChangesNoWalletFile() {
+        emptyCacheFolder()
+        createLegacyDatabase(withAccount = true)
+        putWalletMarker()
+        val database = context.getDatabasePath(DATABASE_NAME)
+        val databaseBefore = database.readBytes()
+        val preferencesBefore = context.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE).all
+        val small = cacheFile("image_cache/a1b2c3.0", 1_024)
+
+        val result = WalletUpgradeBackup.prepareAfterReclaimingCacheForTest(context, 0L)
+
+        assertTrue(result.isFailure)
+        val failure = requireNotNull(WalletUpgradeBackup.blockingFailure())
+        assertEquals("INSUFFICIENT_BACKUP_STORAGE", failure.code)
+        // The second check saw exactly what the cache gave back, and it was too little.
+        assertFalse(small.exists())
+        assertEquals(1_024L, failure.availableBytes)
+        assertTrue(requireNotNull(failure.requiredBytes) > 1_024L)
+        assertArrayEquals(databaseBefore, database.readBytes())
+        assertEquals(preferencesBefore, context.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE).all)
+        assertTrue(
+            context.noBackupFilesDir.listFiles().orEmpty()
+                .none { it.name.startsWith(BACKUP_PREFIX) || it.name.contains("staging") }
+        )
+    }
+
+    @Test
+    fun givingBackTheCacheNeverReachesWalletFilesBackupsOrFilesSetAside() {
+        emptyCacheFolder()
+        createLegacyDatabase(withAccount = true)
+        putWalletMarker()
+        assertTrue(WalletUpgradeBackup.prepare(context).isSuccess)
+        val dataDirectory = File(context.applicationInfo.dataDir)
+        fun walletTree() = listOf(context.noBackupFilesDir, context.filesDir, File(dataDirectory, "shared_prefs"),
+            context.getDatabasePath(DATABASE_NAME).parentFile!!)
+            .flatMap { root -> root.walkTopDown().filter(File::isFile).map { it.path to it.length() }.toList() }
+            .toMap()
+        val before = walletTree()
+        assertTrue(before.keys.any { BACKUP_PREFIX in it })
+        val wallet = listOf(context.noBackupFilesDir, context.filesDir, context.getDatabasePath(DATABASE_NAME).parentFile!!)
+
+        // The app's data folder is not a cache: with wallet folders inside it nothing is deleted.
+        assertEquals(0L, DisposableStorage.reclaimCache(dataDirectory, wallet))
+        // Nor is a wallet folder itself, or a link that stands where the cache folder should be.
+        assertEquals(0L, DisposableStorage.reclaimCache(context.noBackupFilesDir, wallet))
+        val linked = File(context.cacheDir, "linked-cache")
+        Os.symlink(context.noBackupFilesDir.path, linked.path)
+        assertEquals(0L, DisposableStorage.reclaimCache(linked, emptyList()))
+        // The real cache folder, with a link into the backups: only the link goes.
+        cacheFile("lottie_network_cache/animation.json", 512)
+        assertEquals(512L, DisposableStorage.reclaimCache(context.cacheDir, wallet))
+
+        assertEquals(before, walletTree())
+        assertFalse(java.nio.file.Files.exists(linked.toPath(), java.nio.file.LinkOption.NOFOLLOW_LINKS))
+    }
+
+    @Test
+    fun askingAndroidForSpaceAnswersWithoutThrowing() {
+        // Plenty is free on the test device: a small request is granted at once.
+        assertTrue(DisposableStorage.askSystemFor(context, context.noBackupFilesDir, 1_024L * 1_024L))
+        // More than the volume holds cannot be freed: the answer is no, never an exception.
+        assertFalse(DisposableStorage.askSystemFor(context, context.noBackupFilesDir, Long.MAX_VALUE / 4))
+        assertFalse(DisposableStorage.askSystemFor(context, context.noBackupFilesDir, 0L))
+    }
+
+    @Test
+    fun aRepairThatRanOutOfSpaceGivesBackTheCacheAndFinishesInTheSameStart() {
+        emptyCacheFolder()
+        createLegacyDatabase(withAccount = true)
+        putWalletMarker()
+        assertTrue(WalletUpgradeBackup.prepare(context).isSuccess)
+        assertTrue(context.deleteDatabase(DATABASE_NAME))
+        val original = ByteArray(4096) { 0x55 }
+        context.getDatabasePath(DATABASE_NAME).writeBytes(original)
+        // Real bytes, so giving them back really frees space on the volume.
+        File(context.cacheDir, "image_cache").mkdirs()
+        File(context.cacheDir, "image_cache/big.0").outputStream().use { out ->
+            val block = ByteArray(1_024 * 1_024) { 0x33 }
+            repeat(48) { out.write(block) }
+            out.fd.sync()
+        }
+        var failures = 0
+        WalletUpgradeBackup.afterDatabaseRepairCopyForTest = {
+            // The copy hits a full disk once.
+            if (failures++ == 0) throw ErrnoException("write", OsConstants.ENOSPC)
+        }
+        try {
+            WalletUpgradeBackup.simulateProcessStartForTest()
+            val result = WalletUpgradeBackup.prepare(context)
+            assertTrue("${WalletUpgradeBackup.blockingFailure()}", result.isSuccess)
+        } finally {
+            WalletUpgradeBackup.afterDatabaseRepairCopyForTest = null
+        }
+        assertEquals(null, WalletUpgradeBackup.blockingFailure())
+        assertEquals(1, legacyAccountCount())
+        assertFalse(File(context.cacheDir, "image_cache/big.0").exists())
+        val repair = context.noBackupFilesDir.listFiles().orEmpty()
+            .single { it.name.startsWith("wallet-database-repair-") && it.isDirectory }
+        assertArrayEquals(original, File(repair, "original/databases/app.db").readBytes())
+    }
+
     @Test
     fun tryAgainInTheSameProcessFinishesAnInterruptedRepairInsteadOfAnEmptyWallet() {
         createLegacyDatabase(withAccount = true)
