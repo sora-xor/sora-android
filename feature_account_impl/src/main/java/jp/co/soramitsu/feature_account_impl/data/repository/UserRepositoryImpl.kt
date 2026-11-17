@@ -135,12 +135,22 @@ class UserRepositoryImpl(
     private companion object {
         const val DELETION_PREVIEW_TTL_MILLIS = 2 * 60 * 1_000L
         val SELECTABLE_STATES = setOf("VERIFIED", "UNAVAILABLE")
+        /** Labels an account being removed must have: its backup was judged. */
         val DELETABLE_SECRET_SOURCES = setOf(
             StoredSecretsVerdict.SOURCE_MNEMONIC,
             StoredSecretsVerdict.SOURCE_MNEMONIC_UNSUPPORTED,
             StoredSecretsVerdict.SOURCE_RAW_SEED,
             StoredSecretsVerdict.SOURCE_LEGACY_SECRET,
         )
+
+        /**
+         * Labels an account that stays may have. Besides the judged ones, an account whose key
+         * was proven but whose backup could not be read yet: the removal of another account
+         * changes nothing of it (its row, keys and backup stay), and its signing key is proven
+         * again live before anything is removed, as for every account.
+         */
+        val RETAINABLE_SECRET_SOURCES =
+            DELETABLE_SECRET_SOURCES + StoredSecretsVerdict.SOURCE_BACKUP_NOT_CHECKED
         const val UNAVAILABLE_STATE = "UNAVAILABLE"
         const val REMOVED_UNAVAILABLE_COPY_REASON = "removed-unavailable-account"
         const val REMOVED_WITHOUT_BACKUP_COPY_REASON = "removed-account-without-backup"
@@ -1618,9 +1628,16 @@ class UserRepositoryImpl(
                         // A verified account is the one whose stored key signs for its address.
                         // That is what is proven again before anything is removed; the stored
                         // phrase and seed are backup material and do not block the removal the
-                        // person chose.
+                        // person chose. An account being removed needs a judged backup label;
+                        // one that stays may also be waiting for its backup to be judged
+                        // (BACKUP_NOT_CHECKED): it does not veto removing another account.
+                        val allowedSources = if (account.substrateAddress in targetIds) {
+                            DELETABLE_SECRET_SOURCES
+                        } else {
+                            RETAINABLE_SECRET_SOURCES
+                        }
                         deletionRequire(
-                            identity.secretSource in DELETABLE_SECRET_SOURCES,
+                            identity.secretSource in allowedSources,
                             "WALLET_DELETION_SECRET_SOURCE_UNSUPPORTED",
                         )
                         deletionRequire(!watchOnly, "WALLET_DELETION_WATCH_ONLY_MISMATCH")

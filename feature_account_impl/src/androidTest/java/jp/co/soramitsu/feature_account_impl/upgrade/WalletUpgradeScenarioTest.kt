@@ -1241,6 +1241,47 @@ class WalletUpgradeScenarioTest {
         }
     }
 
+    // Codex re-review 3: an account whose key is proven but whose backup could not be read yet
+    // (BACKUP_NOT_CHECKED, written by a first check with a busy Keystore) stays exactly as it is
+    // when another account is removed, and does not block that removal. Removing it itself waits
+    // until a later start judges its backup.
+    @Test
+    fun anAccountWhoseBackupIsNotCheckedYetNeverBlocksRemovingAnother() = runBlocking {
+        val unchecked = phraseWallet(TWELVE_WORDS)
+        val other = rawSeedWallet(RAW_SEED)
+        val before = release3863 {
+            created(unchecked)
+            importedSeed(other)
+            finishedAccount(unchecked)
+            finishedAccount(other)
+            select(unchecked)
+            registrationFinished()
+        }
+        room(73, unchecked to "Unchecked", other to "Other")
+
+        candidate { launch ->
+            assertTrue(launch.prepare.isSuccess)
+            assertEquals(MigrationOutcome.Verified, launch.verify())
+            launch.database.walletIdentityDao().upsertWallet(
+                launch.identity(unchecked).copy(secretSource = "BACKUP_NOT_CHECKED")
+            )
+            val uncheckedRow = launch.identity(unchecked)
+
+            launch.remove(other.address)
+
+            launch.assertUsable(listOf(unchecked), selected = unchecked)
+            assertEquals(uncheckedRow, launch.identity(unchecked))
+            launch.assertCiphertextsKept(before.filterKeys { it.endsWith(unchecked.address) })
+            assertNull(launch.userRepository.walletDeletionFailureCode())
+
+            val refused = runCatching { launch.remove(unchecked.address) }.exceptionOrNull()
+            assertEquals("WALLET_DELETION_SECRET_SOURCE_UNSUPPORTED", refused?.message)
+            launch.assertUsable(listOf(unchecked), selected = unchecked)
+            assertEquals(uncheckedRow, launch.identity(unchecked))
+            assertNull(launch.userRepository.walletDeletionFailureCode())
+        }
+    }
+
     @Test
     fun blankAccountRowNeverBlocksRemovingAccounts() = runBlocking {
         val first = phraseWallet(TWELVE_WORDS)

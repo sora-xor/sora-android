@@ -1108,6 +1108,65 @@ class UserRepositoryTest {
         }
     }
 
+    // Codex re-review 3: a retained account whose backup is not judged yet (BACKUP_NOT_CHECKED)
+    // does not veto removing another account; its signing key is still proven live, and removing
+    // it itself stays refused until its backup is judged.
+    @Test
+    fun `an account whose backup is not checked yet does not block removing another`() = runTest {
+        val kept = "accountAddress"
+        val removed = "removedWallet"
+        val removedSeed = ByteArray(32) { 0x42 }
+        fun removedKeys() = testSr25519Keypair(removedSeed.copyOf())
+        val removedPublic = removedKeys().publicKey
+        coEvery { accountDao.getAccounts() } returns listOf(
+            SoraAccountLocal(kept, "Kept"),
+            SoraAccountLocal(removed, "Removed"),
+        )
+        coEvery { walletIdentityDao.getWallets() } returns listOf(
+            WalletIdentityLocal(
+                walletId = kept,
+                displayName = "Kept",
+                secretSource = "BACKUP_NOT_CHECKED",
+                migrationState = "VERIFIED",
+                derivationVersion = 1,
+            ),
+            WalletIdentityLocal(
+                walletId = removed,
+                displayName = "Removed",
+                secretSource = "LEGACY_SECRET",
+                migrationState = "VERIFIED",
+                derivationVersion = 1,
+            ),
+        )
+        coEvery { walletIdentityDao.getAllNetworkAccounts() } returns emptyList()
+        coEvery { walletIdentityDao.countUnresolvedTransactionsForJournal(any()) } returns 0
+        coEvery { credentialsDatasource.getAddress() } returns ""
+        coEvery { credentialsDatasource.retrieveKeys(kept) } answers { retainedFifteenWordKeyPair() }
+        coEvery { credentialsDatasource.retrieveKeys(removed) } answers { removedKeys() }
+        every { runtimeManager.soraPublicKeyOrNull(removed) } returns removedPublic
+        every { runtimeManager.toSoraAddressOrNull(any()) } answers {
+            if (firstArg<ByteArray>().contentEquals(removedPublic)) removed else kept
+        }
+
+        val preview = userRepository.createWalletDeletionPreview(listOf(removed))
+
+        assertEquals(WalletDeletionScope.SINGLE, preview.scope)
+        assertEquals(listOf(WalletDeletionTarget(removed, "Removed")), preview.targets)
+        assertEquals(kept, preview.selectedAfter)
+        // Removing the unchecked account itself waits until its backup is judged.
+        assertEquals(
+            "WALLET_DELETION_SECRET_SOURCE_UNSUPPORTED",
+            runCatching { userRepository.createWalletDeletionPreview(listOf(kept)) }.exceptionOrNull()?.message,
+        )
+        // The account that stays still has its signing key proven live.
+        coEvery { credentialsDatasource.retrieveKeys(kept) } returns null
+        assertEquals(
+            "WALLET_DELETION_SIGNING_KEY_MISSING",
+            runCatching { userRepository.createWalletDeletionPreview(listOf(removed)) }.exceptionOrNull()?.message,
+        )
+        coVerify(exactly = 0) { walletIdentityDao.beginDeletionOperation(any(), any()) }
+    }
+
     @Test
     fun `deletion preview verifies keypair only legacy secret without deleting it`() =
         runTest {
