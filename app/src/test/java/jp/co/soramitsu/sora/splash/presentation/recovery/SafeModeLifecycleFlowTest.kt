@@ -43,6 +43,8 @@ class SafeModeLifecycleFlowTest {
     private val facts = RecoveryFacts(hasWalletFiles = true, hasRecoveryPhraseOrSeed = true,
         databaseAtCurrentVersion = true, accountsReadableReadOnly = true, phraseWalletIds = listOf("public-fixture-wallet"))
     private val events = mutableListOf<SafeModeEvent>()
+    private val SCREEN_LOCK = androidx.biometric.BiometricPrompt.AUTHENTICATION_RESULT_TYPE_DEVICE_CREDENTIAL
+    private val BIOMETRIC = androidx.biometric.BiometricPrompt.AUTHENTICATION_RESULT_TYPE_BIOMETRIC
     private class QueuedDispatcher : CoroutineDispatcher() {
         private val queue = ArrayDeque<Runnable>()
         override fun dispatch(context: CoroutineContext, block: Runnable) { queue.addLast(block) }
@@ -531,7 +533,7 @@ class SafeModeLifecycleFlowTest {
         assertFalse((vm.state.value.reveal as RevealUi.Auth).biometric)
         vm.requestBiometric(); runCurrent()
         assertTrue(events.isEmpty())
-        vm.onAuthenticated(); runCurrent()
+        vm.onAuthenticated(SCREEN_LOCK); runCurrent()
         assertTrue(vm.state.value.reveal is RevealUi.Auth)
         coVerify(exactly = 0) { credentials.retrieveMnemonic(any()) }
     }
@@ -552,6 +554,27 @@ class SafeModeLifecycleFlowTest {
         assertEquals(AuthError.UNAVAILABLE, (vm.state.value.reveal as RevealUi.Auth).error)
         coVerify(exactly = 0) { credentials.retrieveMnemonic(any()) }
     }
+    // Codex review 1: with no app PIN stored, the phone's screen lock is the proof that opens
+    // the recovery phrase; a fingerprint or face that the prompt might accept reveals nothing.
+    @Test fun noStoredPinRevealsOnlyAfterTheScreenLockItselfNeverABiometric() = runTest {
+        deviceCredentialAvailable()
+        coEvery { user.retrievePin() } returns ""
+        coEvery { credentials.retrieveMnemonic(any()) } returns "public fixture words"
+        every { credentials.convertRetainedSoraPassphraseToSeed(any()) } returns "01"
+        val vm = vm(); vm.startReveal(); runCurrent()
+        vm.requestBiometric(); runCurrent()
+        vm.onAuthenticated(BIOMETRIC); runCurrent()
+        assertTrue(vm.state.value.reveal is RevealUi.Auth)
+        coVerify(exactly = 0) { credentials.retrieveMnemonic(any()) }
+        vm.requestBiometric(); runCurrent()
+        vm.onAuthenticated(SCREEN_LOCK); runCurrent()
+        assertFalse(vm.state.value.reveal is RevealUi.Auth)
+        coVerify(exactly = 1) { credentials.retrieveMnemonic(any()) }
+    }
+    @Test fun theSafeModePromptAllowsTheScreenLockAloneNeverABiometric() {
+        assertEquals(BiometricManager.Authenticators.DEVICE_CREDENTIAL, SafeModeViewModel.DEVICE_CREDENTIAL_AUTHENTICATORS)
+    }
+
     @Test fun revealedWalletCanBeHiddenAndReturnToListThenClose() = runTest {
         every { WalletUpgradeBackup.recoveryFacts() } returns facts.copy(phraseWalletIds = listOf("fixture-a", "fixture-b"))
         coEvery { credentials.retrieveMnemonic(any()) } returns "public fixture words"

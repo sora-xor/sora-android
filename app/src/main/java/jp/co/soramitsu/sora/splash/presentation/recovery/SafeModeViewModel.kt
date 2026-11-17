@@ -25,6 +25,7 @@ import android.content.Context
 import android.os.Build
 import android.os.SystemClock
 import androidx.biometric.BiometricManager
+import jp.co.soramitsu.feature_main_impl.presentation.pincode.ScreenLockPrompt
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -850,7 +851,7 @@ class SafeModeViewModel @Inject constructor(
                 pin.isNullOrEmpty() -> RevealUi.Auth(
                     loading = false,
                     noPin = true,
-                    error = if (canAuthenticate(DEVICE_CREDENTIAL_AUTHENTICATORS)) null else AuthError.NO_SCREEN_LOCK,
+                    error = if (screenLockAvailable()) null else AuthError.NO_SCREEN_LOCK,
                 )
                 else -> RevealUi.Auth(
                     loading = false,
@@ -869,6 +870,10 @@ class SafeModeViewModel @Inject constructor(
         runCatching {
             BiometricManager.from(context).canAuthenticate(authenticators) == BiometricManager.BIOMETRIC_SUCCESS
         }.getOrDefault(false)
+
+    /** The phone has a screen lock to ask for (androidx answers for Android 11+, Keyguard below). */
+    private fun screenLockAvailable(): Boolean =
+        canAuthenticate(DEVICE_CREDENTIAL_AUTHENTICATORS) || ScreenLockPrompt.isAvailable(context)
 
     fun retryAuthCheck() = startReveal()
 
@@ -943,12 +948,17 @@ class SafeModeViewModel @Inject constructor(
         }
     }
 
-    /** A system callback can only complete the explicit no-wallet-PIN recovery flow. */
-    fun onAuthenticated() {
+    /**
+     * A system callback can only complete the explicit no-wallet-PIN recovery flow, and only
+     * with the phone's screen lock itself ([authenticationType], see [ScreenLockPrompt]): a
+     * fingerprint or face reveals nothing.
+     */
+    fun onAuthenticated(authenticationType: Int) {
         val auth = state.value.reveal as? RevealUi.Auth ?: return
         val wasAuthenticating = authenticating
         authenticating = false
         if (!wasAuthenticating || !auth.noPin || auth.loading || auth.error != null) return
+        if (!ScreenLockPrompt.isScreenLock(authenticationType)) return
         revealAfterVerifiedPin()
     }
 
@@ -1097,9 +1107,12 @@ class SafeModeViewModel @Inject constructor(
         /** Automatic attempts per app start for a resumable (not transient) state. */
         const val MAX_RESUMABLE_AUTOMATIC_RETRIES = 3
 
-        @Suppress("DEPRECATION")
-        val DEVICE_CREDENTIAL_AUTHENTICATORS =
-            BiometricManager.Authenticators.BIOMETRIC_WEAK or BiometricManager.Authenticators.DEVICE_CREDENTIAL
+        /**
+         * "Show my recovery phrase" with no app PIN stored: the phone's screen lock alone is the
+         * proof, never a fingerprint or face ([ScreenLockPrompt]). Android 8 to 10 use Keyguard's
+         * confirmation instead, since their prompt cannot take the device credential alone.
+         */
+        const val DEVICE_CREDENTIAL_AUTHENTICATORS = ScreenLockPrompt.AUTHENTICATORS
 
         /** Maps a real verification phase to the four rows (design spec 7.16). */
         fun progressFor(

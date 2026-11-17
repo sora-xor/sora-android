@@ -358,11 +358,12 @@ class PinCodeViewModel @Inject constructor(
 
     /**
      * The system prompt reported success: the phone's owner is here and chooses the new PIN.
+     * Only the screen lock itself counts ([ScreenLockPrompt.isScreenLock]), never a biometric.
      * A prompt that closes any other way (cancelled, failed, not shown) changes nothing, and
      * the next touch of the keypad shows it again.
      */
-    fun onScreenLockConfirmed() {
-        if (!awaitingScreenLock) return
+    fun onScreenLockConfirmed(authenticationType: Int) {
+        if (!awaitingScreenLock || !ScreenLockPrompt.isScreenLock(authenticationType)) return
         screenLockConfirmation = phoneScreenLock?.confirmed()
         awaitingScreenLock = false
     }

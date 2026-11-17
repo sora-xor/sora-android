@@ -437,6 +437,10 @@ class PinCodeViewModelTest {
     private var elapsedMillis = 1_000_000L
     private val phoneScreenLock = PhoneScreenLock(deviceSecure = { true }, elapsedMillis = { elapsedMillis })
 
+    /** What the system prompt reports for the screen lock itself, and for a fingerprint or face. */
+    private val SCREEN_LOCK = androidx.biometric.BiometricPrompt.AUTHENTICATION_RESULT_TYPE_DEVICE_CREDENTIAL
+    private val BIOMETRIC = androidx.biometric.BiometricPrompt.AUTHENTICATION_RESULT_TYPE_BIOMETRIC
+
     /** The screen as the app builds it: with the phone's screen lock to ask. */
     private fun viewModelWithScreenLock() = PinCodeViewModel(
         interactor, mainInteractor, mainRouter, resourceManager, selectNodeRouter, progress,
@@ -513,7 +517,7 @@ class PinCodeViewModelTest {
             startWithUnreadablePin(model, needsScreenLock = true)
             given(interactor.isBiometryAvailable()).willReturn(false)
 
-            model.onScreenLockConfirmed()
+            model.onScreenLockConfirmed(SCREEN_LOCK)
             typeTwice(model, "123456")
 
             val confirmation = argumentCaptor<ScreenLockConfirmation>()
@@ -565,7 +569,7 @@ class PinCodeViewModelTest {
             val prompts = model.countScreenLockPrompts()
             startWithUnreadablePin(model, needsScreenLock = true)
             given(interactor.isBiometryAvailable()).willReturn(false)
-            model.onScreenLockConfirmed()
+            model.onScreenLockConfirmed(SCREEN_LOCK)
             var refused = true
             given(interactor.savePin(anyString(), anyOrNull()))
                 .willAnswer { if (refused) throw ScreenLockConfirmationRequiredException() }
@@ -582,7 +586,7 @@ class PinCodeViewModelTest {
             assertEquals(3, prompts())
 
             refused = false
-            model.onScreenLockConfirmed()
+            model.onScreenLockConfirmed(SCREEN_LOCK)
             typeTwice(model, "654321")
 
             verify(interactor).savePin(org.mockito.kotlin.eq("654321"), org.mockito.kotlin.isNotNull())
@@ -597,10 +601,28 @@ class PinCodeViewModelTest {
         model.startAuth(PinCodeAction.TIMEOUT_CHECK)
         advanceUntilIdle()
 
-        model.onScreenLockConfirmed()
+        model.onScreenLockConfirmed(SCREEN_LOCK)
         typeTwice(model, "123456")
 
         verify(interactor).savePin("123456", null)
+    }
+
+    // Codex review 1: the screen lock is the proof, so a fingerprint or face that the system
+    // prompt might accept in its place confirms nothing.
+    @Test
+    fun `a fingerprint or face in place of the screen lock confirms nothing`() = runTest {
+        val model = viewModelWithScreenLock()
+        val prompts = model.countScreenLockPrompts()
+        startWithUnreadablePin(model, needsScreenLock = true)
+
+        model.onScreenLockConfirmed(BIOMETRIC)
+
+        // Still waiting for the screen lock: the keypad takes no digit and asks again.
+        model.pinCodeNumberClicked("1")
+        assertEquals(2, prompts())
+        assertEquals(0, model.state.checkedDotsCount)
+        typeTwice(model, "123456")
+        verify(interactor, never()).savePin(anyString(), anyOrNull())
     }
 
     @Test

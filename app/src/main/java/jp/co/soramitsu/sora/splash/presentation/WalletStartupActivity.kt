@@ -31,6 +31,7 @@ import android.provider.Settings
 import android.view.View
 import android.view.WindowManager
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.biometric.BiometricPrompt
@@ -58,6 +59,7 @@ import jp.co.soramitsu.common.presentation.compose.neon.safemode.WalletUpgradeRe
 import jp.co.soramitsu.common.presentation.compose.theme.SoraAppTheme
 import jp.co.soramitsu.core_db.WalletUpgradeBackup
 import jp.co.soramitsu.feature_main_api.launcher.MainStarter
+import jp.co.soramitsu.feature_main_impl.presentation.pincode.ScreenLockPrompt
 import jp.co.soramitsu.feature_multiaccount_api.MultiaccountStarter
 import jp.co.soramitsu.feature_select_node_api.NodeManager
 import jp.co.soramitsu.sora.R
@@ -461,13 +463,31 @@ class WalletStartupActivity : AppCompatActivity() {
         }
     }
 
+    /** Keyguard's screen-lock confirmation, on Android 8 to 10 ([ScreenLockPrompt]). */
+    private val keyguardConfirmation =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == RESULT_OK) {
+                safeModeViewModel.onAuthenticated(ScreenLockPrompt.KEYGUARD_CONFIRMED)
+            } else {
+                safeModeViewModel.onAuthenticationEnded()
+            }
+        }
+
     private fun authenticate(deviceCredential: Boolean) {
+        if (deviceCredential && !ScreenLockPrompt.usesBiometricPrompt()) {
+            // The phone's screen lock alone: Keyguard's own confirmation on Android 8 to 10.
+            val request = ScreenLockPrompt.keyguardIntent(this, getString(R.string.recovery_auth_title), "")
+            if (request == null || runCatching { keyguardConfirmation.launch(request) }.isFailure) {
+                safeModeViewModel.onAuthenticationEnded()
+            }
+            return
+        }
         val prompt = BiometricPrompt(
             this,
             ContextCompat.getMainExecutor(this),
             object : BiometricPrompt.AuthenticationCallback() {
                 override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
-                    safeModeViewModel.onAuthenticated()
+                    safeModeViewModel.onAuthenticated(result.authenticationType)
                 }
 
                 override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
@@ -475,17 +495,16 @@ class WalletStartupActivity : AppCompatActivity() {
                 }
             },
         )
-        val info = BiometricPrompt.PromptInfo.Builder()
-            .setTitle(getString(R.string.recovery_auth_title))
-            .apply {
-                if (deviceCredential) {
-                    setAllowedAuthenticators(SafeModeViewModel.DEVICE_CREDENTIAL_AUTHENTICATORS)
-                } else {
-                    setAllowedAuthenticators(androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_STRONG)
-                    setNegativeButtonText(getString(jp.co.soramitsu.common.R.string.common_cancel))
-                }
-            }
-            .build()
+        val info = if (deviceCredential) {
+            // The screen lock alone, never a biometric in its place ([ScreenLockPrompt]).
+            ScreenLockPrompt.promptInfo(getString(R.string.recovery_auth_title), null)
+        } else {
+            BiometricPrompt.PromptInfo.Builder()
+                .setTitle(getString(R.string.recovery_auth_title))
+                .setAllowedAuthenticators(androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_STRONG)
+                .setNegativeButtonText(getString(jp.co.soramitsu.common.R.string.common_cancel))
+                .build()
+        }
         runCatching { prompt.authenticate(info) }.onFailure { safeModeViewModel.onAuthenticationEnded() }
     }
 

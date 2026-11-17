@@ -19,12 +19,14 @@ limitations under the License.
 
 package jp.co.soramitsu.feature_main_impl.presentation.pincode
 
+import android.app.Activity
 import android.app.AlertDialog
 import android.os.Bundle
 import android.view.View
 import android.widget.TextView
 import android.widget.Toast
 import androidx.biometric.BiometricManager
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.biometric.BiometricPrompt
 import androidx.compose.foundation.ScrollState
 import androidx.fragment.app.viewModels
@@ -54,12 +56,15 @@ class PincodeFragment : SoraBaseFragment<PinCodeViewModel>() {
 
     companion object {
         private const val DATA_CLEAR_DELAY = 500L
-
-        /** The phone's screen lock, or a biometric that stands for it (as Safe Mode asks). */
-        private const val SCREEN_LOCK_AUTHENTICATORS =
-            BiometricManager.Authenticators.BIOMETRIC_WEAK or
-                BiometricManager.Authenticators.DEVICE_CREDENTIAL
     }
+
+    /** Keyguard's screen-lock confirmation, on Android 8 to 10 ([ScreenLockPrompt]). */
+    private val keyguardConfirmation =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                viewModel.onScreenLockConfirmed(ScreenLockPrompt.KEYGUARD_CONFIRMED)
+            }
+        }
 
     private val fingerprintWrapper: FingerprintWrapper by lazy {
         val biometricManager = BiometricManager.from(context?.applicationContext!!)
@@ -187,28 +192,30 @@ class PincodeFragment : SoraBaseFragment<PinCodeViewModel>() {
     }
 
     /**
-     * The phone's own screen lock (PIN, pattern, password, or a biometric that stands for it) in
-     * the system prompt, before a new PIN replaces one that cannot be read. Built for each
-     * request: androidx keeps one callback per activity, and this fragment's fingerprint prompt
-     * set its own.
+     * The phone's own screen lock (its PIN, pattern or password, never a biometric) in the
+     * system prompt, before a new PIN replaces one that cannot be read ([ScreenLockPrompt]).
+     * Built for each request: androidx keeps one callback per activity, and this fragment's
+     * fingerprint prompt set its own. A prompt that cannot be shown changes nothing: touching
+     * the keypad asks again.
      */
     private fun confirmScreenLock() {
+        val title = getString(R.string.pincode_set_your_pin_code)
+        val description = getString(R.string.account_repair_screen_lock_body)
+        if (!ScreenLockPrompt.usesBiometricPrompt()) {
+            val request = ScreenLockPrompt.keyguardIntent(requireContext(), title, description) ?: return
+            runCatching { keyguardConfirmation.launch(request) }
+            return
+        }
         val prompt = BiometricPrompt(
             this,
             MainThreadExecutor(),
             object : BiometricPrompt.AuthenticationCallback() {
                 override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
-                    viewModel.onScreenLockConfirmed()
+                    viewModel.onScreenLockConfirmed(result.authenticationType)
                 }
             },
         )
-        val info = BiometricPrompt.PromptInfo.Builder()
-            .setTitle(getString(R.string.pincode_set_your_pin_code))
-            .setDescription(getString(R.string.account_repair_screen_lock_body))
-            .setAllowedAuthenticators(SCREEN_LOCK_AUTHENTICATORS)
-            .build()
-        // A prompt that cannot be shown changes nothing: touching the keypad asks again.
-        runCatching { prompt.authenticate(info) }
+        runCatching { prompt.authenticate(ScreenLockPrompt.promptInfo(title, description)) }
     }
 
     private fun contactSupport() {
