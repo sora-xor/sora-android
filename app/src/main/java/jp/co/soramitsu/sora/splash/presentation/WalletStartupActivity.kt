@@ -418,6 +418,9 @@ class WalletStartupActivity : AppCompatActivity() {
             // False when the current account cannot be resolved: read-only would only come
             // back to this screen, so it is not offered.
             canContinueLegacyWallet = canContinueLegacyWallet,
+            // An app start is not a question: where the wallet can open read-only behind its
+            // PIN, it does. "Try upgrade again" from the read-only home gets its answer here.
+            unattended = !openedForRetry,
         )
         reportStartupReady()
     }

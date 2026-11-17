@@ -94,7 +94,7 @@ class SplashActivityFlowTest {
         every { safeModel.state } returns safe
         every { safeModel.events } returns events.receiveAsFlow()
         every { safeModel.technicalDetails() } returns listOf("code" to "FIXTURE_RECOVERY")
-        every { safeModel.showPanel(any(), any(), any()) } just Runs
+        every { safeModel.showPanel(any(), any(), any(), any()) } just Runs
         every { safeModel.startRetryFromHome() } just Runs
         every { safeModel.onVerificationRouted() } just Runs
         every { safeModel.markProgressFinished() } returns false
@@ -239,13 +239,14 @@ class SplashActivityFlowTest {
         launch(); every { WalletUpgradeBackup.blockingFailure() } returns WalletUpgradeBackup.Failure("FIXTURE_BLOCKED")
         instrumentation.runOnMainSync { main.value = Unit }; drainMainQueue()
         verify(exactly = 0) { mainStarter.start(any()); node.ensureStarted() }
-        verify { safeModel.showPanel("FIXTURE_BLOCKED", any(), any()) }
+        // A start nobody asked anything in: the panel may open the wallet read-only by itself.
+        verify { safeModel.showPanel("FIXTURE_BLOCKED", any(), any(), unattended = true) }
     }
     @Test fun migrationFailurePassesAccountReadOnlyAvailabilityToPanel() {
         launch(); val options = WalletRecoveryOptions.forState("FIXTURE_VERIFY", false, RecoveryFacts())
         instrumentation.runOnMainSync { recovery.value = WalletMigrationRecoveryUiState("FIXTURE_VERIFY", false, options) }
         drainMainQueue()
-        verify { safeModel.showPanel("FIXTURE_VERIFY", options, false) }
+        verify { safeModel.showPanel("FIXTURE_VERIFY", options, false, unattended = true) }
     }
     @Test fun retryReadyRebindsVerificationWithoutStartingNormalMigration() {
         every { WalletUpgradeBackup.recoveryOptions() } returns WalletRecoveryOptions.forState("FIXTURE_RECOVERY", false, RecoveryFacts()); launch(retry = true); emit(SafeModeEvent.RetryReady)
@@ -280,6 +281,17 @@ class SplashActivityFlowTest {
         launch(retry = true); scenario!!.recreate(); drainMainQueue()
         verify(exactly = 1) { safeModel.startRetryFromHome() }
         verify(exactly = 0) { splashModel.start() }
+    }
+    // Audit item 13: "Try upgrade again" from the read-only home gets its answer on the panel;
+    // only a start nobody asked anything in may open the wallet read-only by itself.
+    @Test fun retryFromHomeThatFailsShowsItsPanelAsAnAnswerNotAsAnUnattendedStart() {
+        every { WalletUpgradeBackup.recoveryOptions() } returns WalletRecoveryOptions.forState("FIXTURE_RECOVERY", false, RecoveryFacts())
+        launch(retry = true)
+        emit(SafeModeEvent.RetryReady)
+        val options = WalletRecoveryOptions.forState("FIXTURE_VERIFY", false, RecoveryFacts())
+        instrumentation.runOnMainSync { recovery.value = WalletMigrationRecoveryUiState("FIXTURE_VERIFY", true, options) }; drainMainQueue()
+        verify { safeModel.showPanel("FIXTURE_VERIFY", options, true, unattended = false) }
+        verify(exactly = 0) { safeModel.showPanel(any(), any(), any(), unattended = true) }
     }
     @Test fun completedProgressTickDefersMainNavigationBriefly() {
         launch(); every { safeModel.markProgressFinished() } returns true

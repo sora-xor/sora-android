@@ -218,17 +218,30 @@ class SafeModeViewModel @Inject constructor(
      */
     private var readOnlyAvailable = true
 
+    /**
+     * The person used this screen (an action, "Get help", or "Try upgrade again" from the
+     * read-only home). From then on a state shows its options: what they asked for gets its
+     * answer here, and nothing more is decided for them.
+     */
+    private var personInvolved = false
+
+    /** Read-only was entered (or tried) without the person once; a second time shows the options. */
+    private var readOnlyEntryTried = false
+
     // ---- panel ------------------------------------------------------------------------------
 
     /**
      * Shows the recovery options for [code] (U4 or U6). [canContinueLegacyWallet] is false when
      * the current account was found not to resolve (read-only would only come back here); null
-     * keeps what is known.
+     * keeps what is known. [unattended]: nobody asked for this screen (an app start, or a check
+     * the app ran again by itself), so where the wallet can open read-only it does, without the
+     * panel and its confirmation ([entersReadOnlyByItself]).
      */
     fun showPanel(
         code: String,
         options: WalletRecoveryOptions? = null,
         canContinueLegacyWallet: Boolean? = null,
+        unattended: Boolean = false,
     ) {
         canContinueLegacyWallet?.let { readOnlyAvailable = it }
         val resolved = (options ?: resolveOptions(code)).let {
@@ -250,6 +263,10 @@ class SafeModeViewModel @Inject constructor(
             // An update never stops at "paused" for something that passes by itself (rule of
             // 2026-11-09): the progress screen stays while the same check runs again.
             showAutomaticRetry(model, resolved)
+            return
+        }
+        if (unattended && entersReadOnlyByItself(model)) {
+            enterReadOnlyByItself(model, resolved)
             return
         }
         automaticRetry = null
@@ -311,6 +328,66 @@ class SafeModeViewModel @Inject constructor(
         else -> false
     }
 
+    /**
+     * Whether [model] opens the wallet read-only without asking (update rule of 2026-11-09): a
+     * check that could not finish and will not pass by itself, on a start the person did nothing
+     * in, where "Continue in read-only mode" is offered (the accounts are readable and the
+     * wallet key works). The wallet's own PIN stays the check ([enterReadOnlyByItself]), signing
+     * stays off and the wallet tables stay guarded, exactly as after the confirmation this
+     * replaces. Never a second time, never once the person used this screen, and never for
+     * storage, keys this phone cannot use or a restore waiting for its restart.
+     */
+    private fun entersReadOnlyByItself(model: RecoveryPanelModel): Boolean =
+        !personInvolved && !readOnlyEntryTried &&
+            model.kind == RecoveryPanelKind.RECOVERY &&
+            RecoveryAction.READ_ONLY in model.actions
+
+    /**
+     * Read-only access without the panel and its confirmation. Only when a PIN is stored and
+     * readable: the PIN screen that follows then proves the owner, as on every start. Whatever
+     * does not work out shows the options instead.
+     */
+    private fun enterReadOnlyByItself(model: RecoveryPanelModel, options: WalletRecoveryOptions) {
+        readOnlyEntryTried = true
+        automaticRetry = null
+        autoRetryJob?.cancel()
+        showProgress(ProgressTitle.FINISHING, checkingDataDone = true)
+        mutableState.update {
+            it.copy(
+                visible = true,
+                panel = null,
+                running = RecoveryAction.READ_ONLY,
+                runningLong = false,
+                autoRetrying = true,
+                lastAttemptCode = model.code,
+            )
+        }
+        viewModelScope.launch {
+            val route = withContext(coroutineManager.io) {
+                runCatching {
+                    // Never beside a verification that is still running: its writes would meet
+                    // the read-only guard.
+                    interactor.awaitRunningVerification()
+                    if (userDatasource.retrievePin().isEmpty()) {
+                        null
+                    } else {
+                        WalletUpgradeBackup.authorizeSafeReadOnly(context).getOrThrow()
+                    }
+                }.getOrNull()
+            }
+            mutableState.update { it.copy(running = null, runningLong = false, autoRetrying = false) }
+            if (
+                route == WalletUpgradeBackup.SafeReadOnlyRoute.ROOM_READ_ONLY ||
+                route == WalletUpgradeBackup.SafeReadOnlyRoute.NORMAL_ACCESS
+            ) {
+                eventChannel.trySend(SafeModeEvent.ReadOnlyReady)
+            } else {
+                if (route == WalletUpgradeBackup.SafeReadOnlyRoute.VAULT_ONLY) readOnlyAvailable = false
+                showPanel(model.code, options)
+            }
+        }
+    }
+
     /** The progress screen (not the panel) while [model] is retried by itself. */
     private fun showAutomaticRetry(model: RecoveryPanelModel, options: WalletRecoveryOptions) {
         automaticRetry = model to options
@@ -368,6 +445,7 @@ class SafeModeViewModel @Inject constructor(
      * options are shown (the retries go on behind them); otherwise the support sheet opens.
      */
     fun onGetHelp() {
+        personInvolved = true
         val retrying = automaticRetry
         if (retrying == null) {
             openSheet(SafeSheetKind.SUPPORT)
@@ -413,6 +491,7 @@ class SafeModeViewModel @Inject constructor(
     }
 
     fun onAction(action: RecoveryAction) {
+        personInvolved = true
         if (state.value.running != null && action != RecoveryAction.CONTACT_SUPPORT) return
         when (action) {
             RecoveryAction.CANCEL_RESTORE -> {
@@ -519,8 +598,12 @@ class SafeModeViewModel @Inject constructor(
                     showProgress(ProgressTitle.FINISHING, checkingDataDone = true, startedAtElapsed = startedAt)
                 }
             } else {
-                // Try again re-ran the checks: the panel now shows the state they found.
-                showPanel(failureCode(error, "BACKUP_RETRY_FAILED"))
+                // Try again re-ran the checks: the panel now shows the state they found (or,
+                // after a retry nobody asked for, the wallet opens read-only where it can).
+                showPanel(
+                    failureCode(error, "BACKUP_RETRY_FAILED"),
+                    unattended = state.value.autoRetrying,
+                )
             }
 
             RecoveryAction.READ_ONLY -> {
@@ -700,6 +783,7 @@ class SafeModeViewModel @Inject constructor(
 
     /** "Try upgrade again" from the read-only home: the progress shows from the start. */
     fun startRetryFromHome() {
+        personInvolved = true
         if (isRestorePending(null)) {
             // A confirmed restore waits for a new app process: say so instead of retrying here.
             showPanel(SET_UP_AGAIN_INCOMPLETE)

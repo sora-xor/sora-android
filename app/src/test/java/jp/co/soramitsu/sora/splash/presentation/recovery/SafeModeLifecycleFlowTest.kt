@@ -136,7 +136,8 @@ class SafeModeLifecycleFlowTest {
     @Test fun resumableFailureIsRetriedThreeTimesPerStartThenShowsItsOptions() = runTest {
         val vm = vm()
         val code = "VERIFIED_RECEIPT_INVALID"
-        val resumable = options(code).copy(retryAutomatically = true)
+        // Where the wallet cannot open read-only either, the options are what is left.
+        val resumable = options(code).copy(retryAutomatically = true, canReadOnly = false)
         every { WalletUpgradeBackup.retry(any()) } returns Result.failure(WalletUpgradeBackupException(code))
         every { interactor.recoveryOptions(code) } returns resumable
         vm.showPanel(code, resumable); runCurrent()
@@ -145,6 +146,107 @@ class SafeModeLifecycleFlowTest {
         verify(exactly = 3) { WalletUpgradeBackup.retry(any()) }
         assertEquals(RecoveryPanelKind.RECOVERY, vm.state.value.panel?.kind); assertNull(vm.state.value.progress)
         advanceTimeBy(10 * 30_000L); runCurrent(); verify(exactly = 3) { WalletUpgradeBackup.retry(any()) }
+    }
+    // Audit item 13, update rule of 2026-11-09: a check that cannot finish does not stop a start
+    // at its options when the wallet can open read-only behind its PIN. "Continue in read-only
+    // mode" and its confirmation remain for a person who is using the screen.
+    private fun SafeModeViewModel.unattendedPanel(code: String = "DATABASE_CORRUPT") =
+        showPanel(code, options(code), unattended = true)
+
+    @Test fun aCheckThatCannotFinishOpensTheWalletReadOnlyWithoutAsking() = runTest {
+        val vm = vm(); vm.unattendedPanel(); runCurrent()
+        assertEquals(listOf(SafeModeEvent.ReadOnlyReady), events)
+        assertNull(vm.state.value.panel); assertNull(vm.state.value.sheet); assertNull(vm.state.value.running)
+        assertNotNull(vm.state.value.progress)
+        // The same guarded authorization the confirmation ran, after any running verification,
+        // and only with a PIN that the PIN screen can check.
+        coVerifyOrder {
+            interactor.awaitRunningVerification()
+            user.retrievePin()
+            WalletUpgradeBackup.authorizeSafeReadOnly(any())
+        }
+        verify(exactly = 1) { WalletUpgradeBackup.authorizeSafeReadOnly(any()) }
+        verify(exactly = 0) { WalletUpgradeBackup.retry(any()) }
+    }
+    @Test fun aResumableCheckIsRetriedFirstAndOpensReadOnlyOnlyAfterItsRetries() = runTest {
+        val vm = vm()
+        val code = "VERIFIED_RECEIPT_INVALID"
+        val resumable = options(code).copy(retryAutomatically = true)
+        every { WalletUpgradeBackup.retry(any()) } returns Result.failure(WalletUpgradeBackupException(code))
+        every { interactor.recoveryOptions(code) } returns resumable
+        vm.showPanel(code, resumable, unattended = true); runCurrent()
+        assertTrue(events.isEmpty()); verify(exactly = 0) { WalletUpgradeBackup.authorizeSafeReadOnly(any()) }
+        advanceTimeBy(1_000 + 3_000); runCurrent()
+        assertTrue(events.isEmpty()); verify(exactly = 0) { WalletUpgradeBackup.authorizeSafeReadOnly(any()) }
+        advanceTimeBy(10_000); runCurrent()
+        verify(exactly = 3) { WalletUpgradeBackup.retry(any()) }
+        assertEquals(listOf(SafeModeEvent.ReadOnlyReady), events); assertNull(vm.state.value.panel)
+        advanceTimeBy(10 * 30_000L); runCurrent(); verify(exactly = 3) { WalletUpgradeBackup.retry(any()) }
+    }
+    @Test fun withoutAStoredPinNothingOpensByItself() = runTest {
+        // No PIN to prove the owner at the PIN screen: the options are shown instead.
+        coEvery { user.retrievePin() } returns ""
+        val vm = vm(); vm.unattendedPanel(); runCurrent()
+        assertTrue(events.isEmpty()); verify(exactly = 0) { WalletUpgradeBackup.authorizeSafeReadOnly(any()) }
+        assertEquals(RecoveryPanelKind.RECOVERY, vm.state.value.panel?.kind); assertNull(vm.state.value.progress)
+        assertTrue(RecoveryAction.READ_ONLY in vm.state.value.panel!!.actions); assertNull(vm.state.value.running)
+    }
+    @Test fun aStoredPinThatCannotBeReadOpensNothingByItself() = runTest {
+        coEvery { user.retrievePin() } throws IllegalStateException("PIN_UNREADABLE")
+        val vm = vm(); vm.unattendedPanel(); runCurrent()
+        assertTrue(events.isEmpty()); verify(exactly = 0) { WalletUpgradeBackup.authorizeSafeReadOnly(any()) }
+        assertEquals(RecoveryPanelKind.RECOVERY, vm.state.value.panel?.kind)
+    }
+    @Test fun readOnlyThatCannotOpenHereShowsTheOptionsWithoutIt() = runTest {
+        every { WalletUpgradeBackup.authorizeSafeReadOnly(any()) } returns Result.success(WalletUpgradeBackup.SafeReadOnlyRoute.VAULT_ONLY)
+        val vm = vm(); vm.unattendedPanel(); runCurrent()
+        assertTrue(events.isEmpty()); assertNull(vm.state.value.sheet); assertNull(vm.state.value.sheetFailure)
+        assertEquals(RecoveryPanelKind.RECOVERY, vm.state.value.panel?.kind)
+        assertFalse(RecoveryAction.READ_ONLY in vm.state.value.panel!!.actions)
+    }
+    @Test fun aRefusedReadOnlyAuthorizationShowsTheOptionsAndIsNotTriedAgain() = runTest {
+        every { WalletUpgradeBackup.authorizeSafeReadOnly(any()) } returns Result.failure(WalletUpgradeBackupException("RECOVERY_SOURCE_CHANGED"))
+        val vm = vm(); vm.unattendedPanel(); runCurrent()
+        assertTrue(events.isEmpty()); assertEquals(RecoveryPanelKind.RECOVERY, vm.state.value.panel?.kind)
+        vm.unattendedPanel(); runCurrent()
+        verify(exactly = 1) { WalletUpgradeBackup.authorizeSafeReadOnly(any()) }
+        assertEquals(RecoveryPanelKind.RECOVERY, vm.state.value.panel?.kind)
+    }
+    @Test fun readOnlyOpensByItselfOncePerStart() = runTest {
+        val vm = vm(); vm.unattendedPanel(); runCurrent()
+        assertEquals(listOf(SafeModeEvent.ReadOnlyReady), events)
+        // It came back (the selected account did not resolve): now the options.
+        vm.showPanel("LEGACY_WALLET_SELECTION_UNAVAILABLE", options("LEGACY_WALLET_SELECTION_UNAVAILABLE"), canContinueLegacyWallet = false, unattended = true); runCurrent()
+        assertEquals(1, events.size); verify(exactly = 1) { WalletUpgradeBackup.authorizeSafeReadOnly(any()) }
+        assertFalse(RecoveryAction.READ_ONLY in vm.state.value.panel!!.actions)
+    }
+    @Test fun onceThePersonUsesTheScreenNothingIsDecidedForThem() = runTest {
+        // Try again that the person tapped and that failed: its answer is the options.
+        every { WalletUpgradeBackup.retry(any()) } returns Result.failure(WalletUpgradeBackupException("DATABASE_CORRUPT"))
+        val tapped = vm(); tapped.panel("DATABASE_CORRUPT"); tapped.onAction(RecoveryAction.TRY_AGAIN); runCurrent()
+        assertEquals(RecoveryPanelKind.RECOVERY, tapped.state.value.panel?.kind)
+        tapped.unattendedPanel(); runCurrent()
+        assertEquals(RecoveryPanelKind.RECOVERY, tapped.state.value.panel?.kind)
+        // "Get help" during the progress, then the check fails.
+        val asked = vm(); asked.showProgress(ProgressTitle.UPDATING, true); asked.onGetHelp(); asked.closeSheet()
+        asked.unattendedPanel(); runCurrent()
+        assertEquals(RecoveryPanelKind.RECOVERY, asked.state.value.panel?.kind)
+        // "Try upgrade again" from the read-only home that fails.
+        val fromHome = vm(); fromHome.startRetryFromHome(); runCurrent()
+        assertEquals(RecoveryPanelKind.RECOVERY, fromHome.state.value.panel?.kind)
+        fromHome.unattendedPanel(); runCurrent()
+        assertEquals(RecoveryPanelKind.RECOVERY, fromHome.state.value.panel?.kind)
+        assertTrue(events.isEmpty()); verify(exactly = 0) { WalletUpgradeBackup.authorizeSafeReadOnly(any()) }
+    }
+    @Test fun storageKeysAndPendingRestoreNeverOpenReadOnlyByThemselves() = runTest {
+        val storage = vm(); storage.unattendedPanel("INSUFFICIENT_BACKUP_STORAGE"); runCurrent()
+        assertEquals(RecoveryPanelKind.STORAGE, storage.state.value.panel?.kind)
+        val keys = vm(); keys.unattendedPanel("KEYSTORE_KEY_UNAVAILABLE"); runCurrent()
+        assertEquals(RecoveryPanelKind.KEYS_UNAVAILABLE, keys.state.value.panel?.kind)
+        every { WalletUpgradeBackup.pendingSetUpAgainScope(any()) } returns SetUpAgainScope.ALL_WALLET_FILES
+        val restore = vm(); restore.unattendedPanel(); runCurrent()
+        assertEquals(RecoveryPanelKind.RESTORE_PENDING, restore.state.value.panel?.kind)
+        assertTrue(events.isEmpty()); verify(exactly = 0) { WalletUpgradeBackup.authorizeSafeReadOnly(any()) }
     }
     @Test fun integrityFailureThatCannotPassByItselfShowsItsOptionsAtOnce() = runTest {
         val vm = vm(); vm.panel("DATABASE_CORRUPT"); runCurrent()
