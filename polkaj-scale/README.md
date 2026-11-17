@@ -17,6 +17,11 @@ only the binary).
   - `Optional.isPresent()` instead of `isEmpty()`;
   - `(ByteBuffer) buf.flip()` casts;
   - `BigInteger.valueOf(2)` instead of `BigInteger.TWO`.
+- Removed, because nothing in the app, its tests, the vendored binaries or the locked
+  third-party dependencies uses them: the upstream classes `ScaleExtract`, `UnionValue`,
+  `reader/UnionReader`, `writer/ListWriter` and `writer/UnionWriter`. The Javadoc of
+  `EnumReader` still mentions `UnionReader`, as upstream's does. `ListReader`, `StringWriter`
+  and `UByteWriter` are used only by the comparison harness below and stay.
 
 The fork's behaviour was recovered from its bytecode. All other classes match upstream v0.2.3
 apart from Java 8 code generation. One harness was compiled against the old jar and against this
@@ -27,4 +32,5 @@ To rerun the comparison, take the old jar from git history
 (`vendor/soramitsu-maven/io/emeraldpay/polkaj/polkaj-scale/0.2.3/polkaj-scale-0.2.3.jar`). Compile
 `src/test/compat/PolkajHarness.java` against each one and run `PolkajHarness 3000`. Both must print
 the same 117,066 lines, SHA-256 `768e30296071662a2dbd89771bd2135f6ecb37e98f051ad78b1bd8cf266216ab`,
-including 25,193 identical exception results.
+including 25,193 identical exception results. After the removals above, the harness still printed
+those 117,066 lines with that digest against both the old jar and this source (2026-11-18).
