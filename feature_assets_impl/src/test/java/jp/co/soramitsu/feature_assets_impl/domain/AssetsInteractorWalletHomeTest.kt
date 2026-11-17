@@ -108,8 +108,10 @@ class AssetsInteractorWalletHomeTest {
         every { assetsRepository.subscribeAssetsVisible(address) } returns flowOf(visible)
         every { assetsRepository.subscribeAssetsFavorite(address) } returns flowOf(visible.take(1))
         every { assetsRepository.subscribeAsset(address, xorId) } returns flowOf(visible.first())
+        every { assetsRepository.subscribeAssetsNotListed(address) } returns flowOf(visible.drop(1))
 
         assertEquals(visible, interactor.subscribeAssetsVisibleOfCurAccount().first())
+        assertEquals(visible.drop(1), interactor.subscribeAssetsNotListedOfCurAccount().first())
         assertEquals(visible.take(1), interactor.subscribeAssetsFavoriteOfAccount(soraAccount).first())
         assertEquals(visible.first(), interactor.subscribeAssetOfCurAccount(xorId).first())
     }

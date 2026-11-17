@@ -79,9 +79,11 @@ class FullAssetListViewModelTest {
     private suspend fun viewModel(
         visible: Flow<List<Asset>> = flowOf(listOf(pricedXor, valAsset)),
         all: List<Asset> = listOf(pricedXor, valAsset, pswapAsset),
+        notListed: Flow<List<Asset>> = flowOf(emptyList()),
     ): FullAssetListViewModel {
         given(assetsInteractor.getWhitelistAssets()).willReturn(all)
         given(assetsInteractor.subscribeAssetsVisibleOfCurAccount()).willReturn(visible)
+        given(assetsInteractor.subscribeAssetsNotListedOfCurAccount()).willReturn(notListed)
         return FullAssetListViewModel(assetsInteractor, router, nf)
     }
 
@@ -155,5 +157,47 @@ class FullAssetListViewModelTest {
         val state = viewModel.state.value
         assertTrue(state.topList.isEmpty())
         assertTrue(state.bottomList.isEmpty())
+    }
+
+    // ETH stands for a token on Polkaswap's blacklist that the account holds.
+    private val heldNotListed = TestAssets.ethAsset(BigDecimal("5"))
+
+    @Test
+    fun `a held token Polkaswap does not list is on top, marked, and opens its page`() = runTest {
+        val viewModel = viewModel(notListed = flowOf(listOf(heldNotListed)))
+        advanceUntilIdle()
+
+        val state = viewModel.state.value
+        assertEquals(listOf(pricedXor.token.id, heldNotListed.token.id), state.topList.map { it.tokenId })
+        assertEquals(listOf(false, true), state.topList.map { it.notListed })
+        assertEquals(listOf(valAsset.token.id), state.bottomList.map { it.tokenId })
+        assertFalse(state.bottomList.single().notListed)
+
+        viewModel.onAssetClick(heldNotListed.token.id)
+        verify(router).showAssetDetails(heldNotListed.token.id)
+    }
+
+    @Test
+    fun `search finds a held token Polkaswap does not list and keeps its mark`() = runTest {
+        val viewModel = viewModel(notListed = flowOf(listOf(heldNotListed)))
+        advanceUntilIdle()
+
+        viewModel.onToolbarSearch("eth")
+        advanceUntilIdle()
+        assertEquals(listOf(heldNotListed.token.id), viewModel.state.value.topList.map { it.tokenId })
+        assertTrue(viewModel.state.value.topList.single().notListed)
+
+        viewModel.onToolbarSearch("pswap")
+        advanceUntilIdle()
+        assertTrue(viewModel.state.value.topList.isEmpty())
+        assertEquals(listOf(pswapAsset.token.id), viewModel.state.value.bottomList.map { it.tokenId })
+    }
+
+    @Test
+    fun `a failing stream of not listed tokens keeps the listed assets`() = runTest {
+        val viewModel = viewModel(notListed = flow { throw IOException("database closed") })
+        advanceUntilIdle()
+
+        assertEquals(listOf(pricedXor.token.id), viewModel.state.value.topList.map { it.tokenId })
     }
 }

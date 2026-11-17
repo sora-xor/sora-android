@@ -81,6 +81,8 @@ data class AssetItemCardState(
      * rest is.
      */
     val frozenAmount: String? = null,
+    /** A token Polkaswap's blacklist hides, listed only because the account holds it. */
+    val notListed: Boolean = false,
 )
 
 fun mapTokensToCardState(

@@ -65,11 +65,13 @@ fun AssetItem(
 /**
  * The row shows the liquid amount. When the account holds more of the asset that it cannot send
  * now, the same line names it ("0 XOR · 110 XOR frozen"), so that locked funds do not look lost.
+ * A token Polkaswap does not list says so on the same line ("5 ABC · Not listed by Polkaswap").
  */
 @Composable
-private fun frozenSuffix(assetState: AssetItemCardState): String =
-    assetState.frozenAmount?.let { stringResource(R.string.asset_frozen_amount_suffix, it) }
-        .orEmpty()
+private fun frozenSuffix(assetState: AssetItemCardState): String = listOfNotNull(
+    assetState.frozenAmount?.let { stringResource(R.string.asset_frozen_amount_suffix, it) },
+    stringResource(R.string.asset_not_listed_suffix).takeIf { assetState.notListed },
+).joinToString(" ")
 
 @Composable
 fun AssetItemEnumerated(

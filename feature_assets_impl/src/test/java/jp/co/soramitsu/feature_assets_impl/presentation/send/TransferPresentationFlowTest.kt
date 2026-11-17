@@ -21,6 +21,7 @@ import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.test_data.TestAssets
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.*
 import org.junit.*
 import org.junit.Assert.*
@@ -42,6 +43,7 @@ class TransferPresentationFlowTest {
     @Before fun setup() {
         mockkObject(WalletDiagnostics); every { WalletDiagnostics.recordException(any()) } just Runs
         every { interactor.subscribeAssetsActiveOfCurAccount() } returns assets
+        every { interactor.subscribeAssetsNotListedOfCurAccount() } returns flowOf(emptyList())
         every { interactor.flowCurSoraAccount() } returns account
         coEvery { interactor.getCurSoraAccount() } answers { account.value }
         coEvery { interactor.calcTransactionFee(any(), any(), any(), any()) } returns BigDecimal("0.07")

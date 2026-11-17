@@ -6,6 +6,7 @@ import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.data.network.dto.TokenInfoDto
 import jp.co.soramitsu.common.domain.AssetHolder
 import jp.co.soramitsu.common.domain.WhitelistTokensManager
+import jp.co.soramitsu.common.io.FileManager
 import jp.co.soramitsu.common_wallet.data.AssetLocalToAssetMapper
 import jp.co.soramitsu.common_wallet.data.XorBalanceDto
 import jp.co.soramitsu.core_db.AppDatabase
@@ -16,9 +17,13 @@ import jp.co.soramitsu.feature_blockexplorer_api.data.models.SoraCurrency
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import jp.co.soramitsu.sora.substrate.substrate.ExtrinsicManager
 import jp.co.soramitsu.sora.substrate.substrate.SubstrateCalls
+import jp.co.soramitsu.xnetworking.lib.engines.rest.api.RestClient
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.test.*
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import org.junit.*
 import org.junit.Assert.*
 import java.math.BigDecimal
@@ -54,6 +59,7 @@ class AssetCatalogAndBalancesContractTest {
         coEvery { config.getSelectedCurrency() } answers { currency }
         coEvery { whitelist.updateWhitelistStorage() } just Runs
         every { whitelist.whitelistIds } returns listOf(xor, "alpha")
+        every { whitelist.blacklistIds } returns emptySet()
         every { whitelist.getTokenIconUri(any()) } answers { "icon:${firstArg<String>()}" }
         coEvery { calls.fetchAssetsList() } returns emptyList()
         coEvery { dao.getTokensWithFiatOfCurrency(any()) } answers { catalog }
@@ -256,4 +262,54 @@ class AssetCatalogAndBalancesContractTest {
         equalDecimal("0", result[1].balance.transferable); assertFalse(result[1].favorite)
     }
 
+    @Test fun `a blacklisted token is stored outside the whitelist and returns when the server clears it`() = runTest {
+        val listed = "0x" + "aa".repeat(32); val scam = "0x" + "bb".repeat(32); val other = "0x" + "cc".repeat(32)
+        val rest = mockk<RestClient>(); val files = mockk<FileManager>(relaxed = true)
+        every { files.readInternalFile(any()) } returns null
+        every { files.readInternalCacheFileAsUri(any()) } returns null
+        val icon = JsonPrimitive("data:image/svg+xml,%3Csvg%2F%3E")
+        coEvery { rest.get<JsonArray>(match { it.url.endsWith("/whitelist.json") }) } returns
+            JsonArray(listOf(listed, scam).map { JsonObject(mapOf("address" to JsonPrimitive(it), "icon" to icon)) })
+        coEvery { rest.get<JsonArray>(match { it.url.endsWith("/blacklist.json") }) } returns JsonArray(listOf(JsonPrimitive(scam)))
+        // The blacklisted token was a listed favourite before; the other one was never listed.
+        catalog = listOf(TokenWithFiatLocal(token(scam), null))
+        coEvery { calls.fetchAssetsList() } returns listOf(listed, scam, other).map { TokenInfoDto(it, it, "T", 18, false) }
+        every { manager.applicationScope } returns this
+        val tokens = WhitelistTokensManager(rest, files)
+        val repo = AssetsRepositoryImpl(db, AssetLocalToAssetMapper(tokens, config), extrinsics, calls, config, manager, tokens)
+        runCurrent()
+        val names = (tokenWrites.single() + tokenUpdates.single()).associate { it.id to it.whitelistName }
+        assertEquals(mapOf(listed to AssetHolder.DEFAULT_WHITE_LIST_NAME, scam to "", other to ""), names)
+        coEvery { dao.getWhitelistOfToken(scam) } returns names[scam]
+        assertFalse(repo.isWhitelistedToken(scam))
+
+        // The next start reads a blacklist without it: it is a whitelisted token again.
+        coEvery { rest.get<JsonArray>(match { it.url.endsWith("/blacklist.json") }) } returns JsonArray(emptyList())
+        tokenUpdates.clear()
+        AssetsRepositoryImpl(db, AssetLocalToAssetMapper(tokens, config), extrinsics, calls, config, manager, tokens)
+        runCurrent()
+        assertEquals(AssetHolder.DEFAULT_WHITE_LIST_NAME, tokenUpdates.single().single().whitelistName)
+    }
+    @Test fun `a blacklisted token on the chain has its balance read with the listed ones`() = runTest {
+        every { whitelist.blacklistIds } returns setOf("scam", "gone")
+        coEvery { dao.getAssetWithToken(owner, "scam", "USD") } returns asset("scam", exists = false)
+        coEvery { dao.getAssetWithToken(owner, "gone", "USD") } returns null
+        active = listOf(asset(xor, 18), asset("alpha"))
+        val repo = subject()
+        repo.updateBalancesVisibleAssets(owner)
+        coVerify { calls.fetchBalances(owner, listOf("alpha", "scam")) }
+        val row = inserted.last().single { it.tokenId == "scam" }
+        equalDecimal("1.25", row.free); assertFalse(row.displayAsset); assertFalse(row.visibility)
+        inserted.clear()
+        repo.updateWhitelistBalances(owner)
+        equalDecimal("1.25", inserted.last().single { it.tokenId == "scam" }.free)
+    }
+    @Test fun `only blacklisted tokens the account holds are offered as not listed`() = runTest {
+        every { whitelist.blacklistIds } returns setOf("scam", "spent", "ghost")
+        every { dao.subscribeAssetsOfWhitelist(owner, "USD", "") } returns flowOf(
+            listOf(asset("scam", amount = "5"), asset("spent", amount = "0"), asset("delisted", amount = "3"), asset("ghost", exists = false))
+        )
+        val result = subject().subscribeAssetsNotListed(owner).first()
+        assertEquals(listOf("scam"), result.map { it.token.id }); equalDecimal("5", result.single().balance.transferable)
+    }
 }

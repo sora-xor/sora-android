@@ -98,6 +98,13 @@ interface AssetsRepository {
         address: String
     ): Flow<List<Asset>>
 
+    /**
+     * The assets of [address] in tokens that Polkaswap's blacklist hides, those with a balance
+     * above zero. Every other list and picker leaves these tokens out; the full asset list shows
+     * them marked, so that funds the account already holds stay reachable.
+     */
+    fun subscribeAssetsNotListed(address: String): Flow<List<Asset>>
+
     suspend fun toggleVisibilityOfToken(
         tokenId: String,
         visibility: Boolean,

@@ -85,6 +85,9 @@ interface AssetsInteractor {
 
     fun subscribeAssetsVisibleOfCurAccount(): Flow<List<Asset>>
 
+    /** See [jp.co.soramitsu.feature_assets_api.data.AssetsRepository.subscribeAssetsNotListed]. */
+    fun subscribeAssetsNotListedOfCurAccount(): Flow<List<Asset>>
+
     suspend fun toggleVisibilityOfToken(tokenId: String, visibility: Boolean)
 
     suspend fun tokenFavoriteOff(assetIds: List<String>)

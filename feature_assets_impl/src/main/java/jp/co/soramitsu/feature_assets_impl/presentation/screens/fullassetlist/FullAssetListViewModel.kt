@@ -68,6 +68,7 @@ class FullAssetListViewModel @Inject constructor(
     private val invisibleAssets = mutableListOf<Asset>()
     private val allAssets = mutableListOf<Asset>()
     private val visAssets = mutableListOf<Asset>()
+    private val notListedAssets = mutableListOf<Asset>()
     private val filter = MutableStateFlow("")
 
     private val _state = MutableStateFlow(FullAssetListState(false, "", emptyList(), emptyList()))
@@ -93,6 +94,15 @@ class FullAssetListViewModel @Inject constructor(
                     .collectLatest { assets ->
                         visAssets.clear()
                         visAssets.addAll(assets)
+                        calcState(filter.value)
+                    }
+            }
+            launch {
+                assetsInteractor.subscribeAssetsNotListedOfCurAccount()
+                    .catch { onError(it) }
+                    .collectLatest { assets ->
+                        notListedAssets.clear()
+                        notListedAssets.addAll(assets)
                         calcState(filter.value)
                     }
             }
@@ -129,7 +139,7 @@ class FullAssetListViewModel @Inject constructor(
                 topList = mapAssetsToCardState(
                     group[true] ?: emptyList(),
                     numbersFormatter
-                ),
+                ) + notListedCards(filter),
                 bottomList = mapAssetsToCardState(
                     group[false] ?: emptyList(),
                     numbersFormatter
@@ -147,7 +157,7 @@ class FullAssetListViewModel @Inject constructor(
             val bottomSum = bottomFilter.fiatSum()
             _state.value = _state.value.copy(
                 searchMode = true,
-                topList = mapAssetsToCardState(topFilter, numbersFormatter),
+                topList = mapAssetsToCardState(topFilter, numbersFormatter) + notListedCards(filter),
                 bottomList = mapAssetsToCardState(bottomFilter, numbersFormatter),
                 fiatSum = formatFiatAmount(
                     topSum + bottomSum,
@@ -157,6 +167,15 @@ class FullAssetListViewModel @Inject constructor(
             )
         }
     }
+
+    /**
+     * Held tokens that Polkaswap's blacklist hides: listed on top whatever their fiat value, since
+     * the account holds them, and marked as not listed.
+     */
+    private fun notListedCards(filter: String) = mapAssetsToCardState(
+        notListedAssets.filter { filter.isBlank() || it.token.isMatchFilter(filter) },
+        numbersFormatter,
+    ).map { it.copy(notListed = true) }
 
     override fun onAction() {
         assetsRouter.showFullAssetsSettings()

@@ -167,6 +167,21 @@ class TransferAmountViewModelTest {
     }
 
     @Test
+    fun `a held token Polkaswap does not list can still be sent from its page`() = runTest {
+        // ETH stands for a blacklisted token: the pickers leave it out, its own page sends it.
+        val held = TestAssets.ethAsset(BigDecimal("5"))
+        initViewModel(
+            BigDecimal.ONE,
+            firstTokenId = held.token.id,
+            notListed = flowOf(listOf(held)),
+        )
+        advanceUntilIdle()
+
+        assertEquals(held.token, transferAmountViewModel.sendState.value.input?.token)
+        assertEquals("5", transferAmountViewModel.sendState.value.input?.balance)
+    }
+
+    @Test
     fun `a token without a fiat price shows its balance without empty parentheses`() = runTest {
         // The test tokens have no fiat price, as every token has while the price feed is down.
         initViewModel(BigDecimal("12"))
@@ -1005,8 +1020,10 @@ class TransferAmountViewModelTest {
                 TestAssets.pswapAsset(balance),
             )
         ),
+        notListed: Flow<List<Asset>> = flowOf(emptyList()),
     ) {
         every { assetsInteractor.subscribeAssetsActiveOfCurAccount() } returns assets
+        every { assetsInteractor.subscribeAssetsNotListedOfCurAccount() } returns notListed
         transferAmountViewModel = TransferAmountViewModel(
             interactor = assetsInteractor,
             walletRouter = walletRouter,

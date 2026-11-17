@@ -336,6 +336,18 @@ class AssetsRepositoryImpl @Inject constructor(
         emitAll(f)
     }
 
+    override fun subscribeAssetsNotListed(address: String): Flow<List<Asset>> = flow {
+        val selectedCurrency = soraConfigManager.getSelectedCurrency()
+        // A blacklisted token is stored outside the whitelist, under the empty list name.
+        val f = db.assetDao().subscribeAssetsOfWhitelist(address, selectedCurrency.code, whitelist = "").map { rows ->
+            val notListed = whitelistTokensManager.blacklistIds
+            rows.filter { it.token.id in notListed }
+                .mapNotNull { assetLocalToAssetMapper.map(it) }
+                .filter { it.balance.total > BigDecimal.ZERO }
+        }
+        emitAll(f)
+    }
+
     override suspend fun toggleVisibilityOfToken(
         tokenId: String,
         visibility: Boolean,
@@ -452,7 +464,7 @@ class AssetsRepositoryImpl @Inject constructor(
             val selectedCurrency = soraConfigManager.getSelectedCurrency()
             checkDefaultNeed(address, selectedCurrency.code)
             val assets = db.assetDao().getAssetsActive(address, selectedCurrency.code)
-            insertAssetsInternal(address, assets, true)
+            insertAssetsInternal(address, assets + notListedAssets(address, selectedCurrency.code), true)
         }
     }
 
@@ -465,10 +477,17 @@ class AssetsRepositoryImpl @Inject constructor(
                 val assetsLocal =
                     db.assetDao().getAssetsWhitelist(address, selectedCurrency.code)
                 val assetsLocalSorted = assetsLocal.sortedBy { it.token.symbol }
-                insertAssetsInternal(address, assetsLocalSorted, true)
+                insertAssetsInternal(address, assetsLocalSorted + notListedAssets(address, selectedCurrency.code), true)
             }
         }
     }
+
+    /**
+     * The rows of the blacklisted tokens that exist on the chain. Their balances are read with the
+     * listed ones, so that [subscribeAssetsNotListed] knows which of them the account holds.
+     */
+    private suspend fun notListedAssets(address: String, code: String): List<AssetTokenWithFiatLocal> =
+        whitelistTokensManager.blacklistIds.mapNotNull { db.assetDao().getAssetWithToken(address, it, code) }
 
     private suspend fun insertAssetsInternal(
         address: String,

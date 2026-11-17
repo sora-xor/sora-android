@@ -67,6 +67,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
@@ -173,7 +174,11 @@ class TransferAmountViewModel @AssistedInject constructor(
                 }
         }
         viewModelScope.launch {
-            interactor.subscribeAssetsActiveOfCurAccount()
+            // A held token that Polkaswap does not list can still be sent from its page.
+            combine(
+                interactor.subscribeAssetsActiveOfCurAccount(),
+                interactor.subscribeAssetsNotListedOfCurAccount(),
+            ) { active, notListed -> active + notListed }
                 .catch { onError(it) }
                 .collectLatest { list ->
                     guarded {

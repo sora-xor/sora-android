@@ -242,6 +242,11 @@ class AssetsInteractorImpl constructor(
         }
     }
 
+    override fun subscribeAssetsNotListedOfCurAccount(): Flow<List<Asset>> =
+        userRepository.flowCurSoraAccount().flatMapLatest {
+            assetsRepository.subscribeAssetsNotListed(it.substrateAddress)
+        }
+
     override suspend fun toggleVisibilityOfToken(tokenId: String, visibility: Boolean) {
         val curAccount = userRepository.getCurSoraAccount()
         assetsRepository.toggleVisibilityOfToken(tokenId, visibility, curAccount)
