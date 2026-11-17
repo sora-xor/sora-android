@@ -55,7 +55,6 @@ class MultiaccountInteractor @Inject constructor(
 ) {
 
     companion object {
-        private const val MULTIPLE_ACCOUNT_COUNT = 2
         private const val MINUTE_MILLIS = 60_000L
 
         /**
@@ -755,9 +754,6 @@ class MultiaccountInteractor @Inject constructor(
     suspend fun saveRegistrationStateFinished() {
         userRepository.saveRegistrationState(OnboardingState.REGISTRATION_FINISHED)
     }
-
-    suspend fun isMultiAccount(): Boolean =
-        userRepository.getSoraAccountsCount() >= MULTIPLE_ACCOUNT_COUNT
 
     /**
      * Several accounts were chosen for one backup file and [accounts] of them cannot be

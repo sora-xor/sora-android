@@ -42,6 +42,4 @@ internal object Colors {
     val Yellow30 = Color(0xFFFF9900)
 
     val AdditionalPolkaswap = Color(0xFFFF0066)
-
-    val AdditionalPolkaswapContainer = Color(0xFFFFE3F1)
 }

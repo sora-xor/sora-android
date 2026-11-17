@@ -23,7 +23,6 @@ import kotlinx.coroutines.flow.Flow
 
 interface AppStateProvider {
     val isForeground: Boolean
-    val isBackground: Boolean
     fun observeState(): Flow<AppEvent>
 
     enum class AppEvent {

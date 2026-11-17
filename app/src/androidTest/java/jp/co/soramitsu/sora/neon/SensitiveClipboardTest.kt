@@ -58,7 +58,6 @@ class SensitiveClipboardTest {
             var foreground = true
             val events = MutableStateFlow(AppStateProvider.AppEvent.ON_RESUME)
             override val isForeground get() = foreground
-            override val isBackground get() = !foreground
             override fun observeState() = events
         }
         val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
@@ -105,7 +104,6 @@ class SensitiveClipboardTest {
         val clipboard = context.getSystemService(ClipboardManager::class.java)
         val state = object : AppStateProvider {
             override val isForeground = true
-            override val isBackground = false
             override fun observeState() = MutableStateFlow(AppStateProvider.AppEvent.ON_RESUME)
         }
         val firstScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)

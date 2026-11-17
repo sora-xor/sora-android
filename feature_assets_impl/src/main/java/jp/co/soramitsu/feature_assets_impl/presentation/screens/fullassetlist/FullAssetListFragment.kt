@@ -54,7 +54,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Divider
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
-import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -82,9 +81,6 @@ class FullAssetListFragment : SoraBaseFragment<FullAssetListViewModel>() {
 
     override val viewModel: FullAssetListViewModel by viewModels()
     override fun backgroundColor(): Int = R.attr.baseBackgroundSecond
-
-    @Composable
-    override fun backgroundColorComposable() = MaterialTheme.customColors.bgSurface
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)

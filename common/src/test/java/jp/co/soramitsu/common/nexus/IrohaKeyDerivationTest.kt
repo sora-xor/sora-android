@@ -6,10 +6,8 @@ import java.io.InputStreamReader
 import jp.co.soramitsu.xsubstrate.encrypt.seed.ethereum.EthereumSeedFactory
 import jp.co.soramitsu.xsubstrate.encrypt.seed.substrate.SubstrateSeedFactory
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertThrows
-import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class IrohaKeyDerivationTest {
@@ -196,8 +194,6 @@ class IrohaKeyDerivationTest {
         )
 
         try {
-            assertTrue(IrohaAddressCodec.isValid(account.address, 369))
-            assertFalse(IrohaAddressCodec.isValid(account.address, 753))
             assertThrows(IrohaAddressCodec.AddressException::class.java) {
                 IrohaAddressCodec.parse(account.address.dropLast(1) + "1", 369)
             }

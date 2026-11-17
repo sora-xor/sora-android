@@ -61,15 +61,6 @@ fun initMediumTitle2(title: Any) = SoramitsuToolbarState(
     type = SoramitsuToolbarType.Medium(),
 )
 
-fun initSmallTitleOnly(title: Any) = SoramitsuToolbarState(
-    basic = BasicToolbarState(
-        title = title,
-        visibility = true,
-        navIcon = null,
-    ),
-    type = SoramitsuToolbarType.Small(),
-)
-
 @Composable
 fun Toolbar(
     toolbarState: SoramitsuToolbarState?,

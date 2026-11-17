@@ -33,7 +33,6 @@ class AssetAndPoolSettingsDestinationTest {
         fragment.javaClass.getDeclaredField("viewModel\$delegate").apply { isAccessible = true }.set(fragment, lazyOf(vm))
         every { fragment.viewLifecycleOwner } returns compose.activity
         compose.setContent { SoraAppTheme {
-            fragment.backgroundColorComposable()
             val nav = rememberNavController(); val scroll = rememberScrollState()
             NavHost(nav, startDestination = theOnlyRoute) { with(fragment) { content(scroll, nav) } }
         } }

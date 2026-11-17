@@ -23,12 +23,6 @@ object TairaTestnetContract {
     const val NETWORK_HEX = "4978d0bd15fc32b834672b27bbd8a03653b1df060a1eee7e9374d29af3886d91"
     const val MCP_PROTOCOL_VERSION = "2026-07-28"
 
-    /**
-     * SHA-256 of `taira-v1|<root>|<chain>|<xor-definition>|<scale>`, used to namespace durable
-     * rows without trusting build-time deployment substitutions.
-     */
-    const val CONTRACT_SHA256 =
-        "2bda6642b02735dd0ae287eef4b5e37b8845c8b8b9bd191bc036f808fca02b5d"
     // The immutable local ID binds every newly signed transaction to its genesis. Existing
     // pre-send contract namespaces remain stored as recovery evidence, never reinterpreted.
     const val PENDING_JOURNAL_PREFIX = "taira:$NETWORK_HEX:"
@@ -132,7 +126,6 @@ object NexusNetworks {
     )
 
     val admitted: List<NexusNetwork> = listOf(minamoto, taira)
-    val admittedIds: Set<WalletNetworkId> = admitted.mapTo(linkedSetOf()) { it.id }
 
     // Account creation and recovery retain both derivation profiles. Production has no live
     // deployment yet; it must never inherit Taira's transport availability.

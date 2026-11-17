@@ -54,8 +54,6 @@ interface PoolsInteractor : PolkaswapInteractor {
         assetId: String
     ): Flow<LiquidityData?>
 
-    fun subscribePoolsChanges(): Flow<String>
-
     fun subscribePoolsChangesOfAccount(address: String): Flow<String>
 
     suspend fun updatePools()

@@ -66,8 +66,6 @@ class IndexerAndroidSnapshotContractTest {
         response = { history() }
         assertEquals(tx, client.getTransaction(tx).single().id)
         assertEquals(tx, client.getLastTransactions("cnAccount", 1).single().id)
-        assertEquals(tx, client.getAllTransactionHistory("cnAccount").single().id)
-        assertEquals(tx, client.getAccountTransactionsByHashesQualified("cnAccount", listOf(tx)).value.single().id)
         assertTrue(requests.any { it["variables"].toString().contains(tx) })
     }
     @Test fun assetAndRewardCatalogsKeepLargeQuantitiesExactAcrossAndroidSerialization() = runBlocking {
@@ -94,9 +92,9 @@ class IndexerAndroidSnapshotContractTest {
         } }
         assertEquals(2000, client.getMarket("market-7")!!.displayYesProbabilityBps)
         assertEquals("market-7", client.getMarkets().single().id)
-        assertEquals(7L, client.getMarketSnapshots(7).single().marketId)
-        assertEquals("1.2345", client.getAccountPositions("cnAccount").single().shares)
-        assertEquals("cnAccount", client.getAccountTrades("cnAccount").single().account)
+        assertEquals(7L, client.getMarketSnapshotsQualified(7).value.single().marketId)
+        assertEquals("1.2345", client.getAccountPositionsQualified("cnAccount").value.single().shares)
+        assertEquals("cnAccount", client.getAccountTradesQualified("cnAccount").value.single().account)
         offline = true
         assertTrue(newClient().getAccountPositionsQualified("cnAccount").fromCache)
     }
@@ -105,7 +103,6 @@ class IndexerAndroidSnapshotContractTest {
         val config = client.requireMobileConfig()
         assertTrue(config.nexusAvailable); assertFalse(config.nexusSendsAvailable); assertFalse(config.polkamarktMutationsAvailable)
         assertEquals("wss://mof2.sora.org", config.nodes.single().address)
-        assertEquals("PI_INDEXER_TYPED_ACCOUNT_BALANCES_UNAVAILABLE", runCatching { client.requireTypedAccountBalancesCapability() }.exceptionOrNull()?.message)
     }
     @Test fun strictWireDecoderRejectsDuplicateKeysAndNeverCachesThem() = runBlocking {
         response = { history().replace("\"totalCount\":1", "\"totalCount\":1,\"totalCount\":2") }

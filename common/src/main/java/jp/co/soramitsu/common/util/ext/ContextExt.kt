@@ -31,9 +31,6 @@ import androidx.annotation.AttrRes
 import androidx.annotation.ColorInt
 import androidx.annotation.DimenRes
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.colorResource
 import androidx.core.content.res.use
 import jp.co.soramitsu.androidfoundation.format.safeCast
 
@@ -58,9 +55,6 @@ fun Context.colorFromAttr(
     theme.resolveAttribute(attrColor, typedValue, resolveRefs)
     return typedValue.data
 }
-
-@Composable
-fun getColorAttrComposable(color: Int) = colorResource(LocalContext.current.getColorFromAttrs(color).resourceId)
 
 fun Context.getColorFromAttrs(attr: Int): TypedValue {
     return TypedValue().apply {

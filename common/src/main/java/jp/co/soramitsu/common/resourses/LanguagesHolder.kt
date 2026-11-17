@@ -66,20 +66,6 @@ class LanguagesHolder {
     private val portuguese =
         Language("pt", R.string.common_portuguese, R.string.common_portuguese_native)
 
-    private val bashkir = Language("ba", R.string.common_bashkir, R.string.common_bashkir_native)
-    private val spanish_columbia =
-        Language("es-CO", R.string.common_spanish_colombia, R.string.common_spanish_colombia_native)
-    private val estonian = Language("et", R.string.common_estonian, R.string.common_estonian_native)
-    private val fillipino =
-        Language("fil", R.string.common_filipino, R.string.common_filipino_native)
-    private val croatian = Language("hr", R.string.common_croatian, R.string.common_croatian_native)
-    private val italian = Language("it-IT", R.string.common_italian, R.string.common_italian_native)
-    private val korean = Language("ko", R.string.common_korean, R.string.common_korean_native)
-    private val swedish = Language("sv-SE", R.string.common_swedish, R.string.common_swedish_native)
-    private val thai = Language("th", R.string.common_thai, R.string.common_thai_native)
-    private val ukrainian =
-        Language("uk", R.string.common_ukrainian, R.string.common_ukrainian_native)
-    private val khmer = Language("km-KH", R.string.common_khmer, R.string.common_khmer_native)
 
     private val availableLanguages =
         mutableListOf(english, russian, spanish, french, german, norwegian, chinese, indonesian, turkish)
@@ -120,7 +106,4 @@ class LanguagesHolder {
     }
 
     private fun languageTag(l: String) = l.substringBefore("-").substringBefore("_")
-
-    private fun mapLanguageToLocale(language: String): Locale =
-        Locale.forLanguageTag(language.replace('_', '-'))
 }

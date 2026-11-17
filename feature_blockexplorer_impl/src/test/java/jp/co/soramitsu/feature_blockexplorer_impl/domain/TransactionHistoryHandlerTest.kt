@@ -244,13 +244,6 @@ class TransactionHistoryHandlerTest {
     }
 
     @Test
-    fun `has new tx`() = runTest {
-        advanceUntilIdle()
-        val new = transactionHistoryHandler.hasNewTransaction()
-        assertTrue(new)
-    }
-
-    @Test
     fun `init successful`() = runTest {
         advanceUntilIdle()
         verify(transactionHistoryRepository).onSoraAccountChange()

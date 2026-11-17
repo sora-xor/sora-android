@@ -25,11 +25,9 @@ import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraphBuilder
@@ -46,7 +44,6 @@ import jp.co.soramitsu.common.presentation.args.tokenFromId
 import jp.co.soramitsu.common.presentation.args.tokenToId
 import jp.co.soramitsu.common.presentation.compose.components.PercentContainer
 import jp.co.soramitsu.common.presentation.compose.components.PolkaswapDisclaimer
-import jp.co.soramitsu.common.util.ext.getColorFromAttrs
 import jp.co.soramitsu.feature_assets_api.presentation.selectsearchtoken.SelectSearchTokenScreen
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.components.compose.SwapConfirmScreen
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.components.compose.SwapMainScreen
@@ -82,13 +79,6 @@ class SwapFragment : SoraBaseFragment<SwapViewModel>() {
         (activity as BottomBarController).hideBottomBar()
         super.onViewCreated(view, savedInstanceState)
     }
-
-    @Composable
-    override fun backgroundColorComposable() = Color(
-        color = requireContext().getColorFromAttrs(
-            R.attr.polkaswapBackground
-        ).data
-    )
 
     override fun backgroundColor(): Int = R.attr.polkaswapBackground
 

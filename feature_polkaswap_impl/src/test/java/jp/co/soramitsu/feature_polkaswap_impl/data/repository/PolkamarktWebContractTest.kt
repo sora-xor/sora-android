@@ -149,28 +149,12 @@ class PolkamarktWebContractTest {
             webReference["inspectedRevision"].asString,
         )
         assertEquals(
-            PolkamarktWebContract.SOURCE_BRANCH,
-            webReference["branch"].asString,
-        )
-        assertEquals(
-            PolkamarktWebContract.SOURCE_COMMIT_TREE,
-            webReference["commitTreeObject"].asString,
-        )
-        assertEquals(
-            PolkamarktWebContract.SOURCE_POLKAMARKT_TREE,
-            webReference["polkamarktTreeObject"].asString,
-        )
-        assertEquals(
             "verified",
             webReference["commitSignatureStatus"].asString,
         )
         val sourceFiles =
             webReference["sourceFiles"].asJsonArray.map { it.asString }
         val sourceBlobs = webReference["sourceBlobObjects"].asJsonObject
-        assertEquals(
-            PolkamarktWebContract.SOURCE_FILE_COUNT,
-            sourceFiles.size,
-        )
         assertEquals(sourceFiles.toSet(), sourceBlobs.keySet())
         assertEquals(
             true,
@@ -236,10 +220,6 @@ class PolkamarktWebContractTest {
             behavior["quoteDebounceMilliseconds"].asLong,
         )
         assertEquals(
-            PolkamarktWebContract.CARD_HISTORY_MARKET_LIMIT,
-            behavior["cardHistoryMarketLimit"].asInt,
-        )
-        assertEquals(
             PolkamarktWebContract.DPM_CURVE_POINT_COUNT,
             behavior["dpmCurvePointCount"].asInt,
         )
@@ -248,44 +228,10 @@ class PolkamarktWebContractTest {
             behavior["maxBatchClaims"].asInt,
         )
         assertEquals(
-            PolkamarktWebContract.TRANSLATION_KEYS,
-            translationKeys.entrySet().associate {
-                it.key to it.value.asString
-            },
-        )
-        assertEquals(
             true,
             claimConfirmation["requiresExplicitConfirmation"].asBoolean,
         )
-        assertEquals(
-            PolkamarktWebContract.CLAIM_CONFIRMATION_REVIEW_FIELDS,
-            claimConfirmation["requiredReviewedFields"].asJsonArray.map {
-                it.asString
-            },
-        )
-        assertEquals(
-            PolkamarktWebContract.CLAIM_CONFIRMATION_FRESH_CHECKS,
-            claimConfirmation["freshChecksBeforeSigning"].asJsonArray.map {
-                it.asString
-            },
-        )
         val claimConfirmationCopy = claimConfirmation["copy"].asJsonObject
-        assertEquals(
-            PolkamarktWebContract.CLAIM_CONFIRMATION_TITLE,
-            claimConfirmationCopy["title"].asString,
-        )
-        assertEquals(
-            PolkamarktWebContract.CLAIM_CONFIRMATION_BATCH_TITLE,
-            claimConfirmationCopy["batchTitle"].asString,
-        )
-        assertEquals(
-            PolkamarktWebContract.CLAIM_CONFIRMATION_BODY,
-            claimConfirmationCopy["body"].asString,
-        )
-        assertEquals(
-            PolkamarktWebContract.CLAIM_CONFIRMATION_FEE_NOTICE,
-            claimConfirmationCopy["feeNotice"].asString,
-        )
         val derivationSources =
             canonicalVectors["derivationSources"].asJsonObject
         assertEquals(

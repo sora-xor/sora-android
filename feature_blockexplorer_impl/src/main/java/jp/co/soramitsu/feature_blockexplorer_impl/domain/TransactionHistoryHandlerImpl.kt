@@ -82,16 +82,6 @@ class TransactionHistoryHandlerImpl @Inject constructor(
         return transactionHistoryRepository.state
     }
 
-    override suspend fun hasNewTransaction(): Boolean {
-        val curTime = getCachedEvents(1).getOrNull(0)
-            ?.safeCast<EventUiModel.EventTxUiModel>()?.timestamp ?: 0
-        refreshHistoryEvents()
-        val newTime = _historyState.value.safeCast<HistoryState.History>()?.events?.firstOrNull {
-            it is EventUiModel.EventTxUiModel
-        }?.safeCast<EventUiModel.EventTxUiModel>()?.timestamp
-        return newTime != null && newTime > curTime
-    }
-
     override suspend fun onMoreHistoryEventsRequested() {
         withContext(coroutineManager.io) {
             if (mutex.isLocked) return@withContext

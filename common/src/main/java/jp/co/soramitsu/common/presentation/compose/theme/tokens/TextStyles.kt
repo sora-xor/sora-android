@@ -107,8 +107,6 @@ object NeonType {
      */
     val eyebrow: TextStyle = style(Sora, FontWeight.Bold, 11).copy(letterSpacing = 1.2.sp)
 
-    val eyebrowNoTracking: TextStyle = eyebrow.copy(letterSpacing = 0.sp)
-
     /** Asset and transaction amounts (tabular figures). */
     val amountM: TextStyle = style(Inter, FontWeight.Bold, 15).copy(fontFeatureSettings = "tnum")
 

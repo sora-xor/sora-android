@@ -47,7 +47,6 @@ import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
 import jp.co.soramitsu.sora.substrate.runtime.Storage
 import jp.co.soramitsu.sora.substrate.runtime.assetIdFromKey
 import jp.co.soramitsu.sora.substrate.runtime.mapToToken
-import jp.co.soramitsu.sora.substrate.runtime.poolTBCReserves
 import jp.co.soramitsu.sora.substrate.runtime.reservesKey
 import jp.co.soramitsu.sora.substrate.runtime.reservesKeyToken
 import jp.co.soramitsu.sora.substrate.runtime.takeInt32
@@ -443,24 +442,6 @@ class PolkaswapSubscriptionRepositoryImpl @Inject constructor(
             }
 
         emitAll(resultFlow)
-    }
-
-    override fun observePoolXYKReserves(
-        baseTokenId: String,
-        tokenId: String
-    ): Flow<String> = flow {
-        val key = runtimeManager.getRuntimeSnapshot()
-            .reservesKey(
-                baseTokenId = baseTokenId,
-                tokenId = tokenId.fromHex()
-            )
-        emitAll(substrateCalls.observeStorage(key))
-    }
-
-    override fun observePoolTBCReserves(tokenId: String): Flow<String> = flow {
-        val key =
-            runtimeManager.getRuntimeSnapshot().poolTBCReserves(tokenId.fromHex())
-        emitAll(substrateCalls.observeStorage(key))
     }
 
     override suspend fun isSwapAvailable(tokenId1: String, tokenId2: String, dexId: Int): Boolean {

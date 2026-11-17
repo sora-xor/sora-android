@@ -1129,38 +1129,6 @@ class PolkaswapIndexerClientTest {
     }
 
     @Test
-    fun `health accepts deployed numeric and canonical quoted worker integer tokens`() = runTest {
-        val deployedNumericResponse = healthResponse()
-        val canonicalQuotedResponse = deployedNumericResponse
-            .replace(
-                "\"workerLatestFinalizedBlock\": ${HEALTH_BLOCK + 4}",
-                "\"workerLatestFinalizedBlock\": \"${HEALTH_BLOCK + 4}\"",
-            )
-            .replace(
-                "\"workerLatestIndexedBlock\": $HEALTH_BLOCK",
-                "\"workerLatestIndexedBlock\": \"$HEALTH_BLOCK\"",
-            )
-            .replace(
-                "\"workerLag\": 4",
-                "\"workerLag\": \"4\"",
-            )
-            .replace(
-                "\"workerLastSuccessfulIndexTimestamp\": $HEALTH_NOW",
-                "\"workerLastSuccessfulIndexTimestamp\": \"$HEALTH_NOW\"",
-            )
-
-        restClient.enqueue(deployedNumericResponse)
-        val numeric = client.getHealth()
-        restClient.enqueue(canonicalQuotedResponse)
-        val quoted = client.getHealth()
-
-        assertThat(quoted).isEqualTo(numeric)
-        assertThat(numeric.workerLatestIndexedBlock).isEqualTo(HEALTH_BLOCK.toString())
-        assertThat(numeric.workerLastSuccessfulIndexTimestamp)
-            .isEqualTo(HEALTH_NOW.toString())
-    }
-
-    @Test
     fun `health rejects stale and incoherent checkpoints`() = runTest {
         restClient.enqueue(healthResponse(indexedAt = HEALTH_NOW - 301))
 
@@ -2131,40 +2099,6 @@ class PolkaswapIndexerClientTest {
     }
 
     @Test
-    fun `typed account balances stay fail closed for PI schema v1`() = runTest {
-        restClient.enqueue(
-            healthResponse(indexedAt = System.currentTimeMillis() / 1_000)
-        )
-        restClient.enqueue(
-            """
-            {
-              "data": {
-                "mobileConfig": {
-                  "blockExplorerUrl": "https://sorametrics.org/sorav2?tab=extrinsics&q={transaction}",
-                  "substrateTypesUrl": null,
-                  "nodes": [{ "name": "Sora", "address": "wss://mof2.sora.org" }],
-                  "nexusAvailable": true,
-                  "nexusSendsAvailable": false,
-                  "polkamarktVisible": true,
-                  "polkamarktMutationsAvailable": false,
-                  "tairaDefaultVisible": true
-                }
-              }
-            }
-            """
-        )
-
-        val error = runCatching {
-            client.requireTypedAccountBalancesCapability()
-        }.exceptionOrNull()
-
-        assertThat(error).hasMessageThat()
-            .isEqualTo("PI_INDEXER_TYPED_ACCOUNT_BALANCES_UNAVAILABLE")
-        assertThat(restClient.requests).hasSize(2)
-        assertThat(restClient.requests.none { it.query.contains("account(") }).isTrue()
-    }
-
-    @Test
     fun `polkamarkt cursor pagination preserves arbitrary precision quantities`() = runTest {
         restClient.enqueue(
             """
@@ -2223,162 +2157,6 @@ class PolkaswapIndexerClientTest {
         assertThat(result.first().creatorFees).isEqualTo("123456789012345678901234567890")
         assertThat(restClient.requests[0].variables.toString()).contains("\"after\":null")
         assertThat(restClient.requests[1].variables.toString()).contains("\"after\":\"cursor-1\"")
-    }
-
-    @Test
-    fun `polkamarkt signal quantity strings preserve exact decimals`() = runTest {
-        restClient.enqueue(
-            """
-            {
-              "data": {
-                "polkamarktSignals": {
-                  "totalVolumeUsd": "123456789012345678901234567890.123456789012345678",
-                  "activeMarkets": 12,
-                  "activeAccounts": 34,
-                  "liquidityUsd": "999999999999999999999999.000000000000000001",
-                  "liquiditySeries": [
-                    {
-                      "label": "now",
-                      "value": "777777777777777777777.000000000000000007"
-                    }
-                  ],
-                  "answerBreakdown": [
-                    {
-                      "answer": "yes",
-                      "volumeUsd": "555555555555555555555.000000000000000005",
-                      "markets": 9
-                    }
-                  ],
-                  "accuracySummary": {
-                    "accuracyPercent": 99.125
-                  }
-                }
-              }
-            }
-            """
-        )
-
-        val result = client.getPolkamarktSignals()
-
-        assertThat(result.totalVolumeUsd)
-            .isEqualTo("123456789012345678901234567890.123456789012345678")
-        assertThat(result.liquidityUsd)
-            .isEqualTo("999999999999999999999999.000000000000000001")
-        assertThat(result.liquiditySeries.single().value)
-            .isEqualTo("777777777777777777777.000000000000000007")
-        assertThat(result.answerBreakdown.single().volumeUsd)
-            .isEqualTo("555555555555555555555.000000000000000005")
-        assertThat(result.accuracyPercent)
-            .isEqualTo("99.125")
-    }
-
-    @Test
-    fun `polkamarkt signal quantities reject numeric json tokens`() = runTest {
-        restClient.enqueue(
-            """
-            {
-              "data": {
-                "polkamarktSignals": {
-                  "totalVolumeUsd": 1.25,
-                  "activeMarkets": 1,
-                  "activeAccounts": 1,
-                  "liquidityUsd": "1",
-                  "liquiditySeries": [],
-                  "answerBreakdown": []
-                }
-              }
-            }
-            """
-        )
-
-        val error = runCatching {
-            client.getPolkamarktSignals()
-        }.exceptionOrNull()
-
-        assertThat(error).hasMessageThat()
-            .isEqualTo("PI_INDEXER_INVALID_TOTAL_VOLUME")
-    }
-
-    @Test
-    fun `polkamarkt signals reject negative counts and duplicate labels`() = runTest {
-        restClient.enqueue(
-            """
-            {
-              "data": {
-                "polkamarktSignals": {
-                  "totalVolumeUsd": "1",
-                  "activeMarkets": -1,
-                  "activeAccounts": 1,
-                  "liquidityUsd": "1",
-                  "liquiditySeries": [
-                    { "label": "same", "value": "1" },
-                    { "label": "same", "value": "2" }
-                  ],
-                  "answerBreakdown": []
-                }
-              }
-            }
-            """
-        )
-
-        val error = runCatching {
-            client.getPolkamarktSignals()
-        }.exceptionOrNull()
-
-        assertThat(error).hasMessageThat().isEqualTo("PI_INDEXER_INVALID_SIGNALS")
-    }
-
-    @Test
-    fun `polkamarkt signals reject negative volume quantities`() = runTest {
-        restClient.enqueue(
-            """
-            {
-              "data": {
-                "polkamarktSignals": {
-                  "totalVolumeUsd": "-1",
-                  "activeMarkets": 1,
-                  "activeAccounts": 1,
-                  "liquidityUsd": "1",
-                  "liquiditySeries": [],
-                  "answerBreakdown": []
-                }
-              }
-            }
-            """
-        )
-
-        val error = runCatching {
-            client.getPolkamarktSignals()
-        }.exceptionOrNull()
-
-        assertThat(error).hasMessageThat().isEqualTo("PI_INDEXER_INVALID_TOTAL_VOLUME")
-    }
-
-    @Test
-    fun `polkamarkt signals reject out of range accuracy`() = runTest {
-        restClient.enqueue(
-            """
-            {
-              "data": {
-                "polkamarktSignals": {
-                  "totalVolumeUsd": "1",
-                  "activeMarkets": 1,
-                  "activeAccounts": 1,
-                  "liquidityUsd": "1",
-                  "liquiditySeries": [],
-                  "answerBreakdown": [],
-                  "accuracySummary": { "accuracyPercent": 100.1 }
-                }
-              }
-            }
-            """
-        )
-
-        val error = runCatching {
-            client.getPolkamarktSignals()
-        }.exceptionOrNull()
-
-        assertThat(error).hasMessageThat().isEqualTo("PI_INDEXER_INVALID_ACCURACY")
     }
 
     @Test
@@ -2604,141 +2382,6 @@ class PolkaswapIndexerClientTest {
     }
 
     @Test
-    fun `cursor history pagination rejects overlapping transaction identities`() = runTest {
-        val transactionHash = "0x${"ab".repeat(32)}"
-        repeat(2) { page ->
-            restClient.enqueue(
-                """
-                {
-                  "data": {
-                    "historyElements": {
-                      "totalCount": 2,
-                      "pageInfo": {
-                        "hasNextPage": ${page == 0},
-                        "endCursor": ${if (page == 0) "\"history-cursor-1\"" else "null"}
-                      },
-                      "edges": [
-                        {
-                          "node": {
-                            "id": "$transactionHash",
-                            "address": "cnAccount",
-                            "timestamp": ${page + 1},
-                            "blockHash": "0x${"cd".repeat(32)}",
-                            "blockHeight": 10,
-                            "networkFee": "0",
-                            "execution": { "success": true }
-                          }
-                        }
-                      ]
-                    }
-                  }
-                }
-                """
-            )
-        }
-
-        val error = runCatching {
-            client.getAllTransactionHistoryQualified(
-                address = "cnAccount",
-                pageSize = 1,
-                maxPages = 2,
-            )
-        }.exceptionOrNull()
-
-        assertThat(error).hasMessageThat().isEqualTo("PI_INDEXER_DUPLICATE_TRANSACTION")
-        assertThat(restClient.requests[0].variables.toString()).contains("\"after\":null")
-        assertThat(restClient.requests[1].variables.toString())
-            .contains("\"after\":\"history-cursor-1\"")
-    }
-
-    @Test
-    fun `cursor history pagination rejects a non advancing cursor`() = runTest {
-        listOf("ab", "ef").forEach { byte ->
-            restClient.enqueue(
-                """
-                {
-                  "data": {
-                    "historyElements": {
-                      "totalCount": 3,
-                      "pageInfo": {
-                        "hasNextPage": true,
-                        "endCursor": "same-history-cursor"
-                      },
-                      "edges": [
-                        {
-                          "node": {
-                            "id": "0x${byte.repeat(32)}",
-                            "address": "cnAccount",
-                            "timestamp": 1,
-                            "blockHash": "0x${"cd".repeat(32)}",
-                            "blockHeight": 10,
-                            "networkFee": "0",
-                            "execution": { "success": true }
-                          }
-                        }
-                      ]
-                    }
-                  }
-                }
-                """
-            )
-        }
-
-        val error = runCatching {
-            client.getAllTransactionHistoryQualified(
-                address = "cnAccount",
-                pageSize = 1,
-                maxPages = 3,
-            )
-        }.exceptionOrNull()
-
-        assertThat(error).hasMessageThat().isEqualTo("PI_INDEXER_REPEATED_PAGE")
-        assertThat(restClient.requests).hasSize(2)
-    }
-
-    @Test
-    fun `pending lookup queries only exact hashes for the exact account`() = runTest {
-        val transactionHash = "0x${"ab".repeat(32)}"
-        restClient.enqueue(
-            """
-            {
-              "data": {
-                "historyElements": {
-                  "totalCount": 1,
-                  "pageInfo": { "hasNextPage": false },
-                  "edges": [
-                    {
-                      "node": {
-                        "id": "$transactionHash",
-                        "address": "cnAccount",
-                        "timestamp": 1,
-                        "blockHash": "0x${"cd".repeat(32)}",
-                        "blockHeight": 10,
-                        "networkFee": "0",
-                        "execution": { "success": true }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-            """
-        )
-
-        val result = client.getAccountTransactionsByHashesQualified(
-            address = "cnAccount",
-            transactionHashes = listOf(transactionHash),
-        )
-
-        assertThat(result.value.map(IndexerHistoryElement::id))
-            .containsExactly(transactionHash)
-        val variables = restClient.singleRequest().variables.toString()
-        assertThat(variables).contains("\"and\"")
-        assertThat(variables).contains("\"in\":[\"$transactionHash\"]")
-        assertThat(variables).contains("\"equalTo\":\"cnAccount\"")
-    }
-
-    @Test
     fun `polkamarkt account and market reads reject mismatched returned identities`() = runTest {
         restClient.enqueue(
             """
@@ -2899,143 +2542,6 @@ class PolkaswapIndexerClientTest {
 
         assertThat(overflow).hasMessageThat().isEqualTo("PI_INDEXER_INVALID_MARKET_ID")
         assertThat(restClient.requests).hasSize(requestCount)
-    }
-
-    @Test
-    fun `polkamarkt batch trade history preserves every claimed market`() = runTest {
-        restClient.enqueue(
-            """
-            {
-              "data": {
-                "accountTrades": {
-                  "totalCount": 1,
-                  "pageInfo": { "hasNextPage": false, "endCursor": null },
-                  "edges": [
-                    {
-                      "cursor": "batch-claim",
-                      "node": {
-                        "id": "batch-claim",
-                        "account": "cnAccount",
-                        "marketId": 7,
-                        "marketIds": [7, 8],
-                        "side": "claim",
-                        "blockNumber": $HEALTH_BLOCK,
-                        "blockHash": "0x${"cd".repeat(32)}",
-                        "extrinsicHash": "0x${"ef".repeat(32)}",
-                        "market": {
-                          "id": "market-7",
-                          "marketId": 7,
-                          "status": "Resolved",
-                          "updatedAtBlock": $HEALTH_BLOCK
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-            """
-        )
-
-        val trade = client.getAccountTrades(
-            account = "cnAccount",
-            pageSize = 1,
-            maxPages = 1,
-        ).single()
-        assertThat(trade.marketId).isEqualTo(7L)
-        assertThat(trade.marketIds).containsExactly(7L, 8L).inOrder()
-
-        restClient.enqueue(
-            """
-            {
-              "data": {
-                "accountTrades": {
-                  "totalCount": 1,
-                  "pageInfo": { "hasNextPage": false, "endCursor": null },
-                  "edges": [
-                    {
-                      "cursor": "legacy-cached-trade",
-                      "node": {
-                        "id": "legacy-cached-trade",
-                        "account": "cnAccount",
-                        "marketId": 7,
-                        "side": "claim",
-                        "blockNumber": $HEALTH_BLOCK,
-                        "blockHash": "0x${"cd".repeat(32)}",
-                        "extrinsicHash": "0x${"ef".repeat(32)}",
-                        "market": {
-                          "id": "market-7",
-                          "marketId": 7,
-                          "status": "Resolved",
-                          "updatedAtBlock": $HEALTH_BLOCK
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-            """
-        )
-        val legacyCachedTrade = client.getAccountTrades(
-            account = "cnAccount",
-            pageSize = 1,
-            maxPages = 1,
-        ).single()
-        assertThat(legacyCachedTrade.marketIds).isEmpty()
-
-        val invalidRest = CapturingRestClient()
-        val invalidClient = PolkaswapIndexerClient(
-            restClient = invalidRest,
-            json = testJson,
-            responseCache = InMemoryResponseCache { HEALTH_NOW * 1_000 },
-            nowEpochMillis = { HEALTH_NOW * 1_000 },
-            nowMonotonicNanos = { 1_000 },
-        )
-        invalidRest.enqueue(healthResponse())
-        invalidRest.enqueue(
-            """
-            {
-              "data": {
-                "accountTrades": {
-                  "totalCount": 1,
-                  "pageInfo": { "hasNextPage": false, "endCursor": null },
-                  "edges": [
-                    {
-                      "cursor": "invalid-batch-claim",
-                      "node": {
-                        "id": "invalid-batch-claim",
-                        "account": "cnAccount",
-                        "marketId": 7,
-                        "marketIds": [8, 7],
-                        "side": "claim",
-                        "blockNumber": $HEALTH_BLOCK,
-                        "blockHash": "0x${"cd".repeat(32)}",
-                        "extrinsicHash": "0x${"ef".repeat(32)}",
-                        "market": {
-                          "id": "market-7",
-                          "marketId": 7,
-                          "status": "Resolved",
-                          "updatedAtBlock": $HEALTH_BLOCK
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-            """
-        )
-
-        val invalid = runCatching {
-            invalidClient.getAccountTrades(
-                account = "cnAccount",
-                pageSize = 1,
-                maxPages = 1,
-            )
-        }.exceptionOrNull()
-        assertThat(invalid).hasMessageThat()
-            .isEqualTo("PI_INDEXER_INVALID_TRADE_SEMANTICS")
     }
 
     @Test
@@ -3825,46 +3331,6 @@ class PolkaswapIndexerClientTest {
             }
         }]}}}"""
 
-    @Test fun `qualified full history retains cursor order and provenance through completion`() = runTest {
-        val checked = qualifiedHistoryClient()
-        restClient.enqueue(healthResponse()); restClient.enqueue(boundedHistoryPage("ab", total = 2, more = true, cursor = "next"))
-        restClient.enqueue(boundedHistoryPage("ef", total = 2))
-        val read = checked.getAllTransactionHistoryQualified("cnAccount", pageSize = 1, maxPages = 2)
-        assertThat(read.value.map { it.id }).containsExactly("0x${"ab".repeat(32)}", "0x${"ef".repeat(32)}").inOrder()
-        assertThat(read.fromCache).isFalse(); assertThat(read.health.chainId).isEqualTo("sora:mainnet")
-        assertThat(restClient.requests.last().variables.toString()).contains("\"after\":\"next\"")
-    }
-    @Test fun `full history convenience method preserves a qualified empty wallet`() = runTest {
-        val checked = qualifiedHistoryClient(); restClient.enqueue(healthResponse()); restClient.enqueue(boundedHistoryPage())
-        assertThat(checked.getAllTransactionHistory("cnAccount")).isEmpty()
-    }
-    @Test fun `qualified full history refuses a changed total between pages`() = runTest {
-        val checked = qualifiedHistoryClient(); restClient.enqueue(healthResponse())
-        restClient.enqueue(boundedHistoryPage("ab", total = 2, more = true, cursor = "next")); restClient.enqueue(boundedHistoryPage("ef", total = 3))
-        val error = runCatching { checked.getAllTransactionHistoryQualified("cnAccount", 1, 2) }.exceptionOrNull()
-        assertThat(error).hasMessageThat().isEqualTo("PI_INDEXER_INVALID_PAGE")
-    }
-    @Test fun `qualified full history refuses a terminal page that omits announced rows`() = runTest {
-        val checked = qualifiedHistoryClient(); restClient.enqueue(healthResponse()); restClient.enqueue(boundedHistoryPage("ab", total = 2))
-        val error = runCatching { checked.getAllTransactionHistoryQualified("cnAccount", 1, 2) }.exceptionOrNull()
-        assertThat(error).hasMessageThat().isEqualTo("PI_INDEXER_INVALID_PAGE")
-    }
-    @Test fun `qualified full history refuses missing cursors instead of silently truncating`() = runTest {
-        val checked = qualifiedHistoryClient(); restClient.enqueue(healthResponse()); restClient.enqueue(boundedHistoryPage("ab", total = 2, more = true))
-        val error = runCatching { checked.getAllTransactionHistoryQualified("cnAccount", 1, 2) }.exceptionOrNull()
-        assertThat(error).hasMessageThat().isEqualTo("PI_INDEXER_INVALID_PAGE")
-    }
-    @Test fun `qualified full history reports reaching the configured traversal limit`() = runTest {
-        val checked = qualifiedHistoryClient(); restClient.enqueue(healthResponse()); restClient.enqueue(boundedHistoryPage("ab", total = 2, more = true, cursor = "next"))
-        val error = runCatching { checked.getAllTransactionHistoryQualified("cnAccount", 1, 1) }.exceptionOrNull()
-        assertThat(error).hasMessageThat().isEqualTo("PI_INDEXER_PAGE_LIMIT_EXCEEDED")
-    }
-    @Test fun `qualified full history rejects an exactly repeated page`() = runTest {
-        val checked = qualifiedHistoryClient(); restClient.enqueue(healthResponse())
-        repeat(2) { restClient.enqueue(boundedHistoryPage("ab", total = 3, more = true, cursor = "next")) }
-        val error = runCatching { checked.getAllTransactionHistoryQualified("cnAccount", 1, 3) }.exceptionOrNull()
-        assertThat(error).hasMessageThat().isEqualTo("PI_INDEXER_REPEATED_PAGE")
-    }
     @Test fun `qualified numbered page beyond the end returns an explicit empty terminal page`() = runTest {
         val checked = qualifiedHistoryClient(); restClient.enqueue(healthResponse()); restClient.enqueue(boundedHistoryPage("ab"))
         val read = checked.getTransactionHistoryQualified("cnAccount", 3, 1)
@@ -3907,27 +3373,6 @@ class PolkaswapIndexerClientTest {
         val checked = qualifiedHistoryClient(); restClient.enqueue(healthResponse()); restClient.enqueue(boundedHistoryPage())
         assertThat(checked.getTransactionQualified("ab".repeat(32)).value).isEmpty()
         assertThat(restClient.requests.last().variables.toString()).contains("0x${"ab".repeat(32)}")
-    }
-    @Test fun `qualified pending lookup accepts only requested hashes and sender or recipient roles`() = runTest {
-        for (role in listOf("dataFrom", "dataTo")) {
-            val rest = CapturingRestClient(); val checked = qualifiedHistoryClient(rest)
-            rest.enqueue(healthResponse()); rest.enqueue(boundedHistoryPage("ab", role = role))
-            val result = checked.getAccountTransactionsByHashesQualified("cnAccount", listOf("AB".repeat(32)))
-            assertThat(result.value.single().id).isEqualTo("0x${"ab".repeat(32)}"); assertThat(result.fromCache).isFalse()
-        }
-    }
-    @Test fun `pending lookup rejects normalized duplicate hash inputs before making requests`() = runTest {
-        val checked = qualifiedHistoryClient()
-        val error = runCatching { checked.getAccountTransactionsByHashesQualified("cnAccount", listOf("AB".repeat(32), "0x${"ab".repeat(32)}")) }.exceptionOrNull()
-        assertThat(error).hasMessageThat().isEqualTo("PI_INDEXER_DUPLICATE_TRANSACTION"); assertThat(restClient.requests).isEmpty()
-    }
-    @Test fun `pending lookup refuses empty and oversized batches before transport`() = runTest {
-        val checked = qualifiedHistoryClient()
-        for (hashes in listOf(emptyList(), List(101) { "ab".repeat(32) })) {
-            val error = runCatching { checked.getAccountTransactionsByHashesQualified("cnAccount", hashes) }.exceptionOrNull()
-            assertThat(error).hasMessageThat().isEqualTo("PI_INDEXER_PENDING_LOOKUP_LIMIT_INVALID")
-        }
-        assertThat(restClient.requests).isEmpty()
     }
     @Test fun `asset request rejects duplicate identifiers before transport`() = runTest {
         val checked = qualifiedHistoryClient()
@@ -4046,5 +3491,298 @@ class PolkaswapIndexerClientTest {
             field.isAccessible = true
             return field.get(this)
         }
+    }
+
+    @Test
+    fun `polkamarkt signal quantity strings preserve exact decimals`() = runTest {
+        restClient.enqueue(
+            """
+            {
+              "data": {
+                "polkamarktSignals": {
+                  "totalVolumeUsd": "123456789012345678901234567890.123456789012345678",
+                  "activeMarkets": 12,
+                  "activeAccounts": 34,
+                  "liquidityUsd": "999999999999999999999999.000000000000000001",
+                  "liquiditySeries": [
+                    {
+                      "label": "now",
+                      "value": "777777777777777777777.000000000000000007"
+                    }
+                  ],
+                  "answerBreakdown": [
+                    {
+                      "answer": "yes",
+                      "volumeUsd": "555555555555555555555.000000000000000005",
+                      "markets": 9
+                    }
+                  ],
+                  "accuracySummary": {
+                    "accuracyPercent": 99.125
+                  }
+                }
+              }
+            }
+            """
+        )
+
+        val result = client.getPolkamarktSignalsQualified().value
+
+        assertThat(result.totalVolumeUsd)
+            .isEqualTo("123456789012345678901234567890.123456789012345678")
+        assertThat(result.liquidityUsd)
+            .isEqualTo("999999999999999999999999.000000000000000001")
+        assertThat(result.liquiditySeries.single().value)
+            .isEqualTo("777777777777777777777.000000000000000007")
+        assertThat(result.answerBreakdown.single().volumeUsd)
+            .isEqualTo("555555555555555555555.000000000000000005")
+        assertThat(result.accuracyPercent)
+            .isEqualTo("99.125")
+    }
+
+    @Test
+    fun `polkamarkt signal quantities reject numeric json tokens`() = runTest {
+        restClient.enqueue(
+            """
+            {
+              "data": {
+                "polkamarktSignals": {
+                  "totalVolumeUsd": 1.25,
+                  "activeMarkets": 1,
+                  "activeAccounts": 1,
+                  "liquidityUsd": "1",
+                  "liquiditySeries": [],
+                  "answerBreakdown": []
+                }
+              }
+            }
+            """
+        )
+
+        val error = runCatching {
+            client.getPolkamarktSignalsQualified().value
+        }.exceptionOrNull()
+
+        assertThat(error).hasMessageThat()
+            .isEqualTo("PI_INDEXER_INVALID_TOTAL_VOLUME")
+    }
+
+    @Test
+    fun `polkamarkt signals reject negative counts and duplicate labels`() = runTest {
+        restClient.enqueue(
+            """
+            {
+              "data": {
+                "polkamarktSignals": {
+                  "totalVolumeUsd": "1",
+                  "activeMarkets": -1,
+                  "activeAccounts": 1,
+                  "liquidityUsd": "1",
+                  "liquiditySeries": [
+                    { "label": "same", "value": "1" },
+                    { "label": "same", "value": "2" }
+                  ],
+                  "answerBreakdown": []
+                }
+              }
+            }
+            """
+        )
+
+        val error = runCatching {
+            client.getPolkamarktSignalsQualified().value
+        }.exceptionOrNull()
+
+        assertThat(error).hasMessageThat().isEqualTo("PI_INDEXER_INVALID_SIGNALS")
+    }
+
+    @Test
+    fun `polkamarkt signals reject negative volume quantities`() = runTest {
+        restClient.enqueue(
+            """
+            {
+              "data": {
+                "polkamarktSignals": {
+                  "totalVolumeUsd": "-1",
+                  "activeMarkets": 1,
+                  "activeAccounts": 1,
+                  "liquidityUsd": "1",
+                  "liquiditySeries": [],
+                  "answerBreakdown": []
+                }
+              }
+            }
+            """
+        )
+
+        val error = runCatching {
+            client.getPolkamarktSignalsQualified().value
+        }.exceptionOrNull()
+
+        assertThat(error).hasMessageThat().isEqualTo("PI_INDEXER_INVALID_TOTAL_VOLUME")
+    }
+
+    @Test
+    fun `polkamarkt signals reject out of range accuracy`() = runTest {
+        restClient.enqueue(
+            """
+            {
+              "data": {
+                "polkamarktSignals": {
+                  "totalVolumeUsd": "1",
+                  "activeMarkets": 1,
+                  "activeAccounts": 1,
+                  "liquidityUsd": "1",
+                  "liquiditySeries": [],
+                  "answerBreakdown": [],
+                  "accuracySummary": { "accuracyPercent": 100.1 }
+                }
+              }
+            }
+            """
+        )
+
+        val error = runCatching {
+            client.getPolkamarktSignalsQualified().value
+        }.exceptionOrNull()
+
+        assertThat(error).hasMessageThat().isEqualTo("PI_INDEXER_INVALID_ACCURACY")
+    }
+
+    @Test
+    fun `polkamarkt batch trade history preserves every claimed market`() = runTest {
+        restClient.enqueue(
+            """
+            {
+              "data": {
+                "accountTrades": {
+                  "totalCount": 1,
+                  "pageInfo": { "hasNextPage": false, "endCursor": null },
+                  "edges": [
+                    {
+                      "cursor": "batch-claim",
+                      "node": {
+                        "id": "batch-claim",
+                        "account": "cnAccount",
+                        "marketId": 7,
+                        "marketIds": [7, 8],
+                        "side": "claim",
+                        "blockNumber": $HEALTH_BLOCK,
+                        "blockHash": "0x${"cd".repeat(32)}",
+                        "extrinsicHash": "0x${"ef".repeat(32)}",
+                        "market": {
+                          "id": "market-7",
+                          "marketId": 7,
+                          "status": "Resolved",
+                          "updatedAtBlock": $HEALTH_BLOCK
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+            """
+        )
+
+        val trade = client.getAccountTradesQualified(
+            account = "cnAccount",
+            pageSize = 1,
+            maxPages = 1,
+        ).value.single()
+        assertThat(trade.marketId).isEqualTo(7L)
+        assertThat(trade.marketIds).containsExactly(7L, 8L).inOrder()
+
+        restClient.enqueue(
+            """
+            {
+              "data": {
+                "accountTrades": {
+                  "totalCount": 1,
+                  "pageInfo": { "hasNextPage": false, "endCursor": null },
+                  "edges": [
+                    {
+                      "cursor": "legacy-cached-trade",
+                      "node": {
+                        "id": "legacy-cached-trade",
+                        "account": "cnAccount",
+                        "marketId": 7,
+                        "side": "claim",
+                        "blockNumber": $HEALTH_BLOCK,
+                        "blockHash": "0x${"cd".repeat(32)}",
+                        "extrinsicHash": "0x${"ef".repeat(32)}",
+                        "market": {
+                          "id": "market-7",
+                          "marketId": 7,
+                          "status": "Resolved",
+                          "updatedAtBlock": $HEALTH_BLOCK
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+            """
+        )
+        val legacyCachedTrade = client.getAccountTradesQualified(
+            account = "cnAccount",
+            pageSize = 1,
+            maxPages = 1,
+        ).value.single()
+        assertThat(legacyCachedTrade.marketIds).isEmpty()
+
+        val invalidRest = CapturingRestClient()
+        val invalidClient = PolkaswapIndexerClient(
+            restClient = invalidRest,
+            json = testJson,
+            responseCache = InMemoryResponseCache { HEALTH_NOW * 1_000 },
+            nowEpochMillis = { HEALTH_NOW * 1_000 },
+            nowMonotonicNanos = { 1_000 },
+        )
+        invalidRest.enqueue(healthResponse())
+        invalidRest.enqueue(
+            """
+            {
+              "data": {
+                "accountTrades": {
+                  "totalCount": 1,
+                  "pageInfo": { "hasNextPage": false, "endCursor": null },
+                  "edges": [
+                    {
+                      "cursor": "invalid-batch-claim",
+                      "node": {
+                        "id": "invalid-batch-claim",
+                        "account": "cnAccount",
+                        "marketId": 7,
+                        "marketIds": [8, 7],
+                        "side": "claim",
+                        "blockNumber": $HEALTH_BLOCK,
+                        "blockHash": "0x${"cd".repeat(32)}",
+                        "extrinsicHash": "0x${"ef".repeat(32)}",
+                        "market": {
+                          "id": "market-7",
+                          "marketId": 7,
+                          "status": "Resolved",
+                          "updatedAtBlock": $HEALTH_BLOCK
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+            """
+        )
+
+        val invalid = runCatching {
+            invalidClient.getAccountTradesQualified(
+                account = "cnAccount",
+                pageSize = 1,
+                maxPages = 1,
+            ).value
+        }.exceptionOrNull()
+        assertThat(invalid).hasMessageThat()
+            .isEqualTo("PI_INDEXER_INVALID_TRADE_SEMANTICS")
     }
 }

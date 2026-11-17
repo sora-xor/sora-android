@@ -912,12 +912,6 @@ interface NexusToriiReadClient {
         assetDefinitionId: String,
     ): NexusAssetBalance
 
-    suspend fun committedXorTransfers(
-        network: NexusNetwork,
-        accountId: String,
-        assetDefinitionId: String,
-    ): List<NexusTransferHistoryItem>
-
     suspend fun committedXorTransferPage(
         network: NexusNetwork,
         accountId: String,
@@ -1227,11 +1221,6 @@ class NexusToriiClient internal constructor(
         }
         return response
     }
-
-    /** Compatibility entry point: the newest page, never an unbounded account-history scan. */
-    override suspend fun committedXorTransfers(network: NexusNetwork, accountId: String,
-        assetDefinitionId: String): List<NexusTransferHistoryItem> =
-        committedXorTransferPage(network, accountId, assetDefinitionId, null).items
 
     override suspend fun committedXorTransferPage(network: NexusNetwork, accountId: String,
         assetDefinitionId: String, cursor: String?): NexusTransferHistorySlice =

@@ -19,7 +19,6 @@ limitations under the License.
 
 package jp.co.soramitsu.feature_wallet_api.domain.interfaces
 
-import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.domain.TransactionOutcome
 import jp.co.soramitsu.feature_wallet_api.domain.model.MigrationStatus
@@ -50,6 +49,4 @@ interface WalletInteractor {
     suspend fun checkSubmittedClaim(txHash: String?): TransactionOutcome?
 
     suspend fun getContacts(query: String): List<String>?
-
-    suspend fun getSoraAccounts(): List<SoraAccount>
 }

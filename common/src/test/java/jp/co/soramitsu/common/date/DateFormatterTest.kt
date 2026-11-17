@@ -25,15 +25,12 @@ import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
 import jp.co.soramitsu.androidfoundation.resource.ResourceManager
-import jp.co.soramitsu.androidfoundation.testing.eqNonNull
-import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.resourses.LanguagesHolder
 import org.junit.Assert.assertEquals
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.BDDMockito.anyInt
 import org.mockito.BDDMockito.given
 import org.mockito.Mock
 import org.mockito.junit.MockitoJUnitRunner
@@ -82,41 +79,6 @@ class DateTimeFormatterTest {
         val expectedResult = "01 Jan 1970"
 
         val actualResult = dateTimeFormatter.formatDate(date, DateTimeFormatter.DD_MMM_YYYY)
-
-        assertEquals(expectedResult, actualResult)
-    }
-
-    @Test
-    fun `yesterday date to day formatting with year`() {
-        val expectedResult = "Today"
-        val yesterdayString = "Yesterday"
-        val todayDate = currentDate
-
-        val actualResult =
-            dateTimeFormatter.dateToDayWithYear(todayDate, expectedResult, yesterdayString)
-
-        assertEquals(expectedResult, actualResult)
-    }
-
-    @Test
-    fun `today date to day formatting with year`() {
-        val todayString = "Today"
-        val expectedResult = "Yesterday"
-        val yesterdayDate = Date(currentDate.time - 24 * 60 * 60 * 1000)
-
-        val actualResult =
-            dateTimeFormatter.dateToDayWithYear(yesterdayDate, todayString, expectedResult)
-
-        assertEquals(expectedResult, actualResult)
-    }
-
-    @Test
-    fun `other date to day formatting with year`() {
-        val todayString = "Today"
-        val yesterdayString = "Yesterday"
-        val expectedResult = "01 Jan 1970"
-
-        val actualResult = dateTimeFormatter.dateToDayWithYear(date, todayString, yesterdayString)
 
         assertEquals(expectedResult, actualResult)
     }
@@ -176,20 +138,4 @@ class DateTimeFormatterTest {
         assertEquals(false, actualResult2)
     }
 
-    @Test
-    fun `format Time From Seconds called`() {
-        given(
-            resourceManager.getQuantityString(
-                eqNonNull(R.plurals.common_hour),
-                anyInt()
-            )
-        ).willReturn("hour")
-        given(resourceManager.getString(R.string.common_min)).willReturn("min")
-        given(resourceManager.getString(R.string.common_sec)).willReturn("sec")
-        val seconds = 7400.toLong()
-        val exptectedString = "2h:3m:20s"
-        val actualResult = dateTimeFormatter.formatTimeFromSeconds(seconds)
-
-        assertEquals(exptectedString, actualResult)
-    }
 }

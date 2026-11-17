@@ -32,7 +32,6 @@ import kotlin.math.absoluteValue
 import kotlin.math.pow
 
 private const val DECIMAL_PATTERN_BASE = "###,###."
-private const val TWO_DIGITS_PATTERN = "00"
 
 private const val DEFAULT_PRECISION = 2
 
@@ -127,15 +126,6 @@ class NumbersFormatter {
         return decimalFormatterFor(patternWith(newPrecision)).format(num)
     }
 
-    fun formatInteger(num: BigDecimal): String {
-        return formatBigDecimal(num.setScale(0, RoundingMode.FLOOR))
-    }
-
-    fun formatIntegerToTwoDigits(num: Int): String {
-        val formatter = DecimalFormat(TWO_DIGITS_PATTERN)
-        return formatter.format(num)
-    }
-
     private fun decimalFormatterFor(pattern: String): DecimalFormat {
         val symbols = DecimalFormatSymbols(Locale.getDefault())
         return DecimalFormat(pattern, symbols).apply {
@@ -151,9 +141,4 @@ class NumbersFormatter {
     }
 
     private fun patternWith(precision: Int) = "$DECIMAL_PATTERN_BASE${"#".repeat(precision)}"
-
-    fun getNumberFromString(string: String): Int {
-        return string.trim().replace(GROUPING_SEPARATOR.toString(), "", ignoreCase = false)
-            .toIntOrNull() ?: 0
-    }
 }

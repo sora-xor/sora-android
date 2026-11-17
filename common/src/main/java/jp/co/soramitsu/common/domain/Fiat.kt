@@ -83,20 +83,6 @@ fun Token.formatFiatOr(
 ): String =
     if (value == null) default() else formatFiat(value, nf, checkFraction)
 
-fun printFiatSum(
-    token1: Token,
-    token2: Token,
-    amount1: BigDecimal,
-    amount2: BigDecimal,
-    nf: NumbersFormatter
-): String {
-    val fiat1 = token1.calcFiat(amount1)
-    val fiat2 = token2.calcFiat(amount2)
-    if (fiat1 == null || fiat2 == null) return ""
-    val sum = fiat1 + fiat2
-    return token1.formatFiat(sum, nf)
-}
-
 fun calcAmount(rate: Double, amount: BigDecimal): Double = amount.toDouble() * rate
 
 fun subtractFee(amount: BigDecimal, balance: BigDecimal, fee: BigDecimal?): BigDecimal {

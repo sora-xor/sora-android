@@ -34,18 +34,17 @@ class FileManagerPlatformContractTest {
     @After fun cleanFixture() { root.deleteRecursively() }
     @Test fun cacheAndPrivateFilesPreserveBytesAndDistinguishEmptyFromMissing() {
         val manager = FileManagerImpl(isolated())
-        assertNull(manager.readInternalCacheFile("absent")); assertNull(manager.readInternalCacheFileAsByteArray("absent"))
+        assertNull(manager.readInternalCacheFile("absent"))
         manager.writeInternalCacheFile("empty", "")
-        assertNull(manager.readInternalCacheFile("empty")); assertNull(manager.readInternalCacheFileAsByteArray("empty"))
+        assertNull(manager.readInternalCacheFile("empty"))
         assertEquals("", manager.readInternalCacheFile("empty", 1))
         val text = "wallet fixture á界😀"
         manager.writeInternalCacheFile("utf8", text)
         assertEquals(text, manager.readInternalCacheFile("utf8"))
         assertEquals(text, manager.readInternalCacheFile("utf8", text.toByteArray().size))
         manager.writeInternalCacheFile("binary", byteArrayOf(0, 1, -1))
-        assertArrayEquals(byteArrayOf(0, 1, -1), manager.readInternalCacheFileAsByteArray("binary"))
-        assertFalse(manager.existsInternalFile("private")); manager.writeInternalFile("private", text)
-        assertTrue(manager.existsInternalFile("private")); assertEquals(text, manager.readInternalFile("private"))
+        manager.writeInternalFile("private", text)
+        assertEquals(text, manager.readInternalFile("private"))
         val asset = context.assets.open("default_types.json").bufferedReader().use { it.readText() }
         assertEquals(asset, manager.readAssetFile("default_types.json"))
         assertThrows(IOException::class.java) { manager.readAssetFile("default_types.json", 1) }

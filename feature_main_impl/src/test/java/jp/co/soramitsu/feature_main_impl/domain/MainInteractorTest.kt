@@ -68,15 +68,6 @@ class MainInteractorTest {
     }
 
     @Test
-    fun `getCurUserAddress is called`() = runTest {
-        setUpModel()
-        val actualUser = SoraAccount("address", "user")
-        given(userRepository.getCurSoraAccount()).willReturn(actualUser)
-
-        assertEquals(actualUser.substrateAddress, interactor.getCurUserAddress())
-    }
-
-    @Test
     fun `getAvailableLanguagesWithSelected is called`() = runTest {
         setUpModel()
         val actual = Pair(listOf(Language("ru_Ru", 0, 0)), 0)
@@ -145,16 +136,6 @@ class MainInteractorTest {
         given(userRepository.getCurSoraAccount()).willReturn(curUser)
 
         assertEquals(curUser.accountName, interactor.getAccountName())
-    }
-
-    @Test
-    fun `get sora account list is called`() = runTest {
-        setUpModel()
-        val accounts = listOf(SoraAccount("address", "user"), SoraAccount("address2", "user2"))
-
-        given(userRepository.soraAccountsList()).willReturn(accounts)
-
-        assertEquals(accounts, interactor.getSoraAccountsList())
     }
 
     @Test

@@ -128,10 +128,6 @@ class FileManagerImpl(private val context: Context) : FileManager {
         }
     }
 
-    override fun readInternalCacheFileAsByteArray(fileName: String): ByteArray? =
-        File(internalCacheDir, fileName).takeIf { it.exists() }?.run { readBytes() }
-            ?.takeIf { it.isNotEmpty() }
-
     override fun readInternalCacheFileAsUri(fileName: String): Uri? =
         runCatching {
             FileProvider.getUriForFile(
@@ -213,10 +209,6 @@ class FileManagerImpl(private val context: Context) : FileManager {
 
     override fun writeInternalFile(fileName: String, content: String) {
         File(internalFilesDir, fileName).writeText(content)
-    }
-
-    override fun existsInternalFile(fileName: String): Boolean {
-        return runCatching { File(internalFilesDir, fileName).exists() }.getOrDefault(false)
     }
 
     override fun readInternalFile(fileName: String): String? =

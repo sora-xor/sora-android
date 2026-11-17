@@ -161,30 +161,25 @@ class SubstrateReadFlowTest {
         answer = { if (it.method == "state_getKeysPaged") listOf("key") else emptyList<Any>() }
         assertTrue(subject.fetchAssetsList().isEmpty())
     }
-    @Test fun `block and header queries preserve explicit hash and genesis default`() = runTest {
+    @Test fun `block hash and header queries preserve explicit hash and genesis default`() = runTest {
         answer = { when(it.method) {
             "chain_getBlockHash" -> block
             "chain_getFinalizedHead" -> block
             "chain_getHeader" -> header()
-            "chain_getBlock" -> mapOf("block" to mapOf("header" to header(), "extrinsics" to listOf("0x01", "0x02")), "justification" to null)
             else -> error(it.method)
         } }
         assertEquals(block, subject.getBlockHash()); assertEquals(listOf(0), requests.last().params)
         assertEquals(block, subject.getBlockHash(16)); assertEquals(listOf(16), requests.last().params)
         assertEquals(block, subject.getFinalizedHead())
         assertEquals("0x10", subject.getChainHeader(block).number); assertEquals(listOf(block), requests.last().params)
-        assertEquals("parent", subject.getChainLastHeader().parentHash); assertTrue(requests.last().params.isEmpty())
-        assertEquals(listOf("0x01", "0x02"), subject.getBlock(block).block.extrinsics)
     }
-    @Test fun `runtime metadata and migration checks use their distinct RPC methods`() = runTest {
+    @Test fun `the SORA 1 migration check asks its own RPC method for the Iroha address`() = runTest {
         answer = { when (it.method) {
-            "state_getMetadata" -> "0x6d657461"
-            "chain_getRuntimeVersion" -> mapOf("specVersion" to 133, "transactionVersion" to 131, "specName" to "sora")
             "irohaMigration_needsMigration" -> true
             else -> error(it.method)
         } }
-        assertEquals("0x6d657461", subject.getMetadataHex()); assertEquals(133, subject.getRuntimeVersion().specVersion)
         assertTrue(subject.needsMigration("alice@sora")); assertEquals(listOf("alice@sora"), requests.last().params)
+        assertEquals("irohaMigration_needsMigration", requests.last().method)
     }
     @Test fun `buy quote uses finalized head and serializes large amounts as decimal strings`() = runTest {
         answer = { if (it.method == "chain_getFinalizedHead") block else mapOf("marketId" to 7, "outcome" to "Yes", "collateralIn" to large.toString(), "feeAmount" to "2", "pricingCollateral" to "3", "sharesOut" to "4") }
@@ -238,14 +233,6 @@ class SubstrateReadFlowTest {
         assertTrue(results[3].second is jp.co.soramitsu.sora.substrate.models.ExtrinsicStatusResponse.ExtrinsicStatusFinalized)
         assertEquals(1, results.map { it.first }.distinct().size)
         verify(exactly = 1) { lease.close() }; verify(exactly = 1) { cancelled.cancel() }
-    }
-    @Test fun `empty finalized events decode as empty`() = runTest {
-        answer = { assertEquals(block, it.params[1]); "0x00" }
-        assertTrue(subject.checkEvents(block).isEmpty())
-    }
-    @Test fun `cancelled finalized event read propagates cancellation`() = runTest {
-        answer = { throw CancellationException("screen closed") }
-        expectCancellation { subject.checkEvents(block) }
     }
     @Test fun `bulk custom page size controls requests and last page detection`() = runTest {
         answer = { request -> when(request.params.last()) { "key-b" -> listOf("key-c"); else -> listOf("key-a", "key-b") } }

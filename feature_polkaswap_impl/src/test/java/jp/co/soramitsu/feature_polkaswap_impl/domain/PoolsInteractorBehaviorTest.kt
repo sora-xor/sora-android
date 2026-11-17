@@ -133,18 +133,6 @@ class PoolsInteractorBehaviorTest {
         coEvery { subscription.updateAccountPools("owner") } just Runs
         subject.updatePools(); coVerify(exactly = 1) { subscription.updateAccountPools("owner") }
     }
-    @Test fun `asset changes are debounced before subscribing to pool data`() = runTest {
-        val changes = MutableSharedFlow<String>()
-        every { subscription.subscribeToPoolsAssets("owner") } returns changes
-        every { subscription.subscribeToPoolsData("owner") } returns flowOf("updated-pools")
-        val seen = mutableListOf<String>()
-        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { subject.subscribePoolsChanges().toList(seen) }
-        runCurrent(); changes.emit("first"); advanceTimeBy(100); changes.emit("second"); advanceTimeBy(299); runCurrent()
-        assertTrue(seen.isEmpty())
-        advanceTimeBy(1); runCurrent()
-        assertEquals(listOf("updated-pools"), seen)
-        verify(exactly = 1) { subscription.subscribeToPoolsData("owner") }
-    }
     @Test fun `removal fee is refreshed for a different pair and selected account`() = runTest {
         coEvery { extrinsic.calcRemoveLiquidityNetworkFee(any(), any(), any()) } returnsMany listOf(fee, BigDecimal("0.012"))
         assertEquals(fee, subject.fetchRemoveLiquidityNetworkFee(xor, valToken))

@@ -21,38 +21,6 @@ class TairaCurrentContractTest {
     private fun result(name: String) = fixture(name).getValue("result")
 
     @Test
-    fun `live discovery schemas admit every current wallet request`() {
-        val version = TairaMcpContract.toolsetVersion(result("discovery"))
-        val names = setOf(TairaMcpContract.HEALTH_TOOL, TairaMcpContract.ACCOUNT_ASSETS_TOOL,
-            TairaMcpContract.ASSET_DEFINITION_TOOL, TairaMcpContract.HISTORY_TOOL,
-            TairaMcpContract.TRANSACTION_STATUS_TOOL, TairaMcpContract.SUBMIT_AND_WAIT_TOOL)
-        assertEquals(names, TairaMcpContract.validateToolPage(fixture("tools-selected"), names, version).matched)
-        assertThrows(NexusToriiException::class.java) {
-            TairaMcpContract.validateToolPage(fixture("tools-selected"), names, "a".repeat(64))
-        }
-        val request = TairaMcpContract.discoveryRequest("list", version, null)
-        assertEquals(JsonPrimitive(version), request.params?.get("toolsetVersion"))
-        assertFalse(request.params?.containsKey("toolset_version") == true)
-    }
-
-    @Test
-    fun `account assets and history use nested paths filters and opaque cursors`() {
-        val assets = TairaMcpContract.accountAssetsRequest("assets", "account", TairaTestnetContract.XOR_ASSET_DEFINITION_ID, 100, "cursor1")
-        val arguments = assets.params!!.getValue("arguments").jsonObject
-        assertEquals(JsonPrimitive("account"), arguments.getValue("path").jsonObject["account_id"])
-        assertEquals(JsonPrimitive("cursor1"), arguments["cursor"])
-        assertFalse(arguments.containsKey("offset"))
-        assertEquals(JsonPrimitive(true), arguments["include_total"])
-        val history = TairaMcpContract.historyRequest("history", "account", TairaTestnetContract.XOR_ASSET_DEFINITION_ID, 100,
-            transactionHash = "ab".repeat(32)).params!!.getValue("arguments").jsonObject
-        assertEquals(JsonPrimitive("account"), history.getValue("path").jsonObject["account_id"])
-        assertTrue(history.getValue("filter").toString().contains("tx_hash"))
-        assertTrue(history.getValue("filter").toString().contains("asset_definition_id"))
-        assertFalse(history.containsKey("asset_id"))
-        assertFalse(history.containsKey("page"))
-    }
-
-    @Test
     fun `public Taira balance accepts current local route evidence and uppercase XOR name`() {
         val routed = NexusMcpResultContract.validateEmbeddedRoute(result("balance"), requireFanout = true, allowPublicTairaRoute = true)
         val page = json.decodeFromJsonElement<TairaAccountAssetPage>(routed.getValue("body"))

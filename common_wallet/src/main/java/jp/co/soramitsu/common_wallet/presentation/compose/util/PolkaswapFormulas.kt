@@ -98,18 +98,6 @@ object PolkaswapFormulas {
         return amount1.safeDivide(amount2)
     }
 
-    fun calculateMarkerAssetDesired(
-        fromAmount: BigDecimal,
-        firstReserves: BigDecimal,
-        totalIssuance: BigDecimal,
-    ): BigDecimal = fromAmount.safeDivide(firstReserves).multiply(totalIssuance)
-
-    fun calculateStrategicBonusAPY(
-        strategicBonusApy: Double?
-    ): Double? {
-        return strategicBonusApy?.times(100)
-    }
-
     fun calculateAmountByPercentage(
         amount: BigDecimal,
         percentage: Double,

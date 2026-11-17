@@ -88,9 +88,6 @@ object IrohaAddressCodec {
         )
     }
 
-    fun isValid(address: String, expectedDiscriminant: Int): Boolean =
-        runCatching { parse(address, expectedDiscriminant) }.isSuccess
-
     private fun checkedDiscriminant(value: Int): Int {
         if (value !in 0..MAX_DISCRIMINANT) throw AddressException(ErrorCode.INVALID_DISCRIMINANT)
         return value

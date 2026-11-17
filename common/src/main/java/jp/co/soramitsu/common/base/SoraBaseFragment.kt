@@ -36,7 +36,6 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Scaffold
 import androidx.compose.material.SnackbarResult
 import androidx.compose.material.rememberScaffoldState
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
@@ -278,9 +277,6 @@ abstract class SoraBaseFragment<T : BaseViewModel> : Fragment() {
             }
         }
     }
-
-    @Composable
-    open fun backgroundColorComposable() = MaterialTheme.customColors.bgPage
 
     open fun backgroundColor() = R.attr.baseBackground
 

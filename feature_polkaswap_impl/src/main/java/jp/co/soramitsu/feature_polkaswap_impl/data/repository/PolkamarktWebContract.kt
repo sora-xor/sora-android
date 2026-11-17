@@ -11,15 +11,10 @@ import java.net.URI
  */
 object PolkamarktWebContract {
     const val SOURCE_REVISION = "893783ba6a19c33043eb5dabe42d949c14d0f257"
-    const val SOURCE_COMMIT_TREE = "e391982c0921dea5278e919a7558b7a6a2afc0d4"
-    const val SOURCE_POLKAMARKT_TREE = "57f0fe7623f2b93b34faecfc66d6c5da96d54e1b"
-    const val SOURCE_BRANCH = "ui-updates"
-    const val SOURCE_FILE_COUNT = 22
     const val DEFAULT_SLIPPAGE_BPS = 50
     const val MIN_SLIPPAGE_BPS = 1
     const val MAX_SLIPPAGE_BPS = 1_000
     const val QUOTE_DEBOUNCE_MILLISECONDS = 250L
-    const val CARD_HISTORY_MARKET_LIMIT = 12
     const val DPM_CURVE_POINT_COUNT = 99
     const val MAX_BATCH_CLAIMS = 24
     val SLIPPAGE_PRESETS_BPS = listOf(10, 50, 100)
@@ -55,40 +50,6 @@ object PolkamarktWebContract {
         return creator == selectedAccount
     }
 
-    val CLAIM_CONFIRMATION_REVIEW_FIELDS = listOf(
-        "accountId",
-        "source",
-        "marketIds",
-        "finalizedBlockHash",
-        "claims",
-    )
-    val CLAIM_CONFIRMATION_FRESH_CHECKS = listOf(
-        "account",
-        "featureFlags",
-        "runtimeMetadata",
-        "claimValues",
-        "xorFee",
-        "xorBalance",
-    )
-    const val CLAIM_CONFIRMATION_TITLE = "Confirm claim"
-    const val CLAIM_CONFIRMATION_BATCH_TITLE = "Confirm %1\$d trader payouts"
-    const val CLAIM_CONFIRMATION_BODY = "Verify these finalized runtime values before signing."
-    const val CLAIM_CONFIRMATION_FEE_NOTICE =
-        "The exact XOR network fee and balance will be rechecked before signing."
-    val TRANSLATION_KEYS = mapOf(
-        "pageTitle" to "pageTitle.Polkamarkt",
-        "yes" to "polkamarkt.outcomes.yes",
-        "no" to "polkamarkt.outcomes.no",
-        "buy" to "polkamarkt.actions.buy",
-        "sell" to "polkamarkt.actions.sell",
-        "claimTrader" to "polkamarkt.actions.claimTraderPayout",
-        "claimCreatorFees" to "polkamarkt.actions.claimCreatorFees",
-        "sharesOut" to "polkamarkt.ticket.sharesOut",
-        "collateralOut" to "polkamarkt.ticket.collateralOut",
-        "slippage" to "polkamarkt.ticket.slippage",
-        "takerFee" to "polkamarkt.ticket.takerFee",
-        "networkFee" to "networkFeeText",
-    )
     val CATEGORIES = listOf(
         "Politics",
         "Geopolitics",

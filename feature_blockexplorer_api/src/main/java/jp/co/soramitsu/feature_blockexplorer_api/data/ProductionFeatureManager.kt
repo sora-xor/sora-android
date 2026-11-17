@@ -46,31 +46,6 @@ internal object TairaVisibilityPolicy {
         visible = nexusAvailable && (explicitPreference ?: remoteDefaultVisible),
         preferenceIsExplicit = explicitPreference != null,
     )
-
-    /**
-     * Resolves one atomic preference snapshot. A missing marker is the intentional tester-release
-     * default of the SORA Nexus line (Nexus and Taira shown until the PI flags say otherwise). An
-     * explicit false marker is evidence of an interrupted legacy multi-write cache publication
-     * and must hide Nexus until a complete PI response replaces it.
-     */
-    fun resolveCachedSnapshot(
-        cacheComplete: Boolean?,
-        cachedNexusAvailable: Boolean?,
-        cachedRemoteDefaultVisible: Boolean?,
-        explicitPreference: Boolean?,
-    ): TairaVisibilityDecision {
-        val (nexusAvailable, remoteDefaultVisible) = when (cacheComplete) {
-            null -> true to true
-            false -> false to false
-            true -> (cachedNexusAvailable ?: false) to
-                (cachedRemoteDefaultVisible ?: false)
-        }
-        return resolve(
-            nexusAvailable = nexusAvailable,
-            remoteDefaultVisible = remoteDefaultVisible,
-            explicitPreference = explicitPreference,
-        )
-    }
 }
 
 /**
@@ -183,18 +158,6 @@ class ProductionFeatureManager internal constructor(
         preferences.putBoolean(TAIRA_VISIBLE, visible)
     }
 
-    fun observeTairaVisible(): Flow<Boolean> =
-        preferences.getBooleanSnapshotFlow(TAIRA_VISIBILITY_KEYS)
-            .map { snapshot ->
-                testNetworksAllowed && TairaVisibilityPolicy.resolveCachedSnapshot(
-                    cacheComplete = snapshot[PI_FLAGS_CACHED],
-                    cachedNexusAvailable = snapshot[PI_NEXUS_AVAILABLE],
-                    cachedRemoteDefaultVisible = snapshot[PI_TAIRA_DEFAULT_VISIBLE],
-                    explicitPreference = snapshot[TAIRA_VISIBLE],
-                ).visible
-            }
-            .distinctUntilChanged()
-
     /** Observe the whole atomic capability snapshot, including enablement while a wallet is open. */
     fun observeState(): Flow<ProductionFeatureState> = combine(
         preferences.getBooleanSnapshotFlow(FEATURE_CACHE_KEYS + TAIRA_EXPLICIT_PREFERENCE_KEYS),
@@ -284,13 +247,6 @@ class ProductionFeatureManager internal constructor(
         const val PI_POLKAMARKT_MUTATIONS_AVAILABLE =
             "pi_polkamarkt_mutations_available"
         const val PI_TAIRA_DEFAULT_VISIBLE = "pi_taira_default_visible"
-
-        val TAIRA_VISIBILITY_KEYS = setOf(
-            TAIRA_VISIBLE,
-            PI_FLAGS_CACHED,
-            PI_NEXUS_AVAILABLE,
-            PI_TAIRA_DEFAULT_VISIBLE,
-        )
 
         val TAIRA_EXPLICIT_PREFERENCE_KEYS = setOf(TAIRA_VISIBLE)
 

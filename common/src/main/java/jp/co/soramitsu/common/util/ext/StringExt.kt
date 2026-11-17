@@ -146,23 +146,6 @@ fun String.highlightWords(
     return builder
 }
 
-fun underlineSubstring(
-    main: String,
-    sub: String,
-): AnnotatedString = buildAnnotatedString {
-    val pos = main.indexOf(sub)
-    this.append(main)
-    if (pos != -1) {
-        addStyle(
-            style = SpanStyle(
-                textDecoration = TextDecoration.Underline
-            ),
-            start = pos,
-            end = pos + sub.length,
-        )
-    }
-}
-
 fun String.highlightWordsCompose(
     colors: List<Int>,
     clickableAnnotation: List<String>,

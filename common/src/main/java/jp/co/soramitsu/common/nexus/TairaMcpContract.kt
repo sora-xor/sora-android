@@ -4,7 +4,6 @@ import java.util.Base64
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.booleanOrNull
@@ -51,25 +50,10 @@ internal object TairaMcpContract {
         ),
     )
 
-    private val alwaysProvidedProperties = requestPropertyTypes.mapValues { (tool, properties) ->
-        properties.keys - when (tool) {
-            HISTORY_TOOL -> setOf("cursor")
-            ACCOUNT_ASSETS_TOOL -> setOf("cursor")
-            else -> emptySet()
-        }
-    }
-
     private fun protocolMetadata(): JsonObject = JsonObject(mapOf(
         "io.modelcontextprotocol/protocolVersion" to JsonPrimitive(TairaTestnetContract.MCP_PROTOCOL_VERSION),
         "io.modelcontextprotocol/clientCapabilities" to JsonObject(emptyMap()),
     ))
-
-    fun serverDiscoveryRequest(requestId: String): NexusMcpRequest = NexusMcpRequest(
-        jsonrpc = "2.0",
-        id = requestId,
-        method = "server/discover",
-        params = JsonObject(mapOf("_meta" to protocolMetadata())),
-    )
 
     fun requestHeaders(request: NexusMcpRequest): Map<String, String> = buildMap {
         put("MCP-Protocol-Version", TairaTestnetContract.MCP_PROTOCOL_VERSION)
@@ -77,24 +61,6 @@ internal object TairaMcpContract {
         if (request.method == "tools/call") {
             put("Mcp-Name", checkNotNull(request.params?.string("name")))
         }
-    }
-
-    fun discoveryRequest(
-        requestId: String,
-        toolsetVersion: String,
-        cursor: String?,
-    ): NexusMcpRequest {
-        val params = mutableMapOf<String, JsonElement>(
-            "_meta" to protocolMetadata(),
-            "toolsetVersion" to JsonPrimitive(toolsetVersion),
-        )
-        cursor?.let { params["cursor"] = JsonPrimitive(it) }
-        return NexusMcpRequest(
-            jsonrpc = "2.0",
-            id = requestId,
-            method = "tools/list",
-            params = JsonObject(params),
-        )
     }
 
     fun call(requestId: String, tool: String, arguments: JsonObject): NexusMcpRequest {
@@ -111,88 +77,6 @@ internal object TairaMcpContract {
                 )
             ),
         )
-    }
-
-    fun healthRequest(requestId: String): NexusMcpRequest =
-        call(requestId, HEALTH_TOOL, JsonObject(emptyMap()))
-
-    fun assetDefinitionRequest(requestId: String): NexusMcpRequest = call(
-        requestId,
-        ASSET_DEFINITION_TOOL,
-        JsonObject(
-            mapOf(
-                "path" to JsonObject(mapOf("definition_id" to JsonPrimitive(
-                    TairaTestnetContract.XOR_ASSET_DEFINITION_ID
-                ))),
-                "accept" to JsonPrimitive(NexusToriiRoutes.JSON_RESPONSE_MEDIA_TYPE),
-            )
-        ),
-    )
-
-    fun accountAssetsRequest(
-        requestId: String,
-        accountId: String,
-        definitionId: String,
-        limit: Int,
-        cursor: String? = null,
-    ): NexusMcpRequest {
-        require(limit in 1..NexusToriiRoutes.MAX_PAGE_SIZE)
-        val arguments = mutableMapOf<String, JsonElement>(
-            "path" to JsonObject(mapOf("account_id" to JsonPrimitive(accountId))),
-            "filter" to JsonObject(mapOf(
-                "op" to JsonPrimitive("and"),
-                "args" to JsonArray(listOf(
-                    JsonObject(mapOf("op" to JsonPrimitive("eq"), "args" to JsonArray(listOf(JsonPrimitive("asset"), JsonPrimitive(definitionId))))),
-                    JsonObject(mapOf("op" to JsonPrimitive("eq"), "args" to JsonArray(listOf(JsonPrimitive("scope"), JsonPrimitive("global"))))),
-                )),
-            )),
-            "limit" to JsonPrimitive(limit),
-            "include_total" to JsonPrimitive(true),
-            "accept" to JsonPrimitive(NexusToriiRoutes.JSON_RESPONSE_MEDIA_TYPE),
-        )
-        cursor?.let { arguments["cursor"] = JsonPrimitive(it) }
-        return call(requestId, ACCOUNT_ASSETS_TOOL, JsonObject(arguments))
-    }
-
-    fun transactionStatusRequest(requestId: String, hash: String): NexusMcpRequest = call(
-        requestId,
-        TRANSACTION_STATUS_TOOL,
-        JsonObject(
-            mapOf(
-                "query" to JsonObject(mapOf("hash" to JsonPrimitive(canonicalHash(hash)))) ,
-                "accept" to JsonPrimitive(NexusToriiRoutes.JSON_RESPONSE_MEDIA_TYPE),
-            )
-        ),
-    )
-
-    fun historyRequest(
-        requestId: String,
-        accountId: String,
-        definitionId: String,
-        limit: Int,
-        cursor: String? = null,
-        transactionHash: String? = null,
-    ): NexusMcpRequest {
-        require(limit in 1..100)
-        fun equal(field: String, value: JsonElement) = JsonObject(mapOf(
-            "op" to JsonPrimitive("eq"), "args" to JsonArray(listOf(JsonPrimitive(field), value)),
-        ))
-        val filters = mutableListOf(
-            equal("asset_definition_id", JsonPrimitive(definitionId)),
-            equal("source", JsonPrimitive("transaction")),
-            equal("type", JsonPrimitive("TRANSFER")),
-            equal("status", JsonPrimitive("SUCCESS")),
-            equal("result_ok", JsonPrimitive(true)),
-        )
-        transactionHash?.let { filters += equal("tx_hash", JsonPrimitive(canonicalHash(it))) }
-        val arguments = mutableMapOf<String, JsonElement>(
-            "path" to JsonObject(mapOf("account_id" to JsonPrimitive(accountId))),
-            "filter" to JsonObject(mapOf("op" to JsonPrimitive("and"), "args" to JsonArray(filters))),
-            "limit" to JsonPrimitive(limit),
-            "accept" to JsonPrimitive(NexusToriiRoutes.JSON_RESPONSE_MEDIA_TYPE),
-        )
-        cursor?.let { arguments["cursor"] = JsonPrimitive(it) }
-        return call(requestId, HISTORY_TOOL, JsonObject(arguments))
     }
 
     fun submitAndWaitRequest(
@@ -218,91 +102,6 @@ internal object TairaMcpContract {
         )
     }
 
-    fun toolsetVersion(discoveryResult: JsonElement): String {
-        val root = discoveryResult as? JsonObject ?: contractMismatch()
-        val supported = root["supportedVersions"] as? JsonArray ?: contractMismatch()
-        if (JsonPrimitive(TairaTestnetContract.MCP_PROTOCOL_VERSION) !in supported) contractMismatch()
-        val serverInfo = (root["_meta"] as? JsonObject)
-            ?.get("io.modelcontextprotocol/serverInfo") as? JsonObject ?: contractMismatch()
-        if (serverInfo.string("name") != "iroha-torii-mcp") contractMismatch()
-        val capabilities = root["capabilities"] as? JsonObject ?: contractMismatch()
-        val extensions = capabilities["extensions"] as? JsonObject ?: contractMismatch()
-        val tools = extensions["org.hyperledger.iroha/tools"] as? JsonObject ?: contractMismatch()
-        return tools.string("toolsetVersion")
-            ?.takeIf { NexusTransactionHash.normalized(it) == it }
-            ?: contractMismatch()
-    }
-
-    fun validateToolPage(
-        result: JsonElement,
-        tools: Set<String>,
-        expectedToolsetVersion: String,
-    ): ToolDiscoveryPage {
-        require(tools.isNotEmpty() && requestPropertyTypes.keys.containsAll(tools))
-        val root = result as? JsonObject ?: contractMismatch()
-        val advertised = root["tools"] as? JsonArray ?: contractMismatch()
-        val metadata = (root["_meta"] as? JsonObject)?.get("iroha") as? JsonObject ?: contractMismatch()
-        if (
-            metadata.strictBoolean("listChanged") != false ||
-            metadata.string("toolsetVersion") != expectedToolsetVersion
-        ) {
-            contractMismatch()
-        }
-        val descriptors = advertised.map { it as? JsonObject ?: contractMismatch() }
-        val names = descriptors.map { it.string("name") ?: contractMismatch() }
-        if (names.size != names.toSet().size) contractMismatch()
-        val matched = mutableSetOf<String>()
-        descriptors.forEach { descriptor ->
-            val requiredTool = descriptor.string("name") ?: contractMismatch()
-            if (requiredTool !in tools) return@forEach
-            matched += requiredTool
-            val schema = descriptor["inputSchema"] as? JsonObject ?: contractMismatch()
-            if (schema.string("type") != "object") contractMismatch()
-            val properties = schema["properties"] as? JsonObject ?: contractMismatch()
-            requestPropertyTypes.getValue(requiredTool).forEach { (name, expectedType) ->
-                val property = properties[name]
-                if (property == null || !property.matches(expectedType)) contractMismatch()
-            }
-            val nested = when (requiredTool) {
-                ACCOUNT_ASSETS_TOOL, HISTORY_TOOL -> "path" to "account_id"
-                ASSET_DEFINITION_TOOL -> "path" to "definition_id"
-                TRANSACTION_STATUS_TOOL -> "query" to "hash"
-                else -> null
-            }
-            nested?.let { (container, key) ->
-                val nestedSchema = properties[container] as? JsonObject ?: contractMismatch()
-                val nestedProperties = nestedSchema["properties"] as? JsonObject ?: contractMismatch()
-                if (nestedProperties[key]?.matches(SchemaType.STRING) != true ||
-                    !setOf(key).containsAll(schemaRequiredNames(nestedSchema["required"]))) contractMismatch()
-            }
-            val required = schemaRequiredNames(schema["required"])
-            if (!alwaysProvidedProperties.getValue(requiredTool).containsAll(required)) {
-                contractMismatch()
-            }
-            if (requiredTool == SUBMIT_AND_WAIT_TOOL) {
-                if ("body_base64" !in required) contractMismatch()
-            }
-        }
-        val nextCursor = when (val raw = root["nextCursor"]) {
-            null, JsonNull -> null
-            is JsonPrimitive -> raw.takeIf { it.isString }?.content
-                ?.takeIf { it.matches(Regex("^[1-9][0-9]{0,5}$")) }
-                ?: contractMismatch()
-            else -> contractMismatch()
-        }
-        return ToolDiscoveryPage(
-            matched = matched,
-            advertisedNames = names.toSet(),
-            nextCursor = nextCursor,
-        )
-    }
-
-    data class ToolDiscoveryPage(
-        val matched: Set<String>,
-        val advertisedNames: Set<String>,
-        val nextCursor: String?,
-    )
-
     private fun JsonElement.matches(expectedType: SchemaType): Boolean {
         val schema = this as? JsonObject ?: return false
         return when (expectedType) {
@@ -316,48 +115,6 @@ internal object TairaMcpContract {
                 schema.string("type") == "array" &&
                     ((schema["items"] as? JsonObject)?.string("type") == "string")
         }
-    }
-
-    private fun schemaRequiredNames(value: JsonElement?): Set<String> {
-        if (value == null) return emptySet()
-        val array = value as? JsonArray ?: contractMismatch()
-        val names = array.map { item ->
-            (item as? JsonPrimitive)
-                ?.takeIf(JsonPrimitive::isString)
-                ?.content
-                ?.takeIf(String::isNotEmpty)
-                ?: contractMismatch()
-        }
-        if (names.size != names.toSet().size) contractMismatch()
-        return names.toSet()
-    }
-
-    fun validateHealthResult(result: JsonElement): String {
-        val direct = result as? JsonObject ?: contractMismatch()
-        if (direct.strictBoolean("isError") != false) contractMismatch()
-        val structured = direct["structuredContent"] as? JsonObject ?: contractMismatch()
-        val status = structured.strictInt("status") ?: contractMismatch()
-        if (status !in 200..299) {
-            throw NexusToriiException(
-                safeCode = "NEXUS_MCP_HTTP_$status",
-                httpStatus = status,
-                category = NexusToriiFailureCategory.HTTP,
-            )
-        }
-        val contentType = structured.string("content_type") ?: contractMismatch()
-        if (
-            !NexusToriiRoutes.isExpectedContentType(
-                contentType,
-                NexusToriiRoutes.HEALTH_RESPONSE_MEDIA_TYPE,
-            )
-        ) {
-            contractMismatch()
-        }
-        val body = structured.string("body") ?: contractMismatch()
-        if (!NexusToriiRoutes.isHealthyResponse(body)) {
-            throw NexusToriiException("NEXUS_HEALTH_INVALID")
-        }
-        return body
     }
 
     fun validateSubmitAndWaitResult(
@@ -474,12 +231,6 @@ internal object TairaMcpContract {
 
     private fun JsonObject.strictLong(name: String): Long? =
         (this[name] as? JsonPrimitive)?.takeIf { !it.isString }?.longOrNull
-
-    private fun contractMismatch(): Nothing =
-        throw NexusToriiException(
-            safeCode = "TAIRA_MCP_CONTRACT_MISMATCH",
-            category = NexusToriiFailureCategory.PROTOCOL,
-        )
 
     private fun submissionFailed(status: Int? = null): Nothing =
         throw NexusToriiException(

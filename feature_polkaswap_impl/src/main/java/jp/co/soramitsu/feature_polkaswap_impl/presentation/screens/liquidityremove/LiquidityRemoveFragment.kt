@@ -28,7 +28,6 @@ import androidx.compose.material.AlertDialog
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.material.TextButton
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -47,7 +46,6 @@ import jp.co.soramitsu.common.base.SoraBaseFragment
 import jp.co.soramitsu.common.domain.BottomBarController
 import jp.co.soramitsu.common.presentation.compose.components.PercentContainer
 import jp.co.soramitsu.common.util.StringPair
-import jp.co.soramitsu.common.util.ext.getColorFromAttrs
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.components.compose.LiquidityRemoveConfirmScreen
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.components.compose.LiquidityRemoveScreen
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.components.compose.SwapSlippageScreen
@@ -81,13 +79,6 @@ class LiquidityRemoveFragment : SoraBaseFragment<LiquidityRemoveViewModel>() {
             )
         }
     }
-
-    @Composable
-    override fun backgroundColorComposable() = Color(
-        color = requireContext().getColorFromAttrs(
-            R.attr.polkaswapBackground
-        ).data
-    )
 
     override fun backgroundColor(): Int = R.attr.polkaswapBackground
 

@@ -33,16 +33,11 @@ import jp.co.soramitsu.common.data.network.dto.PolkamarktMarketId
 import jp.co.soramitsu.common.data.network.dto.PolkamarktMarketStateDto
 import jp.co.soramitsu.common.data.network.dto.PolkamarktSellQuoteDto
 import jp.co.soramitsu.common.data.network.dto.TokenInfoDto
-import jp.co.soramitsu.common.logger.WalletDiagnostics
 import jp.co.soramitsu.common.util.ext.sumByBigInteger
 import jp.co.soramitsu.common_wallet.data.XorBalanceDto
-import jp.co.soramitsu.sora.substrate.models.BlockEvent
-import jp.co.soramitsu.sora.substrate.models.BlockResponse
 import jp.co.soramitsu.sora.substrate.models.ExtrinsicStatusResponse
 import jp.co.soramitsu.sora.substrate.request.BlockHashRequest
-import jp.co.soramitsu.sora.substrate.request.BlockRequest
 import jp.co.soramitsu.sora.substrate.request.ChainHeaderRequest
-import jp.co.soramitsu.sora.substrate.request.ChainLastHeaderRequest
 import jp.co.soramitsu.sora.substrate.request.FinalizedHeadRequest
 import jp.co.soramitsu.sora.substrate.request.StateKeys
 import jp.co.soramitsu.sora.substrate.request.StateKeysPaged
@@ -58,10 +53,7 @@ import jp.co.soramitsu.sora.substrate.runtime.mapCodeToken
 import jp.co.soramitsu.xsubstrate.runtime.definitions.types.composite.DictEnum
 import jp.co.soramitsu.xsubstrate.runtime.definitions.types.composite.Struct
 import jp.co.soramitsu.xsubstrate.runtime.definitions.types.fromHex
-import jp.co.soramitsu.xsubstrate.runtime.definitions.types.generics.GenericEvent
-import jp.co.soramitsu.xsubstrate.runtime.definitions.types.primitives.BooleanType
 import jp.co.soramitsu.xsubstrate.runtime.metadata.module
-import jp.co.soramitsu.xsubstrate.runtime.metadata.GetMetadataRequest
 import jp.co.soramitsu.xsubstrate.runtime.metadata.storage
 import jp.co.soramitsu.xsubstrate.runtime.metadata.storageKey
 import jp.co.soramitsu.xsubstrate.scale.EncodableStruct
@@ -76,15 +68,12 @@ import jp.co.soramitsu.xsubstrate.wsrpc.mappers.scale
 import jp.co.soramitsu.xsubstrate.wsrpc.request.runtime.RuntimeRequest
 import jp.co.soramitsu.xsubstrate.wsrpc.request.runtime.author.SubmitAndWatchExtrinsicRequest
 import jp.co.soramitsu.xsubstrate.wsrpc.request.runtime.author.SubmitExtrinsicRequest
-import jp.co.soramitsu.xsubstrate.wsrpc.request.runtime.chain.RuntimeVersion
-import jp.co.soramitsu.xsubstrate.wsrpc.request.runtime.chain.RuntimeVersionRequest
 import jp.co.soramitsu.xsubstrate.wsrpc.request.runtime.storage.GetStorageRequest
 import jp.co.soramitsu.xsubstrate.wsrpc.request.runtime.storage.SubscribeStorageRequest
 import jp.co.soramitsu.xsubstrate.wsrpc.request.runtime.storage.SubscribeStorageResult
 import jp.co.soramitsu.xsubstrate.wsrpc.request.runtime.storage.storageChange
 import jp.co.soramitsu.xsubstrate.wsrpc.subscriptionFlow
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flow
@@ -112,7 +101,6 @@ class SubstrateCalls @Inject constructor(
     companion object {
         const val FINALIZED = "finalized"
         private const val FINALITY_TIMEOUT = "finalityTimeout"
-        const val IN_BLOCK = "inBlock"
         const val DEFAULT_ASSETS_PAGE_SIZE = 100
     }
 
@@ -608,19 +596,6 @@ class SubstrateCalls @Inject constructor(
         )
     }
 
-    suspend fun getRuntimeVersion(): RuntimeVersion {
-        return socketService.executeAsyncMapped(
-            request = RuntimeVersionRequest(),
-            mapper = pojo<RuntimeVersion>().nonNull(),
-        )
-    }
-
-    suspend fun getMetadataHex(): String =
-        socketService.executeAsyncMapped(
-            request = GetMetadataRequest,
-            mapper = pojo<String>().nonNull(),
-        )
-
     suspend fun getFinalizedHead(): String {
         return socketService.executeAsyncMapped(
             request = FinalizedHeadRequest(),
@@ -633,91 +608,5 @@ class SubstrateCalls @Inject constructor(
             request = ChainHeaderRequest(hash),
             mapper = pojo<ChainHeaderResponse>().nonNull(),
         )
-    }
-
-    suspend fun getChainLastHeader(): ChainHeaderResponse {
-        return socketService.executeAsyncMapped(
-            request = ChainLastHeaderRequest(),
-            mapper = pojo<ChainHeaderResponse>().nonNull(),
-        )
-    }
-
-    suspend fun checkEvents(
-        blockHash: String
-    ): List<BlockEvent> {
-        val storageKey =
-            runtimeManager.getRuntimeSnapshot().metadata.module("System").storage("Events")
-                .storageKey()
-        return runCatching {
-            socketService.executeAsyncMapped(
-                request = GetStorageRequest(listOf(storageKey, blockHash)),
-                mapper = pojo<String>().nonNull(),
-            )
-                .let { storage ->
-                    val eventType =
-                        runtimeManager.getRuntimeSnapshot().metadata.module("System")
-                            .storage("Events").type.value!!
-                    val eventsRaw = eventType.fromHex(runtimeManager.getRuntimeSnapshot(), storage)
-                    if (eventsRaw is List<*>) {
-                        val eventRecordList =
-                            eventsRaw.filterIsInstance<Struct.Instance>().mapNotNull {
-                                val phase = it.get<DictEnum.Entry<*>>("phase")
-                                val phaseValue = when (phase?.name) {
-                                    "ApplyExtrinsic" -> phase.value as BigInteger
-                                    "Finalization" -> null
-                                    "Initialization" -> null
-                                    else -> null
-                                }
-                                if (phaseValue != null) {
-                                    val eventInstance = it.get<GenericEvent.Instance>("event")
-                                    if (eventInstance != null) {
-                                        BlockEvent(
-                                            eventInstance.module.index.toInt(),
-                                            eventInstance.event.index.second,
-                                            phaseValue.toLong(),
-                                        )
-                                    } else {
-                                        val enumInstance = it.get<DictEnum.Entry<*>>("event")
-                                        if (enumInstance != null) {
-                                            BlockEvent(
-                                                enumInstance.name,
-                                                enumInstance.value?.safeCast<DictEnum.Entry<*>>()?.name.orEmpty(),
-                                                phaseValue.toLong(),
-                                            )
-                                        } else {
-                                            null
-                                        }
-                                    }
-                                } else null
-                            }
-                        eventRecordList
-                    } else emptyList()
-                }
-        }.getOrElse {
-            if (it is CancellationException) throw it
-            WalletDiagnostics.recordErrorClass(
-                WalletDiagnostics.PrivacySafeErrorClass.FINALIZED_EVENT_READ
-            )
-            emptyList()
-        }
-    }
-
-    suspend fun getBlock(blockHash: String): BlockResponse {
-        return socketService.executeAsyncMapped(
-            request = BlockRequest(blockHash),
-            mapper = pojo<BlockResponse>().nonNull(),
-        )
-    }
-
-    suspend fun isUpgradedToDualRefCount(): Boolean {
-        val storageKey =
-            runtimeManager.getRuntimeSnapshot().metadata.module(Pallete.SYSTEM.palletName)
-                .storage(Storage.UPGRADED_TO_DUAL_REF_COUNT.storageName).storageKey()
-        return socketService.executeAsyncMapped(
-            request = GetStorageRequest(listOf(storageKey)),
-            mapper = pojo<String>().nonNull()
-        ).let {
-            BooleanType.fromHex(runtimeManager.getRuntimeSnapshot(), it)
-        }
     }
 }

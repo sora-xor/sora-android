@@ -31,7 +31,6 @@ class QrCodeGenerator(
 
     companion object {
         private const val RECEIVE_QR_SCALE_SIZE = 1024
-        private const val PADDING_SIZE = 2
     }
 
     fun generateQrBitmap(input: String, backgroundColor: Int = Color.WHITE): Bitmap {

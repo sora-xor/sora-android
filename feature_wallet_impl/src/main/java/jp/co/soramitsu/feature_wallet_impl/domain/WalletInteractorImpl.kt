@@ -125,10 +125,6 @@ class WalletInteractorImpl(
         }
     }
 
-    override suspend fun getSoraAccounts(): List<SoraAccount> {
-        return userRepository.soraAccountsList()
-    }
-
     override suspend fun getFeeToken(): Token {
         return requireNotNull(assetsRepository.getToken(SubstrateOptionsProvider.feeAssetId))
     }

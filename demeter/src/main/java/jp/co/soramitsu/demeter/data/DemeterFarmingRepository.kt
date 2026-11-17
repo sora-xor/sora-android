@@ -63,7 +63,6 @@ interface DemeterFarmingRepository {
     suspend fun getFarmedPools(soraAccountAddress: String): List<DemeterFarmingPool>?
     suspend fun getFarmedBasicPools(): List<DemeterFarmingBasicPool>
     fun subscribeFarms(address: String): Flow<String>
-    suspend fun getStakedFarmedAmountOfAsset(address: String, tokenId: String): BigDecimal
     suspend fun depositDemeterFarm(
         address: String,
         keypair: Sr25519Keypair,
@@ -191,19 +190,6 @@ internal class DemeterFarmingRepositoryImpl(
                     cachedFarmedBasicPools.clear()
                 }
         )
-    }
-
-    override suspend fun getStakedFarmedAmountOfAsset(
-        address: String,
-        tokenId: String,
-    ): BigDecimal {
-        val token = db.assetDao().getTokenLocal(tokenId)
-        val amount = getDemeter(address)
-            ?.filter {
-                it.farm.not() && it.base == tokenId && it.pool == tokenId
-            }
-            ?.sumOf { it.amount }
-        return amount?.let { mapBalance(it, token.precision) } ?: BigDecimal.ZERO
     }
 
     override suspend fun depositDemeterFarm(

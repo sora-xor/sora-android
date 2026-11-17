@@ -150,17 +150,6 @@ object NexusToriiRoutes {
         return "${account(network, accountId)}/assets?${query.joinToString("&")}"
     }
 
-    fun assetDefinitions(
-        network: NexusNetwork,
-        limit: Int = DEFAULT_PAGE_SIZE,
-        offset: Long = 0,
-    ): String {
-        require(limit in 1..MAX_PAGE_SIZE) { "NEXUS_INVALID_PAGE_SIZE" }
-        require(offset >= 0) { "NEXUS_INVALID_OFFSET" }
-        return "${base(network)}/v1/assets/definitions" +
-            "?limit=$limit&offset=$offset&count_mode=bounded"
-    }
-
     fun assetDefinition(network: NexusNetwork, selector: String): String =
         "${base(network)}/v1/assets/definitions/${pathSegment(canonicalAssetSelector(selector))}"
 

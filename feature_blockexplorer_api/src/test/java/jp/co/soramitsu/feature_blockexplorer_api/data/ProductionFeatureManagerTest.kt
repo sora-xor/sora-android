@@ -174,7 +174,6 @@ class ProductionFeatureManagerTest {
             val productionState = production.getState()
             productionState.assertAllOff()
             assertThat(productionState.tairaAvailable).isFalse()
-            assertThat(production.observeTairaVisible().first()).isFalse()
             val observedProductionState = production.observeState().first()
             observedProductionState.assertAllOff()
             assertThat(observedProductionState.tairaAvailable).isFalse()
@@ -186,7 +185,6 @@ class ProductionFeatureManagerTest {
             assertThat(testState.polkamarktVisible).isTrue()
             assertThat(testState.tairaAvailable).isTrue()
             assertThat(testState.tairaVisible).isTrue()
-            assertThat(testBuild.observeTairaVisible().first()).isTrue()
         }
 
     @Test
@@ -214,7 +212,6 @@ class ProductionFeatureManagerTest {
                 assertThat(state.polkamarktVisible).isTrue()
                 assertThat(state.tairaAvailable).isTrue()
                 assertThat(state.tairaVisible).isTrue()
-                assertThat(build.observeTairaVisible().first()).isTrue()
                 val observed = build.observeState().first()
                 assertThat(observed.nexusAvailable).isTrue()
                 assertThat(observed.polkamarktVisible).isTrue()

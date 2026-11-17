@@ -37,7 +37,6 @@ import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
-import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -63,9 +62,6 @@ class FullPoolListFragment : SoraBaseFragment<FullPoolListViewModel>() {
 
     override val viewModel: FullPoolListViewModel by viewModels()
     override fun backgroundColor(): Int = R.attr.baseBackgroundSecond
-
-    @Composable
-    override fun backgroundColorComposable() = MaterialTheme.customColors.bgSurface
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)

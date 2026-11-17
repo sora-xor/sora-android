@@ -196,8 +196,4 @@ class ExportProtectionViewModel @AssistedInject constructor(
             }
         }
     }
-
-    fun backButtonPressed() {
-        router.popBackStack()
-    }
 }

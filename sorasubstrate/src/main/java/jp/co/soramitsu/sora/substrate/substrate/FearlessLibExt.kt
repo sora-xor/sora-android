@@ -44,8 +44,6 @@ import jp.co.soramitsu.xsubstrate.scale.Schema
 import jp.co.soramitsu.xsubstrate.scale.datatype.DataType
 import jp.co.soramitsu.xsubstrate.scale.datatype.uint32
 import jp.co.soramitsu.xsubstrate.ss58.SS58Encoder.toAccountId
-import jp.co.soramitsu.xsubstrate.wsrpc.mappers.nonNull
-import jp.co.soramitsu.xsubstrate.wsrpc.mappers.pojo
 
 val BIP32JunctionDecoder.DEFAULT_DERIVATION_PATH: String
     get() = "//44//60//0/0/0"
@@ -115,8 +113,6 @@ fun String.canonicalExtrinsicHash(): String {
 }
 
 fun String.toHexAccountId(): String = toAccountId().toHexString()
-
-fun preBinder() = pojo<String>().nonNull()
 
 val GenericEvent.Instance.index
     get() = event.index

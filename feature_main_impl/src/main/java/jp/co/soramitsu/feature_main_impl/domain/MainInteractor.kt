@@ -34,10 +34,6 @@ class MainInteractor @Inject constructor(
     private val userRepository: UserRepository,
     private val selectNodeRepository: SelectNodeRepository
 ) {
-    suspend fun getCurUserAddress(): String {
-        return userRepository.getCurSoraAccount().substrateAddress
-    }
-
     fun getAppVersion(): String = OptionsProvider.CURRENT_VERSION_NAME
 
     suspend fun getAvailableLanguagesWithSelected(): Pair<List<Language>, Int> {
@@ -67,9 +63,6 @@ class MainInteractor @Inject constructor(
     suspend fun getAccountName(): String {
         return userRepository.getCurSoraAccount().accountName
     }
-
-    suspend fun getSoraAccountsList(): List<SoraAccount> =
-        userRepository.soraAccountsList()
 
     suspend fun getSoraAccountsCount(): Int =
         userRepository.getSoraAccountsCount()

@@ -167,15 +167,6 @@ object PortfolioCalculator {
         PortfolioScope.SELECTED -> listOfNotNull(snapshot.selectedWallet?.id)
     }
 
-    /** The Wallets lens exists only in All wallets. Tokens is the default. */
-    fun availableLenses(scope: PortfolioScope): List<PortfolioLens> = when (scope) {
-        PortfolioScope.ALL -> PortfolioLens.entries.toList()
-        PortfolioScope.SELECTED -> listOf(PortfolioLens.TOKENS, PortfolioLens.NETWORKS)
-    }
-
-    fun effectiveLens(requested: PortfolioLens?, scope: PortfolioScope): PortfolioLens =
-        requested?.takeIf { it in availableLenses(scope) } ?: PortfolioLens.TOKENS
-
     /** Visible holdings in scope: hidden holdings are counted out and never listed. */
     fun visibleHoldings(snapshot: PortfolioSnapshot, walletIds: Collection<String>): List<PortfolioHolding> {
         val ids = walletIds.toSet()

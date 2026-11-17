@@ -22,8 +22,6 @@ package jp.co.soramitsu.feature_ecosystem_impl.presentation.editfarm
 import android.os.Bundle
 import android.view.View
 import androidx.compose.foundation.ScrollState
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.Color
 import androidx.core.os.bundleOf
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -38,7 +36,6 @@ import jp.co.soramitsu.common.base.SoraBaseFragment
 import jp.co.soramitsu.common.base.theOnlyRoute
 import jp.co.soramitsu.common.domain.BottomBarController
 import jp.co.soramitsu.common.util.StringTriple
-import jp.co.soramitsu.common.util.ext.getColorFromAttrs
 
 @AndroidEntryPoint
 class EditFarmFragment : SoraBaseFragment<EditFarmViewModel>() {
@@ -69,13 +66,6 @@ class EditFarmFragment : SoraBaseFragment<EditFarmViewModel>() {
             )
         }
     }
-
-    @Composable
-    override fun backgroundColorComposable() = Color(
-        color = requireContext().getColorFromAttrs(
-            R.attr.polkaswapBackground
-        ).data
-    )
 
     override fun backgroundColor(): Int = R.attr.polkaswapBackground
 

@@ -38,7 +38,6 @@ interface FileManager {
     /** Reads an AtomicFile-backed UTF-8 cache entry with an encoded-byte ceiling. */
     fun readInternalCacheFileAtomically(fileName: String, maxBytes: Int): String?
     fun readInternalCacheFileAsUri(fileName: String): Uri?
-    fun readInternalCacheFileAsByteArray(fileName: String): ByteArray?
     fun readInternalFile(fileName: String): String?
     fun writeInternalCacheFile(fileName: String, content: String)
     /** Writes one complete cache value with Android's crash-safe AtomicFile protocol. */
@@ -57,5 +56,4 @@ interface FileManager {
     fun writeExternalCacheBitmap(bitmap: Bitmap, fileName: String, format: Bitmap.CompressFormat, quality: Int): Uri
     fun writeExternalCacheText(fileName: String, body: String): Uri
     val logStorageDir: String
-    fun existsInternalFile(fileName: String): Boolean
 }

@@ -4,7 +4,6 @@ import jp.co.soramitsu.common.R
 import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarType
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -19,16 +18,6 @@ class ToolbarPresetsTest {
         assertEquals("", state.basic.title)
         assertEquals(R.drawable.ic_arrow_left, state.basic.navIcon)
         assertTrue(state.type is SoramitsuToolbarType.SmallCentered)
-    }
-
-    @Test
-    fun `a title-only toolbar has no way back`() {
-        val state = initSmallTitleOnly("Assets")
-
-        assertTrue(state.basic.visibility)
-        assertEquals("Assets", state.basic.title)
-        assertNull(state.basic.navIcon)
-        assertTrue(state.type is SoramitsuToolbarType.Small)
     }
 
     @Test

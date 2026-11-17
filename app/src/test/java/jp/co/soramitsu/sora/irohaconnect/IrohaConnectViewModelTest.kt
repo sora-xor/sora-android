@@ -224,12 +224,6 @@ class IrohaConnectViewModelTest {
         assertEquals(1, relays.last().frames.size)
         coVerify(exactly = 0) { credentials.retrieveMnemonic(any()) }
     }
-    @Test fun `missing device authorization closes pending pairing`() = runBlocking {
-        pair(); withContext(main) { vm.authorizationUnavailable() }; phase(IrohaConnectUiPhase.ERROR)
-        assertNull(vm.state.value.pairing)
-        assertTrue(relays.last().closed)
-        coVerify(exactly = 0) { credentials.retrieveMnemonic(any()) }
-    }
     @Test fun `watch only wallet cannot approve pairing`() = runBlocking {
         pair(); coEvery { credentials.isExplicitWatchOnly(wallet) } returns true
         withContext(main) { vm.approvePairing("123456", vm.state.value.pairing?.sessionFingerprint.orEmpty()) }; phase(IrohaConnectUiPhase.ERROR)
@@ -398,7 +392,7 @@ class IrohaConnectViewModelTest {
     }
     @Test fun `authentication callbacks outside a pending review have no signing side effects`() = runBlocking {
         start()
-        withContext(main) { vm.approvePairing("123456", vm.state.value.pairing?.sessionFingerprint.orEmpty()); vm.approveSigning("123456", vm.state.value.signing?.requestToken.orEmpty()); vm.authorizationUnavailable(); vm.rejectSigning(); yield() }
+        withContext(main) { vm.approvePairing("123456", vm.state.value.pairing?.sessionFingerprint.orEmpty()); vm.approveSigning("123456", vm.state.value.signing?.requestToken.orEmpty()); vm.rejectSigning(); yield() }
         assertEquals(IrohaConnectUiPhase.CONNECTING, vm.state.value.phase)
         coVerify(exactly = 0) { credentials.retrieveMnemonic(any()) }; assertFalse(relays.last().closed)
     }

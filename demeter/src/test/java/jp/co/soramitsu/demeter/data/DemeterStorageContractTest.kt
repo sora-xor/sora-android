@@ -119,13 +119,6 @@ class DemeterStorageContractTest {
         equalDecimal("2", pool.amount); equalDecimal("3", pool.amountReward)
         assertEquals(base, pool.tokenBase.id); assertEquals(target, pool.tokenTarget.id); assertEquals(reward, pool.tokenReward.id)
     }
-    @Test fun `staked balance excludes farm positions and other base tokens`() = runTest {
-        userHex = encode(Storage.USER_INFOS, listOf(position("2", farm = false, targetId = base), position("4"), position("6", farm = false)))
-        equalDecimal("2", subject.getStakedFarmedAmountOfAsset(owner, base))
-    }
-    @Test fun `missing user storage is unavailable rather than a synthetic empty position`() = runTest {
-        seedFarm(); assertNull(subject.getFarmedPools(owner)); equalDecimal("0", subject.getStakedFarmedAmountOfAsset(owner, base))
-    }
     @Test fun `empty decoded positions are a valid empty wallet`() = runTest {
         seedFarm(); userHex = encode(Storage.USER_INFOS, emptyList<Any>())
         assertEquals(emptyList<Any>(), subject.getFarmedPools(owner))

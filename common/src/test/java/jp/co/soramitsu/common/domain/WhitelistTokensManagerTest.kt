@@ -32,7 +32,6 @@ class WhitelistTokensManagerTest {
 
     private fun manager(cached: String? = null, blacklist: String? = null): WhitelistTokensManager {
         every { files.readInternalFile(cache) } returns cached
-        every { files.existsInternalFile(cache) } returns (cached != null)
         every { files.readInternalFile(blacklistCache) } returns blacklist
         return WhitelistTokensManager(rest, files)
     }
@@ -152,7 +151,6 @@ class WhitelistTokensManagerTest {
     @Test
     fun `refresh failure retains the previous list even if its backing file disappeared`() = runTest {
         val manager = manager(stored())
-        every { files.existsInternalFile(cache) } returns false
         coEvery { rest.get<JsonArray>(any()) } throws IOException("offline")
         manager.updateWhitelistStorage()
         assertEquals(listOf(other), manager.whitelistIds)

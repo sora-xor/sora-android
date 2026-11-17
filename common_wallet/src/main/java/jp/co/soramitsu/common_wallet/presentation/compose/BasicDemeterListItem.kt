@@ -78,18 +78,6 @@ data class BasicUserFarmListItemState(
     val text4: String
 )
 
-val basicDemeterListItemStateEmpty = BasicFarmListItemState(
-    ids = Triple("", "", ""),
-    number = "",
-    token1Icon = DEFAULT_ICON_URI,
-    token2Icon = DEFAULT_ICON_URI,
-    rewardTokenIcon = DEFAULT_ICON_URI,
-    rewardTokenSymbol = "",
-    text1 = "",
-    text2 = "",
-    text3 = "",
-)
-
 val previewBasicFarmListItemState = listOf(
     BasicFarmListItemState(
         ids = Triple("0", "1", "2"),

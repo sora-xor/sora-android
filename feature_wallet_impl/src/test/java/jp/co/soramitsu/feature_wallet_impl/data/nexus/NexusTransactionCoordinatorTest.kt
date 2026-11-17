@@ -243,7 +243,6 @@ class NexusTransactionCoordinatorTest {
         )
 
         assertEquals("FINALIZED", result.state)
-        coVerify(exactly = 0) { torii.committedXorTransfers(any(), any(), any()) }
         // Both history proofs ask for the block the status reported, never the whole history.
         coVerify(exactly = 1) {
             torii.hasAuthoritativeCommittedTransaction(

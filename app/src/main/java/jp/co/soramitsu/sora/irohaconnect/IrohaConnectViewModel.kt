@@ -306,27 +306,6 @@ class IrohaConnectViewModel @Inject constructor(
         return false
     }
 
-    fun authorizationUnavailable() {
-        val attempt = generation
-        viewModelScope.launch {
-            protocolMutex.withLock {
-                if (
-                    attempt != generation ||
-                    _state.value.phase !in setOf(
-                        IrohaConnectUiPhase.PAIRING,
-                        IrohaConnectUiPhase.SIGNING,
-                    )
-                ) {
-                    return@withLock
-                }
-                dispose(sendClose = true)
-                fail(
-                    resourceManager.getString(jp.co.soramitsu.common.R.string.wallet_connect_pin_unavailable),
-                )
-            }
-        }
-    }
-
     private fun listenerFor(attempt: Long) = object : IrohaConnectTransportListener {
         override fun onConnected() {
             viewModelScope.launch {

@@ -253,10 +253,6 @@ class SoraConfigManager @Inject constructor(
             txHash = txHash
         )
 
-    suspend fun getIndexerUrl(): String =
-        soraConfigFactory.nullableValue(EmptyArgs)
-            ?.indexerUrl ?: OptionsProvider.polkaswapIndexerEndpoint
-
     private suspend fun getCurrencies(): List<SoraCurrency> =
         soraConfigFactory.nullableValue(EmptyArgs)
             ?.currencies ?: listOf(DEFAULT_SORA_CURRENCY)

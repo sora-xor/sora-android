@@ -181,11 +181,6 @@ class NumbersFormatterTest {
     }
 
     @Test
-    fun `format bigdecimal as integer`() {
-        val actual = numbersFormatter.formatInteger(BigDecimal(1000000.27))
-        assertEquals(formatAsInteger, actual)
-    }
-    @Test
     fun `small negative doubles retain their first significant fraction digit`() {
         assertEquals("-0.000008", numbersFormatter.format(-0.000007364243, 2, true))
         assertEquals("-0.00004", numbersFormatter.format(-0.00003456, 2, true))

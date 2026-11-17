@@ -50,13 +50,6 @@ interface PolkaswapSubscriptionRepository {
 
     suspend fun updateBasicPools()
 
-    fun observePoolXYKReserves(
-        baseTokenId: String,
-        tokenId: String
-    ): Flow<String>
-
-    fun observePoolTBCReserves(tokenId: String): Flow<String>
-
     suspend fun isSwapAvailable(tokenId1: String, tokenId2: String, dexId: Int): Boolean
 
     suspend fun getAvailableSources(tokenId1: String, tokenId2: String, dexId: Int): List<Market>

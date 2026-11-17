@@ -30,7 +30,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
-import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -62,9 +61,6 @@ class FullAssetSettingsFragment : SoraBaseFragment<FullAssetSettingsViewModel>()
 
     override val viewModel: FullAssetSettingsViewModel by viewModels()
     override fun backgroundColor(): Int = R.attr.baseBackgroundSecond
-
-    @Composable
-    override fun backgroundColorComposable() = MaterialTheme.customColors.bgSurface
 
     private val itemTouchHelperCallback = CustomItemTouchHelperCallback { from, to ->
         viewModel.assetPositionChanged(from, to)

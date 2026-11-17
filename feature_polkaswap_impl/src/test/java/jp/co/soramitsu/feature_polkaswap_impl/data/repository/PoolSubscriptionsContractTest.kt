@@ -254,14 +254,6 @@ class PoolSubscriptionsContractTest {
         assertEquals("combined", subject.subscribeToBasicPools().first())
         assertEquals(setOf(key, stateKey(Storage.TOTAL_ISSUANCES, reserve)), storage.keys)
     }
-    @Test fun `xyk observation uses the exact ordered reserve storage key`() = runTest {
-        assertEquals("initial", subject.observePoolXYKReserves(xor, valId).first())
-        assertEquals(setOf(snapshot.reservesKey(xor, valId.fromHex())), storage.keys)
-    }
-    @Test fun `bonding curve observation uses the collateral reserve key`() = runTest {
-        assertEquals("initial", subject.observePoolTBCReserves(valId).first())
-        assertEquals(setOf(snapshot.poolTBCReserves(valId.fromHex())), storage.keys)
-    }
     @Test fun `block observation debounces bursts and keeps the latest head`() = runTest {
         val values = mutableListOf<String>()
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { subject.subscribeEachBlock().toList(values) }

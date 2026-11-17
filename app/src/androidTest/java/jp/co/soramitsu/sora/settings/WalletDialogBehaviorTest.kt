@@ -14,7 +14,6 @@ import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.presentation.compose.components.TransactionResultBadgeOverlay
 import jp.co.soramitsu.common.presentation.compose.theme.SoraAppTheme
 import jp.co.soramitsu.common.presentation.transaction.TransactionResultBadge
-import jp.co.soramitsu.feature_wallet_impl.presentation.contacts.ModalQrSelectionDialog
 import org.junit.Rule
 import org.junit.Test
 import org.junit.Assert.*
@@ -27,15 +26,6 @@ class WalletDialogBehaviorTest {
     // activity window, which cannot get focus back while the dialog is open, so the press fails after
     // ten seconds. Naming the dialog makes Espresso wait for the dialog instead.
     private fun pressBackOnDialog() { onView(isRoot()).inRoot(isDialog()).perform(pressBack()) }
-    @Test fun qrSelectionRoutesGalleryCameraAndDismissSeparately() {
-        val events = mutableListOf<String>()
-        compose.setContent { SoraAppTheme { ModalQrSelectionDialog({ events += "gallery" }, { events += "camera" }, { events += "dismiss" }) } }
-        compose.onNodeWithText(compose.activity.getString(R.string.qr_upload)).performClick()
-        compose.onNodeWithText(compose.activity.getString(R.string.common_scan)).performClick()
-        compose.runOnIdle { assertEquals(listOf("gallery", "camera"), events) }
-        pressBackOnDialog()
-        compose.runOnIdle { assertEquals(listOf("gallery", "camera", "dismiss"), events) }
-    }
     @Test fun transactionOutcomeBadgesKeepSubmittedDistinctFromFailure() {
         val current = mutableStateOf(TransactionResultBadge.CONFIRMED)
         compose.setContent { SoraAppTheme { androidx.compose.foundation.layout.Box(androidx.compose.ui.Modifier.fillMaxSize(), contentAlignment = androidx.compose.ui.Alignment.Center) { TransactionResultBadgeOverlay(current.value) } } }

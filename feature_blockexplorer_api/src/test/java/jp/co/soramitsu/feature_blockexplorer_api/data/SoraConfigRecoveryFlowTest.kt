@@ -31,7 +31,6 @@ class SoraConfigRecoveryFlowTest {
         assertEquals("https://fixture.example/join", manager.getInviteLink())
         assertEquals("https://fixture.example/types.json", manager.getSubstrateTypesUrl())
         assertEquals(OptionsProvider.blockExplorerUrl, manager.getBlockExplorerUrl())
-        assertEquals(OptionsProvider.polkaswapIndexerEndpoint, manager.getIndexerUrl())
         assertEquals("JPY", manager.getSelectedCurrency().code)
         assertTrue(manager.getTransactionExplorerUrl("0x1234")!!.endsWith("q=0x1234"))
         coVerify(exactly = 1) { http.getUtf8(OptionsProvider.configCommon, 1024 * 1024); http.getUtf8(OptionsProvider.configMobile, 1024 * 1024) }
@@ -52,7 +51,7 @@ class SoraConfigRecoveryFlowTest {
         coEvery { preferences.getString("commonConfig") } returns "{malformed"
         assertEquals(emptyList<SoraConfigNode>(), manager.getNodes())
         assertEquals("", manager.getGenesis()); assertEquals("", manager.getInviteLink()); assertEquals("", manager.getSubstrateTypesUrl())
-        assertEquals(OptionsProvider.blockExplorerUrl, manager.getBlockExplorerUrl()); assertEquals(OptionsProvider.polkaswapIndexerEndpoint, manager.getIndexerUrl())
+        assertEquals(OptionsProvider.blockExplorerUrl, manager.getBlockExplorerUrl())
         assertEquals("USD", manager.getSelectedCurrency().code)
     }
     @Test fun `missing mobile cache cannot expose a partial live common configuration`() = runTest {

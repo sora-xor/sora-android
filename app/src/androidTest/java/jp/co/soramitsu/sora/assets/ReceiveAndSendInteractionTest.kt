@@ -2,7 +2,6 @@
 package jp.co.soramitsu.sora.assets
 
 import android.graphics.Bitmap
-import android.graphics.Color
 import android.graphics.drawable.BitmapDrawable
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -22,7 +21,6 @@ import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.presentation.compose.neon.safemode.LocalSelectedAccountReadOnly
 import jp.co.soramitsu.common.presentation.compose.theme.SoraAppTheme
 import jp.co.soramitsu.common.presentation.compose.uikit.tokens.ScreenStatus
-import jp.co.soramitsu.feature_assets_impl.presentation.components.compose.receive.ReceiveScreen
 import jp.co.soramitsu.feature_assets_impl.presentation.components.compose.receiverequest.*
 import jp.co.soramitsu.common_wallet.presentation.compose.receive.*
 import jp.co.soramitsu.common_wallet.presentation.compose.send.SendConfirmScreen
@@ -161,20 +159,6 @@ class ReceiveAndSendInteractionTest {
         node(R.string.common_receive).performClick()
         node(R.string.commom_scan_qr).performScrollTo().performClick()
         compose.runOnIdle { assertEquals(listOf("receive-share", "create", "scan"), events) }
-    }
-    @Test fun basicReceiveKeepsCopyAndShareIndependent() {
-        show { Column(Modifier.verticalScroll(rememberScrollState())) { ReceiveScreen(qr, avatar, "Basic wallet", address, { events += "share" }, { events += "copy" }) } }
-        compose.onNodeWithText("Basic wallet").performScrollTo().performClick()
-        compose.onNodeWithText(address).performScrollTo().performClick()
-        node(R.string.copy_receive_address).performScrollTo().performClick()
-        node(R.string.common_share).performScrollTo().performClick()
-        compose.runOnIdle { assertEquals(listOf("copy", "copy", "copy", "share"), events) }
-    }
-    @Test fun basicReceivePlaceholderStillAllowsCopyingTheAddress() {
-        show { Column(Modifier.verticalScroll(rememberScrollState())) { ReceiveScreen(null, avatar, "Basic wallet", address, {}, { events += "copy" }) } }
-        compose.onNodeWithContentDescription(compose.activity.getString(R.string.wallet_receive_xor)).assertDoesNotExist()
-        node(R.string.copy_receive_address).performScrollTo().performClick()
-        compose.runOnIdle { assertEquals(listOf("copy"), events) }
     }
     @Test fun sendConfirmationShowsRecipientAmountAndFeeBeforeSubmit() {
         showSend()
