@@ -58,6 +58,12 @@ class WhitelistTokensManager @Inject constructor(
         private const val BLACKLIST_FILE_NAME = "blacklist_tokens.json"
         private const val BLACKLIST_URL = "https://whitelist.polkaswap2.io/blacklist.json"
         private val ASSET_ID = Regex("0x[0-9a-fA-F]{64}")
+
+        /**
+         * A blacklist entry: "0x" and 64 lower-case hex digits, ASCII only. A regex class, not
+         * Char.isDigit or Character.digit, which also accept digits of other scripts.
+         */
+        private val BLACKLIST_ID = Regex("0x[0-9a-f]{64}")
         private val ICON_TYPES = setOf("", "svg", "png")
 
         // Data URI parameters, compared in lower case. The live list sends XOR's and
@@ -111,11 +117,14 @@ class WhitelistTokensManager @Inject constructor(
         }
     }
 
-    /** The ids of a blacklist. Anything but a JSON array of asset ids rejects the whole list. */
+    /**
+     * The ids of a blacklist. Anything but a JSON array of asset ids ([BLACKLIST_ID]) rejects the
+     * whole list, so a list without one valid id never replaces the last good one; `[]` is valid.
+     */
     private fun blacklistOf(list: JsonElement): Set<String> = list.jsonArray.mapTo(mutableSetOf()) { entry ->
         val id = (entry as? JsonPrimitive)?.takeIf { it.isString }?.content.orEmpty()
-        require(ASSET_ID.matches(id)) { "Polkaswap blacklist entry rejected: $entry" }
-        id.lowercase()
+        require(BLACKLIST_ID.matches(id)) { "Polkaswap blacklist entry rejected: $entry" }
+        id
     }
 
     fun getTokenIconUri(tokenId: String): String {

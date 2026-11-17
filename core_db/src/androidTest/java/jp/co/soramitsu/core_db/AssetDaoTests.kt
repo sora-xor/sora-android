@@ -26,10 +26,14 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import jp.co.soramitsu.androidfoundation.testing.MainCoroutineRule
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.core_db.dao.AssetDao
+import jp.co.soramitsu.common.domain.AssetHolder
+import jp.co.soramitsu.core_db.model.AssetLocal
 import jp.co.soramitsu.core_db.model.FiatTokenPriceLocal
 import jp.co.soramitsu.core_db.model.TokenLocal
 import jp.co.soramitsu.test_data.TestTokens
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import java.math.BigDecimal
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -65,6 +69,39 @@ class AssetDaoTests {
         insertFiat()
         val list = dao.getAssetsWhitelist("address", "usd", whitelist)
         assertEquals(3, list.size)
+    }
+
+    /**
+     * A token Polkaswap's blacklist hides is stored under the empty list name. The Send and
+     * Receive pickers and the home read the active and visible lists, which leave it out even when
+     * its row is visible; the full asset list finds it under the empty name.
+     */
+    @Test
+    fun aBlacklistedTokenIsLeftOutOfTheActiveAndVisibleListsButFoundUnderTheEmptyName() = runTest {
+        dao.insertTokenList(
+            listOf(
+                map(TestTokens.xorToken).copy(whitelistName = AssetHolder.DEFAULT_WHITE_LIST_NAME),
+                map(TestTokens.valToken).copy(whitelistName = ""),
+            )
+        )
+        dao.insertAssets(
+            listOf(TestTokens.xorToken.id, TestTokens.valToken.id).mapIndexed { index, id ->
+                AssetLocal(
+                    tokenId = id, accountAddress = "address", displayAsset = true, position = index,
+                    free = BigDecimal.ZERO, reserved = BigDecimal.ONE, miscFrozen = BigDecimal.ZERO,
+                    feeFrozen = BigDecimal.ZERO, bonded = BigDecimal.ZERO, redeemable = BigDecimal.ZERO,
+                    unbonding = BigDecimal.ZERO, visibility = true,
+                )
+            }
+        )
+        val xorOnly = listOf(TestTokens.xorToken.id)
+        assertEquals(xorOnly, dao.getAssetsActive("address", "usd").map { it.token.id })
+        assertEquals(xorOnly, dao.subscribeAssetsActive("address", "usd").first().map { it.token.id })
+        assertEquals(xorOnly, dao.subscribeAssetsVisible("address", "usd").first().map { it.token.id })
+        assertEquals(
+            listOf(TestTokens.valToken.id),
+            dao.subscribeAssetsOfWhitelist("address", "usd", "").first().map { it.token.id },
+        )
     }
 
     private suspend fun insertFiat() {

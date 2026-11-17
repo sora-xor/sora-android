@@ -217,13 +217,42 @@ class WhitelistTokensManagerTest {
     }
 
     @Test
-    fun `a fetched blacklist is saved in lower case and applied`() = runTest {
+    fun `a fetched blacklist is saved and applied`() = runTest {
         val manager = manager()
         response()
-        blacklisted(ids("0x" + "CD".repeat(32), other))
+        blacklisted(ids(third, other))
         manager.updateWhitelistStorage()
         assertEquals(setOf(third, other), manager.blacklistIds)
         verify { files.writeInternalFile(blacklistCache, """["$third","$other"]""") }
+    }
+
+    @Test
+    fun `only 0x and 64 ASCII lower case hex digits make an id, and a list without one is rejected`() = runTest {
+        val manager = manager(blacklist = """["$other"]""")
+        response()
+        val invalidIds = listOf(
+            "0x" + "CD".repeat(32), // upper case
+            "0X" + "cd".repeat(32), // upper case prefix
+            "0x" + "\u0663".repeat(64), // Arabic-Indic digit three: Char.isDigit says yes
+            "0x" + "\uFF11".repeat(64), // fullwidth digit one
+            "0x" + "cd".repeat(31) + "c\u0661", // one non-ASCII digit at the end
+            " $third", "$third ", "0x" + "cd".repeat(33), "",
+        )
+        for (id in invalidIds) {
+            blacklisted(ids(id))
+            manager.updateWhitelistStorage()
+            assertEquals(id, setOf(other), manager.blacklistIds)
+            // One invalid id rejects the whole list, valid ids beside it included.
+            blacklisted(ids(third, id))
+            manager.updateWhitelistStorage()
+            assertEquals(id, setOf(other), manager.blacklistIds)
+            // The same rule for a cached list.
+            assertEquals(id, WhitelistTokensManager.BUNDLED_BLACKLIST, manager(blacklist = ids(id).toString()).blacklistIds)
+        }
+        verify(exactly = 0) { files.writeInternalFile(blacklistCache, any()) }
+        blacklisted(ids())
+        manager.updateWhitelistStorage()
+        assertTrue(manager.blacklistIds.isEmpty())
     }
 
     @Test

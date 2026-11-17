@@ -49,8 +49,8 @@ class AssetCatalogAndBalancesContractTest {
     private var catalog = emptyList<TokenWithFiatLocal>()
     private var currency = SoraCurrency("USD", "US Dollar", "$")
     private fun token(id: String, precision: Int = 6, symbol: String = id.uppercase()) = TokenLocal(id, symbol, symbol, precision, true, "SORA", true)
-    private fun asset(id: String, precision: Int = 6, exists: Boolean = true, position: Int = 7, amount: String = "9") = AssetTokenWithFiatLocal(token(id, precision), null,
-        if (exists) AssetLocal(id, owner, true, position, BigDecimal(amount), BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, true) else null)
+    private fun asset(id: String, precision: Int = 6, exists: Boolean = true, position: Int = 7, amount: String = "9", reserved: String = "0") = AssetTokenWithFiatLocal(token(id, precision), null,
+        if (exists) AssetLocal(id, owner, true, position, BigDecimal(amount), BigDecimal(reserved), BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, true) else null)
     private fun atomic(value: String, precision: Int = 18) = BigDecimal(value).movePointRight(precision).toBigIntegerExact()
     private val xorBalance = XorBalanceDto(atomic("10"), atomic("2"), atomic("3"), atomic("4"), atomic("5"), atomic("6"), atomic("7"))
     private fun equalDecimal(expected: String, actual: BigDecimal) = assertEquals(expected, 0, BigDecimal(expected).compareTo(actual))
@@ -311,5 +311,33 @@ class AssetCatalogAndBalancesContractTest {
         )
         val result = subject().subscribeAssetsNotListed(owner).first()
         assertEquals(listOf("scam"), result.map { it.token.id }); equalDecimal("5", result.single().balance.transferable)
+    }
+
+    @Test fun `a held blacklisted token stays offered when all of it is reserved`() = runTest {
+        every { whitelist.blacklistIds } returns setOf("locked")
+        every { dao.subscribeAssetsOfWhitelist(owner, "USD", "") } returns flowOf(
+            listOf(asset("locked", amount = "0", reserved = "4"))
+        )
+        val held = subject().subscribeAssetsNotListed(owner).first().single()
+        // Ownership counts, not what can be spent now.
+        equalDecimal("0", held.balance.transferable); equalDecimal("4", held.balance.total)
+    }
+
+    @Test fun `a blacklist that arrives after the list was read applies to the next read of the rows`() = runTest {
+        val held = listOf(asset("old", amount = "1"), asset("new", amount = "2"))
+        val rows = MutableSharedFlow<List<AssetTokenWithFiatLocal>>(replay = 1)
+        rows.tryEmit(held)
+        every { dao.subscribeAssetsOfWhitelist(owner, "USD", "") } returns rows
+        var blacklist = setOf("old")
+        every { whitelist.blacklistIds } answers { blacklist }
+        val emitted = mutableListOf<List<String>>()
+        val job = launch { subject().subscribeAssetsNotListed(owner).collect { list -> emitted += list.map { it.token.id } } }
+        advanceUntilIdle()
+        // A new blacklist is saved; storing the token list again makes Room emit the rows again.
+        blacklist = setOf("new")
+        rows.emit(held)
+        advanceUntilIdle()
+        job.cancel()
+        assertEquals(listOf(listOf("old"), listOf("new")), emitted)
     }
 }

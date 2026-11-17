@@ -1,5 +1,6 @@
 package jp.co.soramitsu.feature_polkaswap_impl.data.repository
 
+import jp.co.soramitsu.common.domain.AssetHolder
 import com.google.gson.Gson
 import io.mockk.*
 import jp.co.soramitsu.common.domain.Market
@@ -54,7 +55,10 @@ class PoolSubscriptionsContractTest {
     private val explorer = mockk<BlockExplorerManager>()
     private val runtime = mockk<RuntimeManager>()
     private val socket = mockk<SocketService>()
-    private val subject = PolkaswapSubscriptionRepositoryImpl(db, api, SwapMarketMapper(), calls, explorer, runtime, socket)
+    private val whitelist = mockk<jp.co.soramitsu.common.domain.WhitelistTokensManager>().also {
+        every { it.blacklistIds } returns emptySet()
+    }
+    private val subject = PolkaswapSubscriptionRepositoryImpl(db, api, SwapMarketMapper(), calls, explorer, runtime, socket, whitelist)
     private val xor = TestTokens.xorToken.id
     private val valId = TestTokens.valToken.id
     private val reserve = ByteArray(32) { 17 }
@@ -92,6 +96,14 @@ class PoolSubscriptionsContractTest {
             catch (error: Throwable) { callback.onError(error) }
             mockk(relaxed = true)
         }
+    }
+    @Test fun `liquidity the account owns stays listed in a pair Polkaswap's blacklist hides`() {
+        assertTrue(ownedPoolKept(AssetHolder.DEFAULT_WHITE_LIST_NAME, valId, emptySet()))
+        // Stored outside the whitelist because the blacklist hides it: the account's own liquidity stays.
+        assertTrue(ownedPoolKept("", "pepe", setOf("pepe")))
+        // On neither list: left out, as before.
+        assertFalse(ownedPoolKept("", "other", setOf("pepe")))
+        assertFalse(ownedPoolKept(null, "other", setOf("pepe")))
     }
     @Test fun `remote reserves keep both independent token precisions and percentage APY`() = runTest {
         coEvery { api.getPoolReserves(xor, valId) } returns (BigInteger("1234567890123456789") to BigInteger("2345678"))

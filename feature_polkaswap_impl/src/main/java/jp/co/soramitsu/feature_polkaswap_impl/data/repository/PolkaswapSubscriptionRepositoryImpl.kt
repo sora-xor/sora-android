@@ -27,6 +27,7 @@ import jp.co.soramitsu.androidfoundation.format.safeCast
 import jp.co.soramitsu.common.data.network.dto.SwapFeeDto
 import jp.co.soramitsu.common.domain.Market
 import jp.co.soramitsu.common.domain.Token
+import jp.co.soramitsu.common.domain.WhitelistTokensManager
 import jp.co.soramitsu.common.logger.WalletDiagnostics
 import jp.co.soramitsu.common.util.mapBalance
 import jp.co.soramitsu.common_wallet.domain.model.LiquidityData
@@ -84,6 +85,7 @@ class PolkaswapSubscriptionRepositoryImpl @Inject constructor(
     private val blockExplorerManager: BlockExplorerManager,
     private val runtimeManager: RuntimeManager,
     private val socketService: SocketService,
+    private val whitelistTokensManager: WhitelistTokensManager,
 ) : PolkaswapSubscriptionRepository,
     PolkaswapBasicRepositoryImpl(db, blockExplorerManager) {
 
@@ -148,8 +150,12 @@ class PolkaswapSubscriptionRepositoryImpl @Inject constructor(
 
             wsConnection.getUserPoolsData(address, pair.first, pair.second)
                 .forEach { poolDataDto ->
-                    if (db.assetDao().getWhitelistOfToken(poolDataDto.assetId).isNullOrEmpty()
-                            .not()
+                    if (
+                        ownedPoolKept(
+                            whitelistName = db.assetDao().getWhitelistOfToken(poolDataDto.assetId),
+                            tokenId = poolDataDto.assetId,
+                            blacklist = whitelistTokensManager.blacklistIds,
+                        )
                     ) {
                         db.assetDao().getPrecisionOfToken(poolDataDto.assetId)
                             ?.let { tokenPrecision ->
@@ -526,3 +532,11 @@ class PolkaswapSubscriptionRepositoryImpl @Inject constructor(
             ?: wsConnection.getPoolReserveAccount(baseToken, targetToken.fromHex())
     }
 }
+
+/**
+ * Whether the account's own liquidity in a pair with [tokenId] is kept on the phone: a token on
+ * Polkaswap's whitelist, and also one its blacklist hides, so liquidity the wallet already owns
+ * stays listed and can be removed. A token on neither list is left out as before.
+ */
+internal fun ownedPoolKept(whitelistName: String?, tokenId: String, blacklist: Set<String>): Boolean =
+    !whitelistName.isNullOrEmpty() || tokenId in blacklist
