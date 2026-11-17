@@ -144,4 +144,5 @@
     <string name="asset_not_favorite_state">Ei suosikki</string>
     <string name="asset_visible_state">Näkyvä</string>
     <string name="asset_hidden_state">Piilotettu</string>
+    <string name="portfolio_claim_body">SORA v1 -varasi odottavat sinua. Lunasta ne siirtääksesi ne SORA v2:een.</string>
 </resources>

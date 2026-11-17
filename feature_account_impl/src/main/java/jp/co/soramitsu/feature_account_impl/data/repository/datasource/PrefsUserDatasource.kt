@@ -117,6 +117,9 @@ class PrefsUserDatasource(
         return soraPreferences.getBoolean(KEY_NEEDS_MIGRATION + suffixAddress)
     }
 
+    override fun flowNeedsMigration(suffixAddress: String): kotlinx.coroutines.flow.Flow<Boolean> =
+        soraPreferences.getBooleanFlow(KEY_NEEDS_MIGRATION + suffixAddress, false)
+
     override suspend fun saveIsMigrationFetched(it: Boolean, suffixAddress: String) {
         soraPreferences.putBoolean(KEY_IS_MIGRATION_FETCHED + suffixAddress, it)
     }

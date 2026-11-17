@@ -144,4 +144,5 @@
     <string name="asset_not_favorite_state">Sevimli deyil</string>
     <string name="asset_visible_state">Görünən</string>
     <string name="asset_hidden_state">Gizli</string>
+    <string name="portfolio_claim_body">SORA v1-dəki aktivləriniz sizi gözləyir. Onları SORA v2-yə köçürmək üçün iddia edin.</string>
 </resources>

@@ -140,4 +140,5 @@
     <string name="asset_not_favorite_state">Bukan kegemaran</string>
     <string name="asset_visible_state">Kelihatan</string>
     <string name="asset_hidden_state">Tersembunyi</string>
+    <string name="portfolio_claim_body">Aset anda daripada SORA v1 sedang menunggu. Tuntut untuk memindahkannya ke SORA v2.</string>
 </resources>

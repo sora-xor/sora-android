@@ -1429,9 +1429,8 @@ class PinCodeViewModelTest {
         verify(mainRouter).popBackStack()
     }
 
-    @Test fun `an unreadable claim state does not prevent successful offline unlock`() = runTest {
+    @Test fun `an offline unlock opens the wallet and reads no claim state first`() = runTest {
         given(interactor.isCodeSet()).willReturn(true)
-        given(interactor.isClaimKnownPending()).willThrow(IllegalStateException("claim state unavailable"))
         connected.value = false
         pinCodeViewModel.startAuth(PinCodeAction.TIMEOUT_CHECK)
         advanceUntilIdle()
@@ -1453,17 +1452,19 @@ class PinCodeViewModelTest {
         verify(mainRouter, never()).showClaim()
     }
 
-    @Test fun `a claim known on this phone is offered on top of the opened wallet once`() = runTest {
+    @Test fun `a claim known on this phone is never put in front of the wallet after the PIN`() = runTest {
+        // Audit item 14, finished: the claim is an entry on the wallet home (CardsHubViewModel
+        // claimPending), so the unlock opens the wallet and nothing else, whatever is pending.
         given(interactor.isCodeSet()).willReturn(true)
-        given(interactor.isClaimKnownPending()).willReturn(true)
+        given(interactor.needsMigration()).willReturn(true)
         pinCodeViewModel.startAuth(PinCodeAction.TIMEOUT_CHECK)
         advanceUntilIdle()
         enterCorrectPin()
         advanceUntilIdle()
-        enterCorrectPin()
+        pinCodeViewModel.onResume()
         advanceUntilIdle()
-        verify(mainRouter, times(1)).showClaim()
-        verify(mainRouter, never()).popBackStack()
+        verify(mainRouter, times(1)).popBackStack()
+        verify(mainRouter, never()).showClaim()
     }
 
     @Test fun `a claim the network finds after the PIN never diverts the wallet that opened`() = runTest {

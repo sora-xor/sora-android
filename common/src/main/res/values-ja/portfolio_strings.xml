@@ -129,4 +129,5 @@
     <string name="asset_not_favorite_state">お気に入りではありません</string>
     <string name="asset_visible_state">表示中</string>
     <string name="asset_hidden_state">非表示</string>
+    <string name="portfolio_claim_body">SORA v1のアセットが残っています。請求すると、SORA v2へ移行できます。</string>
 </resources>

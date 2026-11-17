@@ -144,4 +144,5 @@
     <string name="asset_not_favorite_state">در موارد دلخواه نیست</string>
     <string name="asset_visible_state">نمایان</string>
     <string name="asset_hidden_state">پنهان</string>
+    <string name="portfolio_claim_body">دارایی‌های شما از SORA v1 منتظر شما هستند. برای انتقال آن‌ها به SORA v2 آن‌ها را مطالبه کنید.</string>
 </resources>

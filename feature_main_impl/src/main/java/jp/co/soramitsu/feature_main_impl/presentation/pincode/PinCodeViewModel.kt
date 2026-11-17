@@ -943,41 +943,23 @@ class PinCodeViewModel @Inject constructor(
         selectNodeRouter.showSelectNode()
     }
 
-    private var proceeding = false
     private var proceeded = false
 
     /**
      * After unlocking the wallet opens at once: nothing after the PIN waits for the network or an
-     * answer (update rule of 2026-11-09). A claim of an older SORA balance that the last check
-     * already found on this phone is offered on top of the wallet (Back returns to it). Whether
-     * an account has one is checked afterwards in the background; a claim it finds is offered at
-     * the next unlock, and a check that fails runs again then.
+     * answer, and nothing is put in front of the wallet (update rule of 2026-11-09). A claim of
+     * an older SORA balance that is known on this phone is an entry on the wallet home ("Claim"),
+     * there for as long as it is pending. Whether an account has one is checked afterwards in the
+     * background; the entry appears when that check finds one, and a check that fails runs again
+     * after the next unlock.
      */
     private suspend fun proceed() {
-        // Set before the first suspension: a second trigger (resume, biometrics dialog) while
-        // this one reads must not navigate a second time.
-        if (proceeding || proceeded) return
-        proceeding = true
-        try {
-            val claimPending = try {
-                interactor.isClaimKnownPending()
-            } catch (error: CancellationException) {
-                throw error
-            } catch (_: Throwable) {
-                // Unreadable right now: nothing is offered; the background check below decides.
-                false
-            }
-            proceeded = true
-            WalletSessionState.markUnlocked()
-            if (claimPending) {
-                mainRouter.showClaim()
-            } else {
-                mainRouter.popBackStack()
-            }
-            checkClaimInBackground()
-        } finally {
-            proceeding = false
-        }
+        // A second trigger (resume, biometrics dialog) must not navigate a second time.
+        if (proceeded) return
+        proceeded = true
+        WalletSessionState.markUnlocked()
+        mainRouter.popBackStack()
+        checkClaimInBackground()
     }
 
     /** The optional claim check, after the wallet opened. Never keeps anyone out of it. */

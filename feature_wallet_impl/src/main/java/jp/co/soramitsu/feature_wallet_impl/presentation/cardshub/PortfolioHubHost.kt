@@ -37,6 +37,7 @@ import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.PortfolioScope
 import jp.co.soramitsu.feature_wallet_impl.presentation.portfolio.PortfolioEffect
 import jp.co.soramitsu.feature_wallet_impl.presentation.portfolio.PortfolioHomeActions
 import jp.co.soramitsu.feature_wallet_impl.presentation.portfolio.PortfolioHubScreen
+import jp.co.soramitsu.feature_wallet_impl.presentation.claim.ClaimEntry
 import jp.co.soramitsu.feature_wallet_impl.presentation.portfolio.PortfolioRoutes
 import jp.co.soramitsu.feature_wallet_impl.presentation.portfolio.PortfolioSheet
 import jp.co.soramitsu.feature_wallet_impl.presentation.portfolio.PortfolioSheetActions
@@ -127,6 +128,7 @@ internal fun PortfolioHomeHost(
     }
     val sheetActions = remember(portfolio) { SheetActions(portfolio) }
     val accountReadOnly = LocalSelectedAccountReadOnly.current
+    val claimPending by hub.claimPending.collectAsStateWithLifecycle()
     PortfolioHubScreen(
         scrollState = scrollState,
         model = model,
@@ -142,6 +144,10 @@ internal fun PortfolioHomeHost(
                     modifier = Modifier.padding(bottom = 16.dp),
                     onRepair = hub::onBackupBannerClick,
                 )
+            }
+            // A claim known on this phone stays here as an entry; nothing opens on its own.
+            if (claimPending) {
+                ClaimEntry(onClick = hub::onClaimClick, modifier = Modifier.padding(bottom = 16.dp))
             }
         },
         secondaryCards = {

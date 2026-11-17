@@ -160,4 +160,5 @@
     <string name="asset_not_favorite_state">غير مفضل</string>
     <string name="asset_visible_state">ظاهر</string>
     <string name="asset_hidden_state">مخفي</string>
+    <string name="portfolio_claim_body">أصولك من SORA v1 بانتظارك. طالب بها لنقلها إلى SORA v2.</string>
 </resources>

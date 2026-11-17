@@ -148,4 +148,5 @@
     <string name="asset_not_favorite_state">No es favorito</string>
     <string name="asset_visible_state">Visible</string>
     <string name="asset_hidden_state">Oculto</string>
+    <string name="portfolio_claim_body">Tus activos de SORA v1 te esperan. Reclámalos para pasarlos a SORA v2.</string>
 </resources>

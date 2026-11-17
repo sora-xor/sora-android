@@ -144,4 +144,5 @@
     <string name="asset_not_favorite_state">Ikke en favoritt</string>
     <string name="asset_visible_state">Synlig</string>
     <string name="asset_hidden_state">Skjult</string>
+    <string name="portfolio_claim_body">Eiendelene dine fra SORA v1 venter på deg. Krev dem for å flytte dem til SORA v2.</string>
 </resources>

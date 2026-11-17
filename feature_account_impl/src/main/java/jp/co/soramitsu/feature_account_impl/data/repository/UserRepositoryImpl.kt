@@ -87,6 +87,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
@@ -1742,6 +1743,14 @@ class UserRepositoryImpl(
     override suspend fun needsMigration(soraAccount: SoraAccount): Boolean {
         return userDatasource.needsMigration(soraAccount.substrateAddress)
     }
+
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+    override fun flowClaimPending(): Flow<Boolean> =
+        currentSoraAccount.asStateFlow()
+            .filterNotNull()
+            .distinctUntilChangedBy { it.substrateAddress }
+            .flatMapLatest { userDatasource.flowNeedsMigration(it.substrateAddress) }
+            .distinctUntilChanged()
 
     override suspend fun saveIsMigrationFetched(it: Boolean, soraAccount: SoraAccount) {
         userDatasource.saveIsMigrationFetched(it, soraAccount.substrateAddress)

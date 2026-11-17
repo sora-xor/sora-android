@@ -204,13 +204,6 @@ class PinCodeInteractor @Inject constructor(
         return retainedWordCount == LEGACY_SORA_MNEMONIC_WORD_COUNT
     }
 
-    /**
-     * A claim of an older SORA balance that the last check found and that is not done yet.
-     * Reads this phone only: the unlock never waits for the network to answer it.
-     */
-    suspend fun isClaimKnownPending(): Boolean =
-        userRepository.needsMigration(userRepository.getCurSoraAccount())
-
     suspend fun needsMigration(): Boolean {
         val soraAccount = userRepository.getCurSoraAccount()
         val isFetched = userRepository.isMigrationFetched(soraAccount)

@@ -144,4 +144,5 @@
     <string name="asset_not_favorite_state">Kein Favorit</string>
     <string name="asset_visible_state">Sichtbar</string>
     <string name="asset_hidden_state">Ausgeblendet</string>
+    <string name="portfolio_claim_body">Deine Assets aus SORA v1 warten auf dich. Fordere sie an, um sie auf SORA v2 zu übertragen.</string>
 </resources>

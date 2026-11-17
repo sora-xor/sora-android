@@ -152,4 +152,5 @@
     <string name="asset_not_favorite_state">Не в избранном</string>
     <string name="asset_visible_state">Видимый</string>
     <string name="asset_hidden_state">Скрытый</string>
+    <string name="portfolio_claim_body">Ваши активы с SORA v1 ждут вас. Запросите их, чтобы перенести на SORA v2.</string>
 </resources>

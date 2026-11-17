@@ -148,4 +148,5 @@
     <string name="asset_not_favorite_state">Није омиљено</string>
     <string name="asset_visible_state">Видљиво</string>
     <string name="asset_hidden_state">Скривено</string>
+    <string name="portfolio_claim_body">Ваша средства са SORA v1 вас чекају. Затражите их да бисте их пребацили на SORA v2.</string>
 </resources>

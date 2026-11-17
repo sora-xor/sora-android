@@ -62,7 +62,6 @@ class PinCodeAccountCheckTest {
         coEvery { it.isBiometryEnabled() } returns false
         coEvery { it.retrieveTriesUsed() } returns 0
         coEvery { it.retrieveTimerStartedTimestamp() } returns 0L
-        coEvery { it.isClaimKnownPending() } returns false
         coEvery { it.needsMigration() } returns false
     }
     private val mainRouter = mockk<MainRouter>(relaxed = true)
@@ -93,14 +92,10 @@ class PinCodeAccountCheckTest {
 
     @Test
     fun `a second trigger while the wallet opens never opens it twice`() = runTest {
-        val pending = CompletableDeferred<Boolean>()
-        coEvery { interactor.isClaimKnownPending() } coAnswers { pending.await() }
         val vm = viewModel()
         unlock(vm)
-        // While the first one reads, the biometrics dialog answer starts another one.
+        // The biometrics dialog answer arrives as well.
         vm.biometryDialogNoClicked()
-        advanceUntilIdle()
-        pending.complete(false)
         advanceUntilIdle()
         verify(exactly = 1) { mainRouter.popBackStack() }
         coVerify(exactly = 1) { interactor.needsMigration() }
@@ -138,21 +133,13 @@ class PinCodeAccountCheckTest {
     }
 
     @Test
-    fun `a claim already known on this phone is offered on top of the wallet once`() = runTest {
-        coEvery { interactor.isClaimKnownPending() } returns true
+    fun `a claim already known on this phone opens nothing in front of the wallet`() = runTest {
+        // It is an entry on the wallet home; the unlock opens the wallet and only the wallet.
+        coEvery { interactor.needsMigration() } returns true
         val vm = viewModel()
         unlock(vm)
         vm.onResume()
         advanceUntilIdle()
-        verify(exactly = 1) { mainRouter.showClaim() }
-        verify(exactly = 0) { mainRouter.popBackStack() }
-    }
-
-    @Test
-    fun `an unreadable claim state opens the wallet`() = runTest {
-        coEvery { interactor.isClaimKnownPending() } throws IllegalStateException("unreadable")
-        val vm = viewModel()
-        unlock(vm)
         verify(exactly = 1) { mainRouter.popBackStack() }
         verify(exactly = 0) { mainRouter.showClaim() }
     }

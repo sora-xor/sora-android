@@ -144,4 +144,5 @@
     <string name="asset_not_favorite_state">Geen favoriet</string>
     <string name="asset_visible_state">Zichtbaar</string>
     <string name="asset_hidden_state">Verborgen</string>
+    <string name="portfolio_claim_body">Je assets van SORA v1 wachten op je. Claim ze om ze naar SORA v2 over te zetten.</string>
 </resources>

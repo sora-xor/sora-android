@@ -86,7 +86,9 @@ class PortfolioHostFlowTest {
         every { openSheet(any()) } answers { sheets.value = firstArg() }
         every { closeSheet() } answers { sheets.value = null }
     }
+    private val claim = MutableStateFlow(false)
     private val hub = mockk<CardsHubViewModel>(relaxed = true) {
+        every { claimPending } returns claim
         every { nexusPortfolio } returns balances
         every { sora2Portfolio } returns sora
         every { nexusSend } returns send
@@ -151,6 +153,27 @@ class PortfolioHostFlowTest {
         compose.onNodeWithText(compose.activity.getString(R.string.referral_start_inviting)).performScrollTo().assertExists()
         compose.onAllNodes(SemanticsMatcher.keyIsDefined(androidx.compose.ui.semantics.SemanticsProperties.ProgressBarRangeInfo))
             .assertCountEquals(0)
+    }
+    // A claim known on this phone is an entry on the home, there while it is pending; nothing
+    // about it opens by itself (update rule of 2026-11-09).
+    @Test fun aKnownClaimIsAnEntryOnTheHomeThatOpensOnlyWhenTapped() {
+        show()
+        val entry = jp.co.soramitsu.feature_wallet_impl.presentation.claim.ClaimEntryTags.ENTRY
+        compose.onAllNodes(androidx.compose.ui.test.hasTestTag(entry)).assertCountEquals(0)
+        // The check after the PIN finds one while the home is open: the entry appears.
+        claim.value = true
+        compose.waitForIdle()
+        compose.onNode(androidx.compose.ui.test.hasTestTag(entry)).performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText(compose.activity.getString(R.string.common_claim)).assertIsDisplayed()
+        compose.onNodeWithText(compose.activity.getString(R.string.portfolio_claim_body)).assertIsDisplayed()
+        compose.runOnIdle { verify(exactly = 0) { hub.onClaimClick() } }
+        compose.onNode(androidx.compose.ui.test.hasTestTag(entry)).performClick()
+        compose.runOnIdle { verify(exactly = 1) { hub.onClaimClick() } }
+        // The claim is done: the entry is gone and the home stays.
+        claim.value = false
+        compose.waitForIdle()
+        compose.onAllNodes(androidx.compose.ui.test.hasTestTag(entry)).assertCountEquals(0)
+        compose.onNodeWithText(compose.activity.getString(R.string.common_send)).assertExists()
     }
     @Test fun hubCardsListPoolsBeforeBannersAndRouteTheirTaps() {
         val pool = jp.co.soramitsu.common_wallet.presentation.compose.states.PoolsListItemState(

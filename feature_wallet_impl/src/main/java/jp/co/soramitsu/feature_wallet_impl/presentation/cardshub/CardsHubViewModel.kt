@@ -86,6 +86,11 @@ import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarType
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
@@ -891,6 +896,27 @@ class CardsHubViewModel @Inject constructor(
 
     fun onBackupBannerClick() {
         mainRouter.showAccountDetails(_state.value.accountAddress)
+    }
+
+    /**
+     * A claim of an older SORA balance is known on this phone for the selected account. The
+     * home then shows a "Claim" entry for as long as that is true, and nothing is put in front
+     * of the wallet for it. Read only while the home shows it; an unreadable answer shows none.
+     */
+    val claimPending: StateFlow<Boolean> = flow { emitAll(cardsHubInteractorImpl.flowClaimPending()) }
+        .catch { error ->
+            onBackgroundError(error)
+            emit(false)
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(CLAIM_ENTRY_STOP_TIMEOUT_MS), false)
+
+    /** The home's "Claim" entry: opens the claim screen; Back returns to the wallet. */
+    fun onClaimClick() {
+        mainRouter.showClaim()
+    }
+
+    private companion object {
+        const val CLAIM_ENTRY_STOP_TIMEOUT_MS = 5_000L
     }
 }
 

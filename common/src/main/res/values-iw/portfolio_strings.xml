@@ -148,4 +148,5 @@
     <string name="asset_not_favorite_state">לא מועדף</string>
     <string name="asset_visible_state">גלוי</string>
     <string name="asset_hidden_state">מוסתר</string>
+    <string name="portfolio_claim_body">הנכסים שלך מ-SORA v1 מחכים לך. יש לתבוע אותם כדי להעביר אותם ל-SORA v2.</string>
 </resources>

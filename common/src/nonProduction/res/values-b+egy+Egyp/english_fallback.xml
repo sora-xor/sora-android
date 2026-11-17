@@ -189,6 +189,7 @@
     <string name="portfolio_network">Network</string>
     <string name="portfolio_never_counted">Never counted</string>
     <string name="portfolio_nexus_send_unavailable">Sending on this network is not available for this wallet right now.</string>
+    <string name="portfolio_claim_body">Your assets from SORA v1 are waiting. Claim them to move them to SORA v2.</string>
     <string name="portfolio_not_included">Not included</string>
     <string name="portfolio_nothing_listed">Nothing to list. Hidden assets are not shown here.</string>
     <string name="portfolio_no_balance_yet">No balance yet</string>

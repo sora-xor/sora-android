@@ -140,4 +140,5 @@
     <string name="asset_not_favorite_state">Không yêu thích</string>
     <string name="asset_visible_state">Đang hiển thị</string>
     <string name="asset_hidden_state">Bị ẩn</string>
+    <string name="portfolio_claim_body">Tài sản của bạn từ SORA v1 đang chờ. Hãy lấy để chuyển sang SORA v2.</string>
 </resources>

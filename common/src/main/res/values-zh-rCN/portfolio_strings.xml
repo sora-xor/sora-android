@@ -140,4 +140,5 @@
     <string name="asset_not_favorite_state">未收藏</string>
     <string name="asset_visible_state">可见</string>
     <string name="asset_hidden_state">已隐藏</string>
+    <string name="portfolio_claim_body">您在 SORA v1 的资产正在等待领取。领取后即可转移到 SORA v2。</string>
 </resources>

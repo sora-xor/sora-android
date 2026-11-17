@@ -72,6 +72,7 @@ import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.runCurrent
@@ -592,6 +593,50 @@ class CardsHubViewModelTest {
         val cards = viewModel.state.value.cards.filterIsInstance<TitledAmountCardState>()
         assertTrue(cards.any { it.state is FavoriteAssetsCardState })
         assertTrue(cards.any { it.state is FavoritePoolsCardState })
+    }
+    // Audit item 14, finished: a claim known on this phone is an entry on the wallet home for as
+    // long as it is pending. Nothing about it opens after the PIN.
+    @Test fun `the home shows its Claim entry while a claim is known and drops it when it is done`() = runTest {
+        val pending = MutableStateFlow(false)
+        every { cardsHubInteractorImpl.flowClaimPending() } returns pending
+        val shown = mutableListOf<Boolean>()
+        val job = launch(kotlinx.coroutines.test.UnconfinedTestDispatcher(testScheduler)) {
+            cardsHubViewModel.claimPending.collect { shown += it }
+        }
+        advanceUntilIdle()
+        assertEquals(listOf(false), shown)
+        // The check after the PIN found a claim: the entry appears on the open home.
+        pending.value = true
+        advanceUntilIdle()
+        // The claim completed (or another account without one was selected).
+        pending.value = false
+        advanceUntilIdle()
+        assertEquals(listOf(false, true, false), shown)
+        job.cancel()
+    }
+    @Test fun `the Claim entry opens the claim screen and only when it is tapped`() = runTest {
+        every { cardsHubInteractorImpl.flowClaimPending() } returns MutableStateFlow(true)
+        every { mainRouter.showClaim() } returns Unit
+        val job = launch(kotlinx.coroutines.test.UnconfinedTestDispatcher(testScheduler)) {
+            cardsHubViewModel.claimPending.collect { }
+        }
+        advanceUntilIdle()
+        assertTrue(cardsHubViewModel.claimPending.value)
+        io.mockk.verify(exactly = 0) { mainRouter.showClaim() }
+        cardsHubViewModel.onClaimClick()
+        io.mockk.verify(exactly = 1) { mainRouter.showClaim() }
+        job.cancel()
+    }
+    @Test fun `a claim state that cannot be read shows no entry and leaves the home as it is`() = runTest {
+        every { cardsHubInteractorImpl.flowClaimPending() } returns
+            kotlinx.coroutines.flow.flow { throw java.io.IOException("preferences busy") }
+        val job = launch(kotlinx.coroutines.test.UnconfinedTestDispatcher(testScheduler)) {
+            cardsHubViewModel.claimPending.collect { }
+        }
+        advanceUntilIdle()
+        assertFalse(cardsHubViewModel.claimPending.value)
+        assertFalse(cardsHubViewModel.state.value.loading)
+        job.cancel()
     }
     @Test fun `classic home asset, account and full card taps open their screens`() = runTest {
         advanceUntilIdle()

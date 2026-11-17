@@ -128,6 +128,14 @@ interface UserRepository {
 
     suspend fun needsMigration(soraAccount: SoraAccount): Boolean
 
+    /**
+     * Whether a claim of an older SORA balance is known on this phone for the selected account:
+     * the last check found one and it is not done yet. Follows the selected account and every
+     * change of the saved answer (a check that finishes, a claim that completes). Reads the
+     * phone only.
+     */
+    fun flowClaimPending(): Flow<Boolean>
+
     suspend fun saveIsMigrationFetched(it: Boolean, soraAccount: SoraAccount)
 
     suspend fun isMigrationFetched(soraAccount: SoraAccount): Boolean

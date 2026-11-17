@@ -286,6 +286,41 @@ class UserRepositoryTest {
     }
 
     @Test
+    fun `the claim entry follows the saved answer of the selected account`() = runTest {
+        val own = MutableStateFlow(false)
+        val other = MutableStateFlow(true)
+        every { userDatasource.flowNeedsMigration("accountAddress") } returns own
+        every { userDatasource.flowNeedsMigration(soraAccount.substrateAddress) } returns other
+        coEvery { userDatasource.setCurAccountAddress(any()) } returns Unit
+        coEvery { accountDao.getAccount(soraAccount.substrateAddress) } returns SoraAccountLocal(
+            soraAccount.substrateAddress,
+            soraAccount.accountName,
+        )
+        userRepository.getCurSoraAccount()
+        val seen = mutableListOf<Boolean>()
+        val job = launch(UnconfinedTestDispatcher(testScheduler)) {
+            userRepository.flowClaimPending().collect { seen += it }
+        }
+
+        assertEquals(listOf(false), seen)
+        // The check after the PIN found a claim for this account.
+        own.value = true
+        assertEquals(listOf(false, true), seen)
+        // The claim was completed.
+        own.value = false
+        assertEquals(listOf(false, true, false), seen)
+        // Another account is selected: its own saved answer counts from now on.
+        userRepository.setCurSoraAccount(soraAccount)
+        assertEquals(listOf(false, true, false, true), seen)
+        own.value = true
+        assertEquals(listOf(false, true, false, true), seen)
+
+        job.cancel()
+        // Watching the claim never runs the account stream's own side work.
+        coVerify(exactly = 0) { referralsDao.clearTable() }
+    }
+
+    @Test
     fun `flow cur account list called`() = runTest {
         coEvery { accountDao.flowAccounts() } returns flow {
             emit(
