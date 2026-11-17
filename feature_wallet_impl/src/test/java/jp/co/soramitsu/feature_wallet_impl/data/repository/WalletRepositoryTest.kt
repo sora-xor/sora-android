@@ -185,9 +185,9 @@ class WalletRepositoryTest {
     @Test
     fun `save migration status`() = runTest {
         val m = MigrationStatus.SUCCESS
-        given(datasource.saveMigrationStatus(m)).willReturn(Unit)
-        walletRepository.saveMigrationStatus(m)
-        verify(datasource).saveMigrationStatus(m)
+        given(datasource.saveMigrationStatus("wallet", m)).willReturn(Unit)
+        walletRepository.saveMigrationStatus("wallet", m)
+        verify(datasource).saveMigrationStatus("wallet", m)
     }
 
     @Test

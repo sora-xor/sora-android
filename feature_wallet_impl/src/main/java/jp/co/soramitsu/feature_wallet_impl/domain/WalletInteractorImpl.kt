@@ -33,6 +33,8 @@ import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import jp.co.soramitsu.sora.substrate.substrate.sora2TransactionOutcome
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
 
 class WalletInteractorImpl(
     private val assetsRepository: AssetsRepository,
@@ -43,12 +45,24 @@ class WalletInteractorImpl(
     private val runtimeManager: RuntimeManager,
 ) : WalletInteractor {
 
+    /**
+     * Stored for the selected account. The claim screen cannot outlive a change of account:
+     * switching accounts means leaving it, which ends its view model and its submission.
+     */
     override suspend fun saveMigrationStatus(migrationStatus: MigrationStatus) {
-        return walletRepository.saveMigrationStatus(migrationStatus)
+        return walletRepository.saveMigrationStatus(
+            userRepository.getCurSoraAccount().substrateAddress,
+            migrationStatus,
+        )
     }
 
-    override fun observeMigrationStatus(): Flow<MigrationStatus> {
-        return walletRepository.observeMigrationStatus()
+    /**
+     * The claim results of the account selected when the claim screen starts to listen. A result
+     * another account's claim left behind (account A's success) is not this account's and never
+     * closes its screen.
+     */
+    override fun observeMigrationStatus(): Flow<MigrationStatus> = flow {
+        emitAll(walletRepository.observeMigrationStatus(userRepository.getCurSoraAccount().substrateAddress))
     }
 
     override suspend fun needsMigration(): Boolean {

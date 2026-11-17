@@ -28,9 +28,11 @@ interface WalletDatasource {
 
     suspend fun saveClaimBlockAndTxHash(inBlock: String, txHash: String)
 
-    suspend fun saveMigrationStatus(migrationStatus: MigrationStatus)
+    /** The claim screen's result for the account [walletId]; it never speaks for another one. */
+    suspend fun saveMigrationStatus(walletId: String, migrationStatus: MigrationStatus)
 
-    fun observeMigrationStatus(): Flow<MigrationStatus>
+    /** The claim results of [walletId] only, from the last one saved in this process. */
+    fun observeMigrationStatus(walletId: String): Flow<MigrationStatus>
 
     fun getDisclaimerVisibility(): Flow<Boolean>
 
