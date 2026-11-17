@@ -941,8 +941,147 @@ class MigrationManagerSafetyTest {
             assertEquals(1, storage.journal?.verifiedAccountCount)
         }
 
+    // Audit item 4, update rule of 2026-11-09: the signing proof opens the wallet. Backup
+    // material and Nexus accounts are optional work that a busy Keystore or disk may skip for one
+    // run; what an earlier complete check recorded stays, and the next start judges again.
+    private class OptionalWorkFixture(
+        val manager: MigrationManager,
+        val storage: SuccessfulMigrationStorage,
+        val credentials: CredentialsRepository,
+        val address: String,
+    )
+
+    /** One phrase account after a first complete check: MNEMONIC label, SORA2 and Nexus rows. */
+    private suspend fun verifiedPhraseAccount(): OptionalWorkFixture {
+        val vector = soraVector(PINNED_TWELVE_WORD_SORA2_SEED)
+        val storage = successfulMigrationStorage(listOf(SoraAccountLocal(vector.address, "Primary")))
+        val userRepository = mockk<UserRepository>()
+        val credentials = mockk<CredentialsRepository>()
+        stubWalletMutationLock(
+            userRepository = userRepository,
+            selectedAccount = SoraAccount(vector.address, "Primary"),
+            onboardingState = OnboardingState.REGISTRATION_FINISHED,
+        )
+        coEvery { credentials.isExplicitWatchOnly(any()) } returns false
+        coEvery { credentials.retrieveKeyPair(any()) } answers { sr25519KeyPair(vector.seed) }
+        coEvery { credentials.retrieveMnemonic(any()) } returns MNEMONIC
+        coEvery { credentials.retrieveStoredSeed(any()) } returns ""
+        val manager = MigrationManager(
+            userRepository = userRepository,
+            credentialsRepository = credentials,
+            sora2AddressCodec = Sora2AddressCodec(),
+            database = storage.database,
+            migrationSr25519Crypto = testMigrationSr25519Crypto,
+        )
+        assertTrue(manager.start())
+        assertEquals("MNEMONIC", storage.wallets.getValue(vector.address).secretSource)
+        assertEquals("VERIFIED", storage.journal?.state)
+        assertTrue(storage.networkAccounts.getValue(vector.address).size > 1)
+        return OptionalWorkFixture(manager, storage, credentials, vector.address)
+    }
+
     @Test
-    fun `a storage failure while reading backup material ends the run without a verdict`() =
+    fun `a busy Keystore while reading backup material keeps the earlier label and the run completes`() =
+        runTest {
+            val fixture = verifiedPhraseAccount()
+            val identityBefore = fixture.storage.wallets.getValue(fixture.address)
+            val networkAccountsBefore = fixture.storage.networkAccounts.getValue(fixture.address).toSet()
+            val journalBefore = fixture.storage.journal
+            coEvery { fixture.credentials.retrieveMnemonic(any()) } throws
+                KeyMaterialUnavailableException("KEYSTORE_BUSY", transient = true)
+
+            // The stored key was read and signs: the wallet opens. Nothing is judged from a
+            // phrase that was not read, and nothing recorded changes.
+            assertEquals(MigrationOutcome.Verified, fixture.manager.startWithOutcome())
+
+            assertEquals(identityBefore, fixture.storage.wallets.getValue(fixture.address))
+            assertEquals(networkAccountsBefore, fixture.storage.networkAccounts.getValue(fixture.address).toSet())
+            assertEquals(journalBefore, fixture.storage.journal)
+            val report = fixture.manager.lastSecretsReports.getValue(fixture.address)
+            assertTrue(report.canSign)
+            assertEquals("NOT_JUDGED", report.phrase)
+            assertEquals("NOT_JUDGED", report.seed)
+            assertEquals(setOf("BACKUP_MATERIAL_NOT_READ"), report.diagnostics)
+            coVerify(exactly = 0) { fixture.storage.walletDao.recordMigrationFailure(any()) }
+        }
+
+    @Test
+    fun `backup material skipped by one run is judged again by the next`() = runTest {
+        val fixture = verifiedPhraseAccount()
+        coEvery { fixture.credentials.retrieveStoredSeed(any()) } throws
+            java.io.UncheckedIOException(java.io.IOException("busy disk"))
+        assertEquals(MigrationOutcome.Verified, fixture.manager.startWithOutcome())
+        assertEquals("NOT_JUDGED", fixture.manager.lastSecretsReports.getValue(fixture.address).phrase)
+
+        coEvery { fixture.credentials.retrieveStoredSeed(any()) } returns ""
+        assertEquals(MigrationOutcome.Verified, fixture.manager.startWithOutcome())
+
+        val report = fixture.manager.lastSecretsReports.getValue(fixture.address)
+        assertEquals("MATCHES", report.phrase)
+        assertFalse("BACKUP_MATERIAL_NOT_READ" in report.diagnostics)
+        assertEquals("MNEMONIC", fixture.storage.wallets.getValue(fixture.address).secretSource)
+    }
+
+    @Test
+    fun `a busy Keystore or disk while preparing Nexus accounts never ends the run`() = runTest {
+        val fixture = verifiedPhraseAccount()
+        val networkAccountsBefore = fixture.storage.networkAccounts.getValue(fixture.address).toSet()
+        mockkObject(NexusChildAccounts)
+        try {
+            for (
+                busy in listOf(
+                    KeyMaterialUnavailableException("KEYSTORE_BUSY", transient = true),
+                    android.database.sqlite.SQLiteDatabaseLockedException("database is locked"),
+                )
+            ) {
+                every { NexusChildAccounts.prepare(any(), any(), any(), any(), any()) } throws busy
+
+                assertEquals(MigrationOutcome.Verified, fixture.manager.startWithOutcome())
+
+                val report = fixture.manager.lastSecretsReports.getValue(fixture.address)
+                assertTrue(report.canSign)
+                assertEquals("MATCHES", report.phrase)
+                assertTrue("NEXUS_ACCOUNTS_NOT_PREPARED" in report.diagnostics)
+                // The recorded Nexus rows are left exactly as they are.
+                assertEquals(networkAccountsBefore, fixture.storage.networkAccounts.getValue(fixture.address).toSet())
+                assertEquals("MNEMONIC", fixture.storage.wallets.getValue(fixture.address).secretSource)
+            }
+        } finally {
+            unmockkObject(NexusChildAccounts)
+        }
+    }
+
+    @Test
+    fun `the signing key is never optional - a busy Keystore there still ends the run without a verdict`() =
+        runTest {
+            val fixture = verifiedPhraseAccount()
+            val identityBefore = fixture.storage.wallets.getValue(fixture.address)
+            coEvery { fixture.credentials.retrieveKeyPair(any()) } throws
+                KeyMaterialUnavailableException("KEYSTORE_BUSY", transient = true)
+
+            assertTrue(fixture.manager.startWithOutcome() is MigrationOutcome.Transient)
+
+            assertEquals(identityBefore, fixture.storage.wallets.getValue(fixture.address))
+            coVerify(exactly = 0) { fixture.storage.walletDao.recordMigrationFailure(any()) }
+        }
+
+    @Test
+    fun `an account whose earlier check found no usable key has no backup label to keep`() = runTest {
+        val fixture = verifiedPhraseAccount()
+        // As an earlier run left an account whose key could not sign then.
+        fixture.storage.wallets[fixture.address] = fixture.storage.wallets.getValue(fixture.address)
+            .copy(secretSource = "SECRET_UNAVAILABLE", migrationState = "UNAVAILABLE")
+        coEvery { fixture.credentials.retrieveMnemonic(any()) } throws
+            KeyMaterialUnavailableException("KEYSTORE_BUSY", transient = true)
+
+        // No label is made up for it: this run ends without a result and is retried by itself.
+        assertTrue(fixture.manager.startWithOutcome() is MigrationOutcome.Transient)
+
+        assertEquals("UNAVAILABLE", fixture.storage.wallets.getValue(fixture.address).migrationState)
+    }
+
+    @Test
+    fun `a storage failure while reading backup material before any complete check ends the run without a verdict`() =
         runTest {
             val vector = soraVector(PINNED_TWELVE_WORD_SORA2_SEED)
             val legacy = SoraAccountLocal(vector.address, "Primary")

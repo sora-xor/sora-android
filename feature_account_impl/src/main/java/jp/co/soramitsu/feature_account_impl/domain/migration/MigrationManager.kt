@@ -8,6 +8,7 @@ import javax.inject.Singleton
 import jp.co.soramitsu.common.account.Sora2AddressCodec
 import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.account.WalletRecoveryCapabilityGate
+import jp.co.soramitsu.common.logger.WalletDiagnostics
 import jp.co.soramitsu.common.util.KeyMaterialUnavailableException
 import jp.co.soramitsu.common.util.WalletDecryptionException
 import jp.co.soramitsu.common.util.WalletStorageFailures
@@ -163,6 +164,17 @@ class MigrationManager @Inject constructor(
 
         /** The backup material of an account that cannot sign is not looked at by this run. */
         const val BACKUP_NOT_JUDGED = "NOT_JUDGED"
+
+        /** Report note: a busy Keystore or disk kept this run from reading the backup material. */
+        const val BACKUP_MATERIAL_NOT_READ = "BACKUP_MATERIAL_NOT_READ"
+
+        /** Backup labels a complete check of a signing account writes. */
+        val JUDGED_BACKUP_LABELS = setOf(
+            StoredSecretsVerdict.SOURCE_MNEMONIC,
+            StoredSecretsVerdict.SOURCE_MNEMONIC_UNSUPPORTED,
+            StoredSecretsVerdict.SOURCE_RAW_SEED,
+            StoredSecretsVerdict.SOURCE_LEGACY_SECRET,
+        )
         val INTEGRITY_HASH = Regex("^[0-9a-f]{64}$")
     }
 
@@ -789,9 +801,21 @@ class MigrationManager @Inject constructor(
             signing.refusal?.let { throw MigrationVerificationException(it) }
 
             // Step 2. The phrase and the seed are backup material. A value that cannot be read
-            // has its own status and only limits what is offered as a backup.
-            val mnemonic = readBackupMaterial { credentialsRepository.retrieveMnemonic(account) }
-            val storedSeed = readBackupMaterial { credentialsRepository.retrieveStoredSeed(account) }
+            // has its own status and only limits what is offered as a backup. A value that could
+            // not be looked at just now (a busy Keystore or disk, after the signing key was read
+            // and proven) is optional work that did not run: the account keeps the backup label
+            // its last complete check gave it, and the next start judges the backup again.
+            val phraseRead = readBackupMaterial { credentialsRepository.retrieveMnemonic(account) }
+            val seedRead = readBackupMaterial { credentialsRepository.retrieveStoredSeed(account) }
+            val notReadNow = phraseRead.notReadNow ?: seedRead.notReadNow
+            if (notReadNow != null) {
+                return verifiedWithEarlierBackupLabel(legacy, keyPair, phraseRead, seedRead)
+                    // No complete check of this account yet: there is no label to keep, and
+                    // none is made up. The run ends without a result and is retried by itself.
+                    ?: throw notReadNow
+            }
+            val mnemonic = phraseRead.value
+            val storedSeed = seedRead.value
             val verdict = secretsJudge.judgeBackup(
                 address = legacy.substrateAddress,
                 signing = signing,
@@ -817,9 +841,10 @@ class MigrationManager @Inject constructor(
             // words.
             val nexusPhrase = verdict.recoveryPhrase
                 ?.takeIf { verdict.secretSource == StoredSecretsVerdict.SOURCE_MNEMONIC }
-            // Preparing them comes after the signing decision and can never undo it: if it
-            // fails for a reason other than storage, the SORA2 account is still verified, the
-            // recorded Nexus rows are left exactly as they are and the next start tries again.
+            // Preparing them comes after the signing decision and can never undo it or end the
+            // run: whatever the failure (a busy Keystore or disk included), the SORA2 account is
+            // still verified, the recorded Nexus rows are left exactly as they are and the next
+            // start tries again.
             var nexusPrepared = true
             if (nexusPhrase != null) {
                 networkAccounts += try {
@@ -837,12 +862,7 @@ class MigrationManager @Inject constructor(
                 } catch (error: OutOfMemoryError) {
                     throw error
                 } catch (error: Throwable) {
-                    if (
-                        WalletStorageFailures.isKeyMaterialUnavailable(error) ||
-                        WalletStorageFailures.isTransient(error)
-                    ) {
-                        throw error
-                    }
+                    WalletDiagnostics.recordException(error)
                     nexusPrepared = false
                     emptyList()
                 }
@@ -877,13 +897,18 @@ class MigrationManager @Inject constructor(
     }
 
     /**
-     * Reads one piece of backup material after the signing decision was made. Null when the
-     * stored value cannot be read (a fact about that value, reported as its own status); it
-     * never becomes a failure of the account. Only a Keystore or storage failure is rethrown: it
-     * says nothing about the account and must end the run without any result.
+     * One piece of backup material as this run found it: its [value] (null when the stored value
+     * cannot be read, a fact about that value), or [notReadNow] when a busy Keystore or disk
+     * kept the run from looking at it, which says nothing about the value.
      */
-    private suspend fun readBackupMaterial(read: suspend () -> String): String? = try {
-        read()
+    private class BackupRead(val value: String?, val notReadNow: Throwable? = null)
+
+    /**
+     * Reads one piece of backup material after the signing decision was made. Whatever happens
+     * here never becomes a failure of the account.
+     */
+    private suspend fun readBackupMaterial(read: suspend () -> String): BackupRead = try {
+        BackupRead(read())
     } catch (error: CancellationException) {
         throw error
     } catch (error: OutOfMemoryError) {
@@ -893,9 +918,60 @@ class MigrationManager @Inject constructor(
             WalletStorageFailures.isKeyMaterialUnavailable(error) ||
             WalletStorageFailures.isTransient(error)
         ) {
-            throw error
+            BackupRead(value = null, notReadNow = error)
+        } else {
+            BackupRead(value = null)
         }
-        null
+    }
+
+    /**
+     * The signing key was read and proven, and the backup material could not be looked at just
+     * now. Signing is what opens the wallet; the backup label is a description that an earlier
+     * complete check already wrote. That label is kept as it is (a wrong one would switch off
+     * what depends on it, for example Nexus sends for a phrase account), the Nexus rows are not
+     * touched, and the report says what was not judged. Null when this account has no label
+     * from a complete check to keep.
+     */
+    private suspend fun verifiedWithEarlierBackupLabel(
+        legacy: SoraAccountLocal,
+        keyPair: Sr25519Keypair,
+        phraseRead: BackupRead,
+        seedRead: BackupRead,
+    ): PreparedWallet? {
+        val earlier = database.walletIdentityDao().getWallets()
+            .firstOrNull { it.walletId == legacy.substrateAddress }
+            ?.takeIf { it.migrationState == "VERIFIED" && it.secretSource in JUDGED_BACKUP_LABELS }
+            ?: return null
+        (phraseRead.notReadNow ?: seedRead.notReadNow)?.let(WalletDiagnostics::recordException)
+        return PreparedWallet(
+            identity = WalletIdentityLocal(
+                walletId = legacy.substrateAddress,
+                displayName = legacy.accountName,
+                secretSource = earlier.secretSource,
+                migrationState = "VERIFIED",
+                derivationVersion = DERIVATION_VERSION,
+            ),
+            // Only the SORA2 row is stated; rows of other networks stay exactly as recorded.
+            networkAccounts = listOf(
+                NetworkAccountLocal(
+                    walletId = legacy.substrateAddress,
+                    networkId = "sora2",
+                    publicKey = keyPair.publicKey.toHex(),
+                    address = legacy.substrateAddress,
+                    derivationPath = "",
+                    derivationVersion = DERIVATION_VERSION,
+                    enabled = true,
+                )
+            ),
+            report = WalletSecretsReport(
+                walletId = legacy.substrateAddress,
+                canSign = true,
+                signingRefusal = null,
+                phrase = BACKUP_NOT_JUDGED,
+                seed = BACKUP_NOT_JUDGED,
+                diagnostics = setOf(BACKUP_MATERIAL_NOT_READ),
+            ),
+        )
     }
 
     private suspend fun prepareExplicitWatchOnlyWallet(
