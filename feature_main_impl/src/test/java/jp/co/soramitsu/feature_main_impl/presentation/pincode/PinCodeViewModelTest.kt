@@ -304,10 +304,6 @@ class PinCodeViewModelTest {
 
         delay(20L)
 
-        pinCodeViewModel.checkInviteLiveData.observeForever {
-            assertNotNull(it)
-        }
-
         verify(interactor).savePin("123456")
         verifyNoInteractions(progress)
     }
@@ -670,10 +666,6 @@ class PinCodeViewModelTest {
         pinCodeViewModel.pinCodeNumberClicked("6")
 
         delay(20L)
-
-        pinCodeViewModel.checkInviteLiveData.observeForever {
-            assertNotNull(it)
-        }
 
         verify(interactor).isCodeSet()
         verify(interactor).checkPin(anyString())

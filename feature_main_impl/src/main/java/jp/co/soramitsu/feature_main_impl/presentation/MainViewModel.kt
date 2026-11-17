@@ -25,7 +25,6 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import jp.co.soramitsu.androidfoundation.coroutine.CoroutineManager
-import jp.co.soramitsu.androidfoundation.fragment.SingleLiveEvent
 import jp.co.soramitsu.common.domain.RepeatStrategyBuilder
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.util.ext.setValueIfNew
@@ -55,18 +54,8 @@ class MainViewModel @Inject constructor(
     private val poolsUpdateSubscription: PoolsUpdateSubscription,
 ) : BaseViewModel() {
 
-    private val _showInviteErrorTimeIsUpLiveData = SingleLiveEvent<Unit>()
-    val showInviteErrorTimeIsUpLiveData: LiveData<Unit> = _showInviteErrorTimeIsUpLiveData
-
-    private val _showInviteErrorAlreadyAppliedLiveData = SingleLiveEvent<Unit>()
-    val showInviteErrorAlreadyAppliedLiveData: LiveData<Unit> =
-        _showInviteErrorAlreadyAppliedLiveData
-
     private val _badConnectionVisibilityLiveData = MutableLiveData<Boolean>()
     val badConnectionVisibilityLiveData: LiveData<Boolean> = _badConnectionVisibilityLiveData
-
-    private val _invitationCodeAppliedSuccessful = SingleLiveEvent<Unit>()
-    val invitationCodeAppliedSuccessful: LiveData<Unit> = _invitationCodeAppliedSuccessful
 
     private val _isPincodeUpdateNeeded = MutableLiveData<Boolean>()
     val isPincodeUpdateNeeded: LiveData<Boolean> = _isPincodeUpdateNeeded

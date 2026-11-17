@@ -10,11 +10,9 @@ import androidx.navigation.NavController
 import io.mockk.*
 import jp.co.soramitsu.androidfoundation.coroutine.CoroutineManager
 import jp.co.soramitsu.androidfoundation.resource.ResourceManager
-import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.account.AccountAvatarGenerator
 import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.backup.CloudBackupProvider
-import jp.co.soramitsu.common.domain.InvitationHandler
 import jp.co.soramitsu.feature_account_api.domain.model.WalletDraft
 import jp.co.soramitsu.feature_main_api.launcher.MainStarter
 import jp.co.soramitsu.feature_multiaccount_impl.domain.MultiaccountInteractor
@@ -78,8 +76,7 @@ class OnboardingCloudLifecycleContractTest {
     private fun cloudBackup() = DecryptedBackupAccount(name = account.accountName, address = account.substrateAddress,
         mnemonicPhrase = words.joinToString(" "), cryptoType = CryptoType.SR25519,
         backupAccountType = listOf(BackupAccountType.PASSPHRASE), seed = null, json = null)
-    private fun createViewModel(cloud: Boolean = true) = OnboardingViewModel(mockk<InvitationHandler>(relaxed = true),
-        interactor, starter, resources, CloudBackupProvider(cloud) { backup }, mockk<AccountAvatarGenerator>(relaxed = true), dispatcher)
+    private fun createViewModel(cloud: Boolean = true) = OnboardingViewModel(interactor, starter, resources, CloudBackupProvider(cloud) { backup }, mockk<AccountAvatarGenerator>(relaxed = true), dispatcher)
         .also { store.put("vm-${System.identityHashCode(it)}", it) }
     private fun prepare(vm: OnboardingViewModel) = act {
         vm.onAccountNameChanged(TextFieldValue(account.accountName)); vm.onCreateAccountContinueClicked(nav)

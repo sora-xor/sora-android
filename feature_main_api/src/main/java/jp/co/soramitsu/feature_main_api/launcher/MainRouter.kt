@@ -42,8 +42,6 @@ interface MainRouter {
      */
     fun returnFromPinConfirmation(action: PinCodeAction)
 
-    fun showFlexibleUpdateScreen()
-
     fun popBackStack()
 
     fun popBackStackToAccountList()
@@ -65,10 +63,6 @@ interface MainRouter {
 
     fun showDebugMenu()
 
-    fun currentDestinationIsPincode(): Boolean
-
-    fun currentDestinationIsClaimFragment(): Boolean
-
     fun currentDestinationIsPinCheckNeeded(): Boolean
 
     /**
@@ -76,8 +70,6 @@ interface MainRouter {
      * Opening one again takes the typed PIN, which a lock screen's fingerprint does not replace.
      */
     fun closeSecretScreensLeftOpen()
-
-    fun showProfile()
 
     fun showClaim()
 

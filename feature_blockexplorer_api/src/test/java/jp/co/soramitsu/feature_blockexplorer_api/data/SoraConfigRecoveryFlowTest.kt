@@ -28,7 +28,6 @@ class SoraConfigRecoveryFlowTest {
         val manager = subject()
         assertEquals("1234", manager.getGenesis()); assertEquals("0x1234", manager.getGenesis(true))
         assertEquals("Fixture", manager.getNodes().single().name)
-        assertEquals("https://fixture.example/join", manager.getInviteLink())
         assertEquals("https://fixture.example/types.json", manager.getSubstrateTypesUrl())
         assertEquals(OptionsProvider.blockExplorerUrl, manager.getBlockExplorerUrl())
         assertEquals("JPY", manager.getSelectedCurrency().code)
@@ -50,7 +49,7 @@ class SoraConfigRecoveryFlowTest {
         coEvery { http.getUtf8(any(), any()) } throws BoundedHttpTextException("BOUNDED_HTTP_IO")
         coEvery { preferences.getString("commonConfig") } returns "{malformed"
         assertEquals(emptyList<SoraConfigNode>(), manager.getNodes())
-        assertEquals("", manager.getGenesis()); assertEquals("", manager.getInviteLink()); assertEquals("", manager.getSubstrateTypesUrl())
+        assertEquals("", manager.getGenesis()); assertEquals("", manager.getSubstrateTypesUrl())
         assertEquals(OptionsProvider.blockExplorerUrl, manager.getBlockExplorerUrl())
         assertEquals("USD", manager.getSelectedCurrency().code)
     }
@@ -58,13 +57,12 @@ class SoraConfigRecoveryFlowTest {
         val manager = subject()
         coEvery { http.getUtf8(OptionsProvider.configMobile, any()) } throws BoundedHttpTextException("BOUNDED_HTTP_IO")
         coEvery { preferences.getString("mobileConfig") } returns ""
-        assertTrue(manager.getNodes().isEmpty()); assertEquals("", manager.getInviteLink())
+        assertTrue(manager.getNodes().isEmpty())
     }
     @Test fun `cache write failure preserves a successfully decoded live value`() = runTest {
         val manager = subject()
         coEvery { preferences.putString(any(), any()) } throws IllegalStateException("Storage unavailable")
         assertEquals("Fixture", manager.getNodes().single().name)
-        assertEquals("https://fixture.example/join", manager.getInviteLink())
     }
     @Test fun `cancellation during remote read cache write and fallback read is propagated`() = runTest {
         for (stage in listOf("read", "write", "cache")) {

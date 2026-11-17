@@ -34,6 +34,4 @@ object Const {
     const val HOW_TO_RUN_A_NODE_PAGE = "https://medium.com/sora-xor/how-to-run-a-sora-testnet-node-a4d42a9de1af"
     const val XOR_ASSET_ID = "xor#sora"
 
-    const val IS_PUSH_UPDATE_NEEDED = "is_push_update_needed"
-    const val DEVICE_TOKEN = "device_token"
 }

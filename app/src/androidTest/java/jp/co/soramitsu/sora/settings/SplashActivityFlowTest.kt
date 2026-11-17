@@ -66,7 +66,6 @@ class SplashActivityFlowTest {
     private val loading = SingleLiveEvent<Unit>()
     private val main = SingleLiveEvent<Unit>()
     private val onboarding = SingleLiveEvent<OnboardingState>()
-    private val invitation = SingleLiveEvent<Unit>()
     private val recovery = SingleLiveEvent<WalletMigrationRecoveryUiState>()
     private val safe = MutableStateFlow(SafeModeUiState())
     private val events = Channel<SafeModeEvent>(Channel.UNLIMITED)
@@ -86,7 +85,6 @@ class SplashActivityFlowTest {
         every { splashModel.loadingTextVisiblity } returns loading
         every { splashModel.showMainScreen } returns main
         every { splashModel.showOnBoardingScreen } returns onboarding
-        every { splashModel.showMainScreenFromInviteLink } returns invitation
         every { splashModel.showMigrationRecovery } returns recovery
         every { splashModel.start() } just Runs
         every { splashModel.nextScreen() } just Runs

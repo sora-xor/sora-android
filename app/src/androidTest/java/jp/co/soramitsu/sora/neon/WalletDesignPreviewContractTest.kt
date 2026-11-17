@@ -138,7 +138,6 @@ class WalletDesignPreviewContractTest(private val preview: Fixture) {
             arrayOf(Fixture("jp.co.soramitsu.common.presentation.compose.components.PolkaswapDisclaimerKt.PreviewPolkaswapDisclaimer02", listOf("@string/polkaswap_info_title", "@string/common_close"))),
             arrayOf(Fixture("jp.co.soramitsu.common.presentation.compose.components.AssetSelectionKt.Preview", listOf("XOR"))),
             arrayOf(Fixture("jp.co.soramitsu.feature_wallet_impl.presentation.cardshub.BackupCardKt.PreviewBackupCard", listOf("@string/wallet_backup", "@string/backup_now"))),
-            arrayOf(Fixture("jp.co.soramitsu.feature_main_impl.presentation.inappupdate.InAppUpdateScreenKt.PreviewInAppUpdateScreen", listOf("@string/restart_required", "@string/common_cancel"))),
             arrayOf(Fixture("jp.co.soramitsu.common.presentation.compose.components.PercentBarKt.PreviewPercentageBar", listOf("25%", "50%", "75%", "100%"))),
             arrayOf(Fixture("jp.co.soramitsu.feature_blockexplorer_api.presentation.screen.TxHistoryErrorScreensKt.PreviewTxHistoryErrorScreen", listOf("@string/activity_error_title", "@string/common_refresh"))),
             arrayOf(Fixture("jp.co.soramitsu.common.presentation.compose.uikit.organisms.LoadableContentCardKt.PreviewLoadableContentCard_LOADING", listOf())),

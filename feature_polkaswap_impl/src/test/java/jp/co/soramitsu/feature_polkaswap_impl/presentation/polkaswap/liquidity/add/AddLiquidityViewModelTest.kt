@@ -941,7 +941,6 @@ class AddLiquidityViewModelTest {
             advanceUntilIdle()
             // The transaction page carries "waiting for confirmation" and follows the result.
             kVerify(assetsRouter).showTxResult(txHash, TransactionScreen.ADD_LIQUIDITY)
-            kVerify(router, never()).returnToHubFragment()
             assertEquals(null, viewModel.alertDialogLiveData.value)
         }
 
@@ -991,7 +990,6 @@ class AddLiquidityViewModelTest {
             )
             kVerify(assetsRouter, never()).showTxResult(any(), any())
             // The dialog is on this screen, so the screen stays and offers Confirm again.
-            kVerify(router, never()).returnToHubFragment()
             assertTrue(confirmButton().enabled)
             assertFalse(confirmButton().loading)
         }

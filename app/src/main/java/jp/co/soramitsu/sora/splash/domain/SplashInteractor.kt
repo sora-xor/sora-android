@@ -179,8 +179,4 @@ class SplashInteractor @Inject constructor(
     } catch (_: Throwable) {
         false
     }
-
-    suspend fun saveInviteCode(inviteCode: String) {
-        userRepository.saveParentInviteCode(inviteCode)
-    }
 }

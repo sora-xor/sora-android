@@ -146,7 +146,7 @@ class NavigatorPinLockStackTest {
             assertFalse("$screen", router.showTxResult(txHash, screen))
 
             assertEquals("$screen", locked, screens())
-            assertTrue("$screen", router.currentDestinationIsPincode())
+            assertEquals("$screen", R.id.pincodeFragment, controller.currentDestination?.id)
 
             // The PIN is entered; the PIN lock removes itself and the screen is in front again.
             router.popBackStack()

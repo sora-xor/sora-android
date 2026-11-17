@@ -60,7 +60,6 @@ class SplashViewModel @Inject constructor(
 
     val showMainScreen = SingleLiveEvent<Unit>()
     val showOnBoardingScreen = SingleLiveEvent<OnboardingState>()
-    val showMainScreenFromInviteLink = SingleLiveEvent<Unit>()
     val showMigrationRecovery = SingleLiveEvent<WalletMigrationRecoveryUiState>()
 
     init {

@@ -26,8 +26,6 @@ interface BottomBarController {
     fun showBottomBar()
 
     fun hideBottomBar()
-
-    fun isBottomBarVisible(): Boolean
 }
 
 interface BarsColorHandler {

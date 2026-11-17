@@ -88,10 +88,6 @@
             android:theme="@style/ScannerTheme"
             android:exported="false"/>
 
-        <meta-data
-            android:name="com.onesignal.NotificationAccentColor.DEFAULT"
-            android:value="FF00FF00"/>
-
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.soraFileProvider"

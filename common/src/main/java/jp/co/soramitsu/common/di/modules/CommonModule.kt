@@ -48,7 +48,6 @@ import jp.co.soramitsu.common.data.network.connection.NetworkStateListener
 import jp.co.soramitsu.common.date.DateTimeFormatter
 import jp.co.soramitsu.common.delegate.WithProgressImpl
 import jp.co.soramitsu.common.domain.AppStateProvider
-import jp.co.soramitsu.common.domain.InvitationHandler
 import jp.co.soramitsu.common.interfaces.WithProgress
 import jp.co.soramitsu.common.io.FileManager
 import jp.co.soramitsu.common.io.FileManagerImpl
@@ -180,10 +179,6 @@ class CommonModule {
             )
         )
     }
-
-    @Provides
-    @Singleton
-    fun provideInvitationHandler(): InvitationHandler = InvitationHandler()
 
     @Provides
     @Singleton

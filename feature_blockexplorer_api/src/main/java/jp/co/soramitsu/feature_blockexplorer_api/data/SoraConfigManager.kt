@@ -235,10 +235,6 @@ class SoraConfigManager @Inject constructor(
         soraConfigFactory.nullableValue(EmptyArgs)
             ?.genesis.orEmpty().removeHexPrefix().let { if (prefix) it.addHexPrefix() else it }
 
-    suspend fun getInviteLink(): String =
-        soraConfigFactory.nullableValue(EmptyArgs)
-            ?.joinUrl.orEmpty()
-
     suspend fun getSubstrateTypesUrl(): String =
         soraConfigFactory.nullableValue(EmptyArgs)
             ?.substrateTypesUrl.orEmpty()

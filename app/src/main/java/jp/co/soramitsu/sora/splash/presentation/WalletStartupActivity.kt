@@ -220,14 +220,6 @@ class WalletStartupActivity : AppCompatActivity() {
                 multiaccStarter.startOnboardingFlow(this)
             }
         }
-        splashViewModel.showMainScreenFromInviteLink.observe(this) {
-            afterVerification {
-                runCatching { nodeManager.get().ensureStarted() }
-                reportStartupReady()
-                mainStarter.startWithInvite(this)
-                finish()
-            }
-        }
         splashViewModel.showMigrationRecovery.observe(this) { recovery ->
             showRecovery(recovery.code, recovery.options, recovery.canContinueLegacyWallet)
         }

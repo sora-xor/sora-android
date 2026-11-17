@@ -185,10 +185,6 @@ class PincodeFragment : SoraBaseFragment<PinCodeViewModel>() {
         viewModel.closeAppLiveData.observe {
             (activity as? MainActivity)?.closeApp()
         }
-        viewModel.checkInviteLiveData.observe {
-            (activity as? MainActivity)?.checkInviteAction()
-        }
-
     }
 
     /**

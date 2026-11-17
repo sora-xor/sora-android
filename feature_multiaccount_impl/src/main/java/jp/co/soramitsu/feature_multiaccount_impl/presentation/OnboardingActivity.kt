@@ -109,8 +109,6 @@ class OnboardingActivity : SoraBaseActivity<OnboardingViewModel>() {
 
     companion object {
 
-        const val ACTION_INVITE = "jp.co.soramitsu.feature_onboarding_impl.ACTION_INVITE"
-
         /** File managers label an exported backup in different ways, so any type can be picked. */
         private const val ANY_FILE_TYPE = "*/*"
         private const val BACKUP_FILE_CHUNK_BYTES = 8 * 1024

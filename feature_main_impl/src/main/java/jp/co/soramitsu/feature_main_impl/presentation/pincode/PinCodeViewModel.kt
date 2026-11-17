@@ -58,7 +58,6 @@ import jp.co.soramitsu.sora.substrate.substrate.ConnectionManager
 import kotlin.coroutines.EmptyCoroutineContext
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.launchIn
@@ -117,8 +116,6 @@ class PinCodeViewModel @Inject constructor(
     private val _fingerPrintCanceledFromPromptEvent = SingleLiveEvent<Unit>()
     val fingerPrintCanceledFromPromptEvent: LiveData<Unit> = _fingerPrintCanceledFromPromptEvent
 
-    private val _checkInviteLiveData = SingleLiveEvent<Unit>()
-    val checkInviteLiveData: LiveData<Unit> = _checkInviteLiveData
 
     private val _pincodeChangedEvent = SingleLiveEvent<Unit>()
     val pincodeChangedEvent: LiveData<Unit> = _pincodeChangedEvent

@@ -7,7 +7,6 @@ import androidx.navigation.NavController
 import androidx.navigation.NavDestination
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.mockk.*
-import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.presentation.args.*
 import jp.co.soramitsu.common.presentation.compose.webview.title
 import jp.co.soramitsu.common.presentation.compose.webview.url
@@ -60,7 +59,6 @@ class NavigationArgumentsContractTest {
     }
     @Test fun contactPickerPreservesTokenAndOptionalRecipient() {
         subject.showContacts("asset-id"); assertEquals("asset-id", args(R.id.contactsFragment).tokenId)
-        subject.showContactsFilled("asset-id", "recipient"); assertEquals("recipient", args(R.id.contactsFragment).address)
         assertEquals("asset-id", bundle.captured.tokenId)
     }
     @Test fun transferEntryKeepsRecipientAssetAndExactAmount() {
@@ -120,7 +118,6 @@ class NavigationArgumentsContractTest {
     }
     @Test fun staticRoutesOpenTheirOwnDestinations() {
         val routes = listOf<Pair<() -> Unit, Int>>(
-            subject::showFlexibleUpdateScreen to R.id.updateFlexibleFragment,
             subject::showSelectLanguage to R.id.selectLanguageFragment,
             subject::showPoolSettings to R.id.fullPoolListFragment,
             subject::showFullPoolsSettings to R.id.fullPoolListSettingsFragment,
@@ -131,7 +128,6 @@ class NavigationArgumentsContractTest {
             subject::showLoginSecurity to R.id.loginSecurityFragment,
             subject::showPolkamarkt to R.id.polkamarktFragment,
             subject::showAppSettings to R.id.appSettingsFragment,
-            subject::showProfile to R.id.profile_nav_graph,
             subject::showReferrals to R.id.referral_nav_graph,
             subject::showSelectNode to R.id.select_node_nav_graph,
             subject::showAddCustomNode to R.id.nodeDetailsFragment,
@@ -155,15 +151,6 @@ class NavigationArgumentsContractTest {
     @Test fun leavingOrdinaryExportReturnsToAccountList() {
         every { controller.previousBackStackEntry } returns null
         subject.leaveBackupJson(); verify(exactly = 1) { controller.popBackStack(R.id.accountListFragment, false) }
-    }
-    @Test fun tokenSelectionReturnsParcelableTokensToPreviousScreen() {
-        val handle = SavedStateHandle(); val previous = mockk<NavBackStackEntry>()
-        every { previous.savedStateHandle } returns handle; every { controller.previousBackStackEntry } returns previous
-        val token = Token("xor", "XOR", "SORA", 18, false, null, 1.0, 0.0, "$")
-        subject.returnToAddLiquidity(token, null)
-        val result = handle.get<Bundle>(BUNDLE_KEY)!!
-        assertEquals(token, result.tokenFromNullable); assertNull(result.tokenToNullable)
-        verify(exactly = 1) { controller.popBackStack() }
     }
     @Test fun confirmedPinReturnsTheConfirmedActionToTheScreenBelow() {
         val handle = SavedStateHandle(); val previous = mockk<NavBackStackEntry>()
@@ -189,11 +176,9 @@ class NavigationArgumentsContractTest {
         for (id in listOf(R.id.backupFragment, R.id.backupJsonFragment, R.id.pincodeFragment, R.id.claimFragment, R.id.cardsHubFragment)) {
             every { destination.id } returns id
             assertEquals(id == R.id.backupFragment || id == R.id.backupJsonFragment, subject.currentDestinationIsPinCheckNeeded())
-            assertEquals(id == R.id.pincodeFragment, subject.currentDestinationIsPincode())
-            assertEquals(id == R.id.claimFragment, subject.currentDestinationIsClaimFragment())
         }
         every { controller.currentDestination } returns null
-        assertFalse(subject.currentDestinationIsPinCheckNeeded()); assertFalse(subject.currentDestinationIsPincode()); assertFalse(subject.currentDestinationIsClaimFragment())
+        assertFalse(subject.currentDestinationIsPinCheckNeeded())
     }
     private fun closeSecretScreensFrom(vararg screens: Int): List<Int> {
         val stack = screens.toMutableList()
@@ -215,8 +200,8 @@ class NavigationArgumentsContractTest {
         assertEquals(listOf(R.id.cardsHubFragment), closeSecretScreensFrom(R.id.cardsHubFragment))
     }
     @Test fun explicitBackActionsTargetOnlyTheirNamedScreens() {
-        subject.returnToHubFragment(); subject.popBackStackToAccountDetails(); subject.popBackStack(); subject.popBackStackFragment(); subject.showAccountList()
-        verify { controller.popBackStack(R.id.cardsHubFragment, false) }; verify { controller.popBackStack(R.id.accountDetailsFragment, false) }
+        subject.popBackStackToAccountDetails(); subject.popBackStack(); subject.popBackStackFragment(); subject.showAccountList()
+        verify { controller.popBackStack(R.id.accountDetailsFragment, false) }
         verify(exactly = 2) { controller.popBackStack() }; verify { controller.navigate(R.id.accountListFragment, null) }
     }
 }

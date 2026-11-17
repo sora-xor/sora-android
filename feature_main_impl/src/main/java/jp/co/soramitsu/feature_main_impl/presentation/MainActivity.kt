@@ -38,9 +38,7 @@ import android.view.animation.TranslateAnimation
 import androidx.activity.viewModels
 import androidx.annotation.AttrRes
 import androidx.annotation.StringRes
-import androidx.appcompat.app.AlertDialog
 import androidx.core.view.ViewCompat
-import androidx.core.view.isVisible
 import androidx.navigation.NavController
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.ui.NavigationUI
@@ -82,8 +80,6 @@ class MainActivity :
     OnboardingNavigator {
 
     companion object {
-        private const val ACTION_INVITE = "jp.co.soramitsu.feature_main_impl.ACTION_INVITE"
-
         private const val ACTION_CHANGE_LANGUAGE =
             "jp.co.soramitsu.feature_main_impl.ACTION_CHANGE_LANGUAGE"
 
@@ -96,7 +92,6 @@ class MainActivity :
         private const val IDLE_MINUTES: Long = 5
         private const val ANIM_START_POSITION = 100f
         private const val ANIM_DURATION = 150L
-        private const val REQUEST_CODE_UPDATE = 1233
 
         /**
          * Opens the wallet in a task of its own. When the task of the screen that opens it is
@@ -124,18 +119,6 @@ class MainActivity :
             return activity.takeIf { state != null && state != ActivityManager.LOCK_TASK_MODE_NONE }
         }
 
-        fun startWithInvite(context: Context) {
-            val intent = Intent(context, MainActivity::class.java).apply {
-                action = ACTION_INVITE
-            }
-            val options = ActivityOptions.makeCustomAnimation(
-                context,
-                android.R.anim.fade_in,
-                android.R.anim.fade_out
-            )
-            context.startActivity(intent, options.toBundle())
-        }
-
         fun restartAfterLanguageChange(context: Context) {
             TrustedMainRestart.grant(ACTION_CHANGE_LANGUAGE)
             val intent = Intent(context, MainActivity::class.java).apply {
@@ -157,9 +140,6 @@ class MainActivity :
 
     @Inject
     lateinit var mainRouter: MainRouter
-
-//    @Inject
-//    lateinit var inAppUpdateManager: InAppUpdateManager
 
     @Inject
     lateinit var polkaswapRouter: PolkaswapRouter
@@ -202,30 +182,7 @@ class MainActivity :
     override fun onCreate(savedInstanceState: Bundle?) {
         restoredFromSavedState = savedInstanceState != null
         super.onCreate(savedInstanceState)
-//        lifecycleScope.launch {
-//            inAppUpdateManager.start(this@MainActivity)
-//        }
     }
-
-//    override fun askUserToInstall() {
-//        findNavController(R.id.fragmentNavHostMain)
-//            .currentBackStackEntry?.savedStateHandle
-//            ?.getLiveData<Boolean?>(FlexibleUpdateDialog.UPDATE_REPLY)?.observe(this) {
-//                if (it == true) inAppUpdateManager.startUpdateFlexible()
-//            }
-//        mainRouter.showFlexibleUpdateScreen()
-//    }
-
-//    override fun readyToShowFlexible(): Int? {
-//        return REQUEST_CODE_UPDATE
-//    }
-
-//    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-//        super.onActivityResult(requestCode, resultCode, data)
-//        if (requestCode == REQUEST_CODE_UPDATE) {
-//            inAppUpdateManager.flexibleDesire(resultCode)
-//        }
-//    }
 
     override fun initViews() {
         ViewCompat.setOnApplyWindowInsetsListener(binding.bottomNavigationView) { _, insets ->
@@ -295,24 +252,6 @@ class MainActivity :
     }
 
     override fun subscribe(viewModel: MainViewModel) {
-        viewModel.showInviteErrorTimeIsUpLiveData.observe(
-            this
-        ) {
-            AlertDialog.Builder(this)
-                .setMessage(R.string.invite_enter_error_time_is_up)
-                .setPositiveButton(R.string.common_ok) { _, _ -> }
-                .show()
-        }
-
-        viewModel.showInviteErrorAlreadyAppliedLiveData.observe(
-            this
-        ) {
-            AlertDialog.Builder(this)
-                .setMessage(R.string.invite_enter_error_already_applied)
-                .setPositiveButton(R.string.common_ok) { _, _ -> }
-                .show()
-        }
-
         viewModel.badConnectionVisibilityLiveData.observe(
             this
         ) {
@@ -321,16 +260,6 @@ class MainActivity :
             } else {
                 hideBadConnectionView()
             }
-        }
-
-        viewModel.invitationCodeAppliedSuccessful.observe(
-            this
-        ) {
-            AlertDialog.Builder(this)
-                .setTitle(R.string.invite_code_applied_title)
-                .setMessage(R.string.invite_code_applied_body)
-                .setPositiveButton(R.string.common_ok) { _, _ -> }
-                .show()
         }
 
         // Always the ordinary unlock, also for a 4-digit PIN from SORA 2.x: the PIN screen takes
@@ -387,12 +316,6 @@ class MainActivity :
         }
     }
 
-    fun checkInviteAction() {
-//        if (ACTION_INVITE == intent.action) {
-//            viewModel.startedWithInviteAction()
-//        }
-    }
-
     override fun showBottomBar() {
         requireBinding()?.fabMain?.show()
         requireBinding()?.bottomBarShadow?.show()
@@ -403,10 +326,6 @@ class MainActivity :
         requireBinding()?.fabMain?.gone()
         requireBinding()?.bottomBarShadow?.gone()
         requireBinding()?.bottomNavigationView?.gone()
-    }
-
-    override fun isBottomBarVisible(): Boolean {
-        return requireBinding()?.bottomNavigationView?.isVisible ?: false
     }
 
     fun restartAfterLanguageChange() {

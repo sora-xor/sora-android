@@ -454,7 +454,6 @@ class TransferAmountViewModelTest {
             R.string.common_error_general_title to R.string.common_error_general_message,
             transferAmountViewModel.errorFromResourceLiveData.value,
         )
-        verify(exactly = 0) { walletRouter.returnToHubFragment() }
         verify(exactly = 0) { assetsRouter.showTxResult(any(), any()) }
     }
 

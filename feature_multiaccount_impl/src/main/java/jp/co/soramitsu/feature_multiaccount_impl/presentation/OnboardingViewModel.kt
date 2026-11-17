@@ -41,7 +41,6 @@ import jp.co.soramitsu.androidfoundation.resource.ResourceManager
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.account.AccountAvatarGenerator
 import jp.co.soramitsu.common.account.SoraAccount
-import jp.co.soramitsu.common.domain.InvitationHandler
 import jp.co.soramitsu.common.domain.ResponseCode
 import jp.co.soramitsu.common.domain.SoraException
 import jp.co.soramitsu.common.logger.WalletDiagnostics
@@ -87,7 +86,6 @@ private const val SHORT_ADDRESS_CHARS = 8
 
 @HiltViewModel
 class OnboardingViewModel @Inject constructor(
-    private val invitationHandler: InvitationHandler,
     private val multiaccountInteractor: MultiaccountInteractor,
     private val mainStarter: MainStarter,
     private val resourceManager: ResourceManager,
@@ -559,10 +557,6 @@ class OnboardingViewModel @Inject constructor(
         )
 
         viewModelScope.launch { refreshFoundWallets() }
-    }
-
-    fun startedWithInviteAction() {
-        invitationHandler.invitationApplied()
     }
 
     fun onTermsClicked(navController: NavController) {

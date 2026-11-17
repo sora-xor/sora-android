@@ -35,8 +35,6 @@ class PrefsWalletDatasource @Inject constructor(
 ) : WalletDatasource {
 
     companion object {
-        private const val PREFS_PARENT_INVITATION = "parent_invitation"
-
         private const val KEY_DISCLAIMER_VISIBILITY = "key_disclaimer_visibility"
         private const val KEY_CLAIM_BLOCK_HASH = "key_claim_block_hash"
         private const val KEY_CLAIM_TX_HASH = "key_claim_tx_hash"

@@ -25,7 +25,6 @@ import jp.co.soramitsu.feature_ecosystem_impl.presentation.allcurrencies.*
 import jp.co.soramitsu.feature_ecosystem_impl.presentation.alldemeter.*
 import jp.co.soramitsu.feature_ecosystem_impl.presentation.claimdemeter.ClaimDemeterScreen
 import jp.co.soramitsu.feature_ecosystem_impl.presentation.claimdemeter.model.ClaimScreenState
-import jp.co.soramitsu.feature_main_impl.presentation.inappupdate.InAppUpdateScreen
 import jp.co.soramitsu.feature_wallet_impl.presentation.editcardshub.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.Assert.*
@@ -164,12 +163,5 @@ class ExploreAndWalletInteractionTest {
         compose.runOnIdle { state.value = EditCardsHubScreenState(emptyList(), emptyList()) }
         node(R.string.common_currencies).assertDoesNotExist()
         compose.onNodeWithText(compose.activity.getString(R.string.common_enabled).uppercase()).assertDoesNotExist()
-    }
-    @Test fun updatePromptMakesRestartExplicitAndKeepsCancelSeparate() {
-        show { InAppUpdateScreen({ events += "update" }, { events += "cancel" }) }
-        node(R.string.restart_required).assertExists(); node(R.string.update_downloaded).assertExists()
-        compose.onNode(hasText(compose.activity.getString(R.string.common_update)) and hasClickAction()).performClick()
-        node(R.string.common_cancel).performClick()
-        compose.runOnIdle { assertEquals(listOf("update", "cancel"), events) }
     }
 }

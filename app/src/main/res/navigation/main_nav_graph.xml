@@ -6,10 +6,6 @@
     app:startDestination="@id/wallet_nav_graph">
 
     <fragment
-        android:id="@+id/updateFlexibleFragment"
-        android:name="jp.co.soramitsu.feature_main_impl.presentation.inappupdate.FlexibleUpdateDialog" />
-
-    <fragment
         android:id="@+id/pincodeFragment"
         android:name="jp.co.soramitsu.feature_main_impl.presentation.pincode.PincodeFragment" />
 

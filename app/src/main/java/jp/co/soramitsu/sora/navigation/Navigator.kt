@@ -22,15 +22,12 @@ package jp.co.soramitsu.sora.navigation
 import androidx.navigation.NavController
 import androidx.navigation.NavOptions
 import java.math.BigDecimal
-import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.presentation.args.BUNDLE_KEY
 import jp.co.soramitsu.common.presentation.args.address
 import jp.co.soramitsu.common.presentation.args.addresses
 import jp.co.soramitsu.common.presentation.args.tokenFromId
-import jp.co.soramitsu.common.presentation.args.tokenFromNullable
 import jp.co.soramitsu.common.presentation.args.tokenId
 import jp.co.soramitsu.common.presentation.args.tokenToId
-import jp.co.soramitsu.common.presentation.args.tokenToNullable
 import jp.co.soramitsu.common.presentation.args.txHash
 import jp.co.soramitsu.common.presentation.args.withArgs
 import jp.co.soramitsu.common.presentation.compose.webview.title
@@ -121,10 +118,6 @@ class Navigator :
             action.name,
         )
         navController?.popBackStack()
-    }
-
-    override fun showFlexibleUpdateScreen() {
-        navController?.navigate(R.id.updateFlexibleFragment)
     }
 
     override fun popBackStack() {
@@ -218,16 +211,6 @@ class Navigator :
         )
     }
 
-    override fun showContactsFilled(tokenId: String, address: String) {
-        navController?.navigate(
-            R.id.contactsFragment,
-            withArgs {
-                this.tokenId = tokenId
-                this.address = address
-            }
-        )
-    }
-
     override fun showValTransferAmount(recipientId: String, assetId: String, initSendAmount: String?) {
         navController?.navigate(
             R.id.transferAmountFragment,
@@ -247,17 +230,6 @@ class Navigator :
             R.id.liquidityRemoveFragment,
             LiquidityRemoveFragment.createBundle(ids),
         )
-    }
-
-    override fun returnToAddLiquidity(tokenFrom: Token?, tokenTo: Token?) {
-        navController?.previousBackStackEntry?.savedStateHandle?.set(
-            BUNDLE_KEY,
-            withArgs {
-                this.tokenFromNullable = tokenFrom
-                this.tokenToNullable = tokenTo
-            }
-        )
-        navController?.popBackStack()
     }
 
     override fun openQrCodeFlow(shouldNavigateToScannerDirectly: Boolean) {
@@ -303,18 +275,6 @@ class Navigator :
         navController?.navigate(R.id.appSettingsFragment)
     }
 
-    override fun returnToHubFragment() {
-        navController?.popBackStack(R.id.cardsHubFragment, false)
-    }
-
-    override fun currentDestinationIsPincode(): Boolean {
-        return navController?.currentDestination != null && navController?.currentDestination!!.id == R.id.pincodeFragment
-    }
-
-    override fun currentDestinationIsClaimFragment(): Boolean {
-        return navController?.currentDestination != null && navController?.currentDestination!!.id == R.id.claimFragment
-    }
-
     override fun currentDestinationIsPinCheckNeeded(): Boolean {
         return navController?.currentDestination != null && (navController?.currentDestination!!.id == R.id.backupFragment || navController?.currentDestination!!.id == R.id.backupJsonFragment)
     }
@@ -326,10 +286,6 @@ class Navigator :
         while (controller.currentDestination?.id in secretScreens) {
             if (!controller.popBackStack()) return
         }
-    }
-
-    override fun showProfile() {
-        navController?.navigate(R.id.profile_nav_graph)
     }
 
     override fun showReferrals() {

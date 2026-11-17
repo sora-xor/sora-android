@@ -26,7 +26,6 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
 import io.mockk.coEvery
 import io.mockk.mockk
@@ -253,14 +252,5 @@ class SplashInteractorTest {
         )
 
         assertFalse(splashInteractor.canContinueLegacyWallet())
-    }
-
-    @Test
-    fun `saveInviteCode calls userRepository saveInviteCode`() = runTest {
-        val inviteCode = "inviteCode"
-
-        splashInteractor.saveInviteCode(inviteCode)
-
-        verify(userRepository).saveParentInviteCode(inviteCode)
     }
 }
