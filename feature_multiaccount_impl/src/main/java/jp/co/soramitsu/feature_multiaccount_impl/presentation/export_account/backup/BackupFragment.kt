@@ -40,8 +40,6 @@ import jp.co.soramitsu.feature_multiaccount_impl.util.type
 @AndroidEntryPoint
 class BackupFragment : SoraBaseFragment<BackupViewModel>() {
 
-    override val useSafeAurora = true
-
     @Inject
     lateinit var vmf: BackupViewModel.BackupViewModelFactory
 

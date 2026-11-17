@@ -50,8 +50,6 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import jp.co.soramitsu.androidfoundation.format.TextValue
 import jp.co.soramitsu.common.R
-import jp.co.soramitsu.common.presentation.compose.theme.neon.FxTier
-import jp.co.soramitsu.common.presentation.compose.theme.neon.LocalFx
 import jp.co.soramitsu.common.presentation.compose.theme.neon.neon
 import jp.co.soramitsu.common.presentation.compose.uikit.tokens.ScreenStatus
 import jp.co.soramitsu.common.presentation.compose.neon.BleachedButton
@@ -95,9 +93,7 @@ fun QrCodeScannerScreen(
         // viewfinder, framed by cyan corner brackets.
         val blurCameraBackground = remember { Color.Black.copy(alpha = .55f) }
         val neon = MaterialTheme.neon
-        val fx = LocalFx.current
         val bracketColor = neon.cyan
-        val bracketGlow = fx.glows && fx.tier != FxTier.MINIMAL
         // Edge to edge: keep the bottom button above the navigation bar; the scrim still fills it.
         val navigationBarBottom =
             WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
@@ -202,7 +198,6 @@ fun QrCodeScannerScreen(
                         length = 24.dp.toPx(),
                     )
                     val bracketStroke = Stroke(width = 3.dp.toPx(), cap = StrokeCap.Round)
-                    val glowStroke = Stroke(width = 10.dp.toPx(), cap = StrokeCap.Round)
 
                     onDrawBehind {
                         drawPath(
@@ -213,9 +208,6 @@ fun QrCodeScannerScreen(
                             ),
                             color = blurCameraBackground
                         )
-                        if (bracketGlow) {
-                            drawPath(brackets, bracketColor.copy(alpha = .25f), style = glowStroke)
-                        }
                         drawPath(brackets, bracketColor, style = bracketStroke)
                     }
                 }

@@ -101,7 +101,7 @@ import java.io.File
 class NeonProductionScreensTest {
     @get:Rule val rule = createAndroidComposeRule<ComponentActivity>()
     private val context = InstrumentationRegistry.getInstrumentation().targetContext
-    private val minimal = FxPolicy(FxTier.MINIMAL, true, true, true)
+    private val minimal = FxPolicy(FxTier.MINIMAL, true, true)
 
     @Test fun receiveActionsRemainSeparateAndReachableOnCompactLargeTextScreens() {
         var fontScale by mutableStateOf(1f)

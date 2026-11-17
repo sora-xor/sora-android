@@ -114,7 +114,7 @@ abstract class SoraBaseActivity<T : BaseViewModel> : AppCompatActivity() {
 
                 Box(modifier = Modifier.fillMaxSize()) {
                     // The page colour, and in light mode the classic SORA background image on it.
-                    NeonBackground(safe = useSafeAurora())
+                    NeonBackground()
                     if (!isDarkModeOn.value) {
                         Image(
                             modifier = Modifier.fillMaxSize(),
@@ -165,9 +165,6 @@ abstract class SoraBaseActivity<T : BaseViewModel> : AppCompatActivity() {
     abstract fun onToolbarNavigation()
 
     open fun backgroundColor() = R.attr.baseBackground
-
-    @Composable
-    protected open fun useSafeAurora(): Boolean = false
 
     @Composable
     abstract fun Content(padding: PaddingValues, scrollState: ScrollState)

@@ -261,7 +261,6 @@ internal fun PortfolioHero(
 @Composable
 private fun ScopeChip(model: PortfolioModel, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val n = MaterialTheme.neon
-    val fx = LocalFx.current
     val all = model.scope == PortfolioScope.ALL
     val wallet = model.selectedWallet
     val title = if (all) stringResource(R.string.portfolio_all_wallets) else wallet?.name.orEmpty()
@@ -272,7 +271,7 @@ private fun ScopeChip(model: PortfolioModel, onClick: () -> Unit, modifier: Modi
             modifier = Modifier
                 .height(48.dp)
                 .widthIn(max = 224.dp)
-                .neonGlass(shape, n, fx)
+                .neonGlass(shape)
                 .clickable(onClickLabel = label, role = Role.Button, onClick = onClick)
                 .semantics(mergeDescendants = true) { contentDescription = label }
                 .padding(start = 6.dp, end = 12.dp),

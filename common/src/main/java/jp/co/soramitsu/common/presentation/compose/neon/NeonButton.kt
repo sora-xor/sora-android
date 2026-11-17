@@ -73,7 +73,6 @@ import jp.co.soramitsu.ui_core.lit.litLacquerShadow
 import jp.co.soramitsu.ui_core.lit.litPlate
 import androidx.compose.ui.unit.dp
 import jp.co.soramitsu.common.R
-import jp.co.soramitsu.common.presentation.compose.theme.neon.GlowSpec
 import jp.co.soramitsu.common.presentation.compose.theme.neon.LocalFx
 import jp.co.soramitsu.common.presentation.compose.theme.neon.NeonTokens
 import jp.co.soramitsu.common.presentation.compose.theme.neon.neon
@@ -97,28 +96,26 @@ private data class NeonButtonStyle(
     val pressedFill: Brush?,
     val label: Color,
     val edge: Brush?,
-    val glow: GlowSpec?,
     val pressedOverlay: Color?,
 )
 
 private fun styleFor(variant: NeonVariant, n: NeonTokens, enabled: Boolean): NeonButtonStyle {
     val ink = if (n.isDark) n.onAccent.copy(alpha = .08f) else Color(0xFF0B0C14).copy(alpha = .10f)
-    fun filled(fill: Brush, glow: GlowSpec) = if (enabled) {
-        NeonButtonStyle(fill, null, n.onAccent, n.borderCtaSheen, glow, ink)
+    fun filled(fill: Brush) = if (enabled) {
+        NeonButtonStyle(fill, null, n.onAccent, null, ink)
     } else {
-        NeonButtonStyle(SolidColor(n.ctaDisabled), null, n.textDisabled, null, null, null)
+        NeonButtonStyle(SolidColor(n.ctaDisabled), null, n.textDisabled, null, null)
     }
     return when (variant) {
-        NeonVariant.Primary -> filled(n.ctaPrimary, n.glowPrimary)
-        NeonVariant.Swap -> filled(n.ctaSwap, n.glowSwap)
-        NeonVariant.Safe -> filled(n.ctaSafe, n.glowSafe)
+        NeonVariant.Primary -> filled(n.ctaPrimary)
+        NeonVariant.Swap -> filled(n.ctaSwap)
+        NeonVariant.Safe -> filled(n.ctaSafe)
         NeonVariant.Secondary -> NeonButtonStyle(
             // A raised plate stands behind it.
             fill = null,
             pressedFill = SolidColor(n.glassFillPressed),
             label = if (enabled) n.textPrimary else n.textDisabled,
-            edge = if (enabled) n.borderGlass else null,
-            glow = null,
+            edge = null,
             pressedOverlay = null,
         )
         NeonVariant.Tertiary -> NeonButtonStyle(
@@ -126,7 +123,6 @@ private fun styleFor(variant: NeonVariant, n: NeonTokens, enabled: Boolean): Neo
             pressedFill = SolidColor(n.cyan.copy(alpha = .10f)),
             label = if (enabled) n.link else n.textDisabled,
             edge = null,
-            glow = null,
             pressedOverlay = null,
         )
         NeonVariant.Destructive -> NeonButtonStyle(
@@ -134,7 +130,6 @@ private fun styleFor(variant: NeonVariant, n: NeonTokens, enabled: Boolean): Neo
             pressedFill = SolidColor(n.errorContainer),
             label = if (enabled) n.error else n.textDisabled,
             edge = if (enabled) SolidColor(n.error.copy(alpha = .60f)) else null,
-            glow = null,
             pressedOverlay = null,
         )
     }
@@ -143,7 +138,7 @@ private fun styleFor(variant: NeonVariant, n: NeonTokens, enabled: Boolean): Neo
 /**
  * SORA Neon button (design spec 7.1). Heights: [jp.co.soramitsu.ui_core.component.button.properties.Size]
  * Large 56, Small 40, ExtraSmall 32. Disabled buttons need a reason (in the label or in a line
- * below). [pulse] is only for the two whitelisted CTAs of design spec 4.7.2.
+ * below).
  */
 private val NeonPillRadius = 28.dp
 
@@ -158,7 +153,6 @@ fun NeonButton(
     rightIcon: Painter? = null,
     maxLines: Int = 1,
     loading: Boolean = false,
-    pulse: Boolean = false,
     shape: Shape = NeonPillShape,
     onClick: () -> Unit,
 ) {
@@ -172,12 +166,6 @@ fun NeonButton(
         targetValue = if (pressed && enabled && !loading && !fx.reduceMotion) .98f else 1f,
         animationSpec = tween(if (fx.reduceMotion) 0 else NeonMotion.PRESS),
         label = "neonButtonScale",
-    )
-    val pulseAlpha = rememberCtaPulse(
-        enabled = enabled && !loading,
-        whitelisted = pulse && variant == NeonVariant.Primary,
-        rest = style.glow?.rest ?: 0f,
-        peak = style.glow?.peak ?: 0f,
     )
     val loadingLabel = stringResource(R.string.common_loading)
     // The filled variants are lacquer: a gloss over the fill and their own colour on the plate below.
@@ -212,21 +200,6 @@ fun NeonButton(
         contentAlignment = Alignment.Center,
         propagateMinConstraints = true,
     ) {
-        val glow = style.glow
-        if (glow != null) {
-            NeonGlow(
-                spec = glow,
-                shape = shape,
-                modifier = Modifier.matchParentSize(),
-                alpha = {
-                    when {
-                        loading -> .35f
-                        pressed -> glow.pressed
-                        else -> pulseAlpha()
-                    }
-                },
-            )
-        }
         Row(
             modifier = Modifier
                 .graphicsLayer {

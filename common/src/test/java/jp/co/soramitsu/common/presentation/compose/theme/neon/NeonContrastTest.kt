@@ -93,10 +93,7 @@ class NeonContrastTest {
         assertEquals(NightThemeColors.FgPrimary, NeonClassicDark.textPrimary)
         assertEquals(NightThemeColors.AccentPrimary, NeonClassicDark.brandRed)
         for (n in listOf(NeonClassicLight, NeonClassicDark)) {
-            // Lit surfaces: no aurora, grain or glow, and the neumorphic depth is real.
-            assertEquals(Color.Transparent, n.auroraCyan)
-            assertEquals(0f, n.grainAlpha)
-            assertEquals(0f, n.glowPrimary.rest)
+            // Lit surfaces: the neumorphic depth is real.
             assertTrue("neumorphic controls have depth", n.neuDark.alpha > 0f)
             assertEquals(n.surface, n.glassFill)
             assertEquals(SolidColor(n.brandRed), n.ctaPrimary)
@@ -210,7 +207,6 @@ class NeonContrastTest {
             assertEquals(SolidColor(n.ctaDisabled), disabledSafe.styleField("fill"))
             assertEquals(n.textDisabled, disabledSafe.labelColor())
             assertEquals(null, disabledSafe.styleField("edge"))
-            assertEquals(null, disabledSafe.styleField("glow"))
             assertEquals(null, disabledSafe.styleField("pressedOverlay"))
             assertTrue("disabled safe fill differs from enabled", disabledSafe.styleField("fill") != safe.styleField("fill"))
 

@@ -28,7 +28,7 @@ class SafetySurfaceInteractionTest {
     private fun show(fontScale: Float = 1f, content: @Composable () -> Unit) {
         compose.setContent { SoraAppTheme {
             val density = LocalDensity.current
-            CompositionLocalProvider(LocalDensity provides Density(density.density, fontScale), LocalFx provides FxPolicy(FxTier.MINIMAL, true, true, true)) {
+            CompositionLocalProvider(LocalDensity provides Density(density.density, fontScale), LocalFx provides FxPolicy(FxTier.MINIMAL, true, true)) {
                 Box(Modifier.size(320.dp, 560.dp)) { content() }
             }
         } }

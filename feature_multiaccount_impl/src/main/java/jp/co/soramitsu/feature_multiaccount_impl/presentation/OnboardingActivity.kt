@@ -303,10 +303,6 @@ class OnboardingActivity : SoraBaseActivity<OnboardingViewModel>() {
         }
     }
 
-    @Composable
-    override fun useSafeAurora(): Boolean =
-        viewModel.toolbarState.observeAsState().value?.basic?.visibility == true
-
     @OptIn(
         ExperimentalAnimationApi::class, ExperimentalUnitApi::class,
     )

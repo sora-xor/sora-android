@@ -82,7 +82,7 @@ fun progressPrompt(elapsedMillis: Long, keepWaitingAtMillis: Long? = null): Prog
 data class ProgressAction(val label: String, val onClick: () -> Unit)
 
 /**
- * Upgrade progress (design spec 9.3; U1, U2, U5): the breathing shield, a title, a body, the
+ * Upgrade progress (design spec 9.3; U1, U2, U5): the shield, a title, a body, the
  * real phases as a StepList and the "keep SORA open" callout. Back is disabled while it shows.
  *
  * [initialElapsedMillis] lets a caller that started the work earlier continue the 10 s / 60 s
@@ -123,7 +123,7 @@ fun UpgradeProgressContent(
             .testTag(SafeModeTags.PROGRESS),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        ShieldEmblem(breathing = true)
+        ShieldEmblem()
         Spacer(Modifier.size(8.dp))
         Text(
             modifier = Modifier

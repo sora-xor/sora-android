@@ -233,7 +233,7 @@ abstract class SoraBaseFragment<T : BaseViewModel> : Fragment() {
                     }
 
                     Box(Modifier.fillMaxSize()) {
-                        NeonBackground(safe = useSafeAurora)
+                        NeonBackground()
                         Scaffold(
                             scaffoldState = scaffoldState,
                             backgroundColor = Color.Transparent,
@@ -293,8 +293,6 @@ abstract class SoraBaseFragment<T : BaseViewModel> : Fragment() {
     open fun onNavClicked() {
         viewModel.onNavIcon()
     }
-
-    protected open val useSafeAurora: Boolean = false
 
     abstract fun NavGraphBuilder.content(scrollState: ScrollState, navController: NavHostController)
 

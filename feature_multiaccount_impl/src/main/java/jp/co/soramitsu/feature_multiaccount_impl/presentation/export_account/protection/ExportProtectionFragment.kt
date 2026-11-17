@@ -41,8 +41,6 @@ import jp.co.soramitsu.feature_multiaccount_impl.util.type
 @AndroidEntryPoint
 class ExportProtectionFragment : SoraBaseFragment<ExportProtectionViewModel>() {
 
-    override val useSafeAurora = true
-
     @Inject
     lateinit var vmf: ExportProtectionViewModel.ExportProtectionViewModelFactory
 

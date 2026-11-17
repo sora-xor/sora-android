@@ -264,7 +264,7 @@ private fun TutorialButtons(
             modifier = Modifier.testTagAsId("CreateNewAccount").padding(top = Dimens.x1).fillMaxWidth(),
             text = stringResource(R.string.create_account_title),
             onClick = onCreateAccount, size = Size.Large, variant = NeonVariant.Primary,
-            maxLines = 3, pulse = true,
+            maxLines = 3,
         )
         ChoiceExplanation(R.string.wallet_create_explanation)
         NeonButton(

@@ -46,8 +46,6 @@ import jp.co.soramitsu.common.presentation.args.addresses
 @AndroidEntryPoint
 class BackupJsonFragment : SoraBaseFragment<BackupJsonViewModel>() {
 
-    override val useSafeAurora = true
-
     @Inject
     lateinit var vmf: BackupJsonViewModel.BackupJsonViewModelFactory
 

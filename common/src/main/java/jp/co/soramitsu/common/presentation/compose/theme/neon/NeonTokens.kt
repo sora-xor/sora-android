@@ -37,20 +37,6 @@ import jp.co.soramitsu.common.presentation.compose.theme.tokens.DayThemeColors
 import jp.co.soramitsu.common.presentation.compose.theme.tokens.NightThemeColors
 
 /**
- * A coloured glow (design spec 2.1 "Glow specs"). [blur] is already converted with
- * [designBlur]. Only the alpha of a glow layer is ever animated, never the shadow itself.
- */
-@Immutable
-data class GlowSpec(
-    val color: Color,
-    val rest: Float,
-    val peak: Float,
-    val pressed: Float,
-    val blur: Dp,
-    val offsetY: Dp,
-)
-
-/**
  * Every SORA Neon token that has no ui-core `CustomColors` slot (design spec 2.5).
  * Read with `MaterialTheme.neon` inside `SoraAppTheme`.
  */
@@ -66,13 +52,6 @@ data class NeonTokens(
     val toast: Color,
     val scrim: Color,
     val scrimOverBlur: Color,
-    // aurora + grain
-    val auroraCyan: Color,
-    val auroraMagenta: Color,
-    val auroraRed: Color,
-    val safeAuroraMint: Color,
-    val safeAuroraCyan: Color,
-    val grainAlpha: Float,
     // glass
     val glassFill: Color,
     val glassFillStrong: Color,
@@ -80,10 +59,7 @@ data class NeonTokens(
     val glassSolid: Color,
     val chromeTint: Color,
     // lines
-    val borderGlass: Brush,
     val borderSafe: Brush,
-    val borderCtaSheen: Brush,
-    val borderChromeTop: Brush,
     val hairline: Color,
     val divider: Color,
     val borderInput: Color,
@@ -119,10 +95,6 @@ data class NeonTokens(
     val info: Color,
     val infoContainer: Color,
     val redContainer: Color,
-    // glow
-    val glowPrimary: GlowSpec,
-    val glowSwap: GlowSpec,
-    val glowSafe: GlowSpec,
     // neumorphic
     val neuBg: Color,
     val neuFace: Brush,
@@ -171,7 +143,6 @@ private fun shadow(blur: Float, color: Color, x: Int, y: Int, alpha: Float) = Bo
 )
 
 private val noBrush: Brush = SolidColor(Color.Transparent)
-private val noGlow = GlowSpec(Color.Transparent, 0f, 0f, 0f, 0.dp, 0.dp)
 private val classicInfo = c(0xFF4394E6)
 private val classicInfoContainer = c(0xFFE6F3FF)
 
@@ -191,13 +162,9 @@ private fun classic(
     isDark = isDark,
     canvas = page, layer1 = page, surface = surface, surfaceVariant = surfaceVariant, sheet = surface,
     toast = inverted, scrim = Colors.Brown90.copy(alpha = .32f), scrimOverBlur = Colors.Brown90.copy(alpha = .24f),
-    auroraCyan = Color.Transparent, auroraMagenta = Color.Transparent, auroraRed = Color.Transparent,
-    safeAuroraMint = Color.Transparent, safeAuroraCyan = Color.Transparent,
-    grainAlpha = 0f,
     glassFill = surface, glassFillStrong = surface, glassFillPressed = surfaceVariant,
     glassSolid = surface, chromeTint = surface,
-    borderGlass = noBrush, borderSafe = noBrush, borderCtaSheen = noBrush,
-    borderChromeTop = noBrush,
+    borderSafe = noBrush,
     hairline = if (isDark) a(0x120620, .28f) else a(0x6B4B40, .16f), divider = if (isDark) a(0x120620, .28f) else a(0x6B4B40, .16f),
     borderInput = tertiary, focusRing = secondary,
     textPrimary = primary, textSecondary = secondary, textTertiary = tertiary, textDisabled = tertiary,
@@ -210,7 +177,6 @@ private fun classic(
     success = success, successContainer = successContainer, warning = warning, warningContainer = warningContainer,
     warningFill = warning, onWarningFill = Colors.Brown90, error = error, errorContainer = errorContainer,
     info = classicInfo, infoContainer = classicInfoContainer, redContainer = accentContainer,
-    glowPrimary = noGlow, glowSwap = noGlow, glowSafe = noGlow,
     neuBg = page,
     neuFace = if (isDark) diag(0f to c(0xFF653A80), 1f to c(0xFF522A6A)) else diag(0f to c(0xFFFAF7F5), 1f to c(0xFFF0EBE7)),
     neuFacePressed = surfaceVariant,
@@ -250,7 +216,7 @@ val NeonClassicDark = classic(
 /**
  * The tokens under the system high-contrast setting (design spec 4.0 `highContrast`): tertiary
  * text reads as secondary and 1 dp hairlines are twice as strong. [FxPolicy] covers the rest
- * (2 dp borders, no glow, opaque glass).
+ * (2 dp borders).
  */
 fun NeonTokens.forHighContrast(): NeonTokens = copy(
     textTertiary = textSecondary,

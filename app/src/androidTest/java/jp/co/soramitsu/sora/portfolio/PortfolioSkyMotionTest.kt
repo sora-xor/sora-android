@@ -38,8 +38,8 @@ class PortfolioSkyMotionTest {
 
     // XOR wraps round behind the planet; VAL is highlighted.
     private val fan = listOf(FanSlice("xor", 70.0, 70), FanSlice("val", 30.0, 30))
-    private val motion = FxPolicy(FxTier.FULL, reduceMotion = false, opaqueGlass = false, highContrast = false)
-    private val still = FxPolicy(FxTier.REDUCED, reduceMotion = false, opaqueGlass = false, highContrast = false)
+    private val motion = FxPolicy(FxTier.FULL, reduceMotion = false, highContrast = false)
+    private val still = FxPolicy(FxTier.REDUCED, reduceMotion = false, highContrast = false)
     private val tilt = TiltState()
 
     private fun sky(fx: FxPolicy) {

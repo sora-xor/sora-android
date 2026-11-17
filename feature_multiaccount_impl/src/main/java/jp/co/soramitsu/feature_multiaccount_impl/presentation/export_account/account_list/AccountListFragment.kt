@@ -55,8 +55,6 @@ import jp.co.soramitsu.ui_core.resources.Dimens
 @AndroidEntryPoint
 class AccountListFragment : SoraBaseFragment<AccountListViewModel>() {
 
-    override val useSafeAurora = true
-
     override val viewModel: AccountListViewModel by viewModels()
 
     override fun onCreateView(

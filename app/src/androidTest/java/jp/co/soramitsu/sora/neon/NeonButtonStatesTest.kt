@@ -50,7 +50,7 @@ class NeonButtonStatesTest {
     }
 
     @Test fun withMotionOnTheLoadingSignalAnimates() {
-        val motion = FxPolicy(FxTier.FULL, reduceMotion = false, opaqueGlass = false, highContrast = false)
+        val motion = FxPolicy(FxTier.FULL, reduceMotion = false, highContrast = false)
         // The filled button's lacquer is baked once per size on its first draw. Baked here first, so the
         // screen capture below does not wait for it on a busy device.
         val density = InstrumentationRegistry.getInstrumentation().targetContext.resources.displayMetrics.density

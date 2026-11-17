@@ -20,7 +20,6 @@ limitations under the License.
 package jp.co.soramitsu.common.presentation.compose.neon.safemode
 
 import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -60,7 +59,6 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.material.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -95,7 +93,6 @@ import androidx.core.view.WindowCompat
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.presentation.compose.neon.NeonBackground
 import jp.co.soramitsu.common.presentation.compose.neon.NeonButton
-import jp.co.soramitsu.common.presentation.compose.neon.NeonGlow
 import jp.co.soramitsu.common.presentation.compose.neon.NeonVariant
 import jp.co.soramitsu.common.presentation.compose.neon.neonBorder
 import jp.co.soramitsu.common.presentation.compose.theme.neon.LocalFx
@@ -124,40 +121,19 @@ object SafeModeTags {
     const val PHRASE_VEIL = "safeModePhraseVeil"
 }
 
-/**
- * Shield emblem: a glass circle with a 1.5 dp mint ring, a mint shield and a static `glow.safe`.
- * [breathing] (in-progress states only) runs at most five slow cycles, FULL tier and no reduced
- * motion only; it then rests at the static glow.
- */
+/** Shield emblem: a solid circle with a 1.5 dp mint ring and a mint shield. */
 @Composable
 fun ShieldEmblem(
     modifier: Modifier = Modifier,
     size: Dp = 72.dp,
-    breathing: Boolean = false,
 ) {
     val n = MaterialTheme.neon
-    val fx = LocalFx.current
-    val glow = remember { Animatable(0f) }
-    LaunchedEffect(breathing, fx.pulses) {
-        glow.snapTo(0f)
-        if (!breathing || !fx.pulses) return@LaunchedEffect
-        repeat(5) {
-            glow.animateTo(1f, tween(1600))
-            glow.animateTo(0f, tween(1600))
-        }
-    }
     Box(
         modifier = modifier
             .size(size + 24.dp)
             .clearAndSetSemantics { },
         contentAlignment = Alignment.Center,
     ) {
-        NeonGlow(
-            spec = n.glowSafe,
-            shape = CircleShape,
-            modifier = Modifier.size(size),
-            alpha = { n.glowSafe.rest + (n.glowSafe.peak - n.glowSafe.rest) * glow.value },
-        )
         Box(
             modifier = Modifier
                 .size(size)
@@ -177,8 +153,8 @@ fun ShieldEmblem(
 }
 
 /**
- * Full-screen Safe Mode host: the safe aurora (cyan and mint only), system-bar padding and a
- * scrolling column of at most 560 dp, centred. The Safe CTA is never pinned, so every option
+ * Full-screen Safe Mode host: the page background, system-bar padding and a scrolling column of
+ * at most 560 dp, centred. The Safe CTA is never pinned, so every option
  * stays visible together (design spec 9.4).
  */
 @Composable
@@ -187,7 +163,7 @@ fun SafeModeScreen(
     content: @Composable ColumnScope.() -> Unit,
 ) {
     Box(modifier = modifier.fillMaxSize()) {
-        NeonBackground(safe = true)
+        NeonBackground()
         BoxWithConstraints(
             modifier = Modifier
                 .fillMaxSize()
@@ -252,16 +228,12 @@ fun SafetyPanel(
     modifier: Modifier = Modifier,
     assurances: List<String> = emptyList(),
     callout: String? = null,
-    breathing: Boolean = false,
     beforeActions: @Composable ColumnScope.() -> Unit = {},
     actions: @Composable ColumnScope.() -> Unit,
 ) {
     val n = MaterialTheme.neon
     SafeCard(modifier = modifier.testTag(SafeModeTags.PANEL)) {
-        ShieldEmblem(
-            modifier = Modifier.align(Alignment.CenterHorizontally),
-            breathing = breathing,
-        )
+        ShieldEmblem(modifier = Modifier.align(Alignment.CenterHorizontally))
         Spacer(Modifier.size(8.dp))
         Text(
             modifier = Modifier

@@ -48,9 +48,9 @@ import kotlinx.coroutines.flow.asStateFlow
  * Effect tiers (design spec 4.0). Decided once per device state and read everywhere through
  * [LocalFx]; components never check the API level themselves.
  *
- * - FULL: glow, finite pulses, cross-window blur behind dialogs (API 31+ only).
- * - REDUCED: everything static; no pulses, no live blur.
- * - MINIMAL: opaque cards, 1.5 dp rings instead of glow, flat neumorphic faces, aurora only.
+ * - FULL: the decorative motion of the lit materials (API 31+ only).
+ * - REDUCED: shadows and loops, no decorative motion.
+ * - MINIMAL: flat neumorphic faces, no shadows and no loops.
  */
 enum class FxTier { FULL, REDUCED, MINIMAL }
 
@@ -58,23 +58,13 @@ enum class FxTier { FULL, REDUCED, MINIMAL }
 data class FxPolicy(
     val tier: FxTier,
     val reduceMotion: Boolean,
-    val opaqueGlass: Boolean,
     val highContrast: Boolean,
 ) {
-    // The classic SORA design draws every surface solid, with no glow, live blur, pulse or
-    // ambient texture, whatever the tier.
-
-    /** Coloured glow layers. */
+    /**
+     * The classic SORA design draws no glow on any tier. Only the bottom bar's Polkaswap button
+     * still reads this; it goes with that branch.
+     */
     val glows: Boolean get() = false
-
-    /** Cross-window blur behind dialogs and sheets. */
-    val realBlur: Boolean get() = false
-
-    /** Finite CTA pulse and Safe Mode breathing. */
-    val pulses: Boolean get() = false
-
-    /** Grain and grid textures. */
-    val ambientDetail: Boolean get() = false
 
     /** Neumorphic shadows and the light-theme card shadow. */
     val shadows: Boolean get() = tier != FxTier.MINIMAL
@@ -87,7 +77,7 @@ data class FxPolicy(
 
     companion object {
         /** Safe default used before a device has been measured (and in previews). */
-        val Default = FxPolicy(FxTier.REDUCED, reduceMotion = false, opaqueGlass = true, highContrast = false)
+        val Default = FxPolicy(FxTier.REDUCED, reduceMotion = false, highContrast = false)
 
         fun from(signals: DeviceFxSignals, reduceEffects: Boolean): FxPolicy {
             val tier = resolveFxTier(
@@ -100,7 +90,6 @@ data class FxPolicy(
             return FxPolicy(
                 tier = tier,
                 reduceMotion = reduceEffects || !signals.animatorsEnabled,
-                opaqueGlass = true,
                 highContrast = signals.highContrast,
             )
         }

@@ -63,8 +63,6 @@ import jp.co.soramitsu.ui_core.theme.customTypography
 @AndroidEntryPoint
 class AccountDetailsFragment : SoraBaseFragment<AccountDetailsViewModel>() {
 
-    override val useSafeAurora = true
-
     @Inject
     lateinit var vmf: AccountDetailsViewModel.AccountDetailsViewModelFactory
 
