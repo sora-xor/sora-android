@@ -1074,14 +1074,19 @@ class MigrationManagerSafetyTest {
         coEvery { fixture.credentials.retrieveMnemonic(any()) } throws
             KeyMaterialUnavailableException("KEYSTORE_BUSY", transient = true)
 
-        // No label is made up for it: this run ends without a result and is retried by itself.
-        assertTrue(fixture.manager.startWithOutcome() is MigrationOutcome.Transient)
+        // Its key is proven now, so it is verified; no label is made up for its backup.
+        assertEquals(MigrationOutcome.Verified, fixture.manager.startWithOutcome())
 
-        assertEquals("UNAVAILABLE", fixture.storage.wallets.getValue(fixture.address).migrationState)
+        val identity = fixture.storage.wallets.getValue(fixture.address)
+        assertEquals("VERIFIED", identity.migrationState)
+        assertEquals("BACKUP_NOT_CHECKED", identity.secretSource)
     }
 
     @Test
-    fun `a storage failure while reading backup material before any complete check ends the run without a verdict`() =
+    // Codex review 2: the first check of an account (no identity recorded yet) with a busy
+    // Keystore while reading the phrase. The proven signing key verifies the wallet; the backup
+    // is recorded as not checked yet, never with a made-up label, and the next start judges it.
+    fun `a busy Keystore on the first check verifies the proven key and records the backup as not checked`() =
         runTest {
             val vector = soraVector(PINNED_TWELVE_WORD_SORA2_SEED)
             val legacy = SoraAccountLocal(vector.address, "Primary")
@@ -1105,12 +1110,28 @@ class MigrationManagerSafetyTest {
                 database = storage.database,
                 migrationSr25519Crypto = testMigrationSr25519Crypto,
             )
-
-            // Transient: nothing is recorded, no account is marked, the next start runs again.
-            assertTrue(manager.startWithOutcome() is MigrationOutcome.Transient)
             assertTrue(storage.wallets.isEmpty())
-            assertEquals(null, storage.journal)
+
+            assertEquals(MigrationOutcome.Verified, manager.startWithOutcome())
+
+            val identity = storage.wallets.getValue(vector.address)
+            assertEquals("VERIFIED", identity.migrationState)
+            assertEquals("BACKUP_NOT_CHECKED", identity.secretSource)
+            // Only the SORA2 account: the Nexus accounts wait for a judged phrase.
+            assertEquals(listOf("sora2"), storage.networkAccounts.getValue(vector.address).map { it.networkId })
+            assertEquals("VERIFIED", storage.journal?.state)
+            assertEquals(1, storage.journal?.verifiedAccountCount)
+            val report = manager.lastSecretsReports.getValue(vector.address)
+            assertTrue(report.canSign)
+            assertEquals("NOT_JUDGED", report.phrase)
+            assertEquals(setOf("BACKUP_MATERIAL_NOT_READ"), report.diagnostics)
             coVerify(exactly = 0) { storage.walletDao.recordMigrationFailure(any()) }
+
+            // The next start reads the phrase: the backup is judged and the Nexus accounts come.
+            coEvery { credentials.retrieveMnemonic(any()) } returns MNEMONIC
+            assertEquals(MigrationOutcome.Verified, manager.startWithOutcome())
+            assertEquals("MNEMONIC", storage.wallets.getValue(vector.address).secretSource)
+            assertTrue(storage.networkAccounts.getValue(vector.address).size > 1)
         }
 
     @Test

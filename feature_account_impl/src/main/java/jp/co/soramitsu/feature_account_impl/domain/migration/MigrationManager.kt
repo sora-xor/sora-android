@@ -803,16 +803,13 @@ class MigrationManager @Inject constructor(
             // Step 2. The phrase and the seed are backup material. A value that cannot be read
             // has its own status and only limits what is offered as a backup. A value that could
             // not be looked at just now (a busy Keystore or disk, after the signing key was read
-            // and proven) is optional work that did not run: the account keeps the backup label
-            // its last complete check gave it, and the next start judges the backup again.
+            // and proven) is optional work that did not run: the account is verified by its key,
+            // keeps the backup label its last complete check gave it (or, on its first check,
+            // is recorded as not checked yet), and the next start judges the backup again.
             val phraseRead = readBackupMaterial { credentialsRepository.retrieveMnemonic(account) }
             val seedRead = readBackupMaterial { credentialsRepository.retrieveStoredSeed(account) }
-            val notReadNow = phraseRead.notReadNow ?: seedRead.notReadNow
-            if (notReadNow != null) {
-                return verifiedWithEarlierBackupLabel(legacy, keyPair, phraseRead, seedRead)
-                    // No complete check of this account yet: there is no label to keep, and
-                    // none is made up. The run ends without a result and is retried by itself.
-                    ?: throw notReadNow
+            if (phraseRead.notReadNow != null || seedRead.notReadNow != null) {
+                return verifiedBeforeBackupIsJudged(legacy, keyPair, phraseRead, seedRead)
             }
             val mnemonic = phraseRead.value
             val storedSeed = seedRead.value
@@ -926,28 +923,30 @@ class MigrationManager @Inject constructor(
 
     /**
      * The signing key was read and proven, and the backup material could not be looked at just
-     * now. Signing is what opens the wallet; the backup label is a description that an earlier
-     * complete check already wrote. That label is kept as it is (a wrong one would switch off
-     * what depends on it, for example Nexus sends for a phrase account), the Nexus rows are not
-     * touched, and the report says what was not judged. Null when this account has no label
-     * from a complete check to keep.
+     * now. Signing is what opens the wallet, so the account is verified. The backup label is a
+     * description: one that an earlier complete check wrote is kept as it is (a wrong one would
+     * switch off what depends on it, for example Nexus sends for a phrase account). On the first
+     * check there is none, and none is made up: the account is recorded as
+     * [StoredSecretsVerdict.SOURCE_BACKUP_NOT_CHECKED], which offers nothing that needs a backup.
+     * Either way the Nexus rows are not touched, the report says what was not judged, and the
+     * next start judges the backup again.
      */
-    private suspend fun verifiedWithEarlierBackupLabel(
+    private suspend fun verifiedBeforeBackupIsJudged(
         legacy: SoraAccountLocal,
         keyPair: Sr25519Keypair,
         phraseRead: BackupRead,
         seedRead: BackupRead,
-    ): PreparedWallet? {
-        val earlier = database.walletIdentityDao().getWallets()
+    ): PreparedWallet {
+        val earlierLabel = database.walletIdentityDao().getWallets()
             .firstOrNull { it.walletId == legacy.substrateAddress }
             ?.takeIf { it.migrationState == "VERIFIED" && it.secretSource in JUDGED_BACKUP_LABELS }
-            ?: return null
+            ?.secretSource
         (phraseRead.notReadNow ?: seedRead.notReadNow)?.let(WalletDiagnostics::recordException)
         return PreparedWallet(
             identity = WalletIdentityLocal(
                 walletId = legacy.substrateAddress,
                 displayName = legacy.accountName,
-                secretSource = earlier.secretSource,
+                secretSource = earlierLabel ?: StoredSecretsVerdict.SOURCE_BACKUP_NOT_CHECKED,
                 migrationState = "VERIFIED",
                 derivationVersion = DERIVATION_VERSION,
             ),

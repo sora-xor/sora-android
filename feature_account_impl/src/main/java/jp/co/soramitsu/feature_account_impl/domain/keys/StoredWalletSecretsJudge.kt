@@ -130,6 +130,14 @@ class StoredSecretsVerdict(
         const val SOURCE_MNEMONIC_UNSUPPORTED = "MNEMONIC_UNSUPPORTED"
         const val SOURCE_RAW_SEED = "RAW_SEED"
         const val SOURCE_LEGACY_SECRET = "LEGACY_SECRET"
+
+        /**
+         * Not a judgement: the signing key was proven, and the stored phrase and seed could not
+         * be read yet to judge them as a backup (a busy Keystore or disk on the first check). It
+         * names no backup, so nothing that needs one (Nexus accounts, removal) is offered until
+         * a later start judges the backup and records one of the labels above.
+         */
+        const val SOURCE_BACKUP_NOT_CHECKED = "BACKUP_NOT_CHECKED"
     }
 }
 
