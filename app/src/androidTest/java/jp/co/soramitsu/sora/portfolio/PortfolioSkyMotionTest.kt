@@ -20,6 +20,7 @@ import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.FanSlice
 import jp.co.soramitsu.feature_wallet_impl.presentation.portfolio.PortfolioSky
 import jp.co.soramitsu.feature_wallet_impl.presentation.portfolio.SkyGeometry
 import jp.co.soramitsu.feature_wallet_impl.presentation.portfolio.motion.TiltState
+import jp.co.soramitsu.ui_core.lit.LitHeroRenderer
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Assume.assumeTrue
@@ -91,6 +92,36 @@ class PortfolioSkyMotionTest {
         }
         compose.mainClock.advanceTimeBy(100L)
         assertFalse(before.sameAs(frame()))
+    }
+
+    @Test fun aPhoneWithoutTheShaderStillDrawsThePortfolioAndRespondsToTilt() {
+        // A failed shader compilation is cached for the process. A capable emulator can exercise
+        // the same fallback as an older phone by starting with that cached result.
+        val renderer = LitHeroRenderer::class.java
+        val lock = renderer.getDeclaredField("lock").apply { isAccessible = true }.get(null)!!
+        val tried = renderer.getDeclaredField("tried").apply { isAccessible = true }
+        val compiled = renderer.getDeclaredField("compiled").apply { isAccessible = true }
+        val previous = synchronized(lock) {
+            val saved = tried.getBoolean(null) to compiled.get(null)
+            tried.setBoolean(null, true)
+            compiled.set(null, null)
+            saved
+        }
+        try {
+            sky(motion)
+            settle()
+            val initial = frame()
+            compose.mainClock.advanceTimeBy(1_500L)
+            assertTrue("The fallback has no orbiting comet", initial.sameAs(frame()))
+            compose.runOnIdle { tilt.x = 0.8f }
+            compose.mainClock.advanceTimeBy(100L)
+            assertFalse("The fallback planet and ring must respond to tilt", initial.sameAs(frame()))
+        } finally {
+            synchronized(lock) {
+                compiled.set(null, previous.second)
+                tried.setBoolean(null, previous.first)
+            }
+        }
     }
 
     @Test fun reduceMotionDrawsTheRingAtOnce() {
