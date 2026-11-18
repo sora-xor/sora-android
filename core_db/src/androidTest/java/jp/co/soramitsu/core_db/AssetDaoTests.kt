@@ -29,6 +29,7 @@ import jp.co.soramitsu.core_db.dao.AssetDao
 import jp.co.soramitsu.common.domain.AssetHolder
 import jp.co.soramitsu.core_db.model.AssetLocal
 import jp.co.soramitsu.core_db.model.FiatTokenPriceLocal
+import jp.co.soramitsu.core_db.model.SoraAccountLocal
 import jp.co.soramitsu.core_db.model.TokenLocal
 import jp.co.soramitsu.test_data.TestTokens
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -78,6 +79,7 @@ class AssetDaoTests {
      */
     @Test
     fun aBlacklistedTokenIsLeftOutOfTheActiveAndVisibleListsButFoundUnderTheEmptyName() = runTest {
+        db.accountDao().insertSoraAccount(SoraAccountLocal("address", "Test account"))
         dao.insertTokenList(
             listOf(
                 map(TestTokens.xorToken).copy(whitelistName = AssetHolder.DEFAULT_WHITE_LIST_NAME),
