@@ -29,11 +29,35 @@ class ScreenLockPromptTest {
         assertFalse(ScreenLockPrompt.usesBiometricPrompt(26))
     }
 
+    // Codex re-review 1: Android 11 and later accept the device credential alone. Neither a
+    // biometric nor Keyguard's result (which may come from a fingerprint) ever counts there.
     @Test
-    fun `only a success of the screen lock itself counts`() {
-        assertTrue(ScreenLockPrompt.isScreenLock(BiometricPrompt.AUTHENTICATION_RESULT_TYPE_DEVICE_CREDENTIAL))
-        assertTrue(ScreenLockPrompt.isScreenLock(ScreenLockPrompt.KEYGUARD_CONFIRMED))
-        assertFalse(ScreenLockPrompt.isScreenLock(BiometricPrompt.AUTHENTICATION_RESULT_TYPE_BIOMETRIC))
-        assertFalse(ScreenLockPrompt.isScreenLock(BiometricPrompt.AUTHENTICATION_RESULT_TYPE_UNKNOWN))
+    fun `Android 11 and later accept the device credential alone and never a biometric`() {
+        listOf(30, 31, 34, 36).forEach { sdk ->
+            assertTrue(ScreenLockPrompt.accepts(BiometricPrompt.AUTHENTICATION_RESULT_TYPE_DEVICE_CREDENTIAL, sdk))
+            assertFalse(ScreenLockPrompt.accepts(BiometricPrompt.AUTHENTICATION_RESULT_TYPE_BIOMETRIC, sdk))
+            assertFalse(ScreenLockPrompt.accepts(BiometricPrompt.AUTHENTICATION_RESULT_TYPE_UNKNOWN, sdk))
+            assertFalse(ScreenLockPrompt.accepts(ScreenLockPrompt.SCREEN_LOCK_OR_SYSTEM_BIOMETRIC_PRE_R, sdk))
+        }
+    }
+
+    // Platform limit, kept on purpose: Android 8 to 10 have no screen-lock-only API, so Keyguard's
+    // confirmation (screen lock, or a fingerprint the system accepted) is what counts there, and
+    // only that: a BiometricPrompt result of any kind does not.
+    @Test
+    fun `Android 8 to 10 accept Keyguard's confirmation only, named for what it is`() {
+        listOf(26, 28, 29).forEach { sdk ->
+            assertTrue(ScreenLockPrompt.accepts(ScreenLockPrompt.SCREEN_LOCK_OR_SYSTEM_BIOMETRIC_PRE_R, sdk))
+            assertFalse(ScreenLockPrompt.accepts(BiometricPrompt.AUTHENTICATION_RESULT_TYPE_BIOMETRIC, sdk))
+            assertFalse(ScreenLockPrompt.accepts(BiometricPrompt.AUTHENTICATION_RESULT_TYPE_DEVICE_CREDENTIAL, sdk))
+        }
+        // It is not a BiometricPrompt result type, so it can never pass as the device credential.
+        assertFalse(
+            ScreenLockPrompt.SCREEN_LOCK_OR_SYSTEM_BIOMETRIC_PRE_R in setOf(
+                BiometricPrompt.AUTHENTICATION_RESULT_TYPE_UNKNOWN,
+                BiometricPrompt.AUTHENTICATION_RESULT_TYPE_DEVICE_CREDENTIAL,
+                BiometricPrompt.AUTHENTICATION_RESULT_TYPE_BIOMETRIC,
+            )
+        )
     }
 }

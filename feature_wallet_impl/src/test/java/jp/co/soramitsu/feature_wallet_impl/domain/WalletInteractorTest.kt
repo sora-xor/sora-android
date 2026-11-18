@@ -208,8 +208,8 @@ class WalletInteractorTest {
 
         assertEquals(TransactionOutcome.Confirmed("", ""), interactor.migrate())
 
-        verify(userRepository).saveNeedsMigration(false, soraAccount)
-        verify(userRepository, never()).saveNeedsMigration(false, other)
+        verify(userRepository).markClaimConfirmed(soraAccount)
+        verify(userRepository, never()).markClaimConfirmed(other)
     }
 
     @Test
@@ -219,7 +219,7 @@ class WalletInteractorTest {
 
         interactor.checkSubmittedClaim("0xhash")
 
-        verify(userRepository, never()).saveNeedsMigration(org.mockito.kotlin.eq(false), any())
+        verify(userRepository, never()).markClaimConfirmed(any())
     }
 
     @Test
@@ -229,7 +229,7 @@ class WalletInteractorTest {
 
         interactor.checkSubmittedClaim("0xhash")
 
-        verify(userRepository).saveNeedsMigration(false, soraAccount)
+        verify(userRepository).markClaimConfirmed(soraAccount)
     }
 
     @Test
@@ -240,7 +240,7 @@ class WalletInteractorTest {
         // Nothing to send: the network already has the claim.
         assertEquals(null, interactor.migrate())
 
-        verify(userRepository).saveNeedsMigration(false, soraAccount)
+        verify(userRepository).markClaimConfirmed(soraAccount)
         verify(credentialsRepository, never()).retrieveKeyPair(soraAccount)
         verify(walletRepository, never()).migrate(
             anyString(),

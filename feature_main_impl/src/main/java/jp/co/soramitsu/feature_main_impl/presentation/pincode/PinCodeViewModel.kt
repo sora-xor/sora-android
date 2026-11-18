@@ -19,6 +19,7 @@ limitations under the License.
 
 package jp.co.soramitsu.feature_main_impl.presentation.pincode
 
+import android.os.Build
 import android.os.CountDownTimer
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -342,12 +343,13 @@ class PinCodeViewModel @Inject constructor(
 
     /**
      * The system prompt reported success: the phone's owner is here and chooses the new PIN.
-     * Only the screen lock itself counts ([ScreenLockPrompt.isScreenLock]), never a biometric.
-     * A prompt that closes any other way (cancelled, failed, not shown) changes nothing, and
-     * the next touch of the keypad shows it again.
+     * Only the system's own confirmation counts ([ScreenLockPrompt.accepts]): on Android 11 and
+     * later the device credential alone, never a biometric; on Android 8 to 10 Keyguard's
+     * confirmation (platform limit). A prompt that closes any other way (cancelled, failed, not
+     * shown) changes nothing, and the next touch of the keypad shows it again.
      */
-    fun onScreenLockConfirmed(authenticationType: Int) {
-        if (!awaitingScreenLock || !ScreenLockPrompt.isScreenLock(authenticationType)) return
+    fun onScreenLockConfirmed(authenticationType: Int, sdkInt: Int = Build.VERSION.SDK_INT) {
+        if (!awaitingScreenLock || !ScreenLockPrompt.accepts(authenticationType, sdkInt)) return
         screenLockConfirmation = phoneScreenLock?.confirmed()
         awaitingScreenLock = false
     }

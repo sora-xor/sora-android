@@ -505,23 +505,35 @@ object WalletUpgradeBackup {
         return false
     }
 
-    /** True when [authorizeAutomaticMigrationRetry] would retry. Reads no file. */
-    @Synchronized
+    /**
+     * True when [authorizeAutomaticMigrationRetry] would retry. Reads no file and never takes
+     * this object's lock (see [startupFailureToShow]).
+     */
     fun isAutomaticMigrationRetryAvailable(@Suppress("UNUSED_PARAMETER") context: Context): Boolean =
-        !automaticRetryFailedInProcess &&
-            blockingFailure?.code == "WALLET_MIGRATION_RECOVERY_REQUIRED" &&
-            migrationRecoverySnapshot != null
+        automaticRetryAvailable(blockingFailure)
 
     /**
      * The startup failure that the first screen must show at once, or null when the start can
      * continue: nothing blocks it, or an interrupted verification is about to be (or was just)
-     * retried automatically. Consistent with a concurrent [authorizeAutomaticMigrationRetry].
+     * retried automatically.
+     *
+     * Never takes this object's lock: the startup screen asks on the main thread (also when it
+     * is recreated, for example on rotation), while Try again or the storage step may hold the
+     * lock on a worker for long (walking the cache, `StorageManager.allocateBytes`, a database
+     * repair). It reads volatile fields only, the failure first, and stays consistent with a
+     * concurrent [authorizeAutomaticMigrationRetry] by the order that one writes in: a granted
+     * retry stores its snapshot before it clears the failure, and a refused one marks itself
+     * failed before it restores the failure, so a read in between answers as before or as after.
      */
-    @Synchronized
-    fun startupFailureToShow(context: Context): Failure? {
+    fun startupFailureToShow(@Suppress("UNUSED_PARAMETER") context: Context): Failure? {
         val failure = blockingFailure ?: return null
-        return if (isAutomaticMigrationRetryAvailable(context)) null else failure
+        return if (automaticRetryAvailable(failure)) null else failure
     }
+
+    private fun automaticRetryAvailable(failure: Failure?): Boolean =
+        failure?.code == "WALLET_MIGRATION_RECOVERY_REQUIRED" &&
+            !automaticRetryFailedInProcess &&
+            migrationRecoverySnapshot != null
 
     /**
      * "Set up this device again (keeps old data)", offered when
@@ -822,6 +834,7 @@ object WalletUpgradeBackup {
         if (Looper.getMainLooper().isCurrentThread) return first
         fun freeNow(): Long = runCatching { StatFs(context.noBackupFilesDir.absolutePath).availableBytes }.getOrDefault(0L)
         val freeBefore = if (availableBackupBytesOverride == null) freeNow() else 0L
+        whileReclaimingCacheForTest?.invoke()
         val freed = runCatching {
             DisposableStorage.reclaimCache(
                 cacheDirectory = context.cacheDir,
@@ -844,6 +857,15 @@ object WalletUpgradeBackup {
         if (freeNow() <= freeBefore) return first
         return runCatching { work(null) }
     }
+
+    /**
+     * Runs inside [withDisposableStorageReclaimed], with this object's lock held, right before
+     * the cache is walked: a test parks the storage step there to show that nothing the screens
+     * read waits for it.
+     */
+    @VisibleForTesting
+    @Volatile
+    var whileReclaimingCacheForTest: (() -> Unit)? = null
 
     private fun prepareWithCapacityOverride(
         context: Context,

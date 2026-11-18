@@ -14,25 +14,46 @@ import androidx.biometric.BiometricPrompt
  * never accepted in its place: it is not the screen lock, and it may belong to someone the owner
  * once enrolled.
  *
- * Android 11 and later: `BiometricPrompt` with [AUTHENTICATORS] (the device credential alone).
- * Android 8 to 10 cannot ask `BiometricPrompt` for the device credential alone; there Keyguard's
- * own confirmation screen is used ([keyguardIntent]), as `WalletGenerationRecoveryActivity` does.
+ * Android 11 and later: `BiometricPrompt` with [AUTHENTICATORS] (the device credential alone),
+ * and only a success the prompt reports as the device credential counts ([accepts]).
+ *
+ * Android 8 to 10, platform limit: no API of those versions asks for the screen lock alone.
+ * `BiometricPrompt` cannot take the device credential alone there, and Keyguard's own
+ * confirmation screen ([keyguardIntent], as `WalletGenerationRecoveryActivity` uses) may accept
+ * the phone's fingerprint as well (Android 9 and 10 offer it on that screen and answer
+ * `RESULT_OK` either way). Its success is therefore named for what it is,
+ * [SCREEN_LOCK_OR_SYSTEM_BIOMETRIC_PRE_R], and is accepted on those versions only: it is the
+ * system's own confirmation, and asking for the recovery phrase instead would lock out owners who
+ * no longer have it (before this check nothing was asked at all). Android 11 and later never
+ * accept it.
  */
 object ScreenLockPrompt {
 
     /** The only authenticator these prompts allow: the screen lock, no biometric. */
     const val AUTHENTICATORS = BiometricManager.Authenticators.DEVICE_CREDENTIAL
 
-    /** What Keyguard's confirmation reports as when it succeeds (Android 8 to 10). */
-    const val KEYGUARD_CONFIRMED = BiometricPrompt.AUTHENTICATION_RESULT_TYPE_DEVICE_CREDENTIAL
+    /**
+     * Keyguard's confirmation succeeded (Android 8 to 10): the phone's screen lock, or a
+     * fingerprint the system accepted on that screen; the platform does not say which. Not a
+     * `BiometricPrompt` result type, so it can never be mistaken for the device credential.
+     */
+    const val SCREEN_LOCK_OR_SYSTEM_BIOMETRIC_PRE_R = -0x5C10
 
     /** True where `BiometricPrompt` can ask for the device credential alone (Android 11+). */
     fun usesBiometricPrompt(sdkInt: Int = Build.VERSION.SDK_INT): Boolean =
         sdkInt >= Build.VERSION_CODES.R
 
-    /** True only for a success that came from the screen lock itself, never from a biometric. */
-    fun isScreenLock(authenticationType: Int): Boolean =
-        authenticationType == BiometricPrompt.AUTHENTICATION_RESULT_TYPE_DEVICE_CREDENTIAL
+    /**
+     * True when [authenticationType] is the system's confirmation this phone's version can give:
+     * on Android 11 and later the device credential alone (never a biometric, never Keyguard's
+     * result), on Android 8 to 10 Keyguard's confirmation (see the platform limit above).
+     */
+    fun accepts(authenticationType: Int, sdkInt: Int = Build.VERSION.SDK_INT): Boolean =
+        if (usesBiometricPrompt(sdkInt)) {
+            authenticationType == BiometricPrompt.AUTHENTICATION_RESULT_TYPE_DEVICE_CREDENTIAL
+        } else {
+            authenticationType == SCREEN_LOCK_OR_SYSTEM_BIOMETRIC_PRE_R
+        }
 
     /** The prompt of Android 11 and later. */
     fun promptInfo(title: CharSequence, description: CharSequence?): BiometricPrompt.PromptInfo =

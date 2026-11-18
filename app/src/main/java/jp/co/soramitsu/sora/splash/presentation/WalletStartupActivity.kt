@@ -152,8 +152,18 @@ class WalletStartupActivity : AppCompatActivity() {
         bindSplashViewModel()
         splashViewModel.start()
 
+        if (savedInstanceState != null && isSafeModeVisible()) {
+            // Recreated (rotation, theme) while the recovery screen shows: its retained view
+            // model already holds what is on screen, including a storage step or a retry that is
+            // still running on a worker. Nothing is decided again, so a running step keeps its
+            // progress screen and its result arrives as before.
+            hideStartAnimation()
+            return
+        }
+
         // An interrupted verification is retried automatically first (SplashInteractor); the
-        // recovery options appear only if that retry does not succeed.
+        // recovery options appear only if that retry does not succeed. Never waits for a worker
+        // that holds the backup's lock ([WalletUpgradeBackup.startupFailureToShow]).
         val startupFailure = WalletUpgradeBackup.startupFailureToShow(applicationContext)
         if (startupFailure == null) {
             viewBinding.animationView.addAnimatorUpdateListener(animatorUpdateListener)
@@ -449,11 +459,15 @@ class WalletStartupActivity : AppCompatActivity() {
         }
     }
 
-    /** Keyguard's screen-lock confirmation, on Android 8 to 10 ([ScreenLockPrompt]). */
+    /**
+     * Keyguard's confirmation, on Android 8 to 10 only. Platform limit: it may accept the
+     * phone's fingerprint too, and says so in its result's name ([ScreenLockPrompt]); Android 11
+     * and later ask for the device credential alone and never accept this result.
+     */
     private val keyguardConfirmation =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == RESULT_OK) {
-                safeModeViewModel.onAuthenticated(ScreenLockPrompt.KEYGUARD_CONFIRMED)
+                safeModeViewModel.onAuthenticated(ScreenLockPrompt.SCREEN_LOCK_OR_SYSTEM_BIOMETRIC_PRE_R)
             } else {
                 safeModeViewModel.onAuthenticationEnded()
             }

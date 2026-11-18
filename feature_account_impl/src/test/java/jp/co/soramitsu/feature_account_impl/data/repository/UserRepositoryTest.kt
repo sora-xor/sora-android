@@ -793,6 +793,44 @@ class UserRepositoryTest {
         coVerify(exactly = 1) { userDatasource.savePin("123456") }
     }
 
+    // Codex re-review 4: the claim check at unlock (PinCodeInteractor.needsMigration) reads the
+    // network for a pending claim. If the claim is confirmed while that read is under way, its
+    // late "still pending" must not bring the Claim entry back.
+    @Test
+    fun `a claim confirmed while an older claim check reads the network stays done`() = runTest {
+        val account = SoraAccount("accountAddress", "accountName")
+        val needs = mutableMapOf<String, Boolean>()
+        val fetched = mutableMapOf<String, Boolean>()
+        coEvery { userDatasource.saveNeedsMigration(any(), any()) } answers { needs[secondArg()] = firstArg() }
+        coEvery { userDatasource.needsMigration(any()) } answers { needs[firstArg()] ?: false }
+        coEvery { userDatasource.saveIsMigrationFetched(any(), any()) } answers { fetched[secondArg()] = firstArg() }
+        coEvery { userDatasource.isMigrationStatusFetched(any()) } answers { fetched[firstArg()] ?: false }
+        // A claim this phone knows is pending.
+        needs[account.substrateAddress] = true
+        fetched[account.substrateAddress] = true
+        val network = kotlinx.coroutines.CompletableDeferred<Boolean>()
+
+        val olderCheck = launch(UnconfinedTestDispatcher(testScheduler)) {
+            // A pending claim counts as not fetched, so the check asks the network ...
+            assertFalse(userRepository.isMigrationFetched(account))
+            val stillPending = network.await()
+            userRepository.saveNeedsMigration(stillPending, account)
+            userRepository.saveIsMigrationFetched(true, account)
+        }
+        // ... the claim is confirmed meanwhile, and the network's older answer comes after.
+        userRepository.markClaimConfirmed(account)
+        network.complete(true)
+        olderCheck.join()
+
+        assertFalse(userRepository.needsMigration(account))
+        // Checked and done: a later check reads this answer instead of the network.
+        assertTrue(userRepository.isMigrationFetched(account))
+        // Another account's pending claim is still saved as it is found.
+        val other = SoraAccount("otherAddress", "other")
+        userRepository.saveNeedsMigration(true, other)
+        assertTrue(userRepository.needsMigration(other))
+    }
+
     // Codex review 3: the confirmation is taken before anything is written, so a second save
     // that brings it while the first one is still writing is refused, and only one PIN is set.
     @Test
@@ -1106,6 +1144,65 @@ class UserRepositoryTest {
                 any(),
             )
         }
+    }
+
+    // Codex re-review 3: a retained account whose backup is not judged yet (BACKUP_NOT_CHECKED)
+    // does not veto removing another account; its signing key is still proven live, and removing
+    // it itself stays refused until its backup is judged.
+    @Test
+    fun `an account whose backup is not checked yet does not block removing another`() = runTest {
+        val kept = "accountAddress"
+        val removed = "removedWallet"
+        val removedSeed = ByteArray(32) { 0x42 }
+        fun removedKeys() = testSr25519Keypair(removedSeed.copyOf())
+        val removedPublic = removedKeys().publicKey
+        coEvery { accountDao.getAccounts() } returns listOf(
+            SoraAccountLocal(kept, "Kept"),
+            SoraAccountLocal(removed, "Removed"),
+        )
+        coEvery { walletIdentityDao.getWallets() } returns listOf(
+            WalletIdentityLocal(
+                walletId = kept,
+                displayName = "Kept",
+                secretSource = "BACKUP_NOT_CHECKED",
+                migrationState = "VERIFIED",
+                derivationVersion = 1,
+            ),
+            WalletIdentityLocal(
+                walletId = removed,
+                displayName = "Removed",
+                secretSource = "LEGACY_SECRET",
+                migrationState = "VERIFIED",
+                derivationVersion = 1,
+            ),
+        )
+        coEvery { walletIdentityDao.getAllNetworkAccounts() } returns emptyList()
+        coEvery { walletIdentityDao.countUnresolvedTransactionsForJournal(any()) } returns 0
+        coEvery { credentialsDatasource.getAddress() } returns ""
+        coEvery { credentialsDatasource.retrieveKeys(kept) } answers { retainedFifteenWordKeyPair() }
+        coEvery { credentialsDatasource.retrieveKeys(removed) } answers { removedKeys() }
+        every { runtimeManager.soraPublicKeyOrNull(removed) } returns removedPublic
+        every { runtimeManager.toSoraAddressOrNull(any()) } answers {
+            if (firstArg<ByteArray>().contentEquals(removedPublic)) removed else kept
+        }
+
+        val preview = userRepository.createWalletDeletionPreview(listOf(removed))
+
+        assertEquals(WalletDeletionScope.SINGLE, preview.scope)
+        assertEquals(listOf(WalletDeletionTarget(removed, "Removed")), preview.targets)
+        assertEquals(kept, preview.selectedAfter)
+        // Removing the unchecked account itself waits until its backup is judged.
+        assertEquals(
+            "WALLET_DELETION_SECRET_SOURCE_UNSUPPORTED",
+            runCatching { userRepository.createWalletDeletionPreview(listOf(kept)) }.exceptionOrNull()?.message,
+        )
+        // The account that stays still has its signing key proven live.
+        coEvery { credentialsDatasource.retrieveKeys(kept) } returns null
+        assertEquals(
+            "WALLET_DELETION_SIGNING_KEY_MISSING",
+            runCatching { userRepository.createWalletDeletionPreview(listOf(removed)) }.exceptionOrNull()?.message,
+        )
+        coVerify(exactly = 0) { walletIdentityDao.beginDeletionOperation(any(), any()) }
     }
 
     @Test

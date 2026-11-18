@@ -33,6 +33,8 @@ import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import jp.co.soramitsu.sora.substrate.substrate.sora2TransactionOutcome
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
 
 class WalletInteractorImpl(
     private val assetsRepository: AssetsRepository,
@@ -43,12 +45,24 @@ class WalletInteractorImpl(
     private val runtimeManager: RuntimeManager,
 ) : WalletInteractor {
 
+    /**
+     * Stored for the selected account. The claim screen cannot outlive a change of account:
+     * switching accounts means leaving it, which ends its view model and its submission.
+     */
     override suspend fun saveMigrationStatus(migrationStatus: MigrationStatus) {
-        return walletRepository.saveMigrationStatus(migrationStatus)
+        return walletRepository.saveMigrationStatus(
+            userRepository.getCurSoraAccount().substrateAddress,
+            migrationStatus,
+        )
     }
 
-    override fun observeMigrationStatus(): Flow<MigrationStatus> {
-        return walletRepository.observeMigrationStatus()
+    /**
+     * The claim results of the account selected when the claim screen starts to listen. A result
+     * another account's claim left behind (account A's success) is not this account's and never
+     * closes its screen.
+     */
+    override fun observeMigrationStatus(): Flow<MigrationStatus> = flow {
+        emitAll(walletRepository.observeMigrationStatus(userRepository.getCurSoraAccount().substrateAddress))
     }
 
     override suspend fun needsMigration(): Boolean {
@@ -66,7 +80,7 @@ class WalletInteractorImpl(
         // Re-read the authoritative account-bound state before touching the SORA2 signing key;
         // a stale local/fetched flag is never authority to submit a duplicate claim.
         if (!walletRepository.needsMigration(irohaData.address)) {
-            userRepository.saveNeedsMigration(false, soraAccount)
+            userRepository.markClaimConfirmed(soraAccount)
             return null
         }
         check(
@@ -105,10 +119,11 @@ class WalletInteractorImpl(
     /**
      * The network confirmed the claim of [account]: it is no longer pending for that account
      * (the one that sent it, whichever account is selected now), so the wallet home's "Claim"
-     * entry goes. Only a confirmation counts; a claim that waits or failed stays pending.
+     * entry goes, and an older claim check cannot bring it back ([UserRepository.markClaimConfirmed]).
+     * Only a confirmation counts; a claim that waits or failed stays pending.
      */
     private suspend fun claimDoneWhenConfirmed(outcome: TransactionOutcome?, account: SoraAccount) {
-        if (outcome is TransactionOutcome.Confirmed) userRepository.saveNeedsMigration(false, account)
+        if (outcome is TransactionOutcome.Confirmed) userRepository.markClaimConfirmed(account)
     }
 
     override suspend fun getContacts(query: String): List<String>? {

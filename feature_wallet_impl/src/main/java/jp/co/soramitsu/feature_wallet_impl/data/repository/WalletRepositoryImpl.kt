@@ -64,12 +64,12 @@ class WalletRepositoryImpl @Inject constructor(
         emitAll(resultFlow)
     }
 
-    override suspend fun saveMigrationStatus(migrationStatus: MigrationStatus) {
-        return datasource.saveMigrationStatus(migrationStatus)
+    override suspend fun saveMigrationStatus(walletId: String, migrationStatus: MigrationStatus) {
+        return datasource.saveMigrationStatus(walletId, migrationStatus)
     }
 
-    override fun observeMigrationStatus(): Flow<MigrationStatus> {
-        return datasource.observeMigrationStatus()
+    override fun observeMigrationStatus(walletId: String): Flow<MigrationStatus> {
+        return datasource.observeMigrationStatus(walletId)
     }
 
     override suspend fun retrieveClaimBlockAndTxHash(): Pair<String, String> {
