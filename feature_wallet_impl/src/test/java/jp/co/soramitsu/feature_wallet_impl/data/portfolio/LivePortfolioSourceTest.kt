@@ -299,6 +299,8 @@ class LivePortfolioSourceTest {
         assertEquals(PortfolioScope.SELECTED, picture.scope)
         val first = picture.snapshot
         assertTrue(first.saved)
+        // Nothing has answered yet, so nothing in it is called live.
+        assertFalse(first.nodeUp)
         assertEquals("€", first.fiatSymbol)
         assertEquals(listOf("Main" to true, "Savings" to false), first.wallets.map { it.name to it.selected })
         assertEquals(0, BigDecimal("70").compareTo(first.holding("cnMain", WalletNetworkId.SORA2, savedXor.token.id)!!.total))
@@ -725,6 +727,10 @@ class LivePortfolioSourceTest {
         connected.value = false
         val first = source.observe().first()
         assertTrue(first.connected)
+        // While the app reconnects nothing is called live: what shows was read before.
+        assertFalse(first.nodeUp)
+        val ids0 = first.wallets.map { it.id }
+        assertTrue(PortfolioCalculator.worstFreshness(first, ids0, now)?.kind != FreshnessKind.LIVE)
         val snapshot = source.observe().first { !it.connected }
         assertFalse(snapshot.connected)
         assertEquals(LivePortfolioSource.OFFLINE_AFTER_MS, testScheduler.currentTime)
@@ -733,7 +739,8 @@ class LivePortfolioSourceTest {
         assertEquals(FreshnessKind.OFFLINE, PortfolioFreshness.of(snapshot.sync["cnMain"], snapshot.connected, now).kind)
         connected.value = true
         val back = source.observe().first { it.connected && it.sync["cnMain"]!!.live }
-        assertEquals(FreshnessKind.LIVE, PortfolioFreshness.of(back.sync["cnMain"], back.connected, now).kind)
+        assertTrue(back.nodeUp)
+        assertEquals(FreshnessKind.LIVE, PortfolioFreshness.of(back.sync["cnMain"], back.connected, now, back.nodeUp).kind)
     }
 
     @Test

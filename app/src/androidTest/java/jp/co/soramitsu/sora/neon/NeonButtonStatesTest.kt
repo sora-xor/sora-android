@@ -51,10 +51,10 @@ class NeonButtonStatesTest {
 
     @Test fun withMotionOnTheLoadingSignalAnimates() {
         val motion = FxPolicy(FxTier.FULL, reduceMotion = false, highContrast = false)
-        // The filled button's lacquer is baked once per size on its first draw. Baked here first, so the
+        // The filled button's cut glass is baked once per size on its first draw. Baked here first, so the
         // screen capture below does not wait for it on a busy device.
         val density = InstrumentationRegistry.getInstrumentation().targetContext.resources.displayMetrics.density
-        LitPreload(density, dark = false).lacquer(height = 40.dp, radius = 28.dp)
+        LitPreload(density, dark = false).cutGlass(height = 40.dp)
         compose.mainClock.autoAdvance = false
         compose.setContent {
             SoraAppTheme {

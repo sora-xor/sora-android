@@ -24,20 +24,17 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.staticCompositionLocalOf
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.DpOffset
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.graphics.shadow.Shadow as BoxShadow
-import jp.co.soramitsu.common.presentation.compose.theme.tokens.Colors
 import jp.co.soramitsu.common.presentation.compose.theme.tokens.DayThemeColors
 import jp.co.soramitsu.common.presentation.compose.theme.tokens.NightThemeColors
+import jp.co.soramitsu.ui_core.lit.LitDay
+import jp.co.soramitsu.ui_core.lit.LitNight
+import jp.co.soramitsu.ui_core.lit.LitPalette
 
 /**
- * Every SORA Neon token that has no ui-core `CustomColors` slot (design spec 2.5).
+ * Every colour token that has no ui-core `CustomColors` slot (design spec 2.5).
  * Read with `MaterialTheme.neon` inside `SoraAppTheme`.
  */
 @Immutable
@@ -95,15 +92,6 @@ data class NeonTokens(
     val info: Color,
     val infoContainer: Color,
     val redContainer: Color,
-    // neumorphic
-    val neuBg: Color,
-    val neuFace: Brush,
-    val neuFacePressed: Color,
-    val neuRim: Brush,
-    val neuDark: BoxShadow,
-    val neuLight: BoxShadow,
-    val neuInnerDark: BoxShadow,
-    val neuInnerLight: BoxShadow,
     // skeleton
     val skeletonBase: Color,
     val skeletonHighlight: Color,
@@ -120,96 +108,59 @@ val MaterialTheme.neon: NeonTokens
     @ReadOnlyComposable
     get() = LocalNeon.current
 
-/**
- * Design blur B (Figma/CSS, sigma = B/2) to the Compose `Shadow.radius` (design spec 4.1).
- * Calibrate this one factor on a device; never tune individual call sites.
- */
-fun designBlur(b: Float): Dp = (b * DESIGN_BLUR_FACTOR).dp
-
-internal const val DESIGN_BLUR_FACTOR = 0.87f
-
 private fun c(argb: Long) = Color(argb)
-private fun a(rgb: Long, alpha: Float) = Color(0xFF000000 or rgb).copy(alpha = alpha)
-
-/** 135 degrees, top-start to bottom-end. Never mirrored in RTL (it follows the light source). */
-private fun diag(vararg stops: Pair<Float, Color>) =
-    Brush.linearGradient(*stops, start = Offset.Zero, end = Offset.Infinite)
-
-private fun shadow(blur: Float, color: Color, x: Int, y: Int, alpha: Float) = BoxShadow(
-    radius = designBlur(blur),
-    color = color,
-    offset = DpOffset(x.dp, y.dp),
-    alpha = alpha,
-)
 
 private val noBrush: Brush = SolidColor(Color.Transparent)
 private val classicInfo = c(0xFF4394E6)
 private val classicInfoContainer = c(0xFFE6F3FF)
 
 /**
- * The classic SORA look (3.8.6 and earlier) in the Neon token slots, built from a classic palette:
- * its page, surface, text and accent colours, solid buttons, and no aurora, grain, grid, glass
- * sheen, gradient border, glow or neumorphic depth.
+ * The classic SORA layout's slots in white and SORA red. Glass, pads, wells and cut glass come from the lit kit
+ * ([LitPalette]); these are the colours of what sits on them and of the surfaces that have no sheet of their own.
  */
 private fun classic(
-    isDark: Boolean,
-    page: Color, surface: Color, surfaceVariant: Color, inverted: Color,
-    primary: Color, secondary: Color, tertiary: Color,
+    lit: LitPalette,
     accent: Color, accentContainer: Color,
-    success: Color, successContainer: Color, warning: Color, warningContainer: Color,
+    success: Color, successContainer: Color, warning: Color, warningContainer: Color, warningFill: Color,
     error: Color, errorContainer: Color,
 ) = NeonTokens(
-    isDark = isDark,
-    canvas = page, layer1 = page, surface = surface, surfaceVariant = surfaceVariant, sheet = surface,
-    toast = inverted, scrim = Colors.Brown90.copy(alpha = .32f), scrimOverBlur = Colors.Brown90.copy(alpha = .24f),
-    glassFill = surface, glassFillStrong = surface, glassFillPressed = surfaceVariant,
-    glassSolid = surface, chromeTint = surface,
+    isDark = lit.dark,
+    canvas = lit.page, layer1 = lit.page, surface = lit.surface, surfaceVariant = lit.wellFloor, sheet = lit.surface,
+    toast = lit.ink, scrim = LitDay.ink.copy(alpha = .32f), scrimOverBlur = LitDay.ink.copy(alpha = .24f),
+    glassFill = lit.surface, glassFillStrong = lit.surface, glassFillPressed = lit.wellFloor,
+    glassSolid = lit.surface, chromeTint = lit.surface,
     borderSafe = noBrush,
-    hairline = if (isDark) a(0x120620, .28f) else a(0x6B4B40, .16f), divider = if (isDark) a(0x120620, .28f) else a(0x6B4B40, .16f),
-    borderInput = tertiary, focusRing = secondary,
-    textPrimary = primary, textSecondary = secondary, textTertiary = tertiary, textDisabled = tertiary,
-    onAccent = Color.White, link = accent,
-    brandRed = accent, redText = accent, cyan = accent, steel = secondary,
-    magenta = Colors.AdditionalPolkaswap, polkaswapBrand = Colors.AdditionalPolkaswap,
-    polkaswapText = Colors.AdditionalPolkaswap,
-    ctaPrimary = SolidColor(accent), ctaSwap = SolidColor(Colors.AdditionalPolkaswap), ctaSafe = SolidColor(success),
-    ctaDisabled = surfaceVariant,
+    hairline = lit.rule, divider = lit.rule,
+    borderInput = lit.outline, focusRing = if (lit.dark) lit.redText else lit.redDeep,
+    textPrimary = lit.ink, textSecondary = lit.inkSecondary, textTertiary = lit.inkTertiary, textDisabled = lit.inkTertiary,
+    onAccent = lit.inlay, link = lit.redText,
+    brandRed = accent, redText = lit.redText, cyan = accent, steel = lit.inkSecondary,
+    magenta = accent, polkaswapBrand = accent, polkaswapText = lit.redText,
+    ctaPrimary = SolidColor(lit.red), ctaSwap = SolidColor(lit.red), ctaSafe = SolidColor(if (lit.dark) c(0xFF2C6E50) else success),
+    ctaDisabled = lit.wellFloor,
     success = success, successContainer = successContainer, warning = warning, warningContainer = warningContainer,
-    warningFill = warning, onWarningFill = Colors.Brown90, error = error, errorContainer = errorContainer,
-    info = classicInfo, infoContainer = classicInfoContainer, redContainer = accentContainer,
-    neuBg = page,
-    neuFace = if (isDark) diag(0f to c(0xFF653A80), 1f to c(0xFF522A6A)) else diag(0f to c(0xFFFAF7F5), 1f to c(0xFFF0EBE7)),
-    neuFacePressed = surfaceVariant,
-    neuRim = if (isDark) diag(0f to a(0xFFFFFF, .14f), 1f to a(0xFFFFFF, 0f)) else diag(0f to a(0xFFFFFF, .9f), 1f to a(0xFFFFFF, 0f)),
-    neuDark = if (isDark) shadow(14f, c(0xFF12061C), 5, 7, .70f) else shadow(14f, c(0xFF6B4A40), 5, 7, .34f),
-    neuLight = if (isDark) shadow(10f, c(0xFFD9B6F0), -4, -5, .14f) else shadow(10f, Color.White, -4, -5, .95f),
-    neuInnerDark = if (isDark) shadow(8f, c(0xFF12061C), 3, 4, .70f) else shadow(8f, c(0xFF6B4A40), 3, 4, .38f),
-    neuInnerLight = if (isDark) shadow(6f, c(0xFFD9B6F0), -2, -3, .12f) else shadow(6f, Color.White, -2, -3, .85f),
-    skeletonBase = surfaceVariant, skeletonHighlight = surface.copy(alpha = .70f),
+    warningFill = warningFill, onWarningFill = LitDay.ink, error = error, errorContainer = errorContainer,
+    info = classicInfo, infoContainer = if (lit.dark) c(0xFF1F3246) else classicInfoContainer, redContainer = accentContainer,
+    skeletonBase = lit.wellFloor, skeletonHighlight = lit.surface.copy(alpha = .70f),
 )
 
-/** The classic day palette: brown text on white cards over a warm light page. */
+/** By day: ink on white glass over a washi page. */
 val NeonClassicLight = classic(
-    isDark = false,
-    page = DayThemeColors.BgPage, surface = DayThemeColors.BgSurface,
-    surfaceVariant = DayThemeColors.BgSurfaceVariant, inverted = DayThemeColors.BgSurfaceInverted,
-    primary = DayThemeColors.FgPrimary, secondary = DayThemeColors.FgSecondary, tertiary = DayThemeColors.FgTertiary,
+    lit = LitDay,
     accent = DayThemeColors.AccentPrimary, accentContainer = DayThemeColors.AccentPrimaryContainer,
     success = DayThemeColors.StatusSuccess, successContainer = DayThemeColors.StatusSuccessContainer,
     warning = DayThemeColors.StatusWarning, warningContainer = DayThemeColors.StatusWarningContainer,
+    warningFill = DayThemeColors.StatusWarningFill,
     error = DayThemeColors.StatusError, errorContainer = DayThemeColors.StatusErrorContainer,
 )
 
-/** The classic night palette, which the app follows the system into as 3.8.6 did. */
+/** By night, which the app follows the system into: ivory on warm charcoal. */
 val NeonClassicDark = classic(
-    isDark = true,
-    page = NightThemeColors.BgPage, surface = NightThemeColors.BgSurface,
-    surfaceVariant = NightThemeColors.BgSurfaceVariant, inverted = NightThemeColors.BgSurfaceInverted,
-    primary = NightThemeColors.FgPrimary, secondary = NightThemeColors.FgSecondary,
-    tertiary = NightThemeColors.FgTertiary,
+    lit = LitNight,
     accent = NightThemeColors.AccentPrimary, accentContainer = NightThemeColors.AccentPrimaryContainer,
     success = NightThemeColors.StatusSuccess, successContainer = NightThemeColors.StatusSuccessContainer,
     warning = NightThemeColors.StatusWarning, warningContainer = NightThemeColors.StatusWarningContainer,
+    warningFill = NightThemeColors.StatusWarningFill,
     error = NightThemeColors.StatusError, errorContainer = NightThemeColors.StatusErrorContainer,
 )
 

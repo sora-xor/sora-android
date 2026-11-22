@@ -107,6 +107,7 @@ data class PortfolioSnapshot(
     val wallets: List<PortfolioWallet>,
     val holdings: List<PortfolioHolding>,
     val sync: Map<String, WalletSync>,
+    /** False once the node has been away for longer than a reconnect takes. */
     val connected: Boolean,
     /** Each wallet's own account per network, used to pick Move destinations. */
     val addresses: Map<String, Map<WalletNetworkId, String>>,
@@ -116,6 +117,8 @@ data class PortfolioSnapshot(
     val saved: Boolean = false,
     /** When the newest of the prices was read, if known. */
     val pricesReadAtMillis: Long? = null,
+    /** The node answers now. False while the app connects or reconnects: what shows then was read earlier. */
+    val nodeUp: Boolean = true,
 ) {
     val selectedWallet: PortfolioWallet?
         get() = wallets.firstOrNull { it.selected }

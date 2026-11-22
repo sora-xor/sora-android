@@ -87,39 +87,17 @@ private fun soraMark(): Path = Path().apply {
     close()
 }
 
-/** The red disc with 天, lit from the top left as everything in the wallet is. */
+/** The SORA mark: the red disc with 天 in white, as the logo is. */
 private fun DrawScope.planet(centre: Offset, radius: Float, mark: Path) {
-    val lit = Offset(centre.x - radius * 0.36f, centre.y - radius * 0.46f)
-    drawCircle(
-        Brush.radialGradient(
-            0f to Color(0xFFFF6E68),
-            0.45f to PlanetRed,
-            1f to Color(0xFF8C0817),
-            center = lit,
-            radius = radius * 1.5f,
-        ),
-        radius,
-        centre,
-    )
+    drawCircle(PlanetRed, radius, centre)
     translate(centre.x - radius, centre.y - radius) {
         scale(radius * 2f / 22f, pivot = Offset.Zero) { drawPath(mark, Color.White) }
     }
-    val spot = Offset(centre.x - radius * 0.38f, centre.y - radius * 0.5f)
-    drawCircle(
-        Brush.radialGradient(listOf(Color.White.copy(alpha = 0.40f), Color.Transparent), center = spot, radius = radius * 0.6f),
-        radius * 0.6f,
-        spot,
-    )
-    drawCircle(
-        Brush.radialGradient(0.8f to Color.Transparent, 1f to Color(0x4D4A0410), center = centre, radius = radius),
-        radius,
-        centre,
-    )
 }
 
 /**
- * The planet in its ring of six circles. On the PIN screen the ring is the lock: each digit draws one more circle
- * out from behind the planet, and the last closes the rim. It only shows what the row of dots already says, so
+ * The SORA mark in its ring of six circles. On the PIN screen the ring is the lock: each digit draws one more circle
+ * out from behind the mark, and the last closes the rim. It only shows what the row of dots already says, so
  * it has no place in what a screen reader reads.
  *
  * @param share how much of the code is entered, 0..1
@@ -151,10 +129,10 @@ fun SacredEmblem(
         val middle = Offset(size.width / 2f, size.height / 2f)
         val ring = size.minDimension / 2f - 2.dp.toPx()
         val planetRadius = ring / SacredGeometry.RING_TO_PLANET
-        // The planet's red light on the page round it.
+        // A breath of the mark's red on the page round it.
         drawCircle(
             Brush.radialGradient(
-                0.44f to PlanetRed.copy(alpha = 0.26f),
+                0.44f to PlanetRed.copy(alpha = 0.12f),
                 1f to Color.Transparent,
                 center = middle,
                 radius = planetRadius * 2.1f,

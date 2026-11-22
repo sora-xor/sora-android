@@ -211,6 +211,8 @@ class LivePortfolioSource @Inject constructor(
                 fiatSymbol = saved.fiatSymbol ?: OptionsProvider.fiatSymbol,
                 saved = true,
                 pricesReadAtMillis = saved.pricesReadAtMillis,
+                // Nothing has answered yet: these are saved numbers, whatever their age.
+                nodeUp = false,
             ),
             scope = PortfolioScope.fromKey(saved.scope),
         )
@@ -469,6 +471,7 @@ class LivePortfolioSource @Inject constructor(
             addresses = addresses,
             fiatSymbol = tokenFiatSymbol ?: savedFiatSymbol ?: OptionsProvider.fiatSymbol,
             pricesReadAtMillis = pricedTokens.readAtMillis ?: savedPricesReadAt,
+            nodeUp = node.up,
         )
     }
 

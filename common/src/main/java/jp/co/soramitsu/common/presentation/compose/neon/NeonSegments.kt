@@ -19,7 +19,6 @@ limitations under the License.
 
 package jp.co.soramitsu.common.presentation.compose.neon
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
@@ -37,19 +36,21 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import jp.co.soramitsu.common.presentation.compose.theme.neon.neon
+import jp.co.soramitsu.ui_core.lit.litPad
+import jp.co.soramitsu.ui_core.lit.litWell
 import jp.co.soramitsu.ui_core.theme.customTypography
 
+/** A choice of a few: a track let into the surface, the chosen one a raised pad with the accent's ring. */
 @Composable
 fun NeonSegments(labels: List<String>, selected: Int, onSelect: (Int) -> Unit, modifier: Modifier = Modifier) {
     val n = MaterialTheme.neon
-    Row(modifier.fillMaxWidth().selectableGroup().background(n.neuBg, RoundedCornerShape(20.dp)).padding(4.dp),
+    Row(modifier.fillMaxWidth().selectableGroup().litWell(radius = 16.dp, depth = 2.dp).padding(4.dp),
         horizontalArrangement = Arrangement.spacedBy(4.dp)) {
         labels.forEachIndexed { index, label ->
             val active = index == selected
             Text(label,
                 modifier = Modifier.weight(1f).heightIn(min = 48.dp)
-                    .background(if (active) n.glassSolid else n.neuBg, RoundedCornerShape(16.dp))
-                    .then(if (active) Modifier.border(2.dp, n.cyan, RoundedCornerShape(16.dp)) else Modifier)
+                    .then(if (active) Modifier.litPad(radius = 12.dp, elevation = 6.dp).border(2.dp, n.cyan, RoundedCornerShape(12.dp)) else Modifier)
                     .selectable(selected = active, role = Role.RadioButton, onClick = { onSelect(index) })
                     .padding(horizontal = 8.dp, vertical = 12.dp),
                 color = if (active) n.textPrimary else n.textSecondary,

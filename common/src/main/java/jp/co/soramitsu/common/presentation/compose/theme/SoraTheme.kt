@@ -27,7 +27,12 @@ import androidx.compose.material.Shapes
 import androidx.compose.material.Typography
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import jp.co.soramitsu.common.presentation.compose.theme.neon.LocalFx
 import jp.co.soramitsu.common.presentation.compose.theme.neon.LocalNeon
 import jp.co.soramitsu.common.presentation.compose.theme.neon.NeonClassicDark
@@ -37,6 +42,7 @@ import jp.co.soramitsu.common.presentation.compose.theme.neon.NeonClassicLightHi
 import jp.co.soramitsu.common.presentation.compose.theme.neon.rememberFxPolicy
 import jp.co.soramitsu.common.presentation.compose.theme.tokens.DayThemeColors
 import jp.co.soramitsu.ui_core.lit.LitDay
+import jp.co.soramitsu.ui_core.lit.LitLightRig
 import jp.co.soramitsu.ui_core.lit.LitNight
 import jp.co.soramitsu.ui_core.lit.LocalLitPalette
 import jp.co.soramitsu.common.presentation.compose.theme.tokens.NeonType
@@ -77,15 +83,15 @@ import jp.co.soramitsu.ui_core.theme.lightColors
 import jp.co.soramitsu.ui_core.theme.opacities
 
 /**
- * The one theme for every Compose host: the classic SORA design (3.8.6 and earlier).
+ * The one theme for every Compose host: the classic SORA layout in white and SORA red.
  *
- * - ui-core slots ([MaterialTheme.customColors], typography, radii) carry the classic day and
- *   night palettes.
- * - `MaterialTheme.neon` ([LocalNeon]) carries the tokens that have no slot. The classic set
- *   fills them with the same palette: solid surfaces, no glass, glow, aurora or neumorphic depth.
- * - [LocalFx] carries the effect tier for this device and the system's motion setting.
- * - Under the system high-contrast setting (API 34+), tertiary text uses the secondary colour
- *   and hairlines are twice as strong, in the ui-core slots and the neon tokens alike.
+ * - ui-core slots ([MaterialTheme.customColors], typography, radii) carry the day and night palettes.
+ * - `MaterialTheme.neon` ([LocalNeon]) carries the tokens that have no slot, from the same palettes.
+ * - [LocalLitPalette] carries the materials' palette: glass, pads, wells and cut glass.
+ * - [LocalFx] carries the effect tier for this device and the system's motion setting. Where decorative motion
+ *   is allowed, the screen stands under the light the phone's tilt moves ([LitLightRig]).
+ * - Under the system high-contrast setting (API 34+), tertiary text uses the secondary colour, hairlines are
+ *   twice as strong and sheets get a real edge, in the ui-core slots and the neon tokens alike.
  */
 @Composable
 fun SoraAppTheme(
@@ -126,11 +132,13 @@ fun SoraAppTheme(
                     },
                     LocalFx provides fx,
                     LocalLitPalette provides (if (darkTheme) LitNight else LitDay).let { lit ->
-                        if (highContrast) lit.copy(outline = lit.inkSecondary) else lit
+                        if (highContrast) lit.copy(contrastEdge = lit.inkSecondary) else lit
                     },
                     LocalContentColor provides palette.fgPrimary,
-                    content = content,
-                )
+                ) {
+                    LitLightHost(allowed = fx.litMotion)
+                    content()
+                }
             }
         },
     )
@@ -239,12 +247,35 @@ private val soraMaterialTypography = Typography(
     overline = NeonType.eyebrow,
 )
 
-/** Text fields 16, cards and dialogs 24, sheets 28 (design spec 6). */
+/** Text fields 12, cards and dialogs 16, sheets 18. */
 private val soraMaterialShapes = Shapes(
-    small = RoundedCornerShape(16.dp),
-    medium = RoundedCornerShape(24.dp),
-    large = RoundedCornerShape(28.dp),
+    small = RoundedCornerShape(12.dp),
+    medium = RoundedCornerShape(16.dp),
+    large = RoundedCornerShape(18.dp),
 )
+
+/** Puts this screen under the moving light while it is in front and [allowed] by the device's motion policy. */
+@Composable
+private fun LitLightHost(allowed: Boolean) {
+    val context = LocalContext.current.applicationContext
+    val lifecycle = LocalLifecycleOwner.current.lifecycle
+    DisposableEffect(context, lifecycle, allowed) {
+        var entered = false
+        fun update() {
+            val wanted = allowed && lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)
+            if (wanted == entered) return
+            entered = wanted
+            if (wanted) LitLightRig.enter(context) else LitLightRig.leave(context)
+        }
+        val observer = LifecycleEventObserver { _, _ -> update() }
+        lifecycle.addObserver(observer)
+        update()
+        onDispose {
+            lifecycle.removeObserver(observer)
+            if (entered) LitLightRig.leave(context)
+        }
+    }
+}
 
 private val soraBorderRadius: BorderRadius = borderRadiuses(
     s = jp.co.soramitsu.common.presentation.compose.theme.tokens.BorderRadius.S,

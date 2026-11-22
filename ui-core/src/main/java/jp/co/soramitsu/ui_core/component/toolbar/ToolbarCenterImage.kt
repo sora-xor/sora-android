@@ -8,6 +8,7 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import jp.co.soramitsu.ui_core.R
@@ -21,10 +22,12 @@ internal fun RowScope.ToolbarCenterImageTop(
     onMenuItemClicked: ((Action) -> Unit)? = null,
     onMenuItemClickedTestTag: String? = null,
 ) {
+    // A picture title is printed in ink, as a text title is.
     Image(
         modifier = Modifier.weight(1f),
         painter = state.title.toImage(),
         contentDescription = null,
+        colorFilter = ColorFilter.tint(MaterialTheme.customColors.fgPrimary),
     )
     ToolbarActions(
         menu = state.menu,

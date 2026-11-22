@@ -20,48 +20,57 @@ limitations under the License.
 package jp.co.soramitsu.common.presentation.compose.theme.tokens
 
 import androidx.compose.ui.graphics.Color
+import jp.co.soramitsu.ui_core.lit.LitNight
 
+/**
+ * The night palette: warm charcoal, ivory type, the red as a lighter ink. Nothing glows; a filled button keeps its
+ * own deeper red (`LitNight.red`).
+ */
 object NightThemeColors {
 
-    val AccentPrimary = Color(0xfff754a3)
+    val AccentPrimary = LitNight.redText
 
-    val AccentPrimaryContainer = Color(0xffffe8eb)
+    val AccentPrimaryContainer = Color(0xFF4A2620)
 
-    val AccentSecondary = Color(0xfffcfcfc)
+    val AccentSecondary = LitNight.ink
 
-    val AccentSecondaryContainer = Color(0xff313131)
+    val AccentSecondaryContainer = LitNight.padLit
 
-    val AccentTertiary = Color(0xff9b6fa5)
+    val AccentTertiary = LitNight.inkTertiary
 
-    val AccentTertiaryContainer = Color(0xff313131)
+    val AccentTertiaryContainer = LitNight.padLit
 
-    val BgPage = Color(0xFF3D1F54)
+    val BgPage = LitNight.page
 
-    val BgSurface = Color(0xFF5B3173)
+    val BgSurface = LitNight.surface
 
-    val BgSurfaceVariant = Color(0xFF341A49)
+    val BgSurfaceVariant = LitNight.wellFloor
 
-    val BgSurfaceInverted = Color(0xfffcfcfc)
+    val BgSurfaceInverted = LitNight.ink
 
-    val FgPrimary = Color(0xfffcfcfc)
+    val FgPrimary = LitNight.ink
 
-    val FgSecondary = Color(0xFFD3B0CA)
+    val FgSecondary = LitNight.inkSecondary
 
-    val FgTertiary = Color(0xFFAB80B5)
+    val FgTertiary = LitNight.inkTertiary
 
-    val FgInverted = Color(0xff45245f)
+    val FgInverted = LitNight.page
 
-    val FgOutline = Color(0xFF744594)
+    val FgOutline = Color(0xFF4A4541)
 
-    val StatusSuccess = Color(0xFF44e5b2)
+    val StatusSuccess = Color(0xFF7CC49A)
 
-    val StatusSuccessContainer = Color(0xFFd3f6ec)
+    val StatusSuccessContainer = Color(0xFF23382C)
 
-    val StatusWarning = Color(0xFFff9900)
+    /** The ochre lifted off the charcoal, without glare. */
+    val StatusWarning = Color(0xFFD9B36A)
 
-    val StatusWarningContainer = Color(0xFFfff1d2)
+    val StatusWarningContainer = Color(0xFF3A3122)
 
-    val StatusError = Color(0xFFf24197)
+    /** A warning as a filled mark, with the day ink on it. */
+    val StatusWarningFill = Color(0xFFC8983C)
 
-    val StatusErrorContainer = Color(0xFFffe8eb)
+    val StatusError = LitNight.redText
+
+    val StatusErrorContainer = Color(0xFF4A2620)
 }

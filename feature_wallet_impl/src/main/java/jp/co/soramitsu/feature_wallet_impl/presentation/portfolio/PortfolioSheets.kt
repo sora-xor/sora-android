@@ -57,7 +57,7 @@ import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.PortfolioScope
 import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.PortfolioSlots
 import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.SwapBlock
 import jp.co.soramitsu.ui_core.component.button.properties.Size as ButtonSize
-import jp.co.soramitsu.ui_core.lit.LitLed
+import jp.co.soramitsu.ui_core.lit.LitDot
 import jp.co.soramitsu.ui_core.lit.litPlate
 import jp.co.soramitsu.ui_core.lit.litWell
 import jp.co.soramitsu.ui_core.theme.customTypography
@@ -117,7 +117,7 @@ private fun WalletsSheet(model: PortfolioModel, format: PortfolioFormat, actions
                 SheetRow(
                     selected = model.scope == PortfolioScope.ALL,
                     onClick = actions::onSelectAll,
-                    leading = { AllWalletsAvatar(42.dp) },
+                    leading = { SoraMark(42.dp) },
                     title = stringResource(R.string.portfolio_all_wallets),
                     subtitle = stringResource(R.string.portfolio_wallets_together, model.wallets.size),
                     trailingTop = format.total(model.allTotals),
@@ -129,7 +129,7 @@ private fun WalletsSheet(model: PortfolioModel, format: PortfolioFormat, actions
                 SheetRow(
                     selected = model.scope == PortfolioScope.SELECTED && wallet.selected,
                     onClick = { actions.onSelectWallet(wallet.id) },
-                    leading = { WalletAvatar(wallet.name, model.colorOfWallet(wallet.id), 42.dp) },
+                    leading = { WalletAvatar(wallet.name, model.colorOfWallet(wallet.id, isDarkTheme), 42.dp) },
                     title = wallet.name,
                     subtitle = listOfNotNull(
                         stringResource(R.string.portfolio_selected).takeIf { wallet.selected },
@@ -232,7 +232,7 @@ private fun SyncSheet(model: PortfolioModel, actions: PortfolioSheetActions) {
                     selected = false,
                     onClick = {},
                     role = Role.Button,
-                    leading = { WalletAvatar(summary.wallet.name, model.colorOfWallet(summary.wallet.id), 38.dp) },
+                    leading = { WalletAvatar(summary.wallet.name, model.colorOfWallet(summary.wallet.id, isDarkTheme), 38.dp) },
                     title = summary.wallet.name,
                     subtitle = state?.unreachable?.takeIf { it.isNotEmpty() }?.let { unreachable ->
                         stringResource(R.string.portfolio_unreachable, unreachable.joinToString(", ") { networkName(it) })
@@ -268,7 +268,7 @@ private fun HoldingCard(model: PortfolioModel, holding: PortfolioHolding, line: 
         Modifier
             .fillMaxWidth()
             .heightIn(min = 68.dp)
-            .litPlate(radius = 18.dp, elevation = 8.dp)
+            .litPlate(radius = 14.dp, elevation = 8.dp)
             .clip(shape)
             .then(if (onClick != null) Modifier.clickable(role = Role.Button, onClick = onClick) else Modifier)
             .padding(14.dp),
@@ -383,7 +383,7 @@ private fun MoveSheet(model: PortfolioModel, holdingKey: String?, format: Portfo
                 SheetRow(
                     selected = destination == wallet.id,
                     onClick = { destination = wallet.id },
-                    leading = { WalletAvatar(wallet.name, model.colorOfWallet(wallet.id), 38.dp) },
+                    leading = { WalletAvatar(wallet.name, model.colorOfWallet(wallet.id, isDarkTheme), 38.dp) },
                     title = wallet.name,
                     subtitle = stringResource(R.string.portfolio_arrives_on, symbol, network) + " · " + address.truncateUserAddress(),
                 )
@@ -439,7 +439,7 @@ private fun AmountField(
             .fillMaxWidth()
             .heightIn(min = 60.dp)
             // A field is a well pressed into the sheet.
-            .litWell(radius = 16.dp, depth = 2.6.dp)
+            .litWell(radius = 12.dp, depth = 2.6.dp)
             .clip(shape)
             .then(if (error) Modifier.border(1.5.dp, n.error, shape) else Modifier)
             .padding(start = 16.dp, end = 10.dp),
@@ -531,21 +531,21 @@ private fun SwapSheet(model: PortfolioModel, holdingKey: String?, format: Portfo
         ) {
             targets.forEach { id ->
                 val on = id == target
-                val color = PortfolioPalette.slot(PortfolioSlots.seed(PortfolioLens.TOKENS)[id])
-                val shape = RoundedCornerShape(20.dp)
+                val color = PortfolioPalette.slot(PortfolioSlots.seed(PortfolioLens.TOKENS)[id], isDarkTheme)
+                val shape = RoundedCornerShape(12.dp)
                 val floor = litTint(color)
                 Row(
                     Modifier
                         .heightIn(min = 48.dp)
-                        // Raised at rest, pressed in when chosen.
-                        .then(if (on) Modifier.litWell(radius = 20.dp, depth = 2.2.dp, floor = floor) else Modifier.litPlate(radius = 20.dp, elevation = 6.dp))
+                        // Raised at rest, let in when chosen.
+                        .then(if (on) Modifier.litWell(radius = 12.dp, depth = 2.2.dp, floor = floor) else Modifier.litPlate(radius = 12.dp, elevation = 6.dp))
                         .clip(shape)
                         .clickable(role = Role.RadioButton, onClick = { target = id })
                         .semantics { selected = on }
                         .padding(horizontal = 16.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    LitLed(color, diameter = 8.dp)
+                    LitDot(color, diameter = 8.dp)
                     Spacer(Modifier.width(8.dp))
                     Text(TARGET_SYMBOLS[id] ?: id.take(6), style = MaterialTheme.customTypography.textSBold, color = n.textPrimary)
                 }
@@ -595,7 +595,7 @@ private fun PickWalletSheet(model: PortfolioModel, action: WalletAction, format:
                     selected = false,
                     onClick = { actions.onPickWallet(action, wallet.id) },
                     role = Role.Button,
-                    leading = { WalletAvatar(wallet.name, model.colorOfWallet(wallet.id), 42.dp) },
+                    leading = { WalletAvatar(wallet.name, model.colorOfWallet(wallet.id, isDarkTheme), 42.dp) },
                     title = wallet.name,
                     subtitle = if (wallet.selected) stringResource(R.string.portfolio_selected) else stringResource(R.string.portfolio_switch_first),
                     trailingTop = format.total(summary.totals),

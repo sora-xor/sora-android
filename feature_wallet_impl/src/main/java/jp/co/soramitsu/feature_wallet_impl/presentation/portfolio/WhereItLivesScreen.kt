@@ -62,6 +62,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.min
 import androidx.compose.ui.unit.sp
@@ -84,6 +85,7 @@ import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.isTestnet
 import jp.co.soramitsu.feature_wallet_impl.presentation.portfolio.motion.TiltState
 import jp.co.soramitsu.feature_wallet_impl.presentation.portfolio.motion.tiltLayer
 import jp.co.soramitsu.ui_core.component.button.properties.Size as ButtonSize
+import jp.co.soramitsu.ui_core.lit.LitCutGlassPiece
 import jp.co.soramitsu.ui_core.lit.litWell
 import jp.co.soramitsu.ui_core.theme.customTypography
 import kotlin.math.PI
@@ -152,7 +154,7 @@ internal fun WhereItLivesScreen(
         var selectedKey by rememberSaveable(tokenId, holdingKey) { mutableStateOf(holdingKey) }
         val selected = locations.holdings.firstOrNull { it.key == selectedKey }
             ?: locations.holdings.first()
-        val tokenColor = tokenColor(model, tokenId)
+        val tokenColor = tokenColor(model, tokenId, isDarkTheme)
         Column(
             Modifier
                 .fillMaxSize()
@@ -211,8 +213,8 @@ internal fun WhereItLivesScreen(
     }
 }
 
-private fun tokenColor(model: PortfolioModel, tokenId: String): Color =
-    model.slots[tokenId]?.let(PortfolioPalette::slot) ?: PortfolioPalette.polkaswap
+private fun tokenColor(model: PortfolioModel, tokenId: String, dark: Boolean): Color =
+    PortfolioPalette.slot(model.slots[tokenId] ?: 0, dark)
 
 @Composable
 private fun TopBar(title: String, chrome: () -> Float, onBack: () -> Unit) {
@@ -422,17 +424,16 @@ private val SATELLITE_WIDTH = 112.dp
 
 @Composable
 internal fun PolkaswapDisc(size: Dp, modifier: Modifier = Modifier) {
-    val n = MaterialTheme.neon
-    Box(
-        modifier
-            .size(size)
-            .clip(CircleShape)
-            .background(n.ctaSwap)
-            .border(2.dp, Color.White.copy(alpha = 0.35f), CircleShape),
-        contentAlignment = Alignment.Center,
-    ) {
-        PolkaswapFlower(Modifier.size(size * 0.56f), tint = Color.White)
-    }
+    // Cut red glass with the flower inlaid in white, as the Polkaswap disc is in the tab bar.
+    LitCutGlassPiece(
+        size = DpSize(size, size),
+        radius = size / 2,
+        glyph = painterResource(R.drawable.ic_polkaswap_40),
+        glyphSize = DpSize(size * 0.56f, size * 0.56f),
+        glyphKey = "polkaswap",
+        pressed = false,
+        modifier = modifier,
+    )
 }
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -558,12 +559,12 @@ private fun Breakdown(holding: PortfolioHolding, format: PortfolioFormat, color:
     val locked = holding.locked
     val transferable = holding.transferable
     val stripe = Color.White.copy(alpha = if (n.isDark) 0.55f else 0.8f)
-    val lockedColor = PortfolioPalette.slots[3]
+    val lockedColor = PortfolioPalette.slots(n.isDark)[3]
     val exclusion = PortfolioCalculator.exclusion(holding)
     Column(
         Modifier
             .fillMaxWidth()
-            .litWell(radius = 16.dp, depth = 2.6.dp)
+            .litWell(radius = 12.dp, depth = 2.6.dp)
             .padding(14.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
@@ -642,7 +643,7 @@ private fun RouteCard(model: PortfolioModel, holding: PortfolioHolding) {
     Column(
         Modifier
             .fillMaxWidth()
-            .litWell(radius = 16.dp, depth = 2.2.dp, floor = floor)
+            .litWell(radius = 12.dp, depth = 2.2.dp, floor = floor)
             .padding(12.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {

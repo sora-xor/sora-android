@@ -24,6 +24,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.presentation.compose.theme.neon.neon
+import jp.co.soramitsu.ui_core.lit.Lit
 import jp.co.soramitsu.ui_core.lit.litPlate
 import jp.co.soramitsu.ui_core.theme.customTypography
 
@@ -41,7 +42,7 @@ object ClaimEntryTags {
 fun ClaimEntry(onClick: () -> Unit, modifier: Modifier = Modifier) {
     val n = MaterialTheme.neon
     val title = stringResource(R.string.common_claim)
-    val shape = RoundedCornerShape(24.dp)
+    val shape = RoundedCornerShape(Lit.SheetRadius)
     Row(
         modifier = modifier
             .fillMaxWidth()

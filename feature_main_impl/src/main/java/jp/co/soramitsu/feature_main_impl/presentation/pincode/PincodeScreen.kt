@@ -20,11 +20,6 @@ limitations under the License.
 package jp.co.soramitsu.feature_main_impl.presentation.pincode
 
 import androidx.annotation.DrawableRes
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.snap
-import androidx.compose.animation.core.spring
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -50,7 +45,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -76,7 +70,7 @@ import jp.co.soramitsu.common.presentation.compose.neon.safemode.LegacyPinUpgrad
 import jp.co.soramitsu.common.presentation.compose.neon.safemode.SafeModeScreen
 import jp.co.soramitsu.common.presentation.compose.theme.neon.LocalFx
 import jp.co.soramitsu.common.presentation.compose.theme.neon.neon
-import jp.co.soramitsu.ui_core.lit.LitLed
+import jp.co.soramitsu.ui_core.lit.LitBead
 import jp.co.soramitsu.ui_core.lit.LocalLitPalette
 import jp.co.soramitsu.ui_core.lit.litWell
 import jp.co.soramitsu.ui_core.sacred.SacredEmblem
@@ -109,7 +103,7 @@ fun PincodeScreen(
             onWrongPinAnimationEnd()
         }
     }
-    BoxWithConstraints(Modifier.fillMaxSize().background(n.neuBg)) {
+    BoxWithConstraints(Modifier.fillMaxSize()) {
         val keySize = if (maxWidth >= 400.dp && maxHeight >= 760.dp) 80.dp else 72.dp
         // Room for the emblem between the dots and the keys; short screens go without.
         val showsEmblem = maxHeight >= 720.dp
@@ -141,7 +135,7 @@ fun PincodeScreen(
                     )
                 }
             }
-            // The planet in its ring. The ring is the lock: each digit draws one more of its circles.
+            // The SORA mark in its ring. The ring is the lock: each digit draws one more of its circles.
             if (showsEmblem) {
                 SacredEmblem(
                     share = pinCodeScreenState.checkedDotsCount.toFloat() / pinCodeScreenState.maxDotsCount.coerceAtLeast(1),
@@ -169,7 +163,6 @@ fun PincodeScreen(
 
 @Composable
 private fun DotsProgress(modifier: Modifier, maxDotsCount: Int, checkedDotsCount: Int, wrong: Boolean) {
-    val n = MaterialTheme.neon
     val fx = LocalFx.current
     val entered = checkedDotsCount.coerceIn(0, maxDotsCount)
     val description = stringResource(jp.co.soramitsu.common.R.string.neon_pin_digits_entered, entered, maxDotsCount)
@@ -181,21 +174,10 @@ private fun DotsProgress(modifier: Modifier, maxDotsCount: Int, checkedDotsCount
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         repeat(maxDotsCount) { index ->
-            // A row of wells pressed into the page: each digit drops a lit bead into its well.
-            val bead = animateFloatAsState(
-                targetValue = if (index < entered) 1f else 0f,
-                animationSpec = if (fx.reduceMotion) snap() else spring(dampingRatio = 0.55f, stiffness = Spring.StiffnessMedium),
-                label = "pinBead",
-            )
-            Box(Modifier.size(24.dp).litWell(radius = 12.dp, depth = 2.dp), contentAlignment = Alignment.Center) {
-                LitLed(
-                    color = if (wrong) n.error else n.cyan,
-                    diameter = 15.dp,
-                    modifier = Modifier.graphicsLayer {
-                        scaleX = bead.value
-                        scaleY = bead.value
-                    },
-                )
+            // A row of ruled wells in the page: each digit settles a bead of red glass into its place. The ring
+            // shows an empty place and the bead a filled one without any help from the light.
+            Box(Modifier.size(24.dp).litWell(radius = 12.dp, depth = 2.dp, ruled = true), contentAlignment = Alignment.Center) {
+                LitBead(filled = wrong || index < entered, diameter = 12.dp, motion = !fx.reduceMotion)
             }
         }
     }
@@ -275,6 +257,6 @@ private fun PinIconButton(
     ) {
         Icon(painterResource(icon), contentDescription = null,
             modifier = Modifier.size(if (onClear == null) 28.dp else 24.dp),
-            tint = if (onClear == null) MaterialTheme.neon.cyan else MaterialTheme.neon.textSecondary)
+            tint = if (onClear == null) MaterialTheme.neon.redText else MaterialTheme.neon.textSecondary)
     }
 }

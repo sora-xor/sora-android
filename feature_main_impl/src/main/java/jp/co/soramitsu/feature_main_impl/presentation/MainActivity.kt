@@ -19,9 +19,16 @@ limitations under the License.
 
 package jp.co.soramitsu.feature_main_impl.presentation
 
-import androidx.compose.ui.graphics.Color
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
-import jp.co.soramitsu.ui_core.lit.LitDome
+import jp.co.soramitsu.common.presentation.compose.theme.SoraAppTheme
+import jp.co.soramitsu.ui_core.lit.LitCutGlassPiece
 import jp.co.soramitsu.ui_core.sacred.TenmonFlight
 import android.app.Activity
 import android.app.ActivityManager
@@ -58,7 +65,6 @@ import jp.co.soramitsu.common.presentation.compose.theme.neon.DeviceFxSignals
 import jp.co.soramitsu.common.presentation.view.ToolbarActivity
 import jp.co.soramitsu.common.util.DebounceClickHandler
 import jp.co.soramitsu.common.util.ext.attrColor
-import jp.co.soramitsu.common.util.ext.getColorAttr
 import jp.co.soramitsu.common.util.ext.gone
 import jp.co.soramitsu.common.util.ext.setNavigationBarColorCompat
 import jp.co.soramitsu.common.util.ext.setStatusBarColorCompat
@@ -156,9 +162,6 @@ class MainActivity :
 
     override val viewModel: MainViewModel by viewModels()
 
-    @AttrRes
-    private var curBarsColor: Int = R.attr.baseBackground
-
     override fun layoutResource() = ActivityMainBinding.inflate(layoutInflater)
 
     private var restoredFromSavedState = false
@@ -203,8 +206,24 @@ class MainActivity :
                 info.className = android.widget.Button::class.java.name
             }
         })
-        // The Polkaswap button: a white ceramic dome standing in the bar, under the pink flower.
-        binding.fabDome.setContent { LitDome(lit = Color(0xFFFFFFFF), deep = Color(0xFFD8D1CC), diameter = 56.dp) }
+        // The Polkaswap button: a disc of cut red glass standing in the bar, the flower inlaid in white. A finger
+        // sets it down on the bar.
+        val discPressed = mutableStateOf(false)
+        binding.fabMain.onPressedChange = { discPressed.value = it }
+        binding.fabDome.setContent {
+            SoraAppTheme {
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    LitCutGlassPiece(
+                        size = DpSize(56.dp, 56.dp),
+                        radius = 28.dp,
+                        glyph = painterResource(jp.co.soramitsu.common.R.drawable.ic_polkaswap_40),
+                        glyphSize = DpSize(40.dp, 40.dp),
+                        glyphKey = "polkaswap",
+                        pressed = discPressed.value,
+                    )
+                }
+            }
+        }
         binding.fabMain.setOnClickListener {
             debounceClickHandler.debounceClick {
                 polkaswapRouter.showSwap(SubstrateOptionsProvider.feeAssetId)
@@ -270,31 +289,26 @@ class MainActivity :
     }
 
     override fun setColor(@AttrRes color: Int) {
-        curBarsColor = color
         val barColor = attrColor(color)
         window.setStatusBarColorCompat(barColor)
         window.setNavigationBarColorCompat(barColor)
     }
 
+    /** The notice slides down over the top of the page; the system bars keep the page's colour. */
     private fun showBadConnectionView(@StringRes content: Int = R.string.common_connecting) {
         if (View.GONE == binding.badConnectionView.visibility) {
-            val errorColor = binding.badConnectionView.getColorAttr(R.attr.statusError)
             binding.badConnectionView.setText(content)
-            binding.badConnectionView.setBackgroundColor(errorColor)
             val animation = TranslateAnimation(0f, 0f, -ANIM_START_POSITION, 0f)
             animation.duration = ANIM_DURATION
             binding.badConnectionView.startAnimation(animation)
             binding.badConnectionView.show()
-            window.setStatusBarColorCompat(errorColor)
         }
     }
 
+    /** Says the connection is back for a moment, then slides away. */
     private fun hideBadConnectionView(@StringRes content: Int = R.string.common_connected) {
         if (View.VISIBLE == binding.badConnectionView.visibility) {
-            val successColor = binding.badConnectionView.getColorAttr(R.attr.statusSuccess)
             binding.badConnectionView.setText(content)
-            binding.badConnectionView.setBackgroundColor(successColor)
-            window.setStatusBarColorCompat(successColor)
             val animation = TranslateAnimation(0f, 0f, 0f, -ANIM_START_POSITION)
             animation.duration = ANIM_DURATION
             animation.startOffset = 500
@@ -304,9 +318,6 @@ class MainActivity :
 
                 override fun onAnimationEnd(p0: Animation?) {
                     binding.badConnectionView.gone()
-                    window.setStatusBarColorCompat(
-                        binding.badConnectionView.getColorAttr(curBarsColor)
-                    )
                 }
 
                 override fun onAnimationStart(p0: Animation?) {

@@ -1,40 +1,40 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  XML mirrors of the classic SORA night palette (compose/theme/tokens/NightThemeColors.kt),
-  under the names the XML theme (styles.xml), the splash and recovery panel and dialogs use.
+  XML mirrors of the night palette (compose/theme/tokens/NightThemeColors.kt): warm charcoal, ivory type, the
+  red as a lighter ink, under the names the XML theme (styles.xml), the splash and recovery panel and dialogs use.
 -->
 <resources>
-    <color name="neon_canvas">#3D1F54</color>
-    <color name="neon_surface">#5B3173</color>
-    <color name="neon_surface_variant">#341A49</color>
-    <color name="neon_sheet">#592D71</color>
-    <color name="neon_chrome">#5B3173</color>
-    <color name="neon_hairline">#744594</color>
-    <color name="neon_divider">#744594</color>
-    <color name="neon_border_input">#9B6FA5</color>
+    <color name="neon_canvas">#242220</color>
+    <color name="neon_surface">#302C2A</color>
+    <color name="neon_surface_variant">#292624</color>
+    <color name="neon_sheet">#302C2A</color>
+    <color name="neon_chrome">#302C2A</color>
+    <color name="neon_hairline">#4A4541</color>
+    <color name="neon_divider">#4A4541</color>
+    <color name="neon_border_input">#A39A8E</color>
 
-    <color name="neon_text_primary">#FCFCFC</color>
-    <color name="neon_text_secondary">#D3B0CA</color>
-    <color name="neon_text_tertiary">#AB80B5</color>
-    <color name="neon_text_disabled">#9B6FA5</color>
-    <color name="neon_on_accent">#FFFFFF</color>
-    <color name="neon_link">#F754A3</color>
+    <color name="neon_text_primary">#F8F4EE</color>
+    <color name="neon_text_secondary">#CEC6BB</color>
+    <color name="neon_text_tertiary">#A39A8E</color>
+    <color name="neon_text_disabled">#A39A8E</color>
+    <color name="neon_on_accent">#242220</color>
+    <color name="neon_link">#F18E79</color>
 
-    <color name="neon_brand_red">#F754A3</color>
-    <color name="neon_cyan">#F754A3</color>
-    <color name="neon_polkaswap">#FF0066</color>
-    <color name="neon_polkaswap_text">#FF0066</color>
+    <color name="neon_brand_red">#F18E79</color>
+    <color name="neon_cyan">#F18E79</color>
+    <color name="neon_polkaswap">#F18E79</color>
+    <color name="neon_polkaswap_text">#F18E79</color>
 
-    <color name="neon_success">#44E5B2</color>
-    <color name="neon_success_container">#D3F6EC</color>
-    <color name="neon_warning">#FF9900</color>
-    <color name="neon_warning_container">#FFF1D2</color>
-    <color name="neon_error">#F24197</color>
-    <color name="neon_error_container">#FFE8EB</color>
+    <color name="neon_success">#7CC49A</color>
+    <color name="neon_success_container">#23382C</color>
+    <color name="neon_warning">#D9B36A</color>
+    <color name="neon_warning_container">#3A3122</color>
+    <color name="neon_error">#F18E79</color>
+    <color name="neon_error_container">#4A2620</color>
 
-    <color name="neon_safe_start">#44E5B2</color>
-    <color name="neon_toast">#FCFCFC</color>
-    <color name="neon_on_toast">#45245F</color>
-    <color name="lit_bar_edge">#26FFFFFF</color>
-    <color name="lit_bar_shadow">#59120620</color>
+    <color name="neon_safe_start">#7CC49A</color>
+    <color name="neon_toast">#F8F4EE</color>
+    <color name="neon_on_toast">#242220</color>
+    <color name="lit_bar_edge">#1AFFFFFF</color>
+    <color name="lit_bar_shadow">#4D000000</color>
 </resources>

@@ -25,6 +25,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import jp.co.soramitsu.ui_core.R
+import jp.co.soramitsu.ui_core.lit.Lit
 import jp.co.soramitsu.ui_core.lit.litPlate
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
@@ -34,8 +35,7 @@ import jp.co.soramitsu.ui_core.theme.customTypography
 fun CategoryItem(
     modifier: Modifier = Modifier,
     title: String,
-    cornerRadius: Dp = 36.dp,
-    elevation: Dp = 14.dp,
+    cornerRadius: Dp = Lit.SheetRadius,
     subtitle: String? = null,
     subtitleColor: Color = MaterialTheme.customColors.fgSecondary,
     subtitleIcon: Int? = null,
@@ -44,7 +44,7 @@ fun CategoryItem(
 ) {
     Row(
         modifier = modifier
-            .litPlate(radius = cornerRadius, elevation = elevation)
+            .litPlate(RoundedCornerShape(cornerRadius))
             .clip(RoundedCornerShape(cornerRadius))
             .clickable { onClick() },
         verticalAlignment = Alignment.CenterVertically,

@@ -239,6 +239,33 @@ class PortfolioCalculatorTest {
     }
 
     @Test
+    fun `while the node does not answer nothing is live, however recent`() {
+        val now = 10_000_000L
+        val reconnecting = snapshot(
+            emptyList(),
+            sync = mapOf(
+                MAIN to WalletSync(refreshedAtMillis = now - 5_000, live = true),
+                SAVINGS to WalletSync(refreshedAtMillis = now - 40_000),
+            ),
+        ).copy(nodeUp = false)
+        for (id in listOf(MAIN, SAVINGS)) {
+            val freshness = PortfolioFreshness.of(reconnecting.sync[id], reconnecting.connected, now, reconnecting.nodeUp)
+            assertEquals(FreshnessKind.SAVED, freshness.kind)
+        }
+        // The chip still says how old the saved numbers are.
+        val worst = PortfolioCalculator.worstFreshness(reconnecting, listOf(MAIN, SAVINGS), now)!!
+        assertEquals(FreshnessKind.SAVED, worst.kind)
+        assertEquals(now - 40_000, worst.updatedAtMillis)
+        // A wallet never read on this phone is still being read, and a failed network is still named.
+        assertEquals(FreshnessKind.READING, PortfolioFreshness.of(WalletSync(null, unread = true), true, now, nodeUp = false).kind)
+        assertEquals(
+            FreshnessKind.PARTIAL,
+            PortfolioFreshness.of(WalletSync(now, setOf(WalletNetworkId.MINAMOTO)), true, now, nodeUp = false).kind,
+        )
+        assertEquals(FreshnessKind.OFFLINE, PortfolioFreshness.of(reconnecting.sync[MAIN], false, now, nodeUp = false).kind)
+    }
+
+    @Test
     fun `a read stamped just after the dashboard's clock ticked is live, one from the clock's future is not`() {
         val now = 10_000_000L
         val justAfter = WalletSync(refreshedAtMillis = now + 400)

@@ -63,9 +63,10 @@ import jp.co.soramitsu.ui_core.component.button.properties.Size
 import jp.co.soramitsu.ui_core.component.input.number.BasicNumberInput
 import jp.co.soramitsu.ui_core.component.input.number.DefaultCursorPosition
 import jp.co.soramitsu.ui_core.lit.litCoin
-import jp.co.soramitsu.ui_core.lit.litPlate
+import jp.co.soramitsu.common.presentation.compose.theme.neon.neon
+import jp.co.soramitsu.ui_core.lit.Lit
+import jp.co.soramitsu.ui_core.lit.litWell
 import jp.co.soramitsu.ui_core.resources.Dimens
-import jp.co.soramitsu.ui_core.theme.borderRadius
 import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
 
@@ -85,16 +86,17 @@ fun AssetAmountInput(
     onFocusChange: (Boolean) -> Unit,
     tokenSelectable: Boolean = true,
 ) {
-    val shape = RoundedCornerShape(MaterialTheme.borderRadius.xl)
+    // Something that takes input is let into the surface, with a boundary that does not depend on the light.
+    val shape = RoundedCornerShape(Lit.ControlRadius)
     val focusedInput = remember { mutableStateOf(false) }
     Row(
         modifier = modifier
             .fillMaxWidth()
             .wrapContentHeight()
-            .litPlate(shape, elevation = 12.dp)
+            .litWell(radius = Lit.ControlRadius, depth = 2.dp, ruled = true)
             .then(
                 if (focusedInput.value) {
-                    Modifier.border(BorderStroke(1.dp, MaterialTheme.customColors.fgPrimary), shape)
+                    Modifier.border(BorderStroke(2.dp, MaterialTheme.neon.focusRing), shape)
                 } else {
                     Modifier
                 },

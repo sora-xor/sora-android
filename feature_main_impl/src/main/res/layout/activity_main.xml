@@ -23,26 +23,28 @@
             app:defaultNavHost="true" />
     </FrameLayout>
 
+    <!-- Reconnecting is routine: the notice is ink on the page's own surface, not an alarm. -->
     <TextView
         android:id="@+id/badConnectionView"
         style="@style/TextAppearance.Soramitsu.Paragraph_3"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:background="@drawable/bg_lit_banner"
         android:gravity="center_horizontal"
+        android:paddingBottom="4dp"
         android:text="@string/common_connecting"
-        android:textColor="?attr/baseOnAccent"
+        android:textColor="?attr/contentPrimary"
         android:visibility="gone"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        tools:textColor="@color/grey_800"
         tools:visibility="visible" />
 
-    <!-- The bar is a porcelain slab standing above the page: its shadow falls up over the page behind. -->
+    <!-- The bar is a sheet of milk glass standing above the page: its shadow falls up over the page behind. -->
     <View
         android:id="@+id/bottomBarShadow"
         android:layout_width="0dp"
-        android:layout_height="18dp"
+        android:layout_height="12dp"
         android:background="@drawable/bg_lit_bar_shadow"
         android:importantForAccessibility="no"
         android:visibility="gone"
@@ -70,38 +72,28 @@
         tools:background="@color/neu_color_100"
         tools:visibility="visible" />
 
-    <FrameLayout
+    <!-- The Polkaswap disc: cut red glass with the flower inlaid, and room round it for its shadow. -->
+    <jp.co.soramitsu.feature_main_impl.presentation.PressAwareFrameLayout
         android:id="@+id/fabMain"
-        android:layout_width="80dp"
-        android:layout_height="80dp"
-        android:layout_marginBottom="16dp"
+        android:layout_width="88dp"
+        android:layout_height="88dp"
+        android:layout_marginBottom="12dp"
         android:clickable="true"
         android:elevation="4dp"
         android:focusable="true"
         android:outlineProvider="none"
         android:visibility="gone"
         android:contentDescription="@string/polkaswap_swap_title"
-        android:stateListAnimator="@animator/lit_dome_press"
         app:layout_constraintBottom_toBottomOf="@id/bottomNavigationView"
         app:layout_constraintEnd_toEndOf="@id/bottomNavigationView"
         app:layout_constraintStart_toStartOf="@id/bottomNavigationView">
         <androidx.compose.ui.platform.ComposeView
             android:id="@+id/fabDome"
-            android:layout_width="80dp"
-            android:layout_height="80dp"
+            android:layout_width="88dp"
+            android:layout_height="88dp"
             android:layout_gravity="center"
             android:elevation="4dp"
             android:importantForAccessibility="no" />
-        <ImageView
-            android:layout_width="56dp"
-            android:layout_height="56dp"
-            android:layout_gravity="center"
-            android:duplicateParentState="true"
-            android:elevation="4dp"
-            android:padding="8dp"
-            android:src="@drawable/ic_polkaswap_40"
-            app:tint="@color/neon_polkaswap"
-            android:importantForAccessibility="no" />
-    </FrameLayout>
+    </jp.co.soramitsu.feature_main_impl.presentation.PressAwareFrameLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

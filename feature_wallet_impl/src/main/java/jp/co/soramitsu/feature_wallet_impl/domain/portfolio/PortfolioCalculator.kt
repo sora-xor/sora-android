@@ -250,7 +250,7 @@ object PortfolioCalculator {
             WalletSummary(
                 wallet = wallet,
                 totals = walletTotals(snapshot, wallet.id),
-                freshness = PortfolioFreshness.of(snapshot.sync[wallet.id], snapshot.connected, nowMillis),
+                freshness = PortfolioFreshness.of(snapshot.sync[wallet.id], snapshot.connected, nowMillis, snapshot.nodeUp),
                 networks = PORTFOLIO_NETWORKS.filter { network ->
                     holdings.any { it.network == network && !it.hidden }
                 },
@@ -267,7 +267,7 @@ object PortfolioCalculator {
         nowMillis: Long,
     ): WalletFreshness? {
         val states = walletIds.distinct().map {
-            PortfolioFreshness.of(snapshot.sync[it], snapshot.connected, nowMillis)
+            PortfolioFreshness.of(snapshot.sync[it], snapshot.connected, nowMillis, snapshot.nodeUp)
         }
         val worst = states.maxWithOrNull(
             compareBy<WalletFreshness> { it.kind.severity }
@@ -332,7 +332,8 @@ object FanAllocation {
 /**
  * Honest sync states (portfolio-view SPEC §3.2 and §6). The selected wallet is kept current by the
  * app's live subscription; other wallets are read while the dashboard is visible, at most once a
- * minute, and show their age when a read is older than [LIVE_WINDOW_MS] or failed.
+ * minute, and show their age when a read is older than [LIVE_WINDOW_MS] or failed, and whenever the
+ * node is not answering.
  */
 object PortfolioFreshness {
     const val REFRESH_INTERVAL_MS = 60_000L
@@ -351,13 +352,18 @@ object PortfolioFreshness {
      */
     const val CLOCK_SKEW_MS = 30_000L
 
-    fun of(sync: WalletSync?, connected: Boolean, nowMillis: Long): WalletFreshness {
+    /**
+     * [nodeUp] is whether the node answers now. While it does not (the app is connecting or reconnecting) nothing
+     * is live, however recently it was read: the numbers are saved ones and show their age.
+     */
+    fun of(sync: WalletSync?, connected: Boolean, nowMillis: Long, nodeUp: Boolean = true): WalletFreshness {
         val updatedAt = sync?.refreshedAtMillis
         val unreachable = sync?.unreachable.orEmpty()
         val kind = when {
             !connected -> FreshnessKind.OFFLINE
             unreachable.isNotEmpty() -> FreshnessKind.PARTIAL
             sync?.unread == true -> FreshnessKind.READING
+            !nodeUp -> FreshnessKind.SAVED
             sync?.live == true -> FreshnessKind.LIVE
             updatedAt != null && isRecent(updatedAt, nowMillis) -> FreshnessKind.LIVE
             else -> FreshnessKind.SAVED

@@ -599,7 +599,7 @@ private fun StepGlyph(state: SafeStepState) {
             modifier = Modifier.size(24.dp),
             contentAlignment = Alignment.Center,
         ) {
-            // Amber, the only "needs action" colour in Safe Mode. `warning` (not the light
+            // Ochre, the only "needs action" colour in Safe Mode. `warning` (not the lighter
             // `warningFill`) keeps 3:1 against the surface in both themes.
             Box(
                 Modifier

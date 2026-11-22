@@ -22,6 +22,10 @@ android {
         compose = true
     }
 
+    testOptions {
+        unitTests.isReturnDefaultValues = true
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
@@ -56,6 +60,8 @@ dependencies {
     implementation(libs.composeToolingPreviewDep)
     implementation(libs.coilDep)
     implementation(libs.coilComposeDep)
+
+    testImplementation(libs.junitDep)
 
     constraints {
         // Compose and Coil alone resolve older AndroidX and kotlinx releases than the app ships,

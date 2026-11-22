@@ -28,8 +28,6 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.graphics.Color
 import jp.co.soramitsu.ui_core.theme.customColors
 
-private val polkaswapColor = Color(0xffff0066)
-
 @Composable
 fun PolkaswapSlider(value: Float, onValueChange: (Float) -> Unit) {
     Slider(
@@ -43,14 +41,14 @@ object PolkaswapSliderColors : SliderColors {
 
     @Composable
     override fun thumbColor(enabled: Boolean): State<Color> {
-        return rememberUpdatedState(if (enabled) polkaswapColor else MaterialTheme.customColors.bgSurfaceVariant)
+        return rememberUpdatedState(if (enabled) MaterialTheme.customColors.accentPrimary else MaterialTheme.customColors.bgSurfaceVariant)
     }
 
     @Composable
     override fun trackColor(enabled: Boolean, active: Boolean): State<Color> {
         return rememberUpdatedState(
             if (enabled) {
-                if (active) polkaswapColor else MaterialTheme.customColors.bgSurfaceVariant
+                if (active) MaterialTheme.customColors.accentPrimary else MaterialTheme.customColors.bgSurfaceVariant
             } else {
                 if (active) MaterialTheme.customColors.bgSurfaceVariant else MaterialTheme.customColors.bgSurfaceVariant
             }
@@ -61,7 +59,7 @@ object PolkaswapSliderColors : SliderColors {
     override fun tickColor(enabled: Boolean, active: Boolean): State<Color> {
         return rememberUpdatedState(
             if (enabled) {
-                if (active) polkaswapColor else MaterialTheme.customColors.bgSurfaceVariant
+                if (active) MaterialTheme.customColors.accentPrimary else MaterialTheme.customColors.bgSurfaceVariant
             } else {
                 if (active) MaterialTheme.customColors.bgSurfaceVariant else MaterialTheme.customColors.bgSurfaceVariant
             }

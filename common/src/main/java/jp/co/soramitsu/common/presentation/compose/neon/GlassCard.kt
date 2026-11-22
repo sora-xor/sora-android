@@ -38,16 +38,15 @@ import androidx.compose.ui.graphics.takeOrElse
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import jp.co.soramitsu.common.presentation.compose.theme.neon.neon
+import jp.co.soramitsu.ui_core.lit.Lit
 import jp.co.soramitsu.ui_core.theme.borderRadius
 import jp.co.soramitsu.ui_core.theme.customColors
 
 /**
- * A calm card (design spec 4.3.1, 7.3) on a porcelain plate. Never glows and never uses
- * neumorphic shadows.
+ * A calm card (design spec 4.3.1, 7.3): a sheet of frosted glass with small corners.
  *
- * [backgroundColor] defaults to [Color.Unspecified], which means the plate's own face. An
- * explicit colour keeps legacy call sites safe: it renders as an opaque fill (QR plates rely on
- * solid white).
+ * [backgroundColor] defaults to [Color.Unspecified], which means the glass's own milk. An
+ * explicit colour renders as an opaque sheet of that colour (QR plates rely on solid white).
  */
 @Composable
 fun GlassCard(
@@ -60,7 +59,7 @@ fun GlassCard(
 ) {
     NeonCardSurface(
         modifier = modifier,
-        shape = RoundedCornerShape(cornerRadius),
+        shape = RoundedCornerShape(cornerRadius.coerceAtMost(Lit.SheetRadius)),
         innerPadding = innerPadding,
         backgroundColor = backgroundColor,
         onClick = onClick,
@@ -92,9 +91,8 @@ fun SafeContentCard(
 
 /**
  * Drop-in replacement for `jp.co.soramitsu.ui_core.component.card.ContentCard` with the same
- * parameter names and order: migrate by swapping the import. The classic SORA design draws it as
- * the ui-core card itself (28 dp radius, the grey shadow in light). [Color.Unspecified] is the
- * surface colour.
+ * parameter names and order: migrate by swapping the import. It is the ui-core card itself, a
+ * sheet of frosted glass. [Color.Unspecified] is the surface colour.
  */
 @Composable
 fun ContentCard(
@@ -132,7 +130,7 @@ fun ContentCardEndless(
     content = content,
 )
 
-/** Balance/receive hero. The classic design has none: it is a plain card. */
+/** Balance/receive hero: a plain card. */
 @Composable
 fun HeroCard(
     modifier: Modifier = Modifier,

@@ -32,7 +32,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import jp.co.soramitsu.ui_core.resources.Dimens
@@ -59,7 +58,7 @@ fun ProgressDialog(message: String? = null) {
             ) {
                 CircularProgressIndicator(
                     modifier = Modifier.size(Dimens.x6).padding(Dimens.x1),
-                    color = Color(0xFF44E5B2)
+                    color = MaterialTheme.customColors.accentPrimary,
                 )
                 message?.let {
                     Text(text = it, color = MaterialTheme.customColors.fgPrimary)

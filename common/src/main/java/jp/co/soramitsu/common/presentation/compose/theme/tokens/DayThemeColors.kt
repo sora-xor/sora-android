@@ -20,57 +20,54 @@ limitations under the License.
 package jp.co.soramitsu.common.presentation.compose.theme.tokens
 
 import androidx.compose.ui.graphics.Color
-import jp.co.soramitsu.common.presentation.compose.theme.tokens.Colors.Brown10
-import jp.co.soramitsu.common.presentation.compose.theme.tokens.Colors.Brown30
-import jp.co.soramitsu.common.presentation.compose.theme.tokens.Colors.Brown5
-import jp.co.soramitsu.common.presentation.compose.theme.tokens.Colors.Brown50
-import jp.co.soramitsu.common.presentation.compose.theme.tokens.Colors.Brown90
-import jp.co.soramitsu.common.presentation.compose.theme.tokens.Colors.Green5
-import jp.co.soramitsu.common.presentation.compose.theme.tokens.Colors.Red5
-import jp.co.soramitsu.common.presentation.compose.theme.tokens.Colors.Yellow30
-import jp.co.soramitsu.common.presentation.compose.theme.tokens.Colors.Yellow5
+import jp.co.soramitsu.ui_core.lit.LitDay
 
+/** The day palette: white paper and glass, sumi ink, SORA red (the materials are in `ui_core.lit`). */
 object DayThemeColors {
 
-    val AccentPrimary = Color(0xFFEE2233)
+    val AccentPrimary = LitDay.red
 
-    val AccentPrimaryContainer = Red5
+    val AccentPrimaryContainer = Color(0xFFF7E1DF)
 
-    val AccentSecondary = Brown90
+    val AccentSecondary = LitDay.ink
 
-    val AccentSecondaryContainer = Brown10
+    val AccentSecondaryContainer = LitDay.wellFloor
 
-    val AccentTertiary = Brown50
+    val AccentTertiary = LitDay.inkTertiary
 
-    val AccentTertiaryContainer = Brown10
+    val AccentTertiaryContainer = LitDay.wellFloor
 
-    val BgPage = Color(0xFFE8E2DE)
+    val BgPage = LitDay.page
 
-    val BgSurface = Color(0xFFF6F2EF)
+    val BgSurface = LitDay.surface
 
-    val BgSurfaceVariant = Color(0xFFE7E1DD)
+    val BgSurfaceVariant = LitDay.wellFloor
 
-    val BgSurfaceInverted = Brown90
+    val BgSurfaceInverted = LitDay.ink
 
-    val FgPrimary = Color(0xFF2A1A1C)
+    val FgPrimary = LitDay.ink
 
-    val FgSecondary = Color(0xFF6F5D5E)
+    val FgSecondary = LitDay.inkSecondary
 
-    val FgTertiary = Color(0xFF8A7675)
+    val FgTertiary = LitDay.inkTertiary
 
-    val FgInverted = Brown5
+    val FgInverted = LitDay.padLit
 
-    val FgOutline = Brown5
+    val FgOutline = Color(0xFFDAD6CE)
 
-    val StatusSuccess = Color(0xFF169974)
+    val StatusSuccess = Color(0xFF286448)
 
-    val StatusSuccessContainer = Green5
+    val StatusSuccessContainer = Color(0xFFDCEBE2)
 
-    val StatusWarning = Yellow30
+    /** A calm ochre: readable as ink on white, on its own container and on its own tint. */
+    val StatusWarning = Color(0xFF8A5A0C)
 
-    val StatusWarningContainer = Yellow5
+    val StatusWarningContainer = Color(0xFFF3E9D2)
 
-    val StatusError = Color(0xFFCB0F1F)
+    /** A warning as a filled mark, with ink on it. */
+    val StatusWarningFill = Color(0xFFDDA63A)
 
-    val StatusErrorContainer = Red5
+    val StatusError = LitDay.redDeep
+
+    val StatusErrorContainer = Color(0xFFF7E1DF)
 }

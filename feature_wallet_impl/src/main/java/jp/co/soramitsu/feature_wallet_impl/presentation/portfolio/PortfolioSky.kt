@@ -42,7 +42,10 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.withTransform
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.layer.GraphicsLayer
+import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.graphics.vector.PathParser
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.semantics.hideFromAccessibility
@@ -231,6 +234,7 @@ internal fun PortfolioSky(
     reading: Boolean = false,
     scrollDp: () -> Float = { 0f },
     pullDp: () -> Float = { 0f },
+    capture: GraphicsLayer? = null,
     overlay: @Composable BoxScope.() -> Unit,
 ) {
     val dark = isDarkTheme
@@ -275,6 +279,17 @@ internal fun PortfolioSky(
             Canvas(
                 Modifier
                     .fillMaxSize()
+                    // The scene is also kept as a picture of its own, for the glass it passes behind.
+                    .then(
+                        if (capture != null) {
+                            Modifier.drawWithContent {
+                                capture.record { this@drawWithContent.drawContent() }
+                                drawLayer(capture)
+                            }
+                        } else {
+                            Modifier
+                        },
+                    )
                     // Scrolling moves the finished picture: the shader runs only when the scene itself changes.
                     .graphicsLayer {
                         compositingStrategy = CompositingStrategy.Offscreen
@@ -637,10 +652,13 @@ private fun DrawScope.drawNebula(dark: Boolean, planet: Offset) {
         radius = radius,
         center = center,
     )
-    haze(PortfolioPalette.hazeViolet, if (dark) 0.16f else 0.05f, Offset(size.width * 0.1f, size.height * 0.32f), size.width * 0.62f)
-    haze(PortfolioPalette.hazeCyan, if (dark) 0.10f else 0.05f, Offset(size.width * 0.92f, size.height * 0.12f), size.width * 0.5f)
+    // The haze belongs to the night sky; the white page has none.
+    if (dark) {
+        haze(PortfolioPalette.hazeViolet, 0.16f, Offset(size.width * 0.1f, size.height * 0.32f), size.width * 0.62f)
+        haze(PortfolioPalette.hazeCyan, 0.10f, Offset(size.width * 0.92f, size.height * 0.12f), size.width * 0.5f)
+    }
     val halo = 175.dp.toPx()
-    val core = if (dark) 0.5f else 0.22f
+    val core = if (dark) 0.5f else 0.12f
     drawCircle(
         Brush.radialGradient(
             0f to PortfolioPalette.soraGlow.copy(alpha = core),

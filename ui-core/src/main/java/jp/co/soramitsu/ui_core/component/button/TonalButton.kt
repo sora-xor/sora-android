@@ -33,7 +33,7 @@ import jp.co.soramitsu.ui_core.component.button.properties.Size
 import jp.co.soramitsu.ui_core.component.button.properties.buttonElevation
 import jp.co.soramitsu.ui_core.component.button.properties.buttonSize
 import jp.co.soramitsu.ui_core.resources.Dimens
-import jp.co.soramitsu.ui_core.theme.borderRadius
+import jp.co.soramitsu.ui_core.lit.Lit
 import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
 
@@ -41,7 +41,7 @@ import jp.co.soramitsu.ui_core.theme.customTypography
 @Composable
 fun TonalButton(
     modifier: Modifier = Modifier,
-    shape: Shape = RoundedCornerShape(MaterialTheme.borderRadius.ml),
+    shape: Shape = RoundedCornerShape(Lit.ControlRadius),
     size: Dp,
     order: Order,
     text: String? = null,

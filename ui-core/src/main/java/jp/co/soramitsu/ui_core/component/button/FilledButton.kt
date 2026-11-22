@@ -2,7 +2,6 @@ package jp.co.soramitsu.ui_core.component.button
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -10,40 +9,29 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.Button
-import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.Icon
-import androidx.compose.material.LocalRippleConfiguration
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.RippleConfiguration
-import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 import jp.co.soramitsu.ui_core.R
 import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.component.button.properties.Size
-import jp.co.soramitsu.ui_core.component.button.properties.buttonElevation
-import jp.co.soramitsu.ui_core.component.button.properties.buttonSize
-import jp.co.soramitsu.ui_core.extensions.ripple
 import jp.co.soramitsu.ui_core.resources.Dimens
-import jp.co.soramitsu.ui_core.lit.litLacquer
-import jp.co.soramitsu.ui_core.theme.borderRadius
-import jp.co.soramitsu.ui_core.theme.customTypography
+import jp.co.soramitsu.ui_core.lit.LocalLitPalette
+import jp.co.soramitsu.ui_core.lit.Lit
 
-@OptIn(ExperimentalMaterialApi::class)
+/**
+ * The primary filled button is a slab of cut red glass with its label inlaid in white: the one loud thing on a
+ * screen. The secondary and tertiary ones are soft raised pads with an ink label.
+ */
 @Composable
 fun FilledButton(
     modifier: Modifier = Modifier,
-    shape: Shape = RoundedCornerShape(MaterialTheme.borderRadius.ml),
+    shape: Shape = RoundedCornerShape(Lit.ControlRadius),
     size: Dp,
     order: Order,
     enabled: Boolean = true,
@@ -54,57 +42,14 @@ fun FilledButton(
     onClick: () -> Unit,
 ) {
     val colors = ButtonColors.filledButtonColors(order)
-    CompositionLocalProvider(
-        LocalRippleConfiguration provides RippleConfiguration(color = Color.White.ripple())
-    ) {
-        Button(
-            modifier = modifier.then(if (enabled) Modifier.litLacquer(shape, colors.backgroundColor(true).value) else Modifier).buttonSize(size, shape, false, enabled),
-            colors = colors,
-            shape = shape,
-            border = null,
-            enabled = enabled,
-            onClick = onClick,
-            elevation = buttonElevation(size, enabled),
-            contentPadding = PaddingValues(0.dp),
-        ) {
-            leftIcon?.let { painter ->
-                Icon(
-                    modifier = Modifier.padding(
-                        start = text?.let { Dimens.x2 } ?: 0.dp,
-                        end = text?.let { Dimens.x1 } ?: 0.dp
-                    ),
-                    painter = painter,
-                    contentDescription = null
-                )
-            }
-
-            text?.let {
-                Text(
-                    modifier = Modifier.padding(
-                        start = leftIcon?.let { 0.dp } ?: Dimens.x3,
-                        end = rightIcon?.let { 0.dp } ?: Dimens.x3,
-                        top = Dimens.x1,
-                        bottom = Dimens.x1
-                    ),
-                    textAlign = TextAlign.Center,
-                    text = text,
-                    style = MaterialTheme.customTypography.buttonM,
-                    maxLines = maxLines,
-                )
-            }
-
-            rightIcon?.let { painter ->
-                Icon(
-                    modifier = Modifier.padding(
-                        start = text?.let { Dimens.x1 } ?: 0.dp,
-                        end = text?.let { Dimens.x2 } ?: 0.dp
-                    ),
-                    painter = painter,
-                    contentDescription = null
-                )
-            }
-        }
-    }
+    val lit = LocalLitPalette.current
+    val face = LitButtonFace(
+        glass = lit.red.takeIf { order == Order.PRIMARY },
+        content = if (order == Order.PRIMARY) lit.inlay else colors.backgroundColor(true).value,
+        disabledFill = colors.backgroundColor(false).value,
+        disabledContent = colors.contentColor(false).value,
+    )
+    LitButton(modifier, shape, size, face, enabled, text, leftIcon, rightIcon, maxLines, onClick)
 }
 
 @Preview

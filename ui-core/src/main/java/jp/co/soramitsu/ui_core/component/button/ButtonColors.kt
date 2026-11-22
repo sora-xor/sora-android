@@ -15,20 +15,6 @@ import jp.co.soramitsu.ui_core.theme.opacity
 object ButtonColors {
 
     @Composable
-    fun filledPolkaswapButtonColors(order: Order): androidx.compose.material.ButtonColors {
-        return ButtonDefaults.buttonColors(
-            backgroundColor = Color(0xffff0066),
-            contentColor = Color(0xffffffff),
-            disabledBackgroundColor = MaterialTheme.customColors.fgPrimary.withOpacity(
-                MaterialTheme.opacity.actionBgDisabled
-            ),
-            disabledContentColor = MaterialTheme.customColors.fgPrimary.withOpacity(
-                MaterialTheme.opacity.actionFgDisabled
-            )
-        )
-    }
-
-    @Composable
     fun filledButtonColors(order: Order): androidx.compose.material.ButtonColors {
         return when (order) {
             Order.PRIMARY -> {

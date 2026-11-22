@@ -25,6 +25,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import jp.co.soramitsu.ui_core.lit.Lit
 import jp.co.soramitsu.ui_core.lit.litPlate
 import jp.co.soramitsu.ui_core.modifier.applyIf
 import jp.co.soramitsu.ui_core.theme.borderRadius
@@ -40,17 +41,14 @@ fun ContentCard(
     onClick: (() -> Unit)? = null,
     content: @Composable BoxScope.() -> Unit,
 ) {
-    // A porcelain plate: a custom colour is the plate's glaze.
-    val shape = RoundedCornerShape(cornerRadius)
+    // A sheet of frosted glass with small corners: a custom colour is a sheet of that colour.
+    val radius = cornerRadius.coerceAtMost(Lit.SheetRadius)
+    val shape = RoundedCornerShape(radius)
     val plain = backgroundColor == MaterialTheme.customColors.bgSurface
     CompositionLocalProvider(LocalContentColor provides contentColorFor(backgroundColor)) {
         Box(
             modifier = modifier
-                .litPlate(
-                    radius = cornerRadius,
-                    faceTop = backgroundColor.takeUnless { plain },
-                    faceBottom = backgroundColor.takeUnless { plain },
-                )
+                .litPlate(shape, face = backgroundColor.takeUnless { plain })
                 .clip(shape)
                 .applyIf(onClick != null) {
                     clickable(onClick = onClick!!)

@@ -17,12 +17,10 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
@@ -48,8 +46,6 @@ import jp.co.soramitsu.feature_wallet_impl.presentation.portfolio.motion.Deflect
 import jp.co.soramitsu.feature_wallet_impl.presentation.portfolio.motion.TiltState
 import jp.co.soramitsu.feature_wallet_impl.presentation.portfolio.motion.rememberTiltParallax
 import jp.co.soramitsu.ui_core.lit.LitHeroPerformance
-import jp.co.soramitsu.ui_core.lit.LitLightRig
-import jp.co.soramitsu.ui_core.lit.litPage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -110,10 +106,6 @@ internal fun PortfolioHubScreen(
         heroVisible = heroVisible,
         pinned = pinned?.toDeflection(),
     )
-    // The phone's tilt moves the one light over every plate. Read while drawing, so nothing recomposes.
-    LaunchedEffect(tilt) {
-        snapshotFlow { tilt.x to tilt.y }.collect { (x, y) -> LitLightRig.set(x, y) }
-    }
     val title = stringResource(R.string.portfolio_title)
     val density = LocalDensity.current.density
     val pull = rememberHeroPull()
@@ -122,7 +114,6 @@ internal fun PortfolioHubScreen(
     Column(
         Modifier
             .fillMaxSize()
-            .litPage()
             .nestedScroll(pull)
             .verticalScroll(scrollState)
             .semantics { paneTitle = title }
@@ -196,7 +187,7 @@ private fun LoadingHero(tilt: TiltState) {
     Box(Modifier.fillMaxWidth()) {
         PortfolioSky(
             fan = emptyList(),
-            colorOf = { PortfolioPalette.other },
+            colorOf = { PortfolioPalette.other(false) },
             highlighted = null,
             tilt = tilt,
             onSliceTap = {},

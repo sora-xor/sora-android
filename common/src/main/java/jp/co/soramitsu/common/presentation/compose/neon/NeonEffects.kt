@@ -22,7 +22,6 @@ package jp.co.soramitsu.common.presentation.compose.neon
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -35,36 +34,34 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import jp.co.soramitsu.common.presentation.compose.theme.neon.FxPolicy
 import jp.co.soramitsu.common.presentation.compose.theme.neon.NeonTokens
-import jp.co.soramitsu.common.presentation.compose.theme.neon.neon
+import jp.co.soramitsu.ui_core.lit.litPage
 import jp.co.soramitsu.ui_core.lit.litPlate
 
 /*
- * SORA Neon surface modifiers (design spec 4). Everything here is static; nothing uses
- * RenderEffect or a backdrop blur, so it renders the same on API 26+.
+ * Surface modifiers (design spec 4). Nothing here uses RenderEffect or a backdrop blur, so it renders
+ * the same on API 26+.
  */
 
 /**
- * The page colour behind all content, as a full-size layer. Put it first in a `Box`; it is
- * decorative and has no semantics. It replaces the full-screen `bg_image` bitmap (about 19.5 MB
- * decoded at xxxhdpi).
+ * The page behind all content, as a full-size layer: washi, light falling across it from the top left, and the
+ * shippō print near its top (`litPage`). Put it first in a `Box`; it is decorative and has no semantics.
  */
 @Composable
 fun NeonBackground(modifier: Modifier = Modifier) {
-    val n = MaterialTheme.neon
     Box(
         modifier
             .fillMaxSize()
             .clearAndSetSemantics { }
-            .drawBehind { drawRect(n.canvas) },
+            .litPage(),
     )
 }
 
 /**
- * A porcelain plate for cards and panels (design spec 4.3.1), clipped to [shape]. An explicit
- * [opaqueColor] is its glaze (secrets, review surfaces and QR plates).
+ * A sheet of frosted glass for cards and panels, or a soft pad when it is small, clipped to [shape]. An explicit
+ * [opaqueColor] is a sheet of that colour (secrets, review surfaces and QR plates).
  */
 fun Modifier.neonGlass(shape: Shape, opaqueColor: Color? = null): Modifier =
-    litPlate(shape, faceTop = opaqueColor, faceBottom = opaqueColor).clip(shape)
+    litPlate(shape, face = opaqueColor).clip(shape)
 
 /**
  * Gradient hairline (design spec 4.4). 1 dp, 2 dp under high contrast. The brush runs corner to

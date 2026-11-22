@@ -64,13 +64,15 @@ internal fun NetworkTagChip(tag: WalletNetworkTag, modifier: Modifier = Modifier
         WalletNetworkTag.TESTNET -> MaterialTheme.customColors.statusWarning
         WalletNetworkTag.COMING_SOON -> MaterialTheme.customColors.fgSecondary
     }
+    // Testnet is the warning's ochre on the warning's own container; the others sit on a tint of their colour.
+    val fill = if (tag == WalletNetworkTag.TESTNET) MaterialTheme.customColors.statusWarningContainer else color.copy(alpha = 0.14f)
     Text(
         text = stringResource(tag.label),
         style = MaterialTheme.customTypography.textXSBold,
         color = color,
         maxLines = 1,
         modifier = modifier
-            .background(color.copy(alpha = 0.14f), RoundedCornerShape(10.dp))
+            .background(fill, RoundedCornerShape(10.dp))
             .padding(horizontal = 8.dp, vertical = 3.dp),
     )
 }

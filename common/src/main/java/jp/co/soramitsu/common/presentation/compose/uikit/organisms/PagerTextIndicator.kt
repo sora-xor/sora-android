@@ -48,6 +48,8 @@ import androidx.compose.ui.unit.LayoutDirection
 import jp.co.soramitsu.androidfoundation.format.TextValue
 import jp.co.soramitsu.androidfoundation.format.retrieveString
 import jp.co.soramitsu.common.presentation.compose.extension.noRippleClickable
+import jp.co.soramitsu.common.presentation.compose.theme.neon.neon
+import jp.co.soramitsu.ui_core.lit.Lit
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
@@ -67,15 +69,16 @@ fun PagerTextIndicator(
 
     val layoutDirection = LocalLayoutDirection.current
 
-    val surfaceColor = MaterialTheme.customColors.bgSurfaceInverted
+    // The chosen page's name sits in a well, in the red ink; the others are plain ink.
+    val surfaceColor = MaterialTheme.customColors.bgSurfaceVariant
 
-    val selectedItemTextColor = MaterialTheme.customColors.fgInverted
+    val selectedItemTextColor = MaterialTheme.neon.redText
     val notSelectedItemTextColor = MaterialTheme.customColors.fgPrimary
 
     Row(
         modifier = modifier
             .drawWithCache {
-                val cornerRadius = CornerRadius(Dimens.x3.toPx(), Dimens.x3.toPx())
+                val cornerRadius = CornerRadius(Lit.ControlRadius.toPx(), Lit.ControlRadius.toPx())
 
                 onDrawWithContent {
                     val currentPage = currentPageRetriever.invoke()

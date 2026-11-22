@@ -1,5 +1,6 @@
 package jp.co.soramitsu.feature_wallet_impl.presentation.portfolio
 
+import android.os.Build
 import android.text.format.DateUtils
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.ExperimentalAnimationApi
@@ -15,8 +16,6 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -36,7 +35,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
@@ -50,15 +48,18 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
-import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.graphics.BlurEffect
+import androidx.compose.ui.graphics.TileMode
+import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.layer.GraphicsLayer
+import androidx.compose.ui.graphics.layer.drawLayer
+import androidx.compose.ui.graphics.rememberGraphicsLayer
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -77,7 +78,6 @@ import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -88,13 +88,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.nexus.WalletNetworkTag
-import jp.co.soramitsu.common.presentation.compose.neon.HeroCard
 import jp.co.soramitsu.common.presentation.compose.neon.NeonButton
 import jp.co.soramitsu.common.presentation.compose.neon.NeonVariant
 import jp.co.soramitsu.common.presentation.compose.neon.neonGlass
 import jp.co.soramitsu.common.presentation.compose.neon.safemode.AccountReadOnlyTags
 import jp.co.soramitsu.common.presentation.compose.neon.safemode.LocalSelectedAccountReadOnly
 import jp.co.soramitsu.common.presentation.compose.neon.safemode.ReadOnlyChip
+import jp.co.soramitsu.common.presentation.compose.theme.neon.FxTier
 import jp.co.soramitsu.common.presentation.compose.theme.neon.LocalFx
 import jp.co.soramitsu.common.presentation.compose.theme.neon.neon
 import jp.co.soramitsu.common.presentation.compose.theme.tokens.NeonType
@@ -109,12 +109,16 @@ import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.isTestnet
 import jp.co.soramitsu.feature_wallet_impl.presentation.cardshub.NetworkTagChip
 import jp.co.soramitsu.feature_wallet_impl.presentation.portfolio.motion.TiltState
 import jp.co.soramitsu.ui_core.component.button.properties.Size as ButtonSize
-import jp.co.soramitsu.ui_core.lit.LitCabochon
-import jp.co.soramitsu.ui_core.lit.LitLed
+import jp.co.soramitsu.ui_core.lit.Lit
+import jp.co.soramitsu.ui_core.lit.LitDot
+import jp.co.soramitsu.ui_core.lit.litPad
+import jp.co.soramitsu.ui_core.lit.litPress
+import jp.co.soramitsu.ui_core.lit.litRise
 import jp.co.soramitsu.ui_core.lit.litPlate
 import jp.co.soramitsu.ui_core.lit.litWell
 import jp.co.soramitsu.ui_core.theme.customTypography
-import kotlinx.coroutines.delay
+import kotlin.math.min
+import kotlin.math.roundToInt
 import kotlinx.coroutines.launch
 
 /** What the home's controls do; the fragment wires these to the view models. */
@@ -134,58 +138,97 @@ internal interface PortfolioHomeActions {
     fun onSwapHolding(holdingKey: String)
 }
 
-internal fun PortfolioModel.colorOfWallet(walletId: String): Color = PortfolioPalette.slot(walletSlots[walletId])
+internal fun PortfolioModel.colorOfWallet(walletId: String, dark: Boolean): Color = PortfolioPalette.slot(walletSlots[walletId], dark)
 
-internal fun PortfolioModel.colorOfGroup(key: String?): Color =
-    if (key == null || key == OTHER_KEY) PortfolioPalette.other else PortfolioPalette.slot(slots[key])
+internal fun PortfolioModel.colorOfGroup(key: String?, dark: Boolean): Color =
+    if (key == null || key == OTHER_KEY) PortfolioPalette.other(dark) else PortfolioPalette.slot(slots[key], dark)
 
 /** How far the hero card overlaps the sky: the ring's front passes just above the card. */
 internal val HERO_CARD_OVERLAP = 10.dp
 
+/** What passes behind the hero's sheet: the sky's own picture, and how far the page has scrolled, in dp. */
+internal class HeroBackdrop(val sky: GraphicsLayer, val scrollDp: () -> Float)
+
 /**
- * The hero's plate: the largest, standing highest, the planet's red falling on its top edge and the window's
- * reflection sliding over its glaze as the phone turns. It rises into place the first time it is seen, and fresh
- * light crosses it then and each time a read finishes.
+ * The hero's sheet of glass: the largest, standing highest, the ball's red falling on its top edge and the window's
+ * streaks sliding over it as the phone turns. The ball and its ring lag when the page scrolls, so they pass behind
+ * this sheet's top edge and show through the glass, blurred. It rises into place the first time it is seen, and a
+ * band of fresh light crosses it then and each time a read finishes.
  */
 @Composable
-private fun HeroPlate(reading: Boolean, content: @Composable () -> Unit) {
-    val shape = RoundedCornerShape(26.dp)
+private fun HeroPlate(reading: Boolean, backdrop: HeroBackdrop?, content: @Composable () -> Unit) {
+    val shape = RoundedCornerShape(Lit.SheetRadius)
     val fx = LocalFx.current
+    val dark = isDarkTheme
     val enter = remember { Animatable(if (fx.litMotion) 0f else 1f) }
-    val sweep = remember { Animatable(if (fx.litMotion) SHEEN_SWEEP_FROM else 0f) }
+    val sweep = remember { Animatable(if (fx.litMotion) 0f else 1f) }
     LaunchedEffect(Unit) {
         if (fx.litMotion) {
-            launch { sweep.animateTo(0f, SHEEN_SWEEP) }
-            enter.animateTo(1f, spring(dampingRatio = 0.72f, stiffness = Spring.StiffnessLow))
+            launch { sweep.animateTo(1f, SHEEN_SWEEP) }
+            enter.animateTo(1f, tween(340, easing = CubicBezierEasing(0.16f, 0.84f, 0.3f, 1f)))
         }
     }
     OnReadFinished(reading) {
         if (fx.litMotion) {
-            sweep.snapTo(SHEEN_SWEEP_FROM)
-            sweep.animateTo(0f, SHEEN_SWEEP)
+            sweep.snapTo(0f)
+            sweep.animateTo(1f, SHEEN_SWEEP)
         }
+    }
+    // A live blur costs a pass: only on Android 12 and later, on phones that draw the decorative motion, by day
+    // (by night the sheet is not glass but matte).
+    val blurred = rememberGraphicsLayer()
+    val behind: (DrawScope.() -> Unit)? = if (
+        backdrop != null && !dark && fx.tier == FxTier.FULL && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+    ) {
+        {
+            // At rest nothing lies behind the sheet: the ball comes under it as the page scrolls.
+            if (backdrop.scrollDp() > 4f) {
+                val over = BACKDROP_OVERSCAN.toPx()
+                val reach = min(size.height, (HERO_CARD_OVERLAP + SkyGeometry.HEIGHT * SkyGeometry.SCROLL_LAG).toPx())
+                val left = over - HERO_CARD_INSET.toPx()
+                val top = over - (SkyGeometry.HEIGHT - HERO_CARD_OVERLAP).toPx()
+                if (blurred.renderEffect == null) {
+                    blurred.renderEffect = BlurEffect(BACKDROP_BLUR.toPx(), BACKDROP_BLUR.toPx(), TileMode.Clamp)
+                }
+                // Recorded with a density of its own: inside, this scope's density would refer to itself.
+                blurred.record(
+                    Density(density, fontScale),
+                    layoutDirection,
+                    IntSize((size.width + 2f * over).roundToInt(), (reach + 2f * over).roundToInt()),
+                ) {
+                    translate(left, top) { drawLayer(backdrop.sky) }
+                }
+                translate(-over, -over) { drawLayer(blurred) }
+            }
+        }
+    } else {
+        null
     }
     Box(
         Modifier
             .fillMaxWidth()
             .graphicsLayer {
-                translationY = (1f - enter.value) * 22.dp.toPx()
+                translationY = (1f - enter.value) * 12.dp.toPx()
                 alpha = (enter.value * 2.5f).coerceAtMost(1f)
             }
             .litPlate(
-                radius = 26.dp,
+                radius = Lit.SheetRadius,
                 elevation = 18.dp,
-                halo = 0.45f,
                 bounce = PortfolioPalette.soraGlow,
-                sheen = true,
-                sheenSweep = { sweep.value },
+                bounceStrength = 0.9f,
+                sheen = { sweep.value },
+                backdrop = behind,
             )
             .clip(shape),
     ) { content() }
 }
 
-private const val SHEEN_SWEEP_FROM = -1.2f
-private val SHEEN_SWEEP = tween<Float>(950, easing = CubicBezierEasing(0.2f, 0.7f, 0.2f, 1f))
+private val SHEEN_SWEEP = tween<Float>(1050, easing = CubicBezierEasing(0.3f, 0.1f, 0.3f, 1f))
+private val BACKDROP_BLUR = 8.dp
+private val BACKDROP_OVERSCAN = 24.dp
+
+/** The hero card's margin from the screen's sides. */
+private val HERO_CARD_INSET = 16.dp
 
 private val PortfolioModel.isReading: Boolean
     get() = noTotal == NoTotal.READING || freshness?.kind == FreshnessKind.READING
@@ -204,10 +247,13 @@ internal fun PortfolioHero(
     scrollDp: () -> Float = { 0f },
     pullDp: () -> Float = { 0f },
 ) {
+    val dark = isDarkTheme
+    val sky = rememberGraphicsLayer()
+    val backdrop = remember(sky, scrollDp) { HeroBackdrop(sky, scrollDp) }
     Box(modifier.fillMaxWidth()) {
         PortfolioSky(
             fan = if (model.empty) emptyList() else model.fan,
-            colorOf = { key -> model.colorOfGroup(key) },
+            colorOf = { key -> model.colorOfGroup(key, dark) },
             highlighted = model.highlighted,
             tilt = tilt,
             onSliceTap = actions::onLegend,
@@ -215,6 +261,7 @@ internal fun PortfolioHero(
             reading = model.isReading,
             scrollDp = scrollDp,
             pullDp = pullDp,
+            capture = sky,
         ) {
             ScopeChip(
                 model = model,
@@ -248,11 +295,11 @@ internal fun PortfolioHero(
                 )
             }
         }
-        Box(Modifier.padding(top = SkyGeometry.HEIGHT - HERO_CARD_OVERLAP, start = 16.dp, end = 16.dp)) {
+        Box(Modifier.padding(top = SkyGeometry.HEIGHT - HERO_CARD_OVERLAP, start = HERO_CARD_INSET, end = HERO_CARD_INSET)) {
             if (model.empty) {
-                EmptyCard(model, actions)
+                EmptyCard(model, actions, backdrop)
             } else {
-                PortfolioHeroCard(model, format, actions)
+                PortfolioHeroCard(model, format, actions, backdrop)
             }
         }
     }
@@ -278,9 +325,9 @@ private fun ScopeChip(model: PortfolioModel, onClick: () -> Unit, modifier: Modi
             verticalAlignment = Alignment.CenterVertically,
         ) {
             if (all || wallet == null) {
-                AllWalletsAvatar(34.dp)
+                SoraMark(34.dp)
             } else {
-                WalletAvatar(wallet.name, model.colorOfWallet(wallet.id), 34.dp)
+                WalletAvatar(wallet.name, model.colorOfWallet(wallet.id, isDarkTheme), 34.dp)
             }
             Spacer(Modifier.width(10.dp))
             Text(
@@ -312,9 +359,9 @@ private fun HeroCardTop(model: PortfolioModel, actions: PortfolioHomeActions) {
 }
 
 @Composable
-private fun EmptyCard(model: PortfolioModel, actions: PortfolioHomeActions) {
+private fun EmptyCard(model: PortfolioModel, actions: PortfolioHomeActions, backdrop: HeroBackdrop) {
     val n = MaterialTheme.neon
-    HeroPlate(model.isReading) {
+    HeroPlate(model.isReading, backdrop) {
         Column(
             Modifier
                 .fillMaxWidth()
@@ -350,9 +397,10 @@ private fun EmptyCard(model: PortfolioModel, actions: PortfolioHomeActions) {
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun PortfolioHeroCard(model: PortfolioModel, format: PortfolioFormat, actions: PortfolioHomeActions) {
+private fun PortfolioHeroCard(model: PortfolioModel, format: PortfolioFormat, actions: PortfolioHomeActions, backdrop: HeroBackdrop) {
     val largeText = LocalDensity.current.fontScale >= 1.3f
-    HeroPlate(model.isReading) {
+    val dark = isDarkTheme
+    HeroPlate(model.isReading, backdrop) {
         Column(
             Modifier
                 .padding(start = 18.dp, end = 18.dp, top = 16.dp, bottom = 16.dp)
@@ -370,7 +418,7 @@ private fun PortfolioHeroCard(model: PortfolioModel, format: PortfolioFormat, ac
                             label = legendLabel(model, slice.key),
                             percent = format.rays(slice.rays, slice.countedFiat),
                             fiat = format.fiat(slice.countedFiat),
-                            color = model.colorOfGroup(slice.key),
+                            color = model.colorOfGroup(slice.key, dark),
                             selected = model.highlighted == key,
                             onClick = { actions.onLegend(key) },
                         )
@@ -379,7 +427,7 @@ private fun PortfolioHeroCard(model: PortfolioModel, format: PortfolioFormat, ac
                 if (largeText) {
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) { chips() }
                 } else {
-                    // Scrolling clips: the row runs to the plate's edges, with room for the chips' shadows.
+                    // Scrolling clips: the row runs to the sheet's edges, with room for the chips' shadows.
                     Row(
                         Modifier
                             .bleed(horizontal = 18.dp, vertical = 12.dp)
@@ -467,8 +515,8 @@ private fun TotalBlock(model: PortfolioModel, format: PortfolioFormat) {
 }
 
 /**
- * The total, pressed into the plate. When it changes, only the digits that changed roll, like a counter: digits
- * have one width, so the rest stay still.
+ * The total. When it changes, only the digits that changed roll, like a counter: digits have one width, so the
+ * rest stay still.
  */
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
@@ -482,7 +530,7 @@ private fun RollingTotal(
     rollsUp: Boolean,
 ) {
     val fx = LocalFx.current
-    val base = letterpress(NeonType.displayHero.copy(lineHeight = 50.sp, fontFeatureSettings = "tnum"))
+    val base = NeonType.displayHero.copy(lineHeight = 50.sp, fontFeatureSettings = "tnum")
     val text = main + cents
     val mainLength = main.length
     if (fx.reduceMotion) {
@@ -504,7 +552,7 @@ private fun RollingTotal(
                     targetState = char,
                     transitionSpec = {
                         val direction = if (rollsUp) 1 else -1
-                        (slideInVertically(spring(dampingRatio = 0.82f, stiffness = Spring.StiffnessMediumLow)) { it * direction * 5 / 8 } + fadeIn()) togetherWith
+                        (slideInVertically(spring(dampingRatio = 1f, stiffness = Spring.StiffnessMediumLow)) { it * direction * 5 / 8 } + fadeIn()) togetherWith
                             (slideOutVertically(tween(180)) { -it * direction * 5 / 8 } + fadeOut(tween(140)))
                     },
                     label = "rollingDigit",
@@ -522,20 +570,6 @@ private fun RollingTotal(
             }
         }
     }
-}
-
-/** Text pressed into a plate: the light catches the far edge of each stroke. */
-@Composable
-private fun letterpress(style: TextStyle): TextStyle {
-    val dark = MaterialTheme.neon.isDark
-    val shadow = with(LocalDensity.current) {
-        Shadow(
-            color = if (dark) Color.Black.copy(alpha = 0.45f) else Color.White.copy(alpha = 0.9f),
-            offset = Offset(0.35.dp.toPx(), 0.7.dp.toPx()),
-            blurRadius = 0f,
-        )
-    }
-    return style.copy(shadow = shadow)
 }
 
 /**
@@ -564,7 +598,7 @@ private fun ChangeLine(change: Double, fraction: Double, format: PortfolioFormat
         maxLines = 1,
         modifier = Modifier
             .padding(top = 6.dp)
-            .litWell(radius = 18.dp, depth = 1.8.dp, floor = floor)
+            .litWell(radius = 12.dp, depth = 1.8.dp, floor = floor)
             .padding(horizontal = 12.dp, vertical = 5.dp),
     )
 }
@@ -601,7 +635,7 @@ private fun TotalCaption(model: PortfolioModel, onClick: () -> Unit) {
             .clickable(onClickLabel = stringResource(R.string.portfolio_how_we_count), role = Role.Button, onClick = onClick),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        PortfolioGlyph(Glyph.INFO, n.info, Modifier.size(16.dp))
+        PortfolioGlyph(Glyph.INFO, n.textTertiary, Modifier.size(16.dp))
         Spacer(Modifier.width(8.dp))
         Text(text, style = MaterialTheme.customTypography.textS, color = n.textSecondary)
     }
@@ -615,29 +649,32 @@ private fun pricesTime(millis: Long): String {
     return DateUtils.formatDateTime(LocalContext.current, millis, flags)
 }
 
-/** LIVE · 31s (green dot), SAVED · 2h, PARTIAL (amber), READING, OFFLINE. */
+/**
+ * LIVE · 31s (a dot of ink in the gain colour), SAVED · 2h, PARTIAL, READING, OFFLINE · 3m. LIVE is said only while
+ * the node answers; what was read before shows as saved, with its age.
+ */
 @Composable
 internal fun FreshnessChip(freshness: WalletFreshness, nowMillis: Long, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val n = MaterialTheme.neon
     val label = freshnessLabel(freshness, nowMillis)
     val color = when (freshness.kind) {
         FreshnessKind.LIVE -> n.textPrimary
-        FreshnessKind.SAVED, FreshnessKind.PARTIAL -> n.warning
-        FreshnessKind.READING, FreshnessKind.OFFLINE -> n.textSecondary
+        FreshnessKind.PARTIAL -> n.error
+        FreshnessKind.SAVED, FreshnessKind.READING, FreshnessKind.OFFLINE -> n.textSecondary
     }
-    val shape = RoundedCornerShape(16.dp)
+    val shape = RoundedCornerShape(12.dp)
     Row(
         modifier = modifier
             .minimumInteractiveComponentSize()
             .heightIn(min = 32.dp)
-            .litWell(radius = 16.dp, depth = 1.8.dp)
+            .litWell(radius = 12.dp, depth = 1.8.dp)
             .clip(shape)
             .clickable(onClickLabel = stringResource(R.string.portfolio_sync_status), role = Role.Button, onClick = onClick)
             .padding(horizontal = 11.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         when (freshness.kind) {
-            FreshnessKind.LIVE -> LitLed(n.success, diameter = 7.dp)
+            FreshnessKind.LIVE -> LitDot(n.success, diameter = 7.dp)
             FreshnessKind.SAVED, FreshnessKind.READING -> PortfolioGlyph(Glyph.CLOCK, color, Modifier.size(14.dp))
             FreshnessKind.PARTIAL -> PortfolioGlyph(Glyph.WARNING, color, Modifier.size(14.dp))
             FreshnessKind.OFFLINE -> PortfolioGlyph(Glyph.OFFLINE, color, Modifier.size(14.dp))
@@ -658,8 +695,10 @@ internal fun freshnessLabel(freshness: WalletFreshness, nowMillis: Long): String
             FreshnessKind.OFFLINE -> R.string.portfolio_state_offline
         }
     )
+    // What is shown without the node was read some time ago: saved and offline numbers say how long.
+    val aged = freshness.kind == FreshnessKind.LIVE || freshness.kind == FreshnessKind.SAVED || freshness.kind == FreshnessKind.OFFLINE
     val age = freshness.updatedAtMillis?.let { ageLabel(nowMillis - it) }
-    return if (age != null && (freshness.kind == FreshnessKind.LIVE || freshness.kind == FreshnessKind.SAVED)) "$state · $age" else state
+    return if (age != null && aged) "$state · $age" else state
 }
 
 @Composable
@@ -685,26 +724,17 @@ private fun LegendChip(
     val n = MaterialTheme.neon
     val description =
         stringResource(R.string.portfolio_legend_description, label, percent.removeSuffix("%"), fiat)
-    val shape = RoundedCornerShape(18.dp)
+    val shape = RoundedCornerShape(12.dp)
     val floor = litTint(color)
     val interaction = remember { MutableInteractionSource() }
     val pressed by interaction.collectIsPressedAsState()
-    val press by animateFloatAsState(
-        if (pressed) 1f else 0f,
-        if (pressed) tween(90) else spring(dampingRatio = 0.52f, stiffness = Spring.StiffnessMediumLow),
-        label = "chipPress",
-    )
     Box(Modifier.minimumInteractiveComponentSize(), contentAlignment = Alignment.Center) {
         Row(
             modifier = Modifier
                 .heightIn(min = 36.dp)
-                .graphicsLayer {
-                    val scale = 1f - 0.05f * press
-                    scaleX = scale
-                    scaleY = scale
-                }
-                // Raised at rest, pressed in when selected.
-                .then(if (selected) Modifier.litWell(radius = 18.dp, depth = 2.2.dp, floor = floor) else Modifier.litPlate(radius = 18.dp, elevation = 6.dp))
+                .litPress(pressed, motion = !LocalFx.current.reduceMotion)
+                // Raised at rest, let in when selected.
+                .then(if (selected) Modifier.litWell(radius = 12.dp, depth = 2.2.dp, floor = floor) else Modifier.litPlate(radius = 12.dp, elevation = 6.dp))
                 .clip(shape)
                 .clickable(interactionSource = interaction, indication = null, role = Role.Button, onClick = onClick)
                 .clearAndSetSemantics {
@@ -714,7 +744,7 @@ private fun LegendChip(
                 .padding(start = 13.dp, end = 14.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            LitLed(color, diameter = 8.dp)
+            LitDot(color, diameter = 8.dp)
             Spacer(Modifier.width(9.dp))
             Text(label, style = MaterialTheme.customTypography.textSBold, color = n.textPrimary, maxLines = 1)
             Spacer(Modifier.width(6.dp))
@@ -723,22 +753,23 @@ private fun LegendChip(
     }
 }
 
-/** Send · Receive · Move · Swap, each a glass cabochon in one of the hero's colours, seated in a well. */
+/** Send · Receive · Move · Swap, each a soft raised pad of the sheet's own white with its glyph in red. */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun QuickActions(actions: PortfolioHomeActions, largeText: Boolean) {
+    val red = MaterialTheme.neon.redText
     val items: @Composable () -> Unit = {
-        QuickAction(stringResource(R.string.common_send), PortfolioPalette.actionSend, order = 0, onClick = actions::onSend) {
-            PortfolioGlyph(Glyph.SEND, Color.White, Modifier.size(24.dp))
+        QuickAction(stringResource(R.string.common_send), order = 0, onClick = actions::onSend) {
+            PortfolioGlyph(Glyph.SEND, red, Modifier.size(24.dp))
         }
-        QuickAction(stringResource(R.string.common_receive), PortfolioPalette.actionReceive, order = 1, onClick = actions::onReceive) {
-            PortfolioGlyph(Glyph.RECEIVE, Color.White, Modifier.size(24.dp))
+        QuickAction(stringResource(R.string.common_receive), order = 1, onClick = actions::onReceive) {
+            PortfolioGlyph(Glyph.RECEIVE, red, Modifier.size(24.dp))
         }
-        QuickAction(stringResource(R.string.portfolio_move), PortfolioPalette.actionMove, order = 2, onClick = actions::onMove) {
-            PortfolioGlyph(Glyph.MOVE, Color.White, Modifier.size(24.dp))
+        QuickAction(stringResource(R.string.portfolio_move), order = 2, onClick = actions::onMove) {
+            PortfolioGlyph(Glyph.MOVE, red, Modifier.size(24.dp))
         }
-        QuickAction(stringResource(R.string.portfolio_swap), PortfolioPalette.actionSwap, order = 3, onClick = actions::onSwap) {
-            PolkaswapFlower(Modifier.size(26.dp), tint = Color.White)
+        QuickAction(stringResource(R.string.portfolio_swap), order = 3, onClick = actions::onSwap) {
+            PolkaswapFlower(Modifier.size(24.dp), tint = red)
         }
     }
     if (largeText) {
@@ -748,8 +779,9 @@ private fun QuickActions(actions: PortfolioHomeActions, largeText: Boolean) {
     }
 }
 
+/** Pressing lets the pad into the sheet and moves its glyph down with it. The pad rises into place in turn. */
 @Composable
-private fun QuickAction(label: String, colors: Pair<Color, Color>, order: Int, onClick: () -> Unit, icon: @Composable () -> Unit) {
+private fun QuickAction(label: String, order: Int, onClick: () -> Unit, icon: @Composable () -> Unit) {
     val n = MaterialTheme.neon
     val fx = LocalFx.current
     val interaction = remember { MutableInteractionSource() }
@@ -765,16 +797,16 @@ private fun QuickAction(label: String, colors: Pair<Color, Color>, order: Int, o
             .padding(vertical = 4.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        LitCabochon(
-            lit = colors.first,
-            deep = colors.second,
-            pressed = pressed,
-            reduceMotion = fx.reduceMotion,
-            enterDelayMillis = if (fx.litMotion) 180 + 65 * order else null,
+        Box(
+            Modifier
+                .litRise(motion = fx.litMotion, distance = 7.dp, delayMillis = 180 + 65 * order)
+                .size(width = 60.dp, height = 52.dp)
+                .litPad(radius = 16.dp, elevation = 10.dp, pressed = pressed),
+            contentAlignment = Alignment.Center,
         ) {
-            icon()
+            Box(Modifier.graphicsLayer { translationY = if (pressed) 0.75.dp.toPx() else 0f }) { icon() }
         }
-        Spacer(Modifier.height(7.dp))
+        Spacer(Modifier.height(9.dp))
         Text(label, style = MaterialTheme.customTypography.textSBold, color = n.textPrimary, maxLines = 1)
     }
 }
@@ -786,7 +818,7 @@ internal fun PortfolioList(model: PortfolioModel, format: PortfolioFormat, actio
     PortfolioCard(modifier) {
         Text(
             text = stringResource(R.string.liquid_assets),
-            style = letterpress(MaterialTheme.customTypography.headline2),
+            style = MaterialTheme.customTypography.headline2,
             color = MaterialTheme.neon.textPrimary,
             maxLines = 1,
             modifier = Modifier
@@ -824,20 +856,7 @@ internal fun PortfolioList(model: PortfolioModel, format: PortfolioFormat, actio
 @Composable
 private fun RiseIn(order: Int, content: @Composable () -> Unit) {
     val fx = LocalFx.current
-    val animate = fx.litMotion && order < 8
-    val rise = remember { Animatable(if (animate) 0f else 1f) }
-    LaunchedEffect(Unit) {
-        if (animate) {
-            delay(40L * order)
-            rise.animateTo(1f, spring(dampingRatio = 0.8f, stiffness = Spring.StiffnessMediumLow))
-        }
-    }
-    Box(
-        Modifier.graphicsLayer {
-            translationY = (1f - rise.value) * 10.dp.toPx()
-            alpha = (rise.value * 2f).coerceAtMost(1f)
-        },
-    ) { content() }
+    Box(Modifier.litRise(motion = fx.litMotion && order < 8, delayMillis = 40 * order)) { content() }
 }
 
 @Composable
@@ -947,7 +966,8 @@ private fun TokenRow(model: PortfolioModel, group: PortfolioGroup, format: Portf
                     )
                     if (model.scope == PortfolioScope.ALL && model.allWalletsAvailable) {
                         Spacer(Modifier.width(8.dp))
-                        WalletDots(group.walletIds.map { model.colorOfWallet(it) })
+                        val dark = isDarkTheme
+                        WalletDots(group.walletIds.map { model.colorOfWallet(it, dark) })
                     }
                 }
             }
@@ -980,8 +1000,8 @@ private fun HoldingsWell(content: @Composable () -> Unit) {
         Modifier
             .padding(start = 12.dp, end = 12.dp, bottom = 12.dp)
             .fillMaxWidth()
-            .litWell(radius = 18.dp, depth = 3.dp)
-            .clip(RoundedCornerShape(18.dp))
+            .litWell(radius = 14.dp, depth = 3.dp)
+            .clip(RoundedCornerShape(14.dp))
     ) { content() }
 }
 
@@ -1023,7 +1043,7 @@ internal fun HoldingRow(
             Spacer(Modifier.height(3.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
                 if (model.allWalletsAvailable && wallet != null) {
-                    LitLed(model.colorOfWallet(wallet.id), diameter = 7.dp)
+                    LitDot(model.colorOfWallet(wallet.id, isDarkTheme), diameter = 7.dp)
                     Spacer(Modifier.width(6.dp))
                 }
                 Text(

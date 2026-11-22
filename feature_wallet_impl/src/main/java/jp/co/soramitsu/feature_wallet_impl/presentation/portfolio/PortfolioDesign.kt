@@ -54,6 +54,7 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.layout.layout
@@ -90,7 +91,8 @@ import jp.co.soramitsu.feature_wallet_impl.presentation.cardshub.NetworkTagChip
 import jp.co.soramitsu.ui_core.component.button.properties.Size as ButtonSize
 import jp.co.soramitsu.ui_core.component.icons.TokenIcon
 import jp.co.soramitsu.ui_core.lit.LitEngravedLine
-import jp.co.soramitsu.ui_core.lit.LitLed
+import jp.co.soramitsu.ui_core.lit.Lit
+import jp.co.soramitsu.ui_core.lit.LitDot
 import jp.co.soramitsu.ui_core.lit.LocalLitPalette
 import jp.co.soramitsu.ui_core.lit.litCoin
 import jp.co.soramitsu.ui_core.lit.litPlate
@@ -99,47 +101,51 @@ import jp.co.soramitsu.ui_core.theme.customTypography
 
 /** Colours of the portfolio surfaces that the theme's tokens do not define (portfolio-view SPEC §3.1). */
 internal object PortfolioPalette {
-    /** Chart slots, validated for colour-blind separation; colour follows the entity. */
-    val slots = listOf(
-        Color(0xFFFF009A),
-        Color(0xFF4693F1),
-        Color(0xFFA97416),
-        Color(0xFF8B5CFF),
-        Color(0xFF3CA694),
+    /**
+     * Chart slots, red to ink: told apart by lightness, so they hold for colour-blind eyes; colour follows the
+     * entity. By night the ink is ivory and the reds are lifted off the charcoal.
+     */
+    private val daySlots = listOf(
+        Color(0xFFDA2530),
+        Color(0xFF3A3836),
+        Color(0xFFEE8A84),
+        Color(0xFF86131B),
+        Color(0xFFB9B2A6),
     )
-    val other = Color(0xFF6F7280)
+    private val nightSlots = listOf(
+        Color(0xFFE2452C),
+        Color(0xFFF8F4EE),
+        Color(0xFFEE8A84),
+        Color(0xFFA8382C),
+        Color(0xFF8C857A),
+    )
 
-    fun slot(index: Int?): Color = index?.let { slots.getOrNull(it) } ?: other
+    fun slots(dark: Boolean): List<Color> = if (dark) nightSlots else daySlots
 
-    val polkaswap = Color(0xFFFF0066)
+    fun other(dark: Boolean): Color = if (dark) Color(0xFF6A645C) else Color(0xFF8A847A)
+
+    fun slot(index: Int?, dark: Boolean): Color = index?.let { slots(dark).getOrNull(it) } ?: other(dark)
 
     /** SORA's red (the logo and the XOR icon) and the shading of the hero's planet. */
     val soraRed = Color(0xFFE3232C)
-    val soraLight = Color(0xFFFF6B6E)
-    val soraDeep = Color(0xFFA8101F)
-    val soraEdge = Color(0xFF6E0712)
-    val soraGlow = Color(0xFFFF2D3D)
+    val soraLight = Color(0xFFF2403F)
+    val soraDeep = Color(0xFF9E1620)
+    val soraEdge = Color(0xFF5E0A10)
+    val soraGlow = Color(0xFFF2403F)
     val rimNight = Color(0xFF8AF3FF)
 
     val nightTop = Color(0xFF08070F)
     val nightBottom = Color(0xFF1A0A14)
-    val dawnTop = Color(0xFFFFF9F7)
-    val dawnBottom = Color(0xFFFFE8E5)
-    val dawnInk = Color(0xFF3A0B14)
+    val dawnTop = Color(0x4DFFFFFF)
+    val dawnBottom = Color(0x1AFFFFFF)
+    val dawnInk = Color(0xFF232220)
     val hazeViolet = Color(0xFF6C3BFF)
     val hazeCyan = Color(0xFF22D3EE)
     val starlight = Color(0xFFFFE9E4)
-
-    /** The quick actions' discs, lit (first) to deep (second), in the hero's colours. */
-    val actionSend = Color(0xFFFF5A63) to Color(0xFFC8102E)
-    val actionReceive = Color(0xFF5AA8FF) to Color(0xFF1F5FD6)
-    val actionMove = Color(0xFFA57BFF) to Color(0xFF5B2FD1)
-    val actionSwap = Color(0xFFFF4F96) to Color(0xFFD6005A)
-
-    /** A network's badge, lit (first) to deep (second): one colour for mainnets, one for testnets. */
-    val mainnetBadge = Color(0xFF6E5BFF) to Color(0xFF3A2BB8)
-    val testnetBadge = Color(0xFFFFB547) to Color(0xFFD9781A)
 }
+
+/** Ink or white, whichever reads on a mark of [fill]. */
+internal fun inkOn(fill: Color): Color = if (fill.luminance() > 0.36f) Color(0xFF232220) else Color.White
 
 internal val isDarkTheme: Boolean
     @Composable get() = MaterialTheme.neon.isDark
@@ -253,32 +259,25 @@ internal fun PolkaswapFlower(modifier: Modifier = Modifier, tint: Color? = null)
     )
 }
 
-/** A network's badge, struck as a coin: SORA2 wears the SORA mark; any other network its monogram. */
+/** A network's badge, as a printed mark: SORA2 wears the SORA mark; any other network its monogram in ink. */
 @Composable
 internal fun NetworkBadge(network: WalletNetworkId, size: Dp, modifier: Modifier = Modifier) {
     if (network == WalletNetworkId.SORA2) {
-        val glyph = remember { soraGlyphPath() }
-        Canvas(modifier.size(size).litCoin()) {
-            val r = this.size.minDimension / 2f
-            drawCircle(PortfolioPalette.soraRed, radius = r)
-            scale(2f * r / SORA_GLYPH_VIEWPORT, 2f * r / SORA_GLYPH_VIEWPORT, Offset.Zero) {
-                drawPath(glyph, Color.White)
-            }
-        }
+        SoraMark(size, modifier)
         return
     }
-    val colors = if (network.isTestnet) PortfolioPalette.testnetBadge else PortfolioPalette.mainnetBadge
+    val lit = LocalLitPalette.current
     Box(
         modifier = modifier
             .size(size)
             .litCoin()
             .clip(CircleShape)
-            .background(Brush.linearGradient(listOf(colors.first, colors.second))),
+            .background(if (network.isTestnet) lit.inkTertiary else lit.inkSecondary),
         contentAlignment = Alignment.Center,
     ) {
         Text(
             text = networkMonogram(network),
-            color = Color.White,
+            color = lit.surface,
             maxLines = 1,
             style = MaterialTheme.customTypography.textXSBold.copy(
                 fontSize = (size.value * 0.34f).sp,
@@ -297,32 +296,25 @@ internal fun WalletAvatar(name: String, color: Color, size: Dp, modifier: Modifi
             .size(size)
             .litCoin()
             .clip(CircleShape)
-            .background(Brush.linearGradient(listOf(lerp(color, Color.White, 0.16f), lerp(color, Color.Black, 0.34f)))),
+            .background(color),
         contentAlignment = Alignment.Center,
     ) {
         Text(
             text = name.trim().firstOrNull()?.uppercase() ?: "?",
-            color = Color.White,
+            color = inkOn(color),
             style = MaterialTheme.customTypography.headline3.copy(fontSize = (size.value * 0.42f).sp, lineHeight = (size.value * 0.5f).sp),
             maxLines = 1,
         )
     }
 }
 
-/** "All wallets": the SORA mark, the red disc with 天, as the hero's planet wears it. */
+/** The SORA mark as the logo is: a red disc with 天 in white. "All wallets" and the SORA2 network wear it. */
 @Composable
-internal fun AllWalletsAvatar(size: Dp, modifier: Modifier = Modifier) {
+internal fun SoraMark(size: Dp, modifier: Modifier = Modifier) {
     val glyph = remember { soraGlyphPath() }
     Canvas(modifier.size(size).litCoin()) {
         val r = this.size.minDimension / 2f
-        drawCircle(
-            Brush.linearGradient(
-                listOf(lerp(PortfolioPalette.soraRed, Color.White, 0.14f), lerp(PortfolioPalette.soraRed, Color.Black, 0.24f)),
-                start = Offset.Zero,
-                end = Offset(this.size.width, this.size.height),
-            ),
-            radius = r,
-        )
+        drawCircle(PortfolioPalette.soraRed, radius = r)
         scale(2f * r / SORA_GLYPH_VIEWPORT, 2f * r / SORA_GLYPH_VIEWPORT, Offset.Zero) {
             drawPath(glyph, Color.White)
         }
@@ -333,7 +325,7 @@ internal fun AllWalletsAvatar(size: Dp, modifier: Modifier = Modifier) {
 @Composable
 internal fun WalletDots(colors: List<Color>, modifier: Modifier = Modifier) {
     Row(modifier, horizontalArrangement = Arrangement.spacedBy(3.dp)) {
-        colors.forEach { color -> LitLed(color, diameter = 7.dp) }
+        colors.forEach { color -> LitDot(color, diameter = 7.dp) }
     }
 }
 
@@ -399,11 +391,11 @@ internal fun PortfolioCard(
     }
 }
 
-/** The floor of a well that means something: mostly porcelain, a breath of the colour. */
+/** The floor of a well that means something: mostly white, a breath of the colour. */
 @Composable
 internal fun litTint(color: Color): Color {
     val palette = LocalLitPalette.current
-    return if (palette.dark) lerp(palette.wellFloor, color, 0.16f) else lerp(lerp(palette.wellFloor, Color.White, 0.42f), color, 0.09f)
+    return if (palette.dark) lerp(palette.wellFloor, color, 0.12f) else lerp(lerp(palette.wellFloor, Color.White, 0.42f), color, 0.09f)
 }
 
 /** Lays this out larger than its slot by these margins, without moving what is round it. */
@@ -419,7 +411,7 @@ internal fun Modifier.bleed(horizontal: Dp, vertical: Dp): Modifier = layout { m
 /** A block of rows inside a sheet. */
 @Composable
 internal fun SheetCard(content: @Composable ColumnScope.() -> Unit) {
-    GlassCard(modifier = Modifier.fillMaxWidth(), cornerRadius = 18.dp) {
+    GlassCard(modifier = Modifier.fillMaxWidth(), cornerRadius = Lit.SheetRadius) {
         Column(Modifier.fillMaxWidth(), content = content)
     }
 }
@@ -443,7 +435,7 @@ internal fun PortfolioBanner(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .litWell(radius = 16.dp, depth = 2.2.dp, floor = floor)
+            .litWell(radius = 12.dp, depth = 2.2.dp, floor = floor)
             .padding(14.dp),
     ) {
         PortfolioGlyph(if (warning) Glyph.WARNING else Glyph.INFO, edge, Modifier.size(20.dp))
@@ -455,7 +447,7 @@ internal fun PortfolioBanner(
     }
 }
 
-/** A round neumorphic icon button (48 dp target). */
+/** A round soft pad with an icon (48 dp target). */
 @Composable
 internal fun NeuIconButton(
     label: String,
@@ -480,7 +472,7 @@ internal fun NeuIconButton(
 }
 
 /**
- * Bottom sheet as the app's other sheets: scrim, solid body, top radius 28, grabber, title and
+ * Bottom sheet as the app's other sheets: scrim, solid body, a sheet's top corners, grabber, title and
  * Close, scrolling body; at most 88 % of the screen.
  */
 @Composable
@@ -518,7 +510,7 @@ internal fun PortfolioSheetScaffold(
             contentAlignment = Alignment.BottomCenter,
         ) {
             val maxSheetHeight = maxHeight * 0.88f
-            val shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)
+            val shape = RoundedCornerShape(topStart = Lit.SheetRadius, topEnd = Lit.SheetRadius)
             AnimatedVisibility(visible = shown, enter = slideInVertically { it / 3 } + fadeIn()) {
                 Column(
                     modifier = Modifier
@@ -592,14 +584,14 @@ internal fun SheetRow(
     role: Role = Role.RadioButton,
 ) {
     val n = MaterialTheme.neon
-    val shape = RoundedCornerShape(18.dp)
+    val shape = RoundedCornerShape(14.dp)
     val floor = litTint(n.brandRed)
     Row(
         modifier = modifier
             .fillMaxWidth()
             .heightIn(min = 68.dp)
-            // Raised at rest, pressed in when it is the current choice.
-            .then(if (selected) Modifier.litWell(radius = 18.dp, depth = 2.6.dp, floor = floor) else Modifier.litPlate(radius = 18.dp, elevation = 8.dp))
+            // Raised at rest, let in when it is the current choice.
+            .then(if (selected) Modifier.litWell(radius = 14.dp, depth = 2.6.dp, floor = floor) else Modifier.litPlate(radius = 14.dp, elevation = 8.dp))
             .clip(shape)
             .clickable(role = role, onClick = onClick)
             .padding(horizontal = 14.dp, vertical = 10.dp),

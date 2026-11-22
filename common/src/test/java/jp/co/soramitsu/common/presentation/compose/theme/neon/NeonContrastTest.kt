@@ -27,16 +27,17 @@ import jp.co.soramitsu.common.presentation.compose.theme.soraDarkColorsHighContr
 import jp.co.soramitsu.common.presentation.compose.theme.soraLightColorsHighContrast
 import jp.co.soramitsu.common.presentation.compose.theme.tokens.DayThemeColors
 import jp.co.soramitsu.common.presentation.compose.theme.tokens.NightThemeColors
+import jp.co.soramitsu.ui_core.lit.LitDay
+import jp.co.soramitsu.ui_core.lit.LitNight
 import kotlin.math.pow
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * The classic SORA palettes (3.8.6 and earlier) as the app draws them: the Compose slots, the
- * classic Neon token sets and their XML mirrors. Primary text is readable (4.5:1) on every
- * surface and the accent meets 3:1 for controls. Secondary and tertiary text are the classic
- * lighter browns and purples, below 4.5:1 as they were in 3.8.6.
+ * The day and night palettes as the app draws them: the Compose slots, the token sets and their XML
+ * mirrors. Every ink is readable (4.5:1) on every surface, the accent meets 3:1 for controls, and
+ * the label inlaid in a cut-glass button reads on its red.
  */
 class NeonContrastTest {
 
@@ -68,16 +69,57 @@ class NeonContrastTest {
 
     @Test
     fun `classic slots keep primary text readable and controls visible`() {
-        val day = with(DayThemeColors) { listOf(BgPage, BgSurface, BgSurfaceVariant, FgPrimary, AccentPrimary) }
-        val night = with(NightThemeColors) { listOf(BgPage, BgSurface, BgSurfaceVariant, FgPrimary, AccentPrimary) }
+        val day = with(DayThemeColors) { listOf(BgPage, BgSurface, BgSurfaceVariant, FgPrimary, AccentPrimary, FgInverted, FgSecondary, FgTertiary) }
+        val night = with(NightThemeColors) { listOf(BgPage, BgSurface, BgSurfaceVariant, FgPrimary, AccentPrimary, FgInverted, FgSecondary, FgTertiary) }
         for ((theme, colors) in listOf("day" to day, "night" to night)) {
             val (page, surface, variant, primary, accent) = colors
+            val inverted = colors[5]
             for ((name, bg) in listOf("page" to page, "surface" to surface, "variant" to variant)) {
                 assertContrast("$theme fgPrimary on $name", primary, bg, 4.5)
+                assertContrast("$theme fgSecondary on $name", colors[6], bg, 4.5)
+                assertContrast("$theme fgTertiary on $name", colors[7], bg, 4.5)
                 assertContrast("$theme accentPrimary on $name", accent, bg, 3.0)
             }
-            assertContrast("$theme label on accentPrimary", Color.White, accent, 3.0)
+            // What sits on an accent fill is the inverted ink: white by day, charcoal on the night's lighter red.
+            assertContrast("$theme label on accentPrimary", inverted, accent, 4.5)
         }
+    }
+
+    @Test
+    fun `the label inlaid in cut glass reads on its red, and the red ink reads on glass and pads`() {
+        for (lit in listOf(LitDay, LitNight)) {
+            assertContrast("${lit.dark} inlay on cut glass", lit.inlay, lit.red, 4.5)
+            for ((name, bg) in listOf("surface" to lit.surface, "pad" to lit.padShade, "well" to lit.wellFloor, "page" to lit.page)) {
+                assertContrast("${lit.dark} red ink on $name", lit.redText, bg, 4.5)
+            }
+            // An empty PIN place and an input's boundary are told from their floor without the light.
+            assertContrast("${lit.dark} ruled boundary on a well", lit.outline, lit.wellFloor, 3.0)
+            assertContrast("${lit.dark} ruled boundary on the page", lit.outline, lit.page, 3.0)
+        }
+        assertContrast("gain on glass", DayThemeColors.StatusSuccess, LitDay.surface, 4.5)
+        assertContrast("loss on glass", DayThemeColors.StatusError, LitDay.surface, 4.5)
+        assertContrast("night gain on its sheet", NightThemeColors.StatusSuccess, LitNight.surface, 4.5)
+        assertContrast("night loss on its sheet", NightThemeColors.StatusError, LitNight.surface, 4.5)
+    }
+
+    @Test
+    fun `the warning ochre reads as ink and on its container, and ink reads on its fill`() {
+        for ((n, lit) in listOf(NeonClassicLight to LitDay, NeonClassicDark to LitNight)) {
+            for ((name, bg) in listOf("page" to lit.page, "surface" to lit.surface, "pad" to lit.padShade, "well" to lit.wellFloor)) {
+                assertContrast("${lit.dark} warning on $name", n.warning, bg, 4.5)
+            }
+            // The Testnet tag is the warning ink on the warning's container.
+            assertContrast("${lit.dark} warning on its container", n.warning, n.warningContainer, 4.5)
+            assertContrast("${lit.dark} ink on the warning fill", n.onWarningFill, n.warningFill, 4.5)
+        }
+        assertEquals(Color(0xFF8A5A0C), NeonClassicLight.warning)
+        assertEquals(Color(0xFFF3E9D2), NeonClassicLight.warningContainer)
+        assertEquals(Color(0xFFDDA63A), NeonClassicLight.warningFill)
+        assertEquals(LitDay.ink, NeonClassicLight.onWarningFill)
+        assertEquals(xmlColors("values")["neon_warning"], NeonClassicLight.warning)
+        assertEquals(xmlColors("values")["neon_warning_container"], NeonClassicLight.warningContainer)
+        assertEquals(xmlColors("values-night")["neon_warning"], NeonClassicDark.warning)
+        assertEquals(xmlColors("values-night")["neon_warning_container"], NeonClassicDark.warningContainer)
     }
 
     @Test
@@ -92,11 +134,12 @@ class NeonContrastTest {
         assertEquals(NightThemeColors.BgSurface, NeonClassicDark.surface)
         assertEquals(NightThemeColors.FgPrimary, NeonClassicDark.textPrimary)
         assertEquals(NightThemeColors.AccentPrimary, NeonClassicDark.brandRed)
-        for (n in listOf(NeonClassicLight, NeonClassicDark)) {
-            // Lit surfaces: the neumorphic depth is real.
-            assertTrue("neumorphic controls have depth", n.neuDark.alpha > 0f)
+        for ((n, lit) in listOf(NeonClassicLight to LitDay, NeonClassicDark to LitNight)) {
             assertEquals(n.surface, n.glassFill)
-            assertEquals(SolidColor(n.brandRed), n.ctaPrimary)
+            // A primary button is cut glass of the kit's red, a tone of its own by night.
+            assertEquals(SolidColor(lit.red), n.ctaPrimary)
+            assertEquals(n.ctaPrimary, n.ctaSwap)
+            assertEquals(lit.inlay, n.onAccent)
         }
     }
 
@@ -207,14 +250,13 @@ class NeonContrastTest {
             assertEquals(SolidColor(n.ctaDisabled), disabledSafe.styleField("fill"))
             assertEquals(n.textDisabled, disabledSafe.labelColor())
             assertEquals(null, disabledSafe.styleField("edge"))
-            assertEquals(null, disabledSafe.styleField("pressedOverlay"))
             assertTrue("disabled safe fill differs from enabled", disabledSafe.styleField("fill") != safe.styleField("fill"))
 
             val secondary = buttonStyle(NeonVariant.Secondary, n, true)
             val disabledSecondary = buttonStyle(NeonVariant.Secondary, n, false)
-            // A raised plate stands behind it, so it has no fill of its own.
+            // A soft pad stands behind it and is let into the surface when pressed, so it has no fill of its own.
             assertEquals(null, secondary.styleField("fill"))
-            assertEquals(SolidColor(n.glassFillPressed), secondary.styleField("pressedFill"))
+            assertEquals(null, secondary.styleField("pressedFill"))
             assertEquals(n.textPrimary, secondary.labelColor())
             assertEquals(n.textDisabled, disabledSecondary.labelColor())
             assertEquals(null, disabledSecondary.styleField("edge"))

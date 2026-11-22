@@ -12,10 +12,10 @@ data class BorderRadius(
 )
 
 fun borderRadiuses(
-    s: Dp = 16.dp,
-    m: Dp = 24.dp,
-    ml: Dp = 28.dp,
-    xl: Dp = 32.dp
+    s: Dp = 12.dp,
+    m: Dp = 16.dp,
+    ml: Dp = 18.dp,
+    xl: Dp = 18.dp
 ): BorderRadius = BorderRadius(
     s = s,
     m = m,
