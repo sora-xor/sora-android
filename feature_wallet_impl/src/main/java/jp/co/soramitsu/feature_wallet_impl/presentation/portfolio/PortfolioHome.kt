@@ -273,9 +273,11 @@ internal fun PortfolioHero(
             ScopeChip(
                 model = model,
                 onClick = actions::onScopeChip,
+                // Up to the scan button and no further: a long wallet name, or "All wallets" in Japanese under
+                // larger text, takes the room the row has before it is cut short.
                 modifier = Modifier
                     .align(Alignment.TopStart)
-                    .padding(start = 12.dp, top = SkyGeometry.TOP_ROW),
+                    .padding(start = 12.dp, end = SCOPE_CHIP_END, top = SkyGeometry.TOP_ROW),
             )
             // The selected wallet cannot sign on this phone: its name carries the Read-only chip,
             // as on the home without the Portfolio view; the notice under the hero says why.
@@ -312,6 +314,12 @@ internal fun PortfolioHero(
     }
 }
 
+/** The scan button at the row's other end (48 dp and its 12 dp margin) and a gap before it. */
+private val SCOPE_CHIP_END = 72.dp
+
+/** The widest the scope chip gets where the row would let it grow further (a tablet). */
+private val SCOPE_CHIP_WIDEST = 320.dp
+
 @Composable
 private fun ScopeChip(model: PortfolioModel, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val n = MaterialTheme.neon
@@ -324,7 +332,7 @@ private fun ScopeChip(model: PortfolioModel, onClick: () -> Unit, modifier: Modi
         Row(
             modifier = Modifier
                 .height(48.dp)
-                .widthIn(max = 224.dp)
+                .widthIn(max = SCOPE_CHIP_WIDEST)
                 .neonGlass(shape)
                 .clickable(onClickLabel = label, role = Role.Button, onClick = onClick)
                 .semantics(mergeDescendants = true) { contentDescription = label }
@@ -337,12 +345,11 @@ private fun ScopeChip(model: PortfolioModel, onClick: () -> Unit, modifier: Modi
                 WalletAvatar(wallet.name, model.colorOfWallet(wallet.id, isDarkTheme), 34.dp)
             }
             Spacer(Modifier.width(10.dp))
-            Text(
-                text = title,
-                style = MaterialTheme.customTypography.headline3,
-                color = n.textPrimary,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
+            // "All wallets" in Japanese under larger text, or a long wallet name, is set a little smaller before
+            // anything of it is cut.
+            FittedText(
+                text = AnnotatedString(title),
+                style = MaterialTheme.customTypography.headline3.copy(color = n.textPrimary),
                 modifier = Modifier.weight(1f, fill = false),
             )
             Spacer(Modifier.width(6.dp))
