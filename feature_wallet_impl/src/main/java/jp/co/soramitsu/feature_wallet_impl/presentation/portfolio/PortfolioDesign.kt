@@ -98,7 +98,7 @@ import jp.co.soramitsu.ui_core.lit.LitLayout
 import jp.co.soramitsu.ui_core.lit.NameAndFigures
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.TextStyle
-import kotlin.math.ceil
+import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.layout.IntrinsicMeasurable
 import androidx.compose.ui.unit.Constraints
 import jp.co.soramitsu.ui_core.lit.LitDot
@@ -594,7 +594,7 @@ internal fun SheetRow(
                     maxLines = SHEET_ROW_LINES,
                     constraints = Constraints(maxWidth = width),
                 )
-                return !layout.hasVisualOverflow && ceil(layout.multiParagraph.intrinsics.minIntrinsicWidth) <= width
+                return !layout.hasVisualOverflow && !layout.breaksAWord(text)
             }
             whole(title, titleStyle) && (shownSubtitle == null || whole(shownSubtitle, subtitleStyle))
         }
@@ -643,6 +643,25 @@ internal fun SheetRow(
 /** A sheet row's name and the line under it may take two lines each; past that they would be cut, so the figures make
  * room for them instead. */
 private const val SHEET_ROW_LINES = 2
+
+/**
+ * Whether a line of this layout ends inside a word of a script that writes spaces between words ("Saving" / "s").
+ * Japanese, Chinese, Korean and Thai lines may end between any two characters.
+ */
+private fun TextLayoutResult.breaksAWord(text: String): Boolean = (0 until lineCount - 1).any { line ->
+    val end = getLineEnd(line)
+    end in 1 until text.length && text[end - 1].isWordPart() && text[end].isWordPart()
+}
+
+private fun Char.isWordPart(): Boolean = isLetterOrDigit() && Character.UnicodeScript.of(code) !in UNSPACED_SCRIPTS
+
+private val UNSPACED_SCRIPTS = setOf(
+    Character.UnicodeScript.HAN,
+    Character.UnicodeScript.HIRAGANA,
+    Character.UnicodeScript.KATAKANA,
+    Character.UnicodeScript.HANGUL,
+    Character.UnicodeScript.THAI,
+)
 
 /** A labelled value row (key on the left, value on the right). */
 @Composable

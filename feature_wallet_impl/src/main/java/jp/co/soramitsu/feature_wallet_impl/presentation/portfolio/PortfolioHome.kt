@@ -520,15 +520,27 @@ private fun TotalBlock(model: PortfolioModel, format: PortfolioFormat) {
                 val scale = remember(symbol, whole, cents, room, measurer) {
                     fitTotal(measurer, symbol + whole, cents, room)
                 }
-                RollingTotal(
-                    main = symbol + whole,
-                    cents = cents,
-                    big = TOTAL_SIZE * scale,
-                    small = CENTS_SIZE * scale,
-                    mainColor = if (stale) n.textSecondary else n.textPrimary,
-                    centsColor = n.textSecondary,
-                    rollsUp = (totals.change) >= 0,
-                )
+                if (scale != null) {
+                    RollingTotal(
+                        main = symbol + whole,
+                        cents = cents,
+                        big = TOTAL_SIZE * scale,
+                        small = CENTS_SIZE * scale,
+                        mainColor = if (stale) n.textSecondary else n.textPrimary,
+                        centsColor = n.textSecondary,
+                        rollsUp = (totals.change) >= 0,
+                    )
+                } else {
+                    // Not even its smallest size fits on one line: the whole total, on two, rather than any digit cut.
+                    val ink = if (stale) n.textSecondary else n.textPrimary
+                    Text(
+                        text = buildAnnotatedString {
+                            withStyle(SpanStyle(fontSize = TOTAL_SIZE * TOTAL_LEAST_SCALE, color = ink)) { append(symbol + whole) }
+                            withStyle(SpanStyle(fontSize = CENTS_SIZE * TOTAL_LEAST_SCALE, color = n.textSecondary)) { append(cents) }
+                        },
+                        style = TOTAL_STYLE.copy(lineHeight = TextUnit.Unspecified),
+                    )
+                }
             }
         } else {
             NoTotalDash()
@@ -540,11 +552,12 @@ private fun TotalBlock(model: PortfolioModel, format: PortfolioFormat) {
 }
 
 /**
- * How much of its full size the total takes to fit [room] pixels. The total is drawn a character at a time, each in a
- * box of whole pixels, so it is measured that way; and as larger text scales large type less than small type, each
+ * How much of its full size the total takes to fit [room] pixels, or null where not even its smallest size fits (an
+ * enormous balance in a window far narrower than a phone). The total is drawn a character at a time, each in a box of
+ * whole pixels, so it is measured that way; and as larger text scales large type less than small type, each
  * candidate size is measured rather than worked out from the full one.
  */
-private fun fitTotal(measurer: TextMeasurer, main: String, cents: String, room: Int): Float {
+private fun fitTotal(measurer: TextMeasurer, main: String, cents: String, room: Int): Float? {
     if (room == Constraints.Infinity) return 1f
     fun width(scale: Float): Int {
         fun glyphs(text: String, size: TextUnit) =
@@ -554,13 +567,12 @@ private fun fitTotal(measurer: TextMeasurer, main: String, cents: String, room: 
     var scale = 1f
     repeat(TOTAL_FIT_TRIES) {
         val wide = width(scale)
-        if (wide <= room || scale <= TOTAL_LEAST_SCALE) return scale
+        if (wide <= room) return scale
+        if (scale <= TOTAL_LEAST_SCALE) return null
         // At least half a scaled pixel smaller each time, so it settles; never below the least the total is set at.
         scale = minOf(scale * room / wide, scale - 0.5f / TOTAL_SIZE.value).coerceAtLeast(TOTAL_LEAST_SCALE)
     }
-    // Still too wide after every try (a window far narrower than a phone): the smallest size reached, narrower than
-    // any that was measured.
-    return scale
+    return scale.takeIf { width(it) <= room }
 }
 
 /**
