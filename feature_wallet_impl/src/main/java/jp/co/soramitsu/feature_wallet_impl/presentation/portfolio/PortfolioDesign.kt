@@ -2,8 +2,6 @@ package jp.co.soramitsu.feature_wallet_impl.presentation.portfolio
 
 import jp.co.soramitsu.ui_core.component.text.FittedText
 import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
@@ -97,6 +95,10 @@ import jp.co.soramitsu.common.presentation.compose.TokenBadge
 import jp.co.soramitsu.ui_core.lit.LitEngravedLine
 import jp.co.soramitsu.ui_core.lit.Lit
 import jp.co.soramitsu.ui_core.lit.LitLayout
+import jp.co.soramitsu.ui_core.lit.NameAndFigures
+import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.layout.IntrinsicMeasurable
+import androidx.compose.ui.unit.Constraints
 import jp.co.soramitsu.ui_core.lit.LitDot
 import jp.co.soramitsu.ui_core.lit.LocalLitPalette
 import jp.co.soramitsu.ui_core.lit.litCoin
@@ -555,11 +557,10 @@ internal fun PortfolioSheetScaffold(
 /**
  * A selectable row inside a sheet (radio semantics by default), in the app's accent when selected.
  *
- * A figure is never broken across lines and a name is never squeezed to a few letters: the figures stand beside
- * the name where both fit, and on a line of their own under it where they do not (a 320 dp screen, larger text, a
- * long amount).
+ * A figure is never broken across lines and a name is never cut to make room for one: the figures stand beside the
+ * name where the whole name fits beside them in its two lines, and on a line of their own under it where it does not
+ * (a 320 dp screen, larger text, a long amount, two long wallet names that differ only at the end).
  */
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 internal fun SheetRow(
     selected: Boolean,
@@ -574,7 +575,20 @@ internal fun SheetRow(
 ) {
     val n = MaterialTheme.neon
     val shape = RoundedCornerShape(14.dp)
-    FlowRow(
+    val titleStyle = MaterialTheme.customTypography.headline3
+    val measurer = rememberTextMeasurer()
+    val titleFits: (Int, IntrinsicMeasurable) -> Boolean = remember(title, titleStyle, measurer) {
+        { width, _ ->
+            !measurer.measure(
+                text = title,
+                style = titleStyle,
+                overflow = TextOverflow.Ellipsis,
+                maxLines = SHEET_ROW_TITLE_LINES,
+                constraints = Constraints(maxWidth = width),
+            ).hasVisualOverflow
+        }
+    }
+    Box(
         modifier = modifier
             .fillMaxWidth()
             .heightIn(min = 68.dp)
@@ -584,36 +598,39 @@ internal fun SheetRow(
             .clickable(role = role, onClick = onClick)
             .semantics { if (role == Role.RadioButton) this.selected = selected }
             .padding(horizontal = 14.dp, vertical = 10.dp),
-        horizontalArrangement = Arrangement.End,
-        verticalArrangement = Arrangement.Center,
-        itemVerticalAlignment = Alignment.CenterVertically,
+        contentAlignment = Alignment.CenterStart,
     ) {
-        Row(Modifier.weight(1f).widthIn(min = SHEET_ROW_NAME_MIN), verticalAlignment = Alignment.CenterVertically) {
-            leading()
-            Spacer(Modifier.width(12.dp))
-            Column(Modifier.weight(1f)) {
-                Text(title, style = MaterialTheme.customTypography.headline3, color = n.textPrimary, maxLines = 2, overflow = TextOverflow.Ellipsis)
+        NameAndFigures(
+            modifier = Modifier.fillMaxWidth(),
+            leading = leading,
+            belowGap = 2.dp,
+            nameFits = titleFits,
+            name = {
+                Text(title, style = titleStyle, color = n.textPrimary, maxLines = SHEET_ROW_TITLE_LINES, overflow = TextOverflow.Ellipsis)
+            },
+            below = {
                 subtitle?.takeIf { it.isNotBlank() }?.let {
-                    Spacer(Modifier.height(2.dp))
                     Text(it, style = MaterialTheme.customTypography.textS, color = n.textSecondary, maxLines = 2)
                 }
-            }
-        }
-        if (trailingTop != null || trailingBottom != null) {
-            Column(Modifier.padding(start = 8.dp), horizontalAlignment = Alignment.End) {
-                trailingTop?.let {
-                    FittedText(AnnotatedString(it), NeonType.amountM.copy(color = n.textPrimary, textAlign = TextAlign.End))
+            },
+            figures = {
+                if (trailingTop != null || trailingBottom != null) {
+                    Column(horizontalAlignment = Alignment.End) {
+                        trailingTop?.let {
+                            FittedText(AnnotatedString(it), NeonType.amountM.copy(color = n.textPrimary, textAlign = TextAlign.End))
+                        }
+                        trailingBottom?.let {
+                            FittedText(AnnotatedString(it), NeonType.amountS.copy(color = n.textSecondary, textAlign = TextAlign.End))
+                        }
+                    }
                 }
-                trailingBottom?.let {
-                    FittedText(AnnotatedString(it), NeonType.amountS.copy(color = n.textSecondary, textAlign = TextAlign.End))
-                }
-            }
-        }
+            },
+        )
     }
 }
 
-/** The least a sheet row's picture and name get before its figures move to a line of their own. */
-private val SHEET_ROW_NAME_MIN = 150.dp
+/** A sheet row's name may take two lines; past that it would be cut, so the figures make room for it instead. */
+private const val SHEET_ROW_TITLE_LINES = 2
 
 /** A labelled value row (key on the left, value on the right). */
 @Composable

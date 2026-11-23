@@ -45,6 +45,8 @@ import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.component.button.properties.Size
 import jp.co.soramitsu.ui_core.lit.LitLayout
 import jp.co.soramitsu.ui_core.lit.LitLightRig
+import jp.co.soramitsu.ui_core.lit.NameAndFigures
+import jp.co.soramitsu.ui_core.lit.PickerAndField
 import jp.co.soramitsu.ui_core.lit.litContentWidth
 import jp.co.soramitsu.ui_core.lit.litPlate
 import org.junit.After
@@ -258,4 +260,105 @@ class LitLayoutFitTest {
         compose.onNodeWithTag("action").performClick()
         compose.runOnIdle { assertEquals(2, taps) }
     }
+
+    @Test fun figuresStandBesideAWholeNameAndGoUnderItWhenTheyWouldCutIt() {
+        var width by mutableStateOf(360.dp)
+        var name by mutableStateOf("XOR")
+        compose.setContent {
+            SoraAppTheme {
+                Box(Modifier.width(width)) {
+                    NameAndFigures(
+                        modifier = Modifier.fillMaxWidth().testTag("row"),
+                        leading = { Box(Modifier.size(40.dp).testTag("picture")) },
+                        name = { androidx.compose.material.Text(name, style = ROW_TYPE, maxLines = 1, modifier = Modifier.testTag("name")) },
+                        figures = { androidx.compose.material.Text("$12,345.67", style = ROW_TYPE, maxLines = 1, modifier = Modifier.testTag("figures")) },
+                    )
+                }
+            }
+        }
+
+        // Room for both: one line, the figures at the row's end, level with the name.
+        var row = bounds("row")
+        var figures = bounds("figures")
+        var nameBounds = bounds("name")
+        assertEquals(row.right.value, figures.right.value, 0.6f)
+        assertTrue("the figures are not beside the name", figures.top < nameBounds.bottom)
+        assertEquals(52f, (nameBounds.left - row.left).value, 0.6f)
+
+        // A name that would be cut beside them: whole, with the figures under it at the end.
+        compose.runOnIdle {
+            width = 220.dp
+            name = "Savings wallet 2"
+        }
+        row = bounds("row")
+        figures = bounds("figures")
+        nameBounds = bounds("name")
+        assertFalse("the name was cut", compose.onNodeWithTag("name").textLayout().hasVisualOverflow)
+        assertTrue("the figures are not under the name", figures.top >= nameBounds.bottom)
+        assertEquals(row.right.value, figures.right.value, 0.6f)
+        assertFalse(compose.onNodeWithTag("figures").textLayout().hasVisualOverflow)
+
+        // Room again: back beside it.
+        compose.runOnIdle { width = 480.dp }
+        assertTrue(bounds("figures").top < bounds("name").bottom)
+    }
+
+    @Test fun aNameThatFitsItsTwoLinesBesideTheFiguresKeepsThemThere() {
+        val twoLines = "Savings for the trip to Kyoto"
+        val tooLong = "Savings for the long trip around the world next year"
+        var name by mutableStateOf(twoLines)
+        compose.setContent {
+            SoraAppTheme {
+                val measurer = androidx.compose.ui.text.rememberTextMeasurer()
+                Box(Modifier.width(240.dp)) {
+                    NameAndFigures(
+                        modifier = Modifier.fillMaxWidth(),
+                        nameFits = { room, _ ->
+                            !measurer.measure(name, ROW_TYPE, maxLines = 2, constraints = androidx.compose.ui.unit.Constraints(maxWidth = room)).hasVisualOverflow
+                        },
+                        name = { androidx.compose.material.Text(name, style = ROW_TYPE, maxLines = 2, modifier = Modifier.testTag("name")) },
+                        figures = { androidx.compose.material.Text("12.5 XOR", style = ROW_TYPE, maxLines = 1, modifier = Modifier.testTag("figures")) },
+                    )
+                }
+            }
+        }
+
+        assertTrue("a name that fits in two lines lost its figures beside it", bounds("figures").top < bounds("name").bottom)
+        val beside = compose.onNodeWithTag("name").textLayout()
+        assertEquals(2, beside.lineCount)
+        assertFalse(beside.hasVisualOverflow)
+
+        compose.runOnIdle { name = tooLong }
+        assertTrue("a name too long for two lines kept the figures beside it", bounds("figures").top >= bounds("name").bottom)
+    }
+
+    @Test fun anAmountTooNarrowBesideItsTokenTakesALineOfItsOwn() {
+        var width by mutableStateOf(320.dp)
+        compose.setContent {
+            SoraAppTheme {
+                Box(Modifier.width(width)) {
+                    PickerAndField(
+                        fieldMin = 140.dp,
+                        modifier = Modifier.fillMaxWidth().testTag("line"),
+                        picker = { Box(Modifier.size(130.dp, 48.dp).testTag("picker")) },
+                        field = { Box(Modifier.fillMaxWidth().height(40.dp).testTag("field")) },
+                    )
+                }
+            }
+        }
+
+        // 320 dp: 182 dp beside the token, more than the least an amount gets.
+        var field = bounds("field")
+        assertEquals(320f - 130f - 8f, (field.right - field.left).value, 0.6f)
+        assertEquals(bounds("line").right.value, field.right.value, 0.6f)
+        assertTrue(field.top < bounds("picker").bottom)
+
+        // 260 dp: 122 dp would be too few digits, so the amount stands under the token, as wide as the line.
+        compose.runOnIdle { width = 260.dp }
+        field = bounds("field")
+        assertEquals(260f, (field.right - field.left).value, 0.6f)
+        assertTrue(field.top >= bounds("picker").bottom)
+    }
 }
+
+private val ROW_TYPE = androidx.compose.ui.text.TextStyle(fontSize = 16.sp, lineHeight = 20.sp)

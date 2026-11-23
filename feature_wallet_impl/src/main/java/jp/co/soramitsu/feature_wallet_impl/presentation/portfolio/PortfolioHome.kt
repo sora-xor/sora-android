@@ -81,6 +81,10 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
@@ -113,6 +117,7 @@ import jp.co.soramitsu.ui_core.component.button.properties.Size as ButtonSize
 import jp.co.soramitsu.ui_core.component.text.FittedText
 import jp.co.soramitsu.ui_core.lit.Lit
 import jp.co.soramitsu.ui_core.lit.LitDot
+import jp.co.soramitsu.ui_core.lit.NameAndFigures
 import jp.co.soramitsu.ui_core.lit.litPad
 import jp.co.soramitsu.ui_core.lit.litPress
 import jp.co.soramitsu.ui_core.lit.litRise
@@ -949,40 +954,44 @@ private fun TokenRow(model: PortfolioModel, group: PortfolioGroup, format: Portf
                 .padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            TokenOrb(token, 40.dp)
-            Spacer(Modifier.width(12.dp))
-            Column(Modifier.weight(1f)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        token.symbol,
-                        style = MaterialTheme.customTypography.headline3,
-                        color = n.textPrimary,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.weight(1f, fill = false),
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    if (group.testnetOnly) NetworkTagChip(WalletNetworkTag.TESTNET) else ChangeBadge(token.change24h, format)
-                }
-                Spacer(Modifier.height(4.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        subtitle,
-                        style = MaterialTheme.customTypography.textS,
-                        color = n.textSecondary,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.weight(1f, fill = false),
-                    )
-                    if (model.scope == PortfolioScope.ALL && model.allWalletsAvailable) {
+            // The symbol and its change stay whole: where the amounts beside them would cut them short, the amounts
+            // go under the name.
+            NameAndFigures(
+                modifier = Modifier.weight(1f),
+                leading = { TokenOrb(token, 40.dp) },
+                name = {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            token.symbol,
+                            style = MaterialTheme.customTypography.headline3,
+                            color = n.textPrimary,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f, fill = false),
+                        )
                         Spacer(Modifier.width(8.dp))
-                        val dark = isDarkTheme
-                        WalletDots(group.walletIds.map { model.colorOfWallet(it, dark) })
+                        if (group.testnetOnly) NetworkTagChip(WalletNetworkTag.TESTNET) else ChangeBadge(token.change24h, format)
                     }
-                }
-            }
-            Spacer(Modifier.width(8.dp))
-            RowAmounts(format.rowNumbers(group.holdings, group.amount, token.symbol))
+                },
+                below = {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            subtitle,
+                            style = MaterialTheme.customTypography.textS,
+                            color = n.textSecondary,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f, fill = false),
+                        )
+                        if (model.scope == PortfolioScope.ALL && model.allWalletsAvailable) {
+                            Spacer(Modifier.width(8.dp))
+                            val dark = isDarkTheme
+                            WalletDots(group.walletIds.map { model.colorOfWallet(it, dark) })
+                        }
+                    }
+                },
+                figures = { RowAmounts(format.rowNumbers(group.holdings, group.amount, token.symbol)) },
+            )
             if (expandable) {
                 Spacer(Modifier.width(6.dp))
                 ExpandChevron(expanded)
@@ -1035,44 +1044,52 @@ internal fun HoldingRow(
             .padding(horizontal = 12.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        NetworkBadge(holding.network, 30.dp)
-        Spacer(Modifier.width(10.dp))
-        Column(Modifier.weight(1f)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    networkName(holding.network),
-                    style = MaterialTheme.customTypography.textMBold,
-                    color = n.textPrimary,
-                    maxLines = 1,
-                )
-                if (readiness != Readiness.NONE) {
-                    Spacer(Modifier.width(8.dp))
-                    ReadinessChip(ready = readiness == Readiness.READY)
+        // The network and the wallet name are what tell two holdings apart: where the figures beside them would cut
+        // either short, the figures go under them.
+        NameAndFigures(
+            modifier = Modifier.weight(1f),
+            leading = { NetworkBadge(holding.network, 30.dp) },
+            leadingGap = 10.dp,
+            name = {
+                Column {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            networkName(holding.network),
+                            style = MaterialTheme.customTypography.textMBold,
+                            color = n.textPrimary,
+                            maxLines = 1,
+                        )
+                        if (readiness != Readiness.NONE) {
+                            Spacer(Modifier.width(8.dp))
+                            ReadinessChip(ready = readiness == Readiness.READY)
+                        }
+                    }
+                    Spacer(Modifier.height(3.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        if (model.allWalletsAvailable && wallet != null) {
+                            LitDot(model.colorOfWallet(wallet.id, isDarkTheme), diameter = 7.dp)
+                            Spacer(Modifier.width(6.dp))
+                        }
+                        Text(
+                            text = wallet?.name ?: networkName(holding.network),
+                            style = MaterialTheme.customTypography.textS,
+                            color = n.textSecondary,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
                 }
-            }
-            Spacer(Modifier.height(3.dp))
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                if (model.allWalletsAvailable && wallet != null) {
-                    LitDot(model.colorOfWallet(wallet.id, isDarkTheme), diameter = 7.dp)
-                    Spacer(Modifier.width(6.dp))
+            },
+            figures = {
+                Column(horizontalAlignment = Alignment.End) {
+                    Text(numbers.main, style = NeonType.amountS.copy(fontWeight = FontWeight.SemiBold), color = n.textPrimary, maxLines = 1)
+                    numbers.detail?.let {
+                        Spacer(Modifier.height(3.dp))
+                        Text(it, style = NeonType.amountS, color = n.textSecondary, maxLines = 1)
+                    }
                 }
-                Text(
-                    text = wallet?.name ?: networkName(holding.network),
-                    style = MaterialTheme.customTypography.textS,
-                    color = n.textSecondary,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
-        }
-        Spacer(Modifier.width(8.dp))
-        Column(horizontalAlignment = Alignment.End) {
-            Text(numbers.main, style = NeonType.amountS.copy(fontWeight = FontWeight.SemiBold), color = n.textPrimary, maxLines = 1)
-            numbers.detail?.let {
-                Spacer(Modifier.height(3.dp))
-                Text(it, style = NeonType.amountS, color = n.textSecondary, maxLines = 1)
-            }
-        }
+            },
+        )
     }
 }
 
