@@ -43,6 +43,7 @@ import android.view.KeyEvent
 import android.view.View
 import androidx.activity.viewModels
 import androidx.annotation.AttrRes
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.ViewCompat
 import androidx.navigation.NavController
 import androidx.navigation.fragment.findNavController
@@ -51,6 +52,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import dev.chrisbanes.insetter.Insetter
 import dev.chrisbanes.insetter.windowInsetTypesOf
 import java.util.Date
+import kotlin.math.abs
 import javax.inject.Inject
 import jp.co.soramitsu.common.account.WalletStartupPass
 import jp.co.soramitsu.common.domain.BarsColorHandler
@@ -186,14 +188,33 @@ class MainActivity :
         ViewCompat.setOnApplyWindowInsetsListener(binding.bottomNavigationView) { _, insets ->
             insets
         }
+        // Clear of the bars and the keyboard, and of the camera cutout and a side navigation bar when the phone
+        // lies on its side: nothing of the wallet is drawn under them.
+        val sides = windowInsetTypesOf(navigationBars = true, displayCutout = true)
         Insetter.builder()
-            .paddingTop(windowInsetTypesOf(statusBars = true))
-            .paddingBottom(windowInsetTypesOf(navigationBars = true) or windowInsetTypesOf(ime = true))
+            .paddingTop(windowInsetTypesOf(statusBars = true, displayCutout = true))
+            .paddingBottom(windowInsetTypesOf(navigationBars = true, ime = true, displayCutout = true))
+            .paddingLeft(sides)
+            .paddingRight(sides)
             .applyToView(binding.clMainContainer)
 
         binding.bottomNavigationView.menu[2].isEnabled = false
-        binding.bottomNavigationView.findViewById<View>(R.id.polkaswap_nav_graph)
-            .importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS
+        val middleItem = binding.bottomNavigationView.findViewById<View>(R.id.polkaswap_nav_graph)
+        middleItem.importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS
+        // The disc takes touches over the bar's middle item and nowhere else. On a phone that item is a fifth of
+        // the bar; on a tablet the five items are narrower than that and stand together in the bar's middle, where
+        // a fifth of the bar would also cover part of Explore and Activity. So the share is measured.
+        middleItem.addOnLayoutChangeListener { item, _, _, _, _, _, _, _, _ ->
+            val bar = binding.bottomNavigationView.width
+            if (bar > 0 && item.width > 0) {
+                val share = item.width / bar.toFloat()
+                val params = binding.fabMain.layoutParams as ConstraintLayout.LayoutParams
+                if (abs(params.matchConstraintPercentWidth - share) > 0.002f) {
+                    params.matchConstraintPercentWidth = share
+                    binding.fabMain.layoutParams = params
+                }
+            }
+        }
 
         ViewCompat.setAccessibilityDelegate(binding.fabMain, object : androidx.core.view.AccessibilityDelegateCompat() {
             override fun onInitializeAccessibilityNodeInfo(host: View, info: androidx.core.view.accessibility.AccessibilityNodeInfoCompat) {
