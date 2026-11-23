@@ -98,6 +98,7 @@ import jp.co.soramitsu.ui_core.lit.LitLayout
 import jp.co.soramitsu.ui_core.lit.NameAndFigures
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.TextStyle
+import kotlin.math.ceil
 import androidx.compose.ui.layout.IntrinsicMeasurable
 import androidx.compose.ui.unit.Constraints
 import jp.co.soramitsu.ui_core.lit.LitDot
@@ -581,16 +582,20 @@ internal fun SheetRow(
     val shownSubtitle = subtitle?.takeIf { it.isNotBlank() }
     val measurer = rememberTextMeasurer()
     // Either line can be what tells two rows apart (two holdings on one network differ by their wallet, in the
-    // subtitle): the figures stay beside them only where both are whole in their two lines.
+    // subtitle): the figures stay beside them only where both are whole in their two lines, and no word of them is
+    // broken across a line ("Saving" / "s").
     val nameFits: (Int, IntrinsicMeasurable) -> Boolean = remember(title, shownSubtitle, titleStyle, subtitleStyle, measurer) {
         { width, _ ->
-            fun whole(text: String, style: TextStyle) = !measurer.measure(
-                text = text,
-                style = style,
-                overflow = TextOverflow.Ellipsis,
-                maxLines = SHEET_ROW_LINES,
-                constraints = Constraints(maxWidth = width),
-            ).hasVisualOverflow
+            fun whole(text: String, style: TextStyle): Boolean {
+                val layout = measurer.measure(
+                    text = text,
+                    style = style,
+                    overflow = TextOverflow.Ellipsis,
+                    maxLines = SHEET_ROW_LINES,
+                    constraints = Constraints(maxWidth = width),
+                )
+                return !layout.hasVisualOverflow && ceil(layout.multiParagraph.intrinsics.minIntrinsicWidth) <= width
+            }
             whole(title, titleStyle) && (shownSubtitle == null || whole(shownSubtitle, subtitleStyle))
         }
     }
