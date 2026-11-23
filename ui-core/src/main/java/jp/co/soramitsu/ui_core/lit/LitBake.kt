@@ -11,6 +11,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.toArgb
 import androidx.core.graphics.createBitmap
 import androidx.core.graphics.withTranslation
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Executors
 import kotlin.math.abs
 import kotlin.math.ceil
@@ -81,12 +82,23 @@ internal class LitMask(val width: Int, val height: Int, val scale: Float, val a:
 internal object LitBake {
     private val cache = LruCache<String, Any>(200)
 
-    /** The materials are also baked ahead on a background thread; asking for one being baked waits for it. */
-    private val bakeLock = Any()
+    /**
+     * The materials are also baked ahead on a background thread. Asking for one that is being baked waits for it;
+     * asking for any other does not: each image has a lock of its own while it bakes, so a screen's first frame
+     * never queues behind the page or a pressed button being baked for later.
+     */
+    private val baking = ConcurrentHashMap<String, Any>()
 
     @Suppress("UNCHECKED_CAST")
-    private inline fun <T : Any> cached(key: String, make: () -> T): T =
-        (cache.get(key) ?: synchronized(bakeLock) { cache.get(key) ?: make().also { cache.put(key, it) } }) as T
+    private inline fun <T : Any> cached(key: String, make: () -> T): T {
+        cache.get(key)?.let { return it as T }
+        val lock = baking.getOrPut(key) { Any() }
+        try {
+            return synchronized(lock) { cache.get(key) ?: make().also { cache.put(key, it) } } as T
+        } finally {
+            baking.remove(key, lock)
+        }
+    }
 
     private fun sat(v: Float) = v.coerceIn(0f, 1f)
 
