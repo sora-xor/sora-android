@@ -45,6 +45,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.presentation.compose.neon.TextButton
 import jp.co.soramitsu.ui_core.lit.NameAndFigures
+import jp.co.soramitsu.ui_core.component.text.FittedText
+import androidx.compose.ui.text.AnnotatedString
 import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.component.button.properties.Size
 import jp.co.soramitsu.common.presentation.compose.neon.ContentCard
@@ -92,12 +94,13 @@ fun CommonHubCard(
                     }
                 },
                 figures = {
-                    Text(
-                        text = amount,
-                        textAlign = TextAlign.End,
-                        maxLines = 1,
-                        style = MaterialTheme.customTypography.headline2,
-                        color = MaterialTheme.customColors.fgPrimary,
+                    // Wider than even its own line: set smaller, then ended with an ellipsis, never cut silently.
+                    FittedText(
+                        text = AnnotatedString(amount),
+                        style = MaterialTheme.customTypography.headline2.copy(
+                            color = MaterialTheme.customColors.fgPrimary,
+                            textAlign = TextAlign.End,
+                        ),
                     )
                 },
             )

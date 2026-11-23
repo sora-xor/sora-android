@@ -97,6 +97,7 @@ import jp.co.soramitsu.ui_core.lit.Lit
 import jp.co.soramitsu.ui_core.lit.LitLayout
 import jp.co.soramitsu.ui_core.lit.NameAndFigures
 import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.layout.IntrinsicMeasurable
 import androidx.compose.ui.unit.Constraints
 import jp.co.soramitsu.ui_core.lit.LitDot
@@ -576,16 +577,21 @@ internal fun SheetRow(
     val n = MaterialTheme.neon
     val shape = RoundedCornerShape(14.dp)
     val titleStyle = MaterialTheme.customTypography.headline3
+    val subtitleStyle = MaterialTheme.customTypography.textS
+    val shownSubtitle = subtitle?.takeIf { it.isNotBlank() }
     val measurer = rememberTextMeasurer()
-    val titleFits: (Int, IntrinsicMeasurable) -> Boolean = remember(title, titleStyle, measurer) {
+    // Either line can be what tells two rows apart (two holdings on one network differ by their wallet, in the
+    // subtitle): the figures stay beside them only where both are whole in their two lines.
+    val nameFits: (Int, IntrinsicMeasurable) -> Boolean = remember(title, shownSubtitle, titleStyle, subtitleStyle, measurer) {
         { width, _ ->
-            !measurer.measure(
-                text = title,
-                style = titleStyle,
+            fun whole(text: String, style: TextStyle) = !measurer.measure(
+                text = text,
+                style = style,
                 overflow = TextOverflow.Ellipsis,
-                maxLines = SHEET_ROW_TITLE_LINES,
+                maxLines = SHEET_ROW_LINES,
                 constraints = Constraints(maxWidth = width),
             ).hasVisualOverflow
+            whole(title, titleStyle) && (shownSubtitle == null || whole(shownSubtitle, subtitleStyle))
         }
     }
     Box(
@@ -604,13 +610,13 @@ internal fun SheetRow(
             modifier = Modifier.fillMaxWidth(),
             leading = leading,
             belowGap = 2.dp,
-            nameFits = titleFits,
+            nameFits = nameFits,
             name = {
-                Text(title, style = titleStyle, color = n.textPrimary, maxLines = SHEET_ROW_TITLE_LINES, overflow = TextOverflow.Ellipsis)
+                Text(title, style = titleStyle, color = n.textPrimary, maxLines = SHEET_ROW_LINES, overflow = TextOverflow.Ellipsis)
             },
             below = {
-                subtitle?.takeIf { it.isNotBlank() }?.let {
-                    Text(it, style = MaterialTheme.customTypography.textS, color = n.textSecondary, maxLines = 2)
+                shownSubtitle?.let {
+                    Text(it, style = subtitleStyle, color = n.textSecondary, maxLines = SHEET_ROW_LINES, overflow = TextOverflow.Ellipsis)
                 }
             },
             figures = {
@@ -629,8 +635,9 @@ internal fun SheetRow(
     }
 }
 
-/** A sheet row's name may take two lines; past that it would be cut, so the figures make room for it instead. */
-private const val SHEET_ROW_TITLE_LINES = 2
+/** A sheet row's name and the line under it may take two lines each; past that they would be cut, so the figures make
+ * room for them instead. */
+private const val SHEET_ROW_LINES = 2
 
 /** A labelled value row (key on the left, value on the right). */
 @Composable

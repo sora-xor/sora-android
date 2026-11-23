@@ -902,11 +902,13 @@ private fun ExpandChevron(expanded: Boolean) {
 @Composable
 private fun RowAmounts(numbers: RowNumbers) {
     val n = MaterialTheme.neon
+    // On a line of their own the figures may take the row's whole width; past that they are set smaller, and never cut
+    // silently.
     Column(horizontalAlignment = Alignment.End) {
-        Text(numbers.main, style = NeonType.amountM, color = n.textPrimary, maxLines = 1)
+        FittedText(AnnotatedString(numbers.main), NeonType.amountM.copy(color = n.textPrimary))
         numbers.detail?.let {
             Spacer(Modifier.height(2.dp))
-            Text(it, style = NeonType.amountS, color = n.textSecondary, maxLines = 1)
+            FittedText(AnnotatedString(it), NeonType.amountS.copy(color = n.textSecondary))
         }
     }
 }
@@ -1104,10 +1106,10 @@ internal fun HoldingRow(
             },
             figures = {
                 Column(horizontalAlignment = Alignment.End) {
-                    Text(numbers.main, style = NeonType.amountS.copy(fontWeight = FontWeight.SemiBold), color = n.textPrimary, maxLines = 1)
+                    FittedText(AnnotatedString(numbers.main), NeonType.amountS.copy(fontWeight = FontWeight.SemiBold, color = n.textPrimary))
                     numbers.detail?.let {
                         Spacer(Modifier.height(3.dp))
-                        Text(it, style = NeonType.amountS, color = n.textSecondary, maxLines = 1)
+                        FittedText(AnnotatedString(it), NeonType.amountS.copy(color = n.textSecondary))
                     }
                 }
             },
