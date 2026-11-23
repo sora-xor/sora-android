@@ -39,6 +39,7 @@ import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
@@ -49,7 +50,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import java.math.BigDecimal
 import java.text.DecimalFormatSymbols
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.presentation.compose.theme.SoraAppTheme
@@ -75,12 +75,7 @@ internal fun SwapSlippageScreen(
     value: Double,
     onDone: (Double) -> Unit,
 ) {
-    var currentValueLocalStorage by remember { mutableDoubleStateOf(value) }
-    val desc = remember { mutableStateOf<String?>(null) }
-
-    val frontrun = stringResource(id = R.string.polkaswap_slippage_frontrun)
-    val fail = stringResource(id = R.string.polkaswap_slippage_mayfail)
-
+    var draft by rememberSaveable(value) { mutableDoubleStateOf(value) }
     val focused = remember { mutableStateOf(false) }
 
     val focusRequester = remember {
@@ -96,24 +91,10 @@ internal fun SwapSlippageScreen(
             )
         }
 
-    val onValueChangeDecorator: (BigDecimal) -> Unit = remember {
-        { valueAsBigDecimal ->
-            val valueAsDouble = valueAsBigDecimal.toDouble()
-            when {
-                valueAsDouble < minFail -> {
-                    desc.value = fail
-                }
-                valueAsDouble > maxFrontrun -> {
-                    desc.value = frontrun
-                }
-                else -> {
-                    desc.value = null
-                }
-            }
-
-            // Store inputted value as Double in local storage
-            currentValueLocalStorage = valueAsDouble
-        }
+    val warning = when {
+        draft < minFail -> R.string.polkaswap_slippage_mayfail
+        draft > maxFrontrun -> R.string.polkaswap_slippage_frontrun
+        else -> null
     }
 
     Column(modifier = Modifier.fillMaxSize()) {
@@ -155,27 +136,23 @@ internal fun SwapSlippageScreen(
                         .fillMaxWidth(),
                 ) {
                     BasicNumberInput(
-                        modifier = Modifier,
+                        modifier = Modifier.fillMaxWidth(),
                         textStyle = MaterialTheme.customTypography.textM.copy(color = MaterialTheme.customColors.fgPrimary),
-//                        input value is used; no locally stored data!!!
-                        initial = value.toBigDecimal(),
+                        initial = remember(value) { draft.toBigDecimal() },
                         precision = 2,
                         enabled = true,
                         visualTransformation = visualTransformation,
-                        onValueChanged = onValueChangeDecorator,
+                        onValueChanged = { draft = it.toDouble() },
                         onKeyboardDone = remember {
                             {
-                                // Get locally stored value and make coerceIn
-                                onDone(currentValueLocalStorage.coerceIn(min, max))
+                                onDone(draft.coerceIn(min, max))
                             }
                         }
                     )
 
-                    val currentDescriptionValue = desc.value
-
-                    if (currentDescriptionValue != null)
+                    if (warning != null)
                         Text(
-                            text = currentDescriptionValue,
+                            text = stringResource(warning),
                             color = MaterialTheme.customColors.fgSecondary,
                             style = MaterialTheme.customTypography.textXS
                         )
@@ -196,8 +173,7 @@ internal fun SwapSlippageScreen(
                     order = Order.PRIMARY,
                     text = stringResource(id = R.string.common_done),
                     onClick = {
-                        // Get locally stored value and make coerceIn
-                        onDone(currentValueLocalStorage.coerceIn(min, max))
+                        onDone(draft.coerceIn(min, max))
                     },
                 )
             }

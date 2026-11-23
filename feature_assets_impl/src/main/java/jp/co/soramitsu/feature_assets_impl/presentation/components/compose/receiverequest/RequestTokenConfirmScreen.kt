@@ -179,6 +179,7 @@ fun RequestTokenConfirmScreen(
                     image = state.userAddressAvatar,
                     bodyText = state.userAddressBody
                 ),
+                copyAddress = true,
                 onClick = onUserAddressClick
             )
         }

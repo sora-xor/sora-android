@@ -275,10 +275,11 @@ private fun Orbit(
         .filter { PortfolioReadiness.readiness(it) == Readiness.READY }
         .mapTo(HashSet()) { it.network }
     val angles = SATELLITE_ANGLES[networks.size.coerceIn(1, 3)].orEmpty()
+    val routeColor = MaterialTheme.neon.redText
     val lineColor = n.textPrimary.copy(alpha = if (dark) 0.22f else 0.18f)
     val ringColor = n.textPrimary.copy(alpha = if (dark) 0.16f else 0.14f)
     val muted = n.textTertiary.copy(alpha = 0.7f)
-    val pink = n.polkaswapBrand
+    val accent = n.polkaswapText
     val edge = Color.White.copy(alpha = if (dark) 0.2f else 0.9f)
     BoxWithConstraints(
         Modifier
@@ -321,7 +322,7 @@ private fun Orbit(
                 .tiltLayer(tilt, OrbitDepth.ORB, OrbitDepth.ORB * OrbitDepth.Y_RATIO)
                 .semantics { hideFromAccessibility() }
         ) {
-            TokenOrb(locations.token.iconUri, ORB_SIZE)
+            TokenOrb(locations.token, ORB_SIZE)
         }
         // Links and satellites.
         Box(
@@ -350,7 +351,7 @@ private fun Orbit(
                     val ready = network in swapReady
                     drawPath(
                         path = path,
-                        color = if (ready) pink else muted,
+                        color = if (ready) routeColor else muted,
                         style = Stroke(
                             width = if (ready) 2.dp.toPx() else 1.5.dp.toPx(),
                             cap = StrokeCap.Round,
@@ -381,7 +382,7 @@ private fun Orbit(
                         Box(
                             Modifier
                                 .clip(CircleShape)
-                                .border(2.dp, if (network in swapReady) pink else edge, CircleShape)
+                                .border(2.dp, if (network in swapReady) routeColor else edge, CircleShape)
                         ) {
                             NetworkBadge(network, badge)
                         }
@@ -481,7 +482,7 @@ private fun TokenHeader(model: PortfolioModel, locations: TokenLocations, format
                 Text(
                     (if (up) "▲ " else "▼ ") + format.signedPercent(change),
                     style = NeonType.amountM,
-                    color = if (up) n.success else n.error,
+                    color = if (up) n.textPrimary else n.redText,
                 )
             }
             // Without a price a token has no share of a total: the page does not say 0%.
@@ -633,17 +634,11 @@ private fun RouteCard(model: PortfolioModel, holding: PortfolioHolding) {
     val n = MaterialTheme.neon
     val readiness = PortfolioReadiness.readiness(holding)
     val ready = readiness == Readiness.READY
-    val pink = n.polkaswapBrand
     val wallet = model.wallet(holding.walletId)
-    val floor = when (readiness) {
-        Readiness.READY -> litTint(pink)
-        Readiness.TEST -> litTint(n.warning)
-        Readiness.NONE -> null
-    }
     Column(
         Modifier
             .fillMaxWidth()
-            .litWell(radius = 12.dp, depth = 2.2.dp, floor = floor)
+            .litWell(radius = 12.dp, depth = 2.2.dp)
             .padding(12.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
@@ -679,13 +674,13 @@ private fun RouteCard(model: PortfolioModel, holding: PortfolioHolding) {
 @Composable
 private fun HopChip(label: String, dex: Boolean = false, muted: Boolean = false, icon: @Composable () -> Unit) {
     val n = MaterialTheme.neon
-    val pink = n.polkaswapBrand
+    val accent = n.polkaswapText
     Row(
         Modifier
             .alpha(if (muted) 0.72f else 1f)
             .clip(RoundedCornerShape(14.dp))
-            .background(if (dex) pink.copy(alpha = if (muted) 0.06f else 0.16f) else n.glassFillStrong)
-            .border(1.dp, if (dex) pink.copy(alpha = if (muted) 0.25f else 0.5f) else n.hairline, RoundedCornerShape(14.dp))
+            .background(n.glassSolid)
+            .border(1.dp, if (dex) accent else n.hairline, RoundedCornerShape(14.dp))
             .padding(start = 4.dp, end = 10.dp, top = 3.dp, bottom = 3.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {

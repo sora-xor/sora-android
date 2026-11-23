@@ -90,6 +90,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.window.DialogWindowProvider
 import androidx.core.view.WindowCompat
+import jp.co.soramitsu.common.presentation.compose.neon.neonGlass
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.presentation.compose.neon.NeonBackground
 import jp.co.soramitsu.common.presentation.compose.neon.NeonButton
@@ -99,12 +100,12 @@ import jp.co.soramitsu.common.presentation.compose.theme.neon.LocalFx
 import jp.co.soramitsu.common.presentation.compose.theme.neon.neon
 import jp.co.soramitsu.common.presentation.compose.theme.tokens.NeonType
 import jp.co.soramitsu.ui_core.component.button.properties.Size as ButtonSize
+import jp.co.soramitsu.ui_core.lit.litCoin
 import jp.co.soramitsu.ui_core.theme.customTypography
 
 /*
  * The Safe Mode kit (design spec 7.17, 9): calm, opaque surfaces for recovery and upgrade states.
- * No red, rose or magenta, no grid, no pulse, no caps. Amber is used only for a "needs action"
- * row. Every text pair is a §3 token pair (text.primary / text.secondary on the opaque surface).
+ * Step shapes distinguish the current state independently of color.
  */
 
 /** Test tags shared by every Safe Mode surface (instrumented tests and the debug preview). */
@@ -121,7 +122,7 @@ object SafeModeTags {
     const val PHRASE_VEIL = "safeModePhraseVeil"
 }
 
-/** Shield emblem: a solid circle with a 1.5 dp mint ring and a mint shield. */
+/** The shield is printed on the same coin used for wallet emblems. */
 @Composable
 fun ShieldEmblem(
     modifier: Modifier = Modifier,
@@ -137,15 +138,13 @@ fun ShieldEmblem(
         Box(
             modifier = Modifier
                 .size(size)
-                .clip(CircleShape)
-                .background(n.glassSolid)
-                .border(1.5.dp, n.success, CircleShape),
+                .litCoin(),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
                 modifier = Modifier.size(size * 32 / 72),
                 painter = painterResource(R.drawable.ic_neon_shield_safe),
-                tint = n.success,
+                tint = n.redText,
                 contentDescription = null,
             )
         }
@@ -270,7 +269,7 @@ fun SafetyPanel(
     }
 }
 
-/** One verified assurance: a 20 dp cyan check and primary text. */
+/** One verified assurance with a checkmark. */
 @Composable
 fun AssuranceRow(text: String, modifier: Modifier = Modifier) {
     val n = MaterialTheme.neon
@@ -286,7 +285,7 @@ fun AssuranceRow(text: String, modifier: Modifier = Modifier) {
                 .padding(top = 1.dp)
                 .size(20.dp),
             painter = painterResource(R.drawable.ic_checkmark_24),
-            tint = n.cyan,
+            tint = n.redText,
             contentDescription = null,
         )
         Spacer(Modifier.width(12.dp))
@@ -298,18 +297,14 @@ fun AssuranceRow(text: String, modifier: Modifier = Modifier) {
     }
 }
 
-/**
- * Reassurance callout (design spec 7.17, 9.1-3): `infoContainer`, radius 16, a cyan shield and
- * primary text. Information, not a warning: no caps, no bold, no warning colour.
- */
+/** A glass notice with the same shield as the verification header. */
 @Composable
 fun ReassuranceCallout(text: String, modifier: Modifier = Modifier) {
     val n = MaterialTheme.neon
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .background(n.infoContainer)
+            .neonGlass(RoundedCornerShape(16.dp))
             .padding(12.dp)
             .semantics(mergeDescendants = true) { },
         verticalAlignment = Alignment.Top,
@@ -319,7 +314,7 @@ fun ReassuranceCallout(text: String, modifier: Modifier = Modifier) {
                 .padding(top = 1.dp)
                 .size(20.dp),
             painter = painterResource(R.drawable.ic_neon_shield_safe),
-            tint = n.cyan,
+            tint = n.redText,
             contentDescription = null,
         )
         Spacer(Modifier.width(12.dp))
@@ -520,21 +515,20 @@ private fun StepGlyph(state: SafeStepState) {
             modifier = Modifier
                 .size(24.dp)
                 .clip(CircleShape)
-                .background(n.successContainer)
-                .border(1.5.dp, n.success, CircleShape),
+                .background(n.glassSolid)
+                .border(1.5.dp, n.redText, CircleShape),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
                 modifier = Modifier.size(16.dp),
                 painter = painterResource(R.drawable.ic_checkmark_24),
-                tint = n.success,
+                tint = n.redText,
                 contentDescription = null,
             )
         }
 
         SafeStepState.RUNNING -> {
-            // A cyan arc; it turns on the one shared clock and is static (dashed look) under
-            // reduce motion or on MINIMAL.
+            // Use a stationary segmented ring with reduced motion.
             val rotation = if (fx.loops) {
                 val transition = rememberInfiniteTransition(label = "stepArc")
                 transition.animateFloat(
@@ -564,7 +558,7 @@ private fun StepGlyph(state: SafeStepState) {
                 )
                 if (fx.loops) {
                     drawArc(
-                        color = n.cyan,
+                        color = n.redText,
                         startAngle = -90f,
                         sweepAngle = 100f,
                         useCenter = false,
@@ -575,7 +569,7 @@ private fun StepGlyph(state: SafeStepState) {
                 } else {
                     repeat(4) { i ->
                         drawArc(
-                            color = n.cyan,
+                            color = n.redText,
                             startAngle = -90f + i * 90f,
                             sweepAngle = 45f,
                             useCenter = false,
@@ -599,13 +593,11 @@ private fun StepGlyph(state: SafeStepState) {
             modifier = Modifier.size(24.dp),
             contentAlignment = Alignment.Center,
         ) {
-            // Ochre, the only "needs action" colour in Safe Mode. `warning` (not the lighter
-            // `warningFill`) keeps 3:1 against the surface in both themes.
-            Box(
-                Modifier
-                    .size(14.dp)
-                    .clip(CircleShape)
-                    .background(n.warning),
+            Icon(
+                modifier = Modifier.size(20.dp),
+                painter = painterResource(R.drawable.ic_neu_exclamation),
+                tint = n.redText,
+                contentDescription = null,
             )
         }
     }

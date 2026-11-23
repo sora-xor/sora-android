@@ -210,7 +210,7 @@ private fun PincodeInputView(
             PinTextButton("0", keySize, onNumClick)
             if (isDeleteVisible) {
                 PinIconButton(R.drawable.ic_neu_chevron_back, keySize, "Delete",
-                    stringResource(jp.co.soramitsu.common.R.string.common_delete), onDeleteClick, onClear)
+                    stringResource(jp.co.soramitsu.common.R.string.pin_delete_last_digit), onDeleteClick, onClear)
             } else Box(Modifier.size(keySize))
         }
     }

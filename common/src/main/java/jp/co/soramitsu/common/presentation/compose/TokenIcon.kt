@@ -19,6 +19,25 @@ limitations under the License.
 
 package jp.co.soramitsu.common.presentation.compose
 
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Text
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.dp
+import coil.compose.SubcomposeAsyncImage
+import jp.co.soramitsu.common.nexus.TairaTestnetContract
+import jp.co.soramitsu.common.domain.AssetHolder
+import jp.co.soramitsu.common.domain.DEFAULT_ICON_URI
+import jp.co.soramitsu.common.presentation.compose.theme.neon.neon
 import android.graphics.drawable.Drawable
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
@@ -29,6 +48,35 @@ import coil.compose.AsyncImage
 import coil.imageLoader
 import coil.request.ImageRequest
 import jp.co.soramitsu.common.R
+
+/** Uses the immutable asset ID for the bundled XOR logo; other assets keep their catalogue artwork. */
+@Composable
+fun TokenBadge(assetId: String, symbol: String, uri: String?, size: Dp, modifier: Modifier = Modifier) {
+    Box(modifier.size(size).clip(CircleShape), contentAlignment = Alignment.Center) {
+        if (assetId == AssetHolder.XOR_ASSET_ID || assetId == TairaTestnetContract.XOR_ASSET_DEFINITION_ID) {
+            Image(painterResource(R.drawable.ic_0x0200000000000000000000000000000000000000000000000000000000000000),
+                contentDescription = null, modifier = Modifier.fillMaxSize())
+        } else {
+            val characters = if (size >= 36.dp) 6 else 4
+            val mark = if (symbol.length <= characters) symbol else symbol.take(characters - 2) + "…" + symbol.last()
+            val markSize = with(LocalDensity.current) {
+                (size * minOf(.42f, 1.28f / mark.length.coerceAtLeast(1))).toSp()
+            }
+            val monogram: @Composable () -> Unit = {
+                Box(Modifier.fillMaxSize().background(MaterialTheme.neon.glassSolid), contentAlignment = Alignment.Center) {
+                    Text(mark, modifier = Modifier.clearAndSetSemantics { }, color = MaterialTheme.neon.cyan, fontSize = markSize,
+                        fontWeight = FontWeight.Bold, maxLines = 1)
+                }
+            }
+            if (uri.isNullOrBlank() || uri == DEFAULT_ICON_URI) {
+                monogram()
+            } else {
+                SubcomposeAsyncImage(model = uri, contentDescription = null, modifier = Modifier.fillMaxSize(),
+                    loading = { monogram() }, error = { monogram() })
+            }
+        }
+    }
+}
 
 @Composable
 fun TokenIcon(

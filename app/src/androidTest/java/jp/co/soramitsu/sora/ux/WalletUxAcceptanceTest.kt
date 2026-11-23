@@ -60,6 +60,7 @@ import java.util.concurrent.atomic.AtomicReference
 class WalletUxAcceptanceTest {
     private val instrumentation = InstrumentationRegistry.getInstrumentation()
     private val context get() = instrumentation.targetContext
+    private val choosePhoto get() = context.getString(jp.co.soramitsu.common.R.string.common_upload_from_library)
     private val screenshotDirectory get() = File(context.getExternalFilesDir(null), "ux-acceptance").apply { mkdirs() }
     private val sampleRecipient = "SampleRecipientForUxOnly1234567890123456789012345678901234567890"
 
@@ -164,8 +165,8 @@ class WalletUxAcceptanceTest {
             Instrumentation.ActivityResult(Activity.RESULT_OK, Intent().setData(androidx.core.content.FileProvider.getUriForFile(context, "${context.packageName}.soraFileProvider", photo))), true)
         try {
             ActivityScenario.launchActivityForResult<QRCodeScannerActivity>(intent).use { scenario ->
-                waitUntil { findText("Upload from library") != null }
-                clickText("Upload from library")
+                waitUntil { findText(choosePhoto) != null }
+                clickText(choosePhoto)
                 waitUntil { scenario.state == Lifecycle.State.DESTROYED }
                 assertEquals(1, monitor.hits)
                 assertEquals(sampleRecipient, contract.parseResult(scenario.result.resultCode, scenario.result.resultData))
@@ -177,8 +178,8 @@ class WalletUxAcceptanceTest {
             Instrumentation.ActivityResult(Activity.RESULT_CANCELED, null), true)
         try {
             ActivityScenario.launchActivityForResult<QRCodeScannerActivity>(intent).use { scenario ->
-                waitUntil { findText("Upload from library") != null }
-                clickText("Upload from library")
+                waitUntil { findText(choosePhoto) != null }
+                clickText(choosePhoto)
                 instrumentation.waitForIdleSync()
                 assertEquals(Lifecycle.State.RESUMED, scenario.state)
                 assertEquals(1, cancelled.hits)
@@ -203,8 +204,8 @@ class WalletUxAcceptanceTest {
         }, Instrumentation.ActivityResult(Activity.RESULT_OK, Intent().setData(uri)), true)
         try {
             ActivityScenario.launchActivityForResult<QRCodeScannerActivity>(contract.createIntent(context, Unit)).use { scenario ->
-                waitUntil { findText("Upload from library") != null }
-                clickText("Upload from library")
+                waitUntil { findText(choosePhoto) != null }
+                clickText(choosePhoto)
                 val failed = java.util.concurrent.atomic.AtomicBoolean(false)
                 waitUntil {
                     scenario.onActivity { activity ->
@@ -217,7 +218,7 @@ class WalletUxAcceptanceTest {
                 }
                 assertEquals(1, monitor.hits)
                 assertEquals(Lifecycle.State.RESUMED, scenario.state)
-                assertNotNull(findText("Upload from library"))
+                assertNotNull(findText(choosePhoto))
                 capture("scanner-invalid-photo-recovery")
                 scenario.onActivity { it.finish() }
                 assertNull(contract.parseResult(scenario.result.resultCode, scenario.result.resultData))
@@ -378,7 +379,7 @@ class WalletUxAcceptanceTest {
             waitUntil { findText("Taira") != null }
             assertNull(findText("OtherWalletAddressForLayoutOnly"))
             clickText("Taira")
-            waitUntil { findText("Liquid balance") != null }
+            waitUntil { findText(context.getString(jp.co.soramitsu.common.R.string.asset_details_liquid_balance)) != null }
             assertEquals(listOf(network), opened)
             capture("network-xor-page")
             clickText("Receive")

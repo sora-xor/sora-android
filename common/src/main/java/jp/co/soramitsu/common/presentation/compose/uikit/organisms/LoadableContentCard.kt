@@ -19,8 +19,6 @@ limitations under the License.
 
 package jp.co.soramitsu.common.presentation.compose.uikit.organisms
 
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -28,19 +26,20 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material.CircularProgressIndicator
-import androidx.compose.material.Divider
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import jp.co.soramitsu.common.R
+import jp.co.soramitsu.common.presentation.compose.components.LoadingRows
+import jp.co.soramitsu.common.presentation.compose.neon.FilledButton
+import jp.co.soramitsu.ui_core.component.button.properties.Order
+import androidx.compose.ui.unit.dp
 import jp.co.soramitsu.common.presentation.compose.uikit.tokens.ScreenStatus
 import jp.co.soramitsu.common.presentation.compose.neon.ContentCard
 import jp.co.soramitsu.ui_core.resources.Dimens
@@ -63,33 +62,19 @@ fun LoadableContentCard(
         cornerRadius = cornerRadius
     ) {
         when (state) {
-            ScreenStatus.LOADING -> {
-                Box {
-                    CircularProgressIndicator(
-                        modifier = Modifier
-                            .align(Alignment.Center),
-                        color = MaterialTheme.customColors.fgPrimary
-                    )
-                }
-            }
+            ScreenStatus.LOADING -> LoadingRows(stringResource(R.string.common_loading), count = 1)
             ScreenStatus.ERROR -> {
                 Column(
+                    modifier = Modifier.fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
+                    verticalArrangement = Arrangement.spacedBy(Dimens.x2),
                 ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.ic_error_80),
-                        contentDescription = null
-                    )
-                    Divider(
-                        thickness = Dimens.x1,
-                        color = Color.Transparent
-                    )
-                    Text(
-                        modifier = Modifier.clickable {
-                            onTryAgainClick.invoke()
-                        },
-                        text = stringResource(id = R.string.common_error_general_title),
+                    Text(stringResource(R.string.common_error_general_title), color = MaterialTheme.customColors.fgPrimary)
+                    FilledButton(
+                        text = stringResource(R.string.common_try_again),
+                        order = Order.SECONDARY,
+                        size = 48.dp,
+                        onClick = onTryAgainClick,
                     )
                 }
             }

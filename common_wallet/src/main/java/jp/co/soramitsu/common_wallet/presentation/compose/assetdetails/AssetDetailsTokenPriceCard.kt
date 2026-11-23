@@ -40,7 +40,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import jp.co.soramitsu.common.domain.DEFAULT_ICON_URI
-import jp.co.soramitsu.common.presentation.compose.TokenIcon
+import jp.co.soramitsu.common.presentation.compose.TokenBadge
 import jp.co.soramitsu.ui_core.component.asset.changePriceColor
 import jp.co.soramitsu.common.presentation.compose.neon.ContentCard
 import jp.co.soramitsu.ui_core.resources.Dimens
@@ -54,6 +54,7 @@ fun AssetDetailsTokenPriceCard(
     tokenPrice: String,
     tokenPriceChange: String,
     iconUri: String,
+    assetId: String = "",
 ) {
     Box(
         modifier = Modifier
@@ -78,12 +79,14 @@ fun AssetDetailsTokenPriceCard(
                     .wrapContentHeight(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text(
-                    text = tokenSymbol,
-                    style = MaterialTheme.customTypography.textXSBold,
-                    color = MaterialTheme.customColors.fgSecondary,
-                )
-                Spacer(modifier = Modifier.height(Dimens.x1))
+                if (tokenSymbol != tokenName) {
+                    Text(
+                        text = tokenSymbol,
+                        style = MaterialTheme.customTypography.textXSBold,
+                        color = MaterialTheme.customColors.fgSecondary,
+                    )
+                    Spacer(modifier = Modifier.height(Dimens.x1))
+                }
                 Text(
                     modifier = Modifier.wrapContentSize(),
                     color = MaterialTheme.customColors.fgPrimary,
@@ -115,7 +118,7 @@ fun AssetDetailsTokenPriceCard(
                 .size(Dimens.x9)
                 .align(Alignment.TopCenter)
         ) {
-            TokenIcon(uri = iconUri, size = Dimens.x9)
+            TokenBadge(assetId, tokenSymbol, iconUri, Dimens.x9)
         }
     }
 }

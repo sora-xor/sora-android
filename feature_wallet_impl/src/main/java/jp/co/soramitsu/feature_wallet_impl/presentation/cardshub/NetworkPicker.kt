@@ -1,5 +1,7 @@
 package jp.co.soramitsu.feature_wallet_impl.presentation.cardshub
 
+import jp.co.soramitsu.common.presentation.compose.theme.neon.neon
+import androidx.compose.foundation.border
 import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -30,7 +32,8 @@ import jp.co.soramitsu.common.nexus.WalletNetworkDirectory
 import jp.co.soramitsu.common.nexus.WalletNetworkId
 import jp.co.soramitsu.common.nexus.WalletNetworkTag
 import jp.co.soramitsu.common.nexus.WalletNetworkUnavailable
-import jp.co.soramitsu.common.presentation.compose.TokenIcon
+import jp.co.soramitsu.common.domain.AssetHolder
+import jp.co.soramitsu.common.presentation.compose.TokenBadge
 import jp.co.soramitsu.common.presentation.compose.components.WalletSheet
 import jp.co.soramitsu.common.presentation.compose.neon.ContentCard
 import jp.co.soramitsu.common.util.NumbersFormatter
@@ -61,11 +64,10 @@ internal fun networkLabel(id: WalletNetworkId): String {
 internal fun NetworkTagChip(tag: WalletNetworkTag, modifier: Modifier = Modifier) {
     val color = when (tag) {
         WalletNetworkTag.MAIN -> MaterialTheme.customColors.accentPrimary
-        WalletNetworkTag.TESTNET -> MaterialTheme.customColors.statusWarning
+        WalletNetworkTag.TESTNET -> MaterialTheme.neon.redText
         WalletNetworkTag.COMING_SOON -> MaterialTheme.customColors.fgSecondary
     }
-    // Testnet is the warning's ochre on the warning's own container; the others sit on a tint of their colour.
-    val fill = if (tag == WalletNetworkTag.TESTNET) MaterialTheme.customColors.statusWarningContainer else color.copy(alpha = 0.14f)
+    val fill = MaterialTheme.neon.glassSolid
     Text(
         text = stringResource(tag.label),
         style = MaterialTheme.customTypography.textXSBold,
@@ -73,6 +75,7 @@ internal fun NetworkTagChip(tag: WalletNetworkTag, modifier: Modifier = Modifier
         maxLines = 1,
         modifier = modifier
             .background(fill, RoundedCornerShape(10.dp))
+            .border(1.dp, MaterialTheme.neon.hairline, RoundedCornerShape(10.dp))
             .padding(horizontal = 8.dp, vertical = 3.dp),
     )
 }
@@ -134,7 +137,7 @@ private fun NetworkChoiceRow(choice: WalletNetworkChoice, icon: String?, onClick
             .testTag("NetworkChoice${choice.id.wireId}"),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        TokenIcon(uri = icon, size = 40.dp)
+        TokenBadge(AssetHolder.XOR_ASSET_ID, "XOR", icon, 40.dp)
         Column(
             Modifier
                 .weight(1f)
@@ -212,7 +215,7 @@ private fun NetworkAssetRow(
             .testTag("NetworkRow${balance.networkId.wireId}"),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        TokenIcon(uri = icon, size = 40.dp)
+        TokenBadge(AssetHolder.XOR_ASSET_ID, "XOR", icon, 40.dp)
         Column(
             Modifier
                 .weight(1f)

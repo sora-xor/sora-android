@@ -146,7 +146,7 @@ class NodeDetailsViewModelTest {
         addNodeViewModel()
 
         assertEquals(
-            R.string.select_node_node_details,
+            R.string.select_node_add_custom_node,
             viewModel.toolbarState.getOrAwaitValue().basic.title
         )
     }

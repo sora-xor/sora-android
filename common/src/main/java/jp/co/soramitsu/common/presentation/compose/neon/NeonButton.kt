@@ -161,7 +161,7 @@ fun NeonButton(
     val glass = (style.fill as? SolidColor)?.value?.takeIf { enabled }
     val padded = variant == NeonVariant.Secondary || variant == NeonVariant.Destructive
     val material = when {
-        glass != null -> Modifier.litPress(pressed, scale = 1f).litCutGlass(glass, pressed, radius)
+        glass != null -> Modifier.litPress(pressed, scale = .985f, motion = !fx.reduceMotion).litCutGlass(glass, pressed, radius)
         padded && enabled -> Modifier.litPress(pressed, motion = !fx.reduceMotion).litPad(radius, elevation = 8.dp, pressed = pressed)
         style.fill != null -> Modifier.background(style.fill, shape)
         pressed && style.pressedFill != null -> Modifier.background(style.pressedFill, shape)

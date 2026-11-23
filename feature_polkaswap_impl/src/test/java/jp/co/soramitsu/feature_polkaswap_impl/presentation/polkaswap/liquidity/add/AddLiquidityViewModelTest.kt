@@ -204,6 +204,43 @@ class AddLiquidityViewModelTest {
     }
 
     @Test
+    fun `empty catalog and missing base recover in place before choosing a pool`() = runTest {
+        given(assetsInteractor.subscribeAssetsActiveOfCurAccount()).willReturn(flowOf(emptyList()))
+        setUpViewModel(secondTokenId = null, firstTokenId = "missing")
+        advanceUntilIdle()
+
+        assertTrue(viewModel.addState.value.assetCatalogUnavailable)
+        assertFalse(viewModel.addState.value.btnState.enabled)
+        assertEquals(null, viewModel.errorFromResourceLiveData.value)
+        assertEquals(null, viewModel.alertDialogLiveData.value)
+
+        val catalog = kotlinx.coroutines.flow.MutableStateFlow(listOf(XOR_ASSET, VAL_ASSET))
+        given(assetsInteractor.subscribeAssetsActiveOfCurAccount()).willReturn(catalog)
+        viewModel.retryAssets()
+        advanceUntilIdle()
+
+        kVerify(assetsInteractor).updateBalanceVisibleAssets()
+        assertFalse(viewModel.addState.value.assetCatalogUnavailable)
+        assertEquals(null, viewModel.addState.value.assetState1)
+        viewModel.onToken1Change(XOR_ASSET.token.id)
+        viewModel.onAmount1Change(BigDecimal.ONE)
+        advanceUntilIdle()
+        assertEquals(XOR_ASSET.token.id, viewModel.addState.value.assetState1?.token?.id)
+        assertEquals(BigDecimal.ONE, viewModel.addState.value.assetState1?.amount)
+        assertFalse(viewModel.addState.value.btnState.enabled)
+
+        catalog.value = emptyList()
+        advanceUntilIdle()
+        assertTrue(viewModel.addState.value.assetCatalogUnavailable)
+        assertEquals(null, viewModel.addState.value.assetState1)
+        assertFalse(viewModel.addState.value.confirm.btnState.enabled)
+        assertEquals("", viewModel.addState.value.prices.fee)
+        viewModel.onToken1Change("stale")
+        viewModel.onToken2Change("stale")
+        assertEquals(null, viewModel.addState.value.assetState2)
+    }
+
+    @Test
     fun `maximum XOR amount reserves the quoted network fee`() = runTest {
         val quotedFee = BigDecimal("0.1")
         given(poolsInteractor.calcLiquidityDetails(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any()))

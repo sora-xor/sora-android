@@ -783,8 +783,8 @@ class CardsHubViewModel @Inject constructor(
         _nexusSend.value = NexusSendUiState()
     }
 
-    fun openQrCodeFlow() {
-        router.openQrCodeFlow()
+    fun openQrScanner() {
+        router.openQrCodeFlow(shouldNavigateToScannerDirectly = true)
     }
 
     fun onAssetClick(tokenId: String) {

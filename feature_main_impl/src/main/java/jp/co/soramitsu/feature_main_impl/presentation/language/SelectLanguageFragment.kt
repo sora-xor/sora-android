@@ -101,10 +101,9 @@ internal fun LanguagesList(
 ) {
     list.forEach {
         SelectableItem(
-            modifier = Modifier.padding(vertical = Dimens.x2),
-            title = it.displayName,
+            title = it.nativeDisplayName,
             isSelected = it.isSelected,
-            subtitle = it.nativeDisplayName,
+            subtitle = it.displayName,
             isMenuIconVisible = false,
             onClick = { onClick.invoke(it) },
             menuItems = emptyList(),

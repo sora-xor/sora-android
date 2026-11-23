@@ -272,12 +272,12 @@ private fun BasicBar(
                 )
                 if (onSearch != null && state.basic.searchEnabled) {
                     IconButton(
-                        modifier = Modifier.size(40.dp),
+                        modifier = Modifier.size(48.dp),
                         onClick = { searchMode.value = true }
                     ) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_search),
-                            contentDescription = null,
+                            contentDescription = stringResource(R.string.toolbar_search_open),
                             tint = actionTint,
                         )
                     }
@@ -299,12 +299,14 @@ private fun BasicBar(
                     onClick = {
                         keyboardController?.hide()
                         focusManager.clearFocus()
+                        searchValue.value = ""
+                        onSearch?.invoke("")
                         searchMode.value = false
                     }
                 ) {
                     Icon(
                         painter = painterResource(R.drawable.ic_arrow_left),
-                        contentDescription = null,
+                        contentDescription = stringResource(R.string.toolbar_search_close),
                         tint = MaterialTheme.customColors.fgPrimary,
                     )
                 }
@@ -360,7 +362,7 @@ private fun BasicBar(
                         interactionSource = interactionSource,
                         placeholder = {
                             Text(
-                                text = state.basic.searchPlaceholder?.toTitle() ?: "",
+                                text = state.basic.searchPlaceholder?.toTitle() ?: stringResource(R.string.toolbar_search_open),
                                 modifier = Modifier.wrapContentHeight(),
                                 style = MaterialTheme.customTypography.paragraphS,
                                 color = MaterialTheme.customColors.fgTertiary,
@@ -382,7 +384,7 @@ private fun BasicBar(
                 ) {
                     Icon(
                         painter = painterResource(R.drawable.ic_cross_24),
-                        contentDescription = null,
+                        contentDescription = stringResource(R.string.toolbar_search_clear),
                         tint = MaterialTheme.customColors.fgPrimary,
                     )
                 }

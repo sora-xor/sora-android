@@ -305,10 +305,10 @@ class ReferralViewModelTest {
         setupViewModel()
         advanceUntilIdle()
 
-        assertEquals(
-            R.string.common_error_general_title to R.string.common_error_network,
-            referralViewModel.errorFromResourceLiveData.value,
-        )
+        val notice = checkNotNull(referralViewModel.confirmDialogLiveData.value)
+        assertEquals("text-${R.string.common_try_again}", notice.confirmText)
+        assertNull(referralViewModel.errorFromResourceLiveData.value)
+        assertNull(referralViewModel.alertDialogLiveData.value)
         // Changing the number of invitations while offline is reported the same way.
         referralViewModel.onBondPlus()
         advanceUntilIdle()
@@ -710,9 +710,13 @@ class ReferralViewModelTest {
         assertEquals("text-${R.string.common_try_again}", question.confirmText)
         assertEquals("text-${R.string.common_close}", question.dismissText)
 
+        assertNull(referralViewModel.errorFromResourceLiveData.value)
+        assertNull(referralViewModel.alertDialogLiveData.value)
+        val readsBeforeRetry = feeQuestionCount()
         offline = false
         question.onConfirm()
         advanceUntilIdle()
+        assertEquals(readsBeforeRetry + 1, feeQuestionCount())
         referrerBalanceFlowEmit(BigDecimal.ZERO)
         advanceUntilIdle()
 

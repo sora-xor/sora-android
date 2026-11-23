@@ -39,6 +39,8 @@ data class LiquidityAddState(
      * Supply stays off and the screen shows a notice with Try again.
      */
     val estimateUnavailable: NetworkFeeUnavailable? = null,
+    val assetCatalogUnavailable: Boolean = false,
+    val refreshingAssets: Boolean = false,
 )
 
 data class LiquidityAddConfirmState(

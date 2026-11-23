@@ -55,9 +55,9 @@ object DayThemeColors {
 
     val FgOutline = Color(0xFFDAD6CE)
 
-    val StatusSuccess = Color(0xFF286448)
+    val StatusSuccess = LitDay.ink
 
-    val StatusSuccessContainer = Color(0xFFDCEBE2)
+    val StatusSuccessContainer = LitDay.surface
 
     /** A calm ochre: readable as ink on white, on its own container and on its own tint. */
     val StatusWarning = Color(0xFF8A5A0C)

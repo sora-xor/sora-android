@@ -38,7 +38,7 @@ class ProfileAndLoginDestinationTest {
         show(ProfileFragment(), profile)
         for (id in listOf(R.string.settings_crypto_accounts, R.string.polkamarkt_title, R.string.settings_nodes,
             R.string.settings_header_app, R.string.settings_login_title, R.string.settings_invite_title, R.string.settings_information_title)) click(id)
-        compose.onNodeWithText("Debug Menu").performScrollTo().performClick()
+        compose.onNodeWithText(compose.activity.getString(R.string.settings_debug)).performScrollTo().performClick()
         compose.runOnIdle {
             verify(exactly = 1) { profile.showAccountList(); profile.showPolkamarkt(); profile.showSelectNode(); profile.showAppSettings(); profile.showLogin(); profile.showReferral(); profile.showAbout(); profile.showDebugMenu() }
         }
@@ -49,7 +49,7 @@ class ProfileAndLoginDestinationTest {
         compose.runOnIdle { profileState.value = profileState.value.copy(nodeName = "Offline fixture", nodeConnected = false, isDebugMenuAvailable = false, polkamarktVisible = false) }
         compose.onNodeWithText("Fixture node").assertDoesNotExist()
         compose.onNodeWithText("Offline fixture").assertExists()
-        compose.onNodeWithText("Debug Menu").assertDoesNotExist()
+        compose.onNodeWithText(compose.activity.getString(R.string.settings_debug)).assertDoesNotExist()
         compose.onNodeWithText(compose.activity.getString(R.string.polkamarkt_title)).assertDoesNotExist()
     }
 

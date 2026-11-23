@@ -565,18 +565,18 @@ class CardsHubViewModelTest {
 
     @Test fun `hub actions route to the selected account and pool`() = runTest {
         advanceUntilIdle()
-        every { router.openQrCodeFlow() } returns Unit
+        every { router.openQrCodeFlow(shouldNavigateToScannerDirectly = true) } returns Unit
         every { router.openEditCardsHub() } returns Unit
         every { polkaswapRouter.showPoolDetails(any()) } returns Unit
         every { polkaswapRouter.showPoolSettings() } returns Unit
         every { referralRouter.showReferrals() } returns Unit
         every { mainRouter.showAccountDetails(any()) } returns Unit
-        cardsHubViewModel.openQrCodeFlow(); cardsHubViewModel.onEditViewClick()
+        cardsHubViewModel.openQrScanner(); cardsHubViewModel.onEditViewClick()
         cardsHubViewModel.onPoolClick("xor" to "val")
         cardsHubViewModel.onOpenFullCard(FavoritePoolsCardState(jp.co.soramitsu.common_wallet.presentation.compose.states.PoolsListState(emptyList())))
         cardsHubViewModel.onStartReferral(); cardsHubViewModel.onBackupBannerClick()
         io.mockk.verify(exactly = 1) {
-            router.openQrCodeFlow(); router.openEditCardsHub(); polkaswapRouter.showPoolDetails("xor" to "val")
+            router.openQrCodeFlow(shouldNavigateToScannerDirectly = true); router.openEditCardsHub(); polkaswapRouter.showPoolDetails("xor" to "val")
             polkaswapRouter.showPoolSettings(); referralRouter.showReferrals(); mainRouter.showAccountDetails(account.substrateAddress)
         }
     }

@@ -30,11 +30,11 @@ class DiagnosticAndHubBehaviorTest {
         val runtime = mockk<RuntimeManager>(relaxed = true)
         val provider = CloudBackupProvider(false) { error("Unavailable cloud backup must not initialize") }
         val vm = withContext(Dispatchers.Main) { DebugMenuViewModel(runtime, provider) }
-        assertTrue(vm.state.settings.any { it.name == "App ID:" && it.value.isNotEmpty() })
-        assertTrue(vm.state.settings.any { it.name == "Arch:" && it.value.contains("arm64") })
+        assertTrue(vm.state.settings.any { it.label == R.string.debug_app_id && it.value.isNotEmpty() })
+        assertTrue(vm.state.settings.any { it.label == R.string.debug_arch && it.value.contains("arm64") })
         compose.setContent { SoraAppTheme { DebugMenuScreen(vm.state) } }
-        compose.onNodeWithText("App ID:").assertIsDisplayed()
-        compose.onNodeWithText("Build Flavor:").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText(compose.activity.getString(R.string.debug_app_id)).assertIsDisplayed()
+        compose.onNodeWithText(compose.activity.getString(R.string.debug_flavor)).performScrollTo().assertIsDisplayed()
         withContext(Dispatchers.Main) { vm.onResetRuntimeClick() }
         coVerify(exactly = 1) { runtime.resetRuntimeVersion() }
     }

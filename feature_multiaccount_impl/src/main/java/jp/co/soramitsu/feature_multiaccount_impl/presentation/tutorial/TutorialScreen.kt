@@ -113,16 +113,6 @@ fun TutorialScreen(
                     color = MaterialTheme.customColors.fgPrimary
                 )
 
-
-                Text(
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                    text = stringResource(id = R.string.tutorial_many_world_desc),
-                    textAlign = TextAlign.Center,
-                    style = MaterialTheme.customTypography.paragraphS,
-                    color = MaterialTheme.customColors.fgPrimary,
-                )
-
                 TutorialButtons(
                     modifier = Modifier.padding(top = Dimens.x3),
                     onCreateAccount = onCreateAccount,

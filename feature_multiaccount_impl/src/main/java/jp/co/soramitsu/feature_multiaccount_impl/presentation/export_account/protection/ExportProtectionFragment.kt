@@ -19,6 +19,7 @@ limitations under the License.
 
 package jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.protection
 
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -63,7 +64,7 @@ class ExportProtectionFragment : SoraBaseFragment<ExportProtectionViewModel>() {
         ) {
             viewModel.exportProtectionScreenState.observeAsState().value?.let {
                 Box(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier.fillMaxSize().verticalScroll(scrollState),
                     contentAlignment = Alignment.TopCenter,
                 ) {
                     ExportProtection(

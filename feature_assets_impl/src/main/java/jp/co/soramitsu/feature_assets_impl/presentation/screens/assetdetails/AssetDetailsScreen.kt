@@ -76,6 +76,7 @@ internal fun AssetDetailsScreen(
             tokenPrice = stateData.price,
             tokenPriceChange = stateData.priceChange,
             iconUri = stateData.tokenIcon,
+            assetId = stateData.tokenId,
         )
         Spacer(modifier = Modifier.size(Dimens.x2))
         AssetDetailsBalanceCard(

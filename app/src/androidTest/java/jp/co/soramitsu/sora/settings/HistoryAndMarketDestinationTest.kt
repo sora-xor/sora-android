@@ -106,9 +106,9 @@ class HistoryAndMarketDestinationTest {
         }
         Fragment::class.java.getDeclaredField("mHost").apply { isAccessible = true }.set(fragment, host)
         show(fragment, vm)
-        compose.onNodeWithText("Density", substring = true).assertIsDisplayed()
-        compose.onNodeWithText("Reset runtime").performClick()
-        compose.onNodeWithText("Change google account").performClick()
+        compose.onNodeWithText(text(R.string.debug_display)).assertIsDisplayed()
+        compose.onNodeWithText(text(R.string.debug_reset_runtime)).performClick()
+        compose.onNodeWithText(text(R.string.debug_google_account)).performClick()
         compose.runOnIdle { verify(exactly = 1) { vm.onResetRuntimeClick(); vm.onChangeGoogleAccount(any()) } }
     }
 }

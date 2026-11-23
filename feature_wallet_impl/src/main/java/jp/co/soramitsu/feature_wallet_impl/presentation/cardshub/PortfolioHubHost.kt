@@ -323,7 +323,7 @@ private class HomeActions(
     private val startNetworkAction: (WalletNetworkAction) -> Boolean,
 ) : PortfolioHomeActions {
     override fun onScopeChip() = portfolio.openSheet(PortfolioSheet.Wallets)
-    override fun onScan() = hub.openQrCodeFlow()
+    override fun onScan() = hub.openQrScanner()
     override fun onFreshness() = portfolio.openSheet(PortfolioSheet.Sync)
     override fun onCaption() = portfolio.openSheet(PortfolioSheet.HowWeCount)
     override fun onLegend(key: String) = portfolio.onLegendTap(key)

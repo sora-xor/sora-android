@@ -23,7 +23,6 @@ import android.os.Bundle
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -43,8 +42,6 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.core.view.WindowCompat
 import javax.inject.Inject
 import jp.co.soramitsu.common.R
@@ -113,16 +110,7 @@ abstract class SoraBaseActivity<T : BaseViewModel> : AppCompatActivity() {
                 }
 
                 Box(modifier = Modifier.fillMaxSize()) {
-                    // The page colour, and in light mode the classic SORA background image on it.
                     NeonBackground()
-                    if (!isDarkModeOn.value) {
-                        Image(
-                            modifier = Modifier.fillMaxSize(),
-                            contentScale = ContentScale.FillBounds,
-                            painter = painterResource(id = R.drawable.bg_image),
-                            contentDescription = ""
-                        )
-                    }
                     Scaffold(
                         modifier = Modifier
                             .navigationBarsPadding()

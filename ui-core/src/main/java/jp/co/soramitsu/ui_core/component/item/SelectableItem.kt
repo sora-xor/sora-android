@@ -2,7 +2,10 @@ package jp.co.soramitsu.ui_core.component.item
 
 import android.graphics.drawable.Drawable
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
@@ -40,7 +43,9 @@ fun SelectableItem(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .clickable { onClick() },
+            .heightIn(min = 52.dp)
+            .selectable(isSelected, role = Role.RadioButton, onClick = onClick)
+            .padding(vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
@@ -50,7 +55,7 @@ fun SelectableItem(
             if (isSelected) {
                 Icon(
                     painter = painterResource(R.drawable.ic_check_rounded),
-                    tint = MaterialTheme.customColors.statusSuccess,
+                    tint = MaterialTheme.customColors.accentPrimary,
                     contentDescription = null
                 )
             }
@@ -59,7 +64,7 @@ fun SelectableItem(
         if (leftIcon != null) {
             Image(
                 modifier = Modifier
-                    .padding(start = Dimens.x2),
+                    .padding(start = Dimens.x2).size(40.dp),
                 bitmap = leftIcon.toBitmap().asImageBitmap(),
                 contentDescription = null
             )
@@ -74,11 +79,9 @@ fun SelectableItem(
                 text = title,
                 style = MaterialTheme.customTypography.textM,
                 color = MaterialTheme.customColors.fgPrimary,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis
             )
 
-            Text(
+            if (subtitle.isNotBlank() && !subtitle.equals(title, ignoreCase = true)) Text(
                 text = subtitle,
                 style = MaterialTheme.customTypography.textXSBold,
                 color = MaterialTheme.customColors.fgSecondary,
@@ -94,7 +97,7 @@ fun SelectableItem(
                     Icon(
                         painter = painterResource(R.drawable.ic_menu_vertical),
                         tint = MaterialTheme.customColors.accentTertiary,
-                        contentDescription = null
+                        contentDescription = title
                     )
                 }
 

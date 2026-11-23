@@ -24,6 +24,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextRange
@@ -33,6 +34,7 @@ import java.math.BigDecimal
 import java.net.URLEncoder
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.domain.AssetAmountInputState
+import jp.co.soramitsu.common.domain.AssetHolder
 import jp.co.soramitsu.common.domain.DEFAULT_ICON_URI
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.nexus.TairaTestnetContract
@@ -93,6 +95,12 @@ internal object NexusRoutes {
 internal const val NEXUS_PULL_REFRESH_MILLIS = 1_200L
 
 private const val XOR = "XOR"
+
+@Composable
+private fun bundledXorIconUri(): String {
+    val logo = R.drawable.ic_0x0200000000000000000000000000000000000000000000000000000000000000
+    return "android.resource://${LocalContext.current.packageName}/$logo"
+}
 
 /** An exact XOR amount as SORA2 writes amounts ("25 000 XOR"); nothing is rounded. */
 internal fun NumbersFormatter.nexusXor(quantity: String): String = "${nexusXorNumber(quantity)} $XOR"
@@ -222,7 +230,7 @@ private fun xorInputScale(network: WalletNetworkId): Int =
 private const val XOR_INPUT_SCALE = 18
 
 private fun nexusXorToken(balance: NexusPortfolioBalance, xorIcon: String?, xorName: String?) = Token(
-    id = balance.assetDefinitionId ?: XOR,
+    id = balance.assetDefinitionId ?: if (balance.networkId == WalletNetworkId.TAIRA) TairaTestnetContract.XOR_ASSET_DEFINITION_ID else XOR,
     name = xorName ?: XOR,
     symbol = XOR,
     precision = xorInputScale(balance.networkId),
@@ -283,6 +291,7 @@ internal fun NexusAssetScreen(
                 tokenPrice = networkLabel(balance.networkId),
                 tokenPriceChange = "",
                 iconUri = icon,
+                assetId = AssetHolder.XOR_ASSET_ID,
             )
             Spacer(modifier = Modifier.size(Dimens.x2))
             AssetDetailsBalanceCard(
@@ -293,6 +302,7 @@ internal fun NexusAssetScreen(
                     else -> "…"
                 },
                 amountFiat = "",
+                balanceTitle = stringResource(if (balance.networkLive) R.string.asset_details_liquid_balance else R.string.portfolio_network),
                 // As on SORA2, Send is offered when there is something it can send.
                 isTransferableAmountAvailable = balance.sendAvailable &&
                     balance.xorQuantity?.isPositiveQuantity() == true,
@@ -306,7 +316,7 @@ internal fun NexusAssetScreen(
                 ),
                 notes = { NexusBalanceNotes(balance, onRefresh = onRefresh, onRecovery = onRecovery) },
             )
-            val events = nexusActivityEvents(balance, icon, numbers::nexusXor)
+            val events = nexusActivityEvents(balance, bundledXorIconUri(), numbers::nexusXor)
             if (balance.networkLive &&
                 (events.isNotEmpty() || balance.historyErrorCode != null || balance.historyHasMore)
             ) {
@@ -413,7 +423,6 @@ internal fun NexusReceiveScreen(
 internal fun NexusTransferScreen(
     balance: NexusPortfolioBalance,
     details: NexusTransferDetails,
-    xorIcon: String?,
     scrollState: ScrollState,
     dateTime: (Long) -> String,
     onCopy: (String) -> Unit,
@@ -446,7 +455,7 @@ internal fun NexusTransferScreen(
                 explorerUrl = balance.explorerBaseUrl.takeIf { balance.networkLive },
                 statusNote = details.statusNote?.let { stringResource(it) },
             ),
-            icon = xorIcon ?: DEFAULT_ICON_URI,
+            icon = bundledXorIconUri(),
             isAmountGreen = details.incoming,
             amount = (if (details.incoming) "+" else "") + numbers.nexusXor(details.amount),
             onCloseClick = onClose,
@@ -508,7 +517,6 @@ internal fun NexusSendScreen(
         NexusSendStep.OUTCOME -> NexusSendOutcome(
             state = state,
             network = network,
-            xorIcon = xorIcon,
             scrollState = scrollState,
             dateTime = dateTime,
             onClose = onClose,
@@ -550,9 +558,7 @@ private fun NexusSendForm(
             onAddressLongClick = {},
             inputState = AssetAmountInputState(
                 token = nexusXorToken(network, xorIcon, xorName),
-                balance = network.xorQuantity?.let {
-                    stringResource(R.string.wallet_available_xor, numbers.nexusXorNumber(it))
-                } ?: stringResource(R.string.balance_unavailable),
+                balance = network.xorQuantity?.let { numbers.nexusXor(it) } ?: stringResource(R.string.wallet_value_unknown),
                 amount = state.amount.toBigDecimalOrNull(),
                 amountFiat = "",
                 enabled = !busy,
@@ -638,7 +644,7 @@ private fun NexusRecipientField(
             onRecipient(it.text)
         },
         onAction = onScan,
-        keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
+        keyboardOptions = KeyboardOptions(autoCorrectEnabled = false, imeAction = ImeAction.Done),
         keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
     )
 }
@@ -675,8 +681,7 @@ private fun NexusSendReview(
             onAddressLongClick = {},
             inputState = AssetAmountInputState(
                 token = nexusXorToken(network, xorIcon, xorName),
-                // Under the amount, the network it is sent on.
-                balance = networkLabel(network.networkId),
+                balance = "",
                 amount = prepared.canonicalAmount.toBigDecimal(),
                 amountFiat = "",
                 enabled = false,
@@ -688,6 +693,7 @@ private fun NexusSendReview(
             feeFiat = "",
             reviewEnabled = state.canConfirmSend(),
             notes = {
+                SendScreenNote(text = networkLabel(network.networkId))
                 SendScreenNote(text = stringResource(R.string.wallet_total_xor, numbers.nexusXorNumber(total)))
                 SendScreenNote(
                     text = stringResource(R.string.wallet_available_xor, numbers.nexusXorNumber(prepared.availableBalance))
@@ -706,7 +712,6 @@ private fun NexusSendReview(
 private fun NexusSendOutcome(
     state: NexusSendUiState,
     network: NexusPortfolioBalance,
-    xorIcon: String?,
     scrollState: ScrollState,
     dateTime: (Long) -> String,
     onClose: () -> Unit,
@@ -745,7 +750,7 @@ private fun NexusSendOutcome(
                     result?.let { walletTransactionDescription(it.state) } ?: R.string.wallet_submission_uncertain
                 ),
             ),
-            icon = xorIcon ?: DEFAULT_ICON_URI,
+            icon = bundledXorIconUri(),
             amount = numbers.nexusXor(prepared?.canonicalAmount ?: state.amount),
             onCloseClick = onClose,
             onCopyClick = onCopy,

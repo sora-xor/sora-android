@@ -96,6 +96,8 @@ class NeonContrastTest {
             assertContrast("${lit.dark} ruled boundary on a well", lit.outline, lit.wellFloor, 3.0)
             assertContrast("${lit.dark} ruled boundary on the page", lit.outline, lit.page, 3.0)
         }
+        assertEquals(LitDay.ink, DayThemeColors.StatusSuccess)
+        assertEquals(LitDay.surface, DayThemeColors.StatusSuccessContainer)
         assertContrast("gain on glass", DayThemeColors.StatusSuccess, LitDay.surface, 4.5)
         assertContrast("loss on glass", DayThemeColors.StatusError, LitDay.surface, 4.5)
         assertContrast("night gain on its sheet", NightThemeColors.StatusSuccess, LitNight.surface, 4.5)
@@ -173,6 +175,8 @@ class NeonContrastTest {
         assertEquals(NightThemeColors.FgPrimary, night["neon_text_primary"])
         assertEquals(NightThemeColors.FgSecondary, night["neon_text_secondary"])
         assertEquals(NightThemeColors.AccentPrimary, night["neon_brand_red"])
+        assertEquals(DayThemeColors.StatusSuccess, day["neon_success"])
+        assertEquals(DayThemeColors.StatusSuccessContainer, day["neon_success_container"])
         assertEquals(DayThemeColors.BgPage, day["neon_canvas"])
         assertEquals(DayThemeColors.BgSurface, day["neon_surface"])
         assertEquals(DayThemeColors.FgPrimary, day["neon_text_primary"])

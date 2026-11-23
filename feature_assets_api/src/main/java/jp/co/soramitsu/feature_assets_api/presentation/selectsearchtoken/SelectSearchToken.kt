@@ -21,44 +21,40 @@ package jp.co.soramitsu.feature_assets_api.presentation.selectsearchtoken
 
 import android.content.res.Configuration
 import androidx.compose.foundation.ScrollState
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Divider
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import jp.co.soramitsu.common.R
+import jp.co.soramitsu.common.presentation.compose.components.LoadingRows
+import jp.co.soramitsu.common.presentation.compose.components.NothingFoundText
 import jp.co.soramitsu.common_wallet.presentation.compose.components.AssetItem
 import jp.co.soramitsu.common_wallet.presentation.compose.states.AssetItemCardState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.previewAssetItemCardStateList
 import jp.co.soramitsu.common.presentation.compose.neon.ContentCardEndless
 import jp.co.soramitsu.ui_core.resources.Dimens
-import jp.co.soramitsu.ui_core.theme.customColors
-import jp.co.soramitsu.ui_core.theme.customTypography
 
 data class SelectSearchAssetState(
     val list: List<AssetItemCardState>,
+    val loading: Boolean = false,
 )
 
 data class SearchTokenFilter(
     val filter: String,
     val tokenIds: List<String>,
+    val restrictToTokenIds: Boolean = false,
 )
 
 val emptySearchTokenFilter = SearchTokenFilter("", emptyList())
@@ -77,6 +73,7 @@ fun SelectSearchTokenScreen(
     SelectSearchTokenCard(
         scrollState = scrollState,
         state = state,
+        searching = searchTokenFilter.filter.isNotBlank(),
         onAssetSelect = onAssetSelect,
     )
 }
@@ -86,6 +83,7 @@ private fun SelectSearchTokenCard(
     scrollState: ScrollState,
     state: SelectSearchAssetState,
     onAssetSelect: (String) -> Unit,
+    searching: Boolean = false,
 ) {
     ContentCardEndless(
         modifier = Modifier
@@ -93,16 +91,10 @@ private fun SelectSearchTokenCard(
             .fillMaxSize(),
         innerPadding = PaddingValues(top = Dimens.x3),
     ) {
-        if (state.list.isEmpty()) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text(
-                    modifier = Modifier.wrapContentSize(),
-                    text = stringResource(id = R.string.search_empty_state),
-                    textAlign = TextAlign.Center,
-                    style = MaterialTheme.customTypography.paragraphM,
-                    color = MaterialTheme.customColors.fgSecondary,
-                )
-            }
+        if (state.loading) {
+            LoadingRows(description = stringResource(R.string.common_loading))
+        } else if (state.list.isEmpty()) {
+            NothingFoundText(stringResource(if (searching) R.string.search_empty_state else R.string.asset_picker_empty))
         } else {
             Column(
                 modifier = Modifier

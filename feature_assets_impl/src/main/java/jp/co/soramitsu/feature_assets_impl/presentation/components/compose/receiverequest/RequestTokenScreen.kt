@@ -147,8 +147,9 @@ fun RequestTokenScreen(
         }
     }
 
-    LaunchedEffect(requestFocus) {
-        if (requestFocus) {
+    val amountEditable = state.assetAmountInputState?.let { it.enabled && !it.readOnly } == true
+    LaunchedEffect(requestFocus, amountEditable) {
+        if (requestFocus && amountEditable) {
             focusRequester.requestFocus()
         }
     }
@@ -186,6 +187,7 @@ fun RequestTokenScreen(
                 Divider(thickness = Dimens.x2, color = Color.Transparent)
                 ListTile(
                     state = state.recipientListTileState,
+                    copyAddress = true,
                     onClick = onUserAddressClick
                 )
             }

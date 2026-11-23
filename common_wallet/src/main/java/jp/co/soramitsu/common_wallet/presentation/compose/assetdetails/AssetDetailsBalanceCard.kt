@@ -85,6 +85,7 @@ fun AssetDetailsBalanceCard(
     readOnly: Boolean = rememberWalletReadOnly() || LocalSelectedAccountReadOnly.current,
     swapAvailable: Boolean = true,
     receiveText: String = stringResource(id = R.string.common_receive),
+    balanceTitle: String = stringResource(R.string.asset_details_liquid_balance),
     notes: @Composable ColumnScope.() -> Unit = {},
 ) {
     ContentCard(
@@ -101,31 +102,16 @@ fun AssetDetailsBalanceCard(
                 .fillMaxWidth()
                 .wrapContentHeight()
         ) {
-            Row(
-                modifier = Modifier
-                    .padding(horizontal = Dimens.x3)
-                    .fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    text = stringResource(id = R.string.asset_details_liquid_balance),
-                    color = MaterialTheme.customColors.fgPrimary,
-                    style = MaterialTheme.customTypography.headline2
-                )
-                Text(
-                    text = amountFiat,
-                    color = MaterialTheme.customColors.fgPrimary,
-                    style = MaterialTheme.customTypography.headline2
-                )
+            Column(Modifier.fillMaxWidth().padding(horizontal = Dimens.x3)) {
+                Text(balanceTitle, color = MaterialTheme.customColors.fgSecondary,
+                    style = MaterialTheme.customTypography.textSBold)
+                Text(amount, color = MaterialTheme.customColors.fgPrimary,
+                    style = MaterialTheme.customTypography.headline2)
+                if (amountFiat.isNotBlank()) {
+                    Text(amountFiat, color = MaterialTheme.customColors.fgSecondary,
+                        style = MaterialTheme.customTypography.textM)
+                }
             }
-            Text(
-                modifier = Modifier
-                    .padding(horizontal = Dimens.x3)
-                    .fillMaxWidth(),
-                text = amount,
-                style = MaterialTheme.customTypography.textXSBold,
-                color = MaterialTheme.customColors.fgSecondary
-            )
 
             Spacer(modifier = Modifier.height(Dimens.x2))
 

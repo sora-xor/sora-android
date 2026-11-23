@@ -19,15 +19,17 @@ limitations under the License.
 
 package jp.co.soramitsu.feature_ecosystem_impl.presentation.explore
 
+import jp.co.soramitsu.common.presentation.compose.components.LoadingRows
+import jp.co.soramitsu.common.presentation.compose.components.NothingFoundText
+import jp.co.soramitsu.common.presentation.compose.neon.NeonSegments
+import jp.co.soramitsu.common.presentation.compose.theme.neon.LocalFx
 import android.os.Bundle
 import android.view.View
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.ScrollState
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -36,8 +38,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Divider
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
@@ -67,9 +67,6 @@ import jp.co.soramitsu.feature_ecosystem_impl.R
 import jp.co.soramitsu.feature_ecosystem_impl.presentation.allcurrencies.AllCurrenciesScreen
 import jp.co.soramitsu.feature_ecosystem_impl.presentation.alldemeter.AllDemeterScreen
 import jp.co.soramitsu.feature_ecosystem_impl.presentation.allpools.AllPoolsScreen
-import jp.co.soramitsu.common.presentation.compose.neon.FilledButton
-import jp.co.soramitsu.common.presentation.compose.neon.TonalButton
-import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.common.presentation.compose.neon.ContentCardEndless
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
@@ -120,28 +117,14 @@ class ExploreFragment : SoraBaseFragment<ExploreViewModel>() {
                 ),
             ) {
                 if (state.isLoading) {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator(
-                            modifier = Modifier
-                                .size(Dimens.x6)
-                                .padding(Dimens.x1),
-                            color = MaterialTheme.customColors.accentPrimary
-                        )
-                    }
+                    LoadingRows(stringResource(R.string.common_loading))
                 } else {
                     if ((state.ecoSystemTokensState == null || state.ecoSystemTokensState.topTokens.isEmpty()) && state.farms.isEmpty() && state.pools.isEmpty()) {
                         Box(
                             modifier = Modifier.fillMaxSize(),
                             contentAlignment = Alignment.Center
                         ) {
-                            Text(
-                                text = stringResource(id = R.string.common_nothing_found),
-                                style = MaterialTheme.customTypography.paragraphM,
-                                color = MaterialTheme.customColors.fgSecondary
-                            )
+                            NothingFoundText(stringResource(R.string.common_nothing_found))
                         }
                     } else {
                         Column {
@@ -230,35 +213,17 @@ class ExploreFragment : SoraBaseFragment<ExploreViewModel>() {
             Column(
                 modifier = Modifier.fillMaxSize()
             ) {
-                val horizontalState = rememberScrollState()
-
-                Row(
-                    modifier = Modifier
-                        .padding(bottom = Dimens.x2, start = Dimens.x3)
-                        .horizontalScroll(horizontalState),
-                ) {
-                    (0..<pagerState.pageCount).forEach {
-                        if (it == pagerState.currentPage) {
-                            FilledButton(
-                                modifier = Modifier.padding(end = Dimens.x1),
-                                size = Dimens.x4,
-                                order = Order.SECONDARY,
-                                text = stringResource(id = ExplorePages.entries[it].titleResource)
-                            ) {
-                                scope.launch { pagerState.animateScrollToPage(it) }
-                            }
-                        } else {
-                            TonalButton(
-                                modifier = Modifier.padding(end = Dimens.x1),
-                                size = Dimens.x4,
-                                order = Order.SECONDARY,
-                                text = stringResource(id = ExplorePages.entries[it].titleResource)
-                            ) {
-                                scope.launch { pagerState.animateScrollToPage(it) }
-                            }
+                val reduceMotion = LocalFx.current.reduceMotion
+                NeonSegments(
+                    labels = ExplorePages.entries.map { stringResource(it.titleResource) },
+                    selected = pagerState.currentPage,
+                    onSelect = { index ->
+                        scope.launch {
+                            if (reduceMotion) pagerState.scrollToPage(index) else pagerState.animateScrollToPage(index)
                         }
-                    }
-                }
+                    },
+                    modifier = Modifier.padding(start = Dimens.x2, end = Dimens.x2, bottom = Dimens.x2),
+                )
 
                 HorizontalPager(
                     modifier = Modifier.fillMaxHeight(),

@@ -19,26 +19,24 @@ limitations under the License.
 
 package jp.co.soramitsu.feature_assets_impl.presentation.components.compose.receiverequest
 
+import androidx.compose.ui.res.stringResource
+import jp.co.soramitsu.common.presentation.compose.neon.NeonSegments
+import jp.co.soramitsu.common.presentation.compose.theme.neon.LocalFx
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import java.math.BigDecimal
-import jp.co.soramitsu.androidfoundation.format.TextValue
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.presentation.compose.components.previewAssetAmountInputState
-import jp.co.soramitsu.common.presentation.compose.uikit.organisms.PagerTextIndicator
 import jp.co.soramitsu.common.presentation.compose.uikit.tokens.ScreenStatus
 import jp.co.soramitsu.common_wallet.presentation.compose.receive.ReceiveTokenByQrScreen
 import jp.co.soramitsu.common_wallet.presentation.compose.receive.ReceiveTokenByQrScreenState
@@ -66,51 +64,30 @@ fun QrCodeMainScreen(
     requestToken_onCreateRequestClick: () -> Unit,
     requestToken_onTryAgainClick: () -> Unit,
 ) {
-    val qrCodeMainScreenPages = remember {
-        mutableListOf<QrCodeMainScreenPage>().apply {
-            add(QrCodeMainScreenPage.RECEIVE)
-            add(QrCodeMainScreenPage.REQUEST)
-        }.toList()
-    }
-
-    val pagerState = rememberPagerState(
-        initialPage = 0,
-        initialPageOffsetFraction = 0f
-    ) {
-        qrCodeMainScreenPages.size
-    }
-
+    val pages = QrCodeMainScreenPage.entries
+    val pagerState = rememberPagerState { pages.size }
+    val reduceMotion = LocalFx.current.reduceMotion
     val coroutineScope = rememberCoroutineScope()
 
     Column(
         modifier = Modifier
             .fillMaxSize()
     ) {
-        PagerTextIndicator(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(Dimens.x5)
-                .padding(horizontal = Dimens.x9),
-            indicatorsArray = qrCodeMainScreenPages.map {
-                when (it) {
-                    QrCodeMainScreenPage.RECEIVE -> TextValue.StringRes(id = R.string.common_receive)
-
-                    QrCodeMainScreenPage.REQUEST -> TextValue.StringRes(id = R.string.common_request)
+        NeonSegments(
+            labels = listOf(stringResource(R.string.common_receive), stringResource(R.string.common_request)),
+            selected = pagerState.currentPage,
+            onSelect = { index ->
+                coroutineScope.launch {
+                    if (reduceMotion) pagerState.scrollToPage(index) else pagerState.animateScrollToPage(index)
                 }
             },
-            currentPageRetriever = { pagerState.currentPage },
-            slideOffsetRetriever = { pagerState.currentPageOffsetFraction },
-            onIndicatorClick = {
-                coroutineScope.launch {
-                    pagerState.animateScrollToPage(it)
-                }
-            }
+            modifier = Modifier.padding(horizontal = Dimens.x2),
         )
 
         HorizontalPager(
             state = pagerState,
         ) {
-            when (qrCodeMainScreenPages[it]) {
+            when (pages[it]) {
                 QrCodeMainScreenPage.RECEIVE -> {
                     ReceiveTokenByQrScreen(
                         scrollState = scrollState,
@@ -123,7 +100,7 @@ fun QrCodeMainScreen(
                 }
                 QrCodeMainScreenPage.REQUEST -> {
                     RequestTokenScreen(
-                        index = qrCodeMainScreenPages.indexOf(QrCodeMainScreenPage.REQUEST),
+                        index = pages.indexOf(QrCodeMainScreenPage.REQUEST),
                         pagerState = pagerState,
                         scrollState = scrollState,
                         state = requestTokenScreenState,

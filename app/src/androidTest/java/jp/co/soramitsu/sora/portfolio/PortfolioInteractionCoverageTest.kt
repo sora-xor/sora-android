@@ -159,7 +159,8 @@ class PortfolioInteractionCoverageTest {
         val format = PortfolioFormat(NumbersFormatter(), "$")
         show { Column(Modifier.verticalScroll(rememberScrollState())) { PortfolioHero(model, format, TiltState(), actions) } }
         compose.onNodeWithContentDescription(text(R.string.portfolio_total_balance) + ", " + format.fiat(40.0), substring = true).assertExists()
-        compose.onNodeWithText(text(R.string.portfolio_excluded_unpriced, 1), substring = true).assertExists()
+        node(R.string.portfolio_exclusions).performClick()
+        compose.runOnIdle { assertEquals(listOf("caption"), actions.events) }
         node(R.string.tx_outcome_quote_unavailable).assertDoesNotExist()
     }
 
@@ -192,8 +193,8 @@ class PortfolioInteractionCoverageTest {
         assertFalse(model.empty)
         show { PortfolioHubScreen(rememberScrollState(), model, null, false, null, actions, actions, {}, {}) }
         node(R.string.portfolio_wallet_ready).assertDoesNotExist()
-        compose.onNodeWithContentDescription(text(R.string.portfolio_reading_balances), substring = true).assertExists()
-        node(R.string.portfolio_reading_balances).performScrollTo().assertIsDisplayed()
+        compose.onNodeWithContentDescription(text(R.string.portfolio_reading_balances)).performScrollTo().assertIsDisplayed()
+        node(R.string.portfolio_reading_balances).assertDoesNotExist()
         // No age to show yet, so no chip.
         node(R.string.portfolio_state_reading).assertDoesNotExist()
         compose.onNodeWithText("$0", substring = true).assertDoesNotExist()
@@ -312,7 +313,7 @@ class PortfolioInteractionCoverageTest {
 
     @Test fun busyMoveCannotBeReviewedTwice() {
         sheet(model(), PortfolioSheet.Move(source.key), busy = true)
-        node(R.string.portfolio_review_in_send).performScrollTo().assertIsNotEnabled()
+        node(R.string.common_enter_amount).performScrollTo().assertIsNotEnabled()
         compose.runOnIdle { assertNull(actions.move) }
     }
 
@@ -485,7 +486,7 @@ class PortfolioInteractionCoverageTest {
     @Test fun anotherWalletMoveNamesTheSwitchAndPassesItsExactHolding() {
         val other = source.copy(walletId = "savings", address = "savings-sora2")
         sheet(model(holdings = listOf(other)), PortfolioSheet.Move(other.key))
-        compose.onNodeWithText(compose.activity.getString(R.string.portfolio_switch_and_review, "Savings wallet")).performScrollTo().performClick()
+        compose.onNodeWithText(compose.activity.getString(R.string.portfolio_continue_wallet, "Savings wallet")).performScrollTo().performClick()
         compose.runOnIdle { assertEquals(other.key, actions.move!!.first); assertEquals("main", actions.move!!.second); assertNull(actions.move!!.third) }
     }
     @Test fun anotherWalletSwapNamesTheSwitchBeforeOpeningPolkaswap() {

@@ -269,7 +269,8 @@ class AccountListViewModelTest {
         }
 
         val s = accountListViewModel.toolbarState.getOrAwaitValue()
-        assertEquals("1", s.basic.title)
+        assertEquals(R.string.backup_selected_count, s.basic.title)
+        assertEquals(listOf(1), s.basic.titleArgs?.toList())
         assertEquals(R.string.common_backup, s.basic.actionLabel)
     }
 

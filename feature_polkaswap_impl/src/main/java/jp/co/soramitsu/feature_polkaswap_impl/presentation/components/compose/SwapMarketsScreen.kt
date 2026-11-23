@@ -19,17 +19,19 @@ limitations under the License.
 
 package jp.co.soramitsu.feature_polkaswap_impl.presentation.components.compose
 
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material.AlertDialog
+import androidx.compose.material.IconButton
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
@@ -37,11 +39,16 @@ import androidx.compose.material.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.unit.dp
+import jp.co.soramitsu.common.presentation.compose.theme.neon.neon
+import jp.co.soramitsu.common.presentation.compose.neon.TonalButton
+import jp.co.soramitsu.ui_core.component.button.properties.Order
+import jp.co.soramitsu.ui_core.component.button.properties.Size
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -59,6 +66,8 @@ internal fun SwapMarketsScreen(
     selected: Market,
     markets: List<Market>,
     onMarketSelect: (Market) -> Unit,
+    emptyText: Int = jp.co.soramitsu.common.R.string.swap_market_empty,
+    onBack: (() -> Unit)? = null,
 ) {
     Column(
         modifier = Modifier
@@ -76,6 +85,28 @@ internal fun SwapMarketsScreen(
                     .wrapContentHeight()
                     .fillMaxWidth()
             ) {
+                if (markets.isEmpty()) {
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        Icon(
+                            painterResource(jp.co.soramitsu.common.R.drawable.ic_polkaswap_40), null,
+                            modifier = Modifier.size(36.dp), tint = MaterialTheme.neon.cyan,
+                        )
+                        Text(
+                            stringResource(emptyText), modifier = Modifier.padding(Dimens.x2),
+                            textAlign = TextAlign.Center, style = MaterialTheme.customTypography.textM,
+                            color = MaterialTheme.customColors.fgPrimary,
+                        )
+                        if (onBack != null) {
+                            TonalButton(
+                                modifier = Modifier.fillMaxWidth(), size = Size.Large, order = Order.SECONDARY,
+                                text = stringResource(jp.co.soramitsu.common.R.string.common_back), onClick = onBack,
+                            )
+                        }
+                    }
+                }
                 markets.forEach { market ->
                     MarketScreenItem(
                         selected = market.name == selected.name,
@@ -98,10 +129,11 @@ private fun MarketScreenItem(
         modifier = Modifier
             .fillMaxWidth()
             .wrapContentHeight()
-            .padding(vertical = Dimens.x1),
+            .heightIn(min = 48.dp)
+            .selectable(selected, role = Role.RadioButton, onClick = onClick),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        var hintVisible by remember { mutableStateOf(false) }
+        var hintVisible by rememberSaveable { mutableStateOf(false) }
         if (hintVisible) {
             AlertDialog(
                 backgroundColor = MaterialTheme.customColors.bgPage,
@@ -126,7 +158,7 @@ private fun MarketScreenItem(
                     ) {
                         Text(
                             text = stringResource(id = jp.co.soramitsu.common.R.string.common_ok),
-                            color = Color.Red,
+                            color = MaterialTheme.neon.cyan,
                         )
                     }
                 },
@@ -139,7 +171,7 @@ private fun MarketScreenItem(
             Icon(
                 modifier = Modifier.size(Dimens.x3),
                 painter = painterResource(R.drawable.ic_check_rounded),
-                tint = MaterialTheme.customColors.statusSuccess,
+                tint = MaterialTheme.neon.cyan,
                 contentDescription = null
             )
         } else {
@@ -150,24 +182,22 @@ private fun MarketScreenItem(
                 .testTagAsId("MarketTitle")
                 .padding(horizontal = Dimens.x1)
                 .weight(1f)
-                .wrapContentHeight()
-                .clickable(onClick = onClick),
+                .wrapContentHeight(),
             textAlign = TextAlign.Start,
             text = stringResource(id = market.titleResource),
             style = MaterialTheme.customTypography.textM,
             color = MaterialTheme.customColors.fgPrimary,
         )
-        Icon(
-            modifier = Modifier
-                .testTagAsId("MarketHintIcon")
-                .size(Dimens.x3)
-                .clickable {
-                    hintVisible = true
-                },
-            painter = painterResource(jp.co.soramitsu.common.R.drawable.ic_neu_exclamation),
-            tint = MaterialTheme.customColors.fgSecondary,
-            contentDescription = null
-        )
+        IconButton(
+            modifier = Modifier.testTagAsId("MarketHintIcon").size(48.dp),
+            onClick = { hintVisible = true },
+        ) {
+            Icon(
+                painter = painterResource(jp.co.soramitsu.common.R.drawable.ic_neu_exclamation),
+                tint = MaterialTheme.customColors.fgSecondary,
+                contentDescription = stringResource(jp.co.soramitsu.common.R.string.swap_about_market, stringResource(market.titleResource)),
+            )
+        }
     }
 }
 

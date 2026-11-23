@@ -36,7 +36,8 @@ fun Asset(
     symbol: String,
     onClick: () -> Unit,
     fiat: String? = null,
-    change: String? = null
+    change: String? = null,
+    tokenBadge: (@Composable () -> Unit)? = null,
 ) {
     AssetInfo(
         modifier,
@@ -45,6 +46,7 @@ fun Asset(
         balance,
         symbol,
         onClick = onClick,
+        tokenBadge = tokenBadge,
         rightContent = {
             Column(
                 verticalArrangement = Arrangement.Center,

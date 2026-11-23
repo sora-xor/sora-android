@@ -5,6 +5,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -14,7 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.imageLoader
 import coil.request.ImageRequest
@@ -31,10 +32,12 @@ internal fun AssetInfo(
     symbol: String,
     onClick: (() -> Unit)? = null,
     leftContent: @Composable (() -> Unit)? = null,
-    rightContent: @Composable (() -> Unit)? = null
+    rightContent: @Composable (() -> Unit)? = null,
+    tokenBadge: (@Composable () -> Unit)? = null,
 ) {
     Row(
         modifier = Modifier
+            .heightIn(min = 48.dp)
             .clickable(enabled = onClick != null) {
                 onClick?.invoke()
             }.then(
@@ -44,14 +47,18 @@ internal fun AssetInfo(
     ) {
         leftContent?.invoke()
 
-        AsyncImage(
-            model = ImageRequest.Builder(LocalContext.current)
-                .data(icon)
-                .build(),
-            imageLoader = LocalContext.current.imageLoader,
-            modifier = Modifier.size(Dimens.AssetIconSize),
-            contentDescription = null
-        )
+        if (tokenBadge != null) {
+            tokenBadge()
+        } else {
+            AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(icon)
+                    .build(),
+                imageLoader = LocalContext.current.imageLoader,
+                modifier = Modifier.size(Dimens.AssetIconSize),
+                contentDescription = null
+            )
+        }
 
         Column(
             modifier = Modifier
@@ -64,16 +71,12 @@ internal fun AssetInfo(
                 text = name,
                 style = MaterialTheme.customTypography.textM,
                 color = MaterialTheme.customColors.fgPrimary,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
             )
 
             Text(
-                text = "$balance $symbol",
+                text = listOf(balance, symbol).filter(String::isNotBlank).joinToString(" "),
                 style = MaterialTheme.customTypography.textXSBold,
                 color = MaterialTheme.customColors.fgSecondary,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
             )
         }
 

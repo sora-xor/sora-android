@@ -58,7 +58,7 @@ enum class ProgressPrompt {
     /** Under 10 s: the steps only. */
     NONE,
 
-    /** From 10 s: "Still working… this can take up to a minute on some devices." */
+    /** Show the live status after 10 seconds. */
     STILL_WORKING,
 
     /** From 60 s: also "Keep waiting" and "Get help". It never fails on its own. */

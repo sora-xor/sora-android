@@ -1,0 +1,15 @@
+<resources>
+    <string name="swap_pay_label">支払い</string>
+    <string name="swap_receive_label">受け取り</string>
+    <string name="asset_balance_value">残高 %1$s</string>
+    <string name="asset_catalog_retry">再読み込み</string>
+    <string name="swap_market_missing_pair">トークンを2つ選ぶと市場が表示されます。</string>
+    <string name="swap_market_empty">このペアの市場はありません</string>
+    <string name="swap_about_market">%1$sについて</string>
+    <string name="swap_show_terms">利用条件を読む</string>
+    <string name="swap_hide_terms">利用条件を閉じる</string>
+    <string name="swap_terms_summary">スワップの前に利用条件をご確認ください。</string>
+    <string name="asset_picker_empty">選択できるトークンはありません</string>
+    <string name="liquidity_base_token">基軸トークン</string>
+    <string name="liquidity_pair_token">ペアトークン</string>
+</resources>

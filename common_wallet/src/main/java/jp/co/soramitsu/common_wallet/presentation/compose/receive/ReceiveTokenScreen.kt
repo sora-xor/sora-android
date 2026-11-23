@@ -185,6 +185,7 @@ fun ReceiveTokenByQrScreen(
                     image = state.userAddressAvatar,
                     bodyText = state.userAddressBody
                 ),
+                copyAddress = true,
                 onClick = onUserAddressClick
             )
         }
@@ -202,8 +203,8 @@ fun ReceiveTokenByQrScreen(
             modifier = Modifier
                 .fillMaxWidth(),
             size = Size.Large,
-            order = Order.SECONDARY,
-            leftIcon = painterResource(id = R.drawable.ic_new_arrow_up_24),
+            order = Order.PRIMARY,
+            leftIcon = painterResource(id = R.drawable.ic_share_24),
             enabled = state.isShareQRCodeEnabled,
             text = stringResource(id = R.string.common_share),
             onClick = onShareCodeClick
@@ -214,6 +215,7 @@ fun ReceiveTokenByQrScreen(
                     .fillMaxWidth(),
                 size = Size.Large,
                 order = Order.SECONDARY,
+                leftIcon = painterResource(R.drawable.ic_scan_qr),
                 text = stringResource(id = R.string.commom_scan_qr),
                 onClick = onScanQrClick
             )

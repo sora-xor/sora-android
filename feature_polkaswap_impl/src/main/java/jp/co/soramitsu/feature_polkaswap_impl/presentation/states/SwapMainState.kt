@@ -43,6 +43,7 @@ data class SwapMainState(
     val assetCatalogUnavailable: Boolean = false,
     /** Set when the network fee can't be checked; the screen says why and offers Try again. */
     val feeUnavailable: NetworkFeeUnavailable? = null,
+    val refreshingAssets: Boolean = false,
 )
 
 data class SwapDetailsState(

@@ -20,7 +20,6 @@ limitations under the License.
 package jp.co.soramitsu.common.presentation.compose.components
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -28,7 +27,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.AlertDialog
 import androidx.compose.material.Icon
@@ -48,7 +47,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.semantics.Role
+import jp.co.soramitsu.common.presentation.compose.theme.neon.neon
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import jp.co.soramitsu.common.R
@@ -100,7 +100,7 @@ fun DetailsItem(
                     ) {
                         Text(
                             text = stringResource(id = R.string.common_ok),
-                            color = Color.Red,
+                            color = MaterialTheme.neon.redText,
                         )
                     }
                 },
@@ -109,70 +109,58 @@ fun DetailsItem(
                 },
             )
         }
-        Text(
-            modifier = Modifier
-                .wrapContentSize()
-                .padding(horizontal = Dimens.x1_2)
-                .clickable { hintVisible = true },
-            text = text,
-            style = MaterialTheme.customTypography.textXSBold,
-            color = MaterialTheme.customColors.fgSecondary,
-            maxLines = 1,
-        )
-        if (hint != null) {
-            Icon(
-                modifier = Modifier
-                    .size(size = Dimens.x2)
-                    .clickable { hintVisible = true },
-                painter = painterResource(id = R.drawable.ic_neu_exclamation),
-                tint = MaterialTheme.customColors.fgSecondary,
-                contentDescription = null
-            )
-        }
         Row(
             modifier = Modifier
                 .weight(1f)
-                .padding(horizontal = Dimens.x1_4),
-            horizontalArrangement = Arrangement.End,
+                .then(if (hint == null) Modifier else Modifier
+                    .clickable(role = Role.Button) { hintVisible = true }
+                    .heightIn(min = 48.dp)),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            if (value1Uri != null) {
-                TokenIcon(
-                    uri = value1Uri,
-                    size = Dimens.x2,
+            Text(
+                modifier = Modifier.weight(1f, fill = false).padding(horizontal = Dimens.x1_2),
+                text = text,
+                style = MaterialTheme.customTypography.textXSBold,
+                color = MaterialTheme.customColors.fgSecondary,
+            )
+            if (hint != null) {
+                Icon(
+                    modifier = Modifier.size(Dimens.x2),
+                    painter = painterResource(R.drawable.ic_neu_exclamation),
+                    tint = MaterialTheme.customColors.fgSecondary,
+                    contentDescription = null,
+                )
+            }
+        }
+        Column(
+            modifier = Modifier.weight(1.2f).padding(start = Dimens.x1),
+            horizontalAlignment = Alignment.End,
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                if (value1Uri != null) TokenIcon(uri = value1Uri, size = Dimens.x2)
+                Text(
+                    text = value1,
+                    textAlign = TextAlign.End,
+                    style = if (value1Bold) MaterialTheme.customTypography.textSBold else MaterialTheme.customTypography.textS,
+                    color = valueColor,
+                )
+            }
+            if (!value2.isNullOrBlank()) {
+                Text(
+                    text = value2,
+                    textAlign = TextAlign.End,
+                    style = MaterialTheme.customTypography.textXSBold,
+                    color = MaterialTheme.customColors.fgSecondary,
                 )
             }
             if (value1Percent != null) {
                 LinearProgressIndicator(
-                    modifier = Modifier
-                        .width(64.dp)
-                        .clip(RoundedCornerShape(Dimens.x2)),
+                    modifier = Modifier.width(64.dp).clip(RoundedCornerShape(Dimens.x2)),
                     progress = value1Percent,
                     color = MaterialTheme.customColors.accentPrimary,
                     backgroundColor = MaterialTheme.customColors.bgSurfaceVariant,
                 )
             }
-        }
-        Text(
-            modifier = Modifier
-                .wrapContentSize()
-                .padding(horizontal = Dimens.x1_2),
-            text = value1,
-            textAlign = TextAlign.End,
-            style = if (value1Bold) MaterialTheme.customTypography.textSBold else MaterialTheme.customTypography.textS,
-            color = valueColor,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
-        value2?.let {
-            Text(
-                modifier = Modifier
-                    .wrapContentSize()
-                    .padding(horizontal = Dimens.x1_2),
-                text = it,
-                style = MaterialTheme.customTypography.textXSBold,
-                color = MaterialTheme.customColors.fgSecondary,
-                maxLines = 1,
-            )
         }
     }
 }

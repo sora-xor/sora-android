@@ -41,7 +41,7 @@ class SelectSearchTokenViewModel @Inject constructor(
     private val numbersFormatter: NumbersFormatter,
 ) : ViewModel() {
 
-    private val _state = MutableStateFlow(SelectSearchAssetState(emptyList()))
+    private val _state = MutableStateFlow(SelectSearchAssetState(emptyList(), loading = true))
     val state = _state.asStateFlow()
 
     private var searchTokenFilter = emptySearchTokenFilter
@@ -57,7 +57,7 @@ class SelectSearchTokenViewModel @Inject constructor(
                 .collectLatest {
                     assets.clear()
                     assets.addAll(it)
-                    reCalcFilter()
+                    reCalcFilter(loading = false)
                 }
         }
     }
@@ -71,9 +71,9 @@ class SelectSearchTokenViewModel @Inject constructor(
         searchTokenFilter.tokenIds.contains(it.token.id)
     }
 
-    private fun reCalcFilter() {
+    private fun reCalcFilter(loading: Boolean = _state.value.loading) {
         val tokensFiltered =
-            if (searchTokenFilter.tokenIds.isEmpty()) assets
+            if (searchTokenFilter.tokenIds.isEmpty() && !searchTokenFilter.restrictToTokenIds) assets
             else assets.filter(tokenFilterInclude)
         val curFilterValue = searchTokenFilter.filter.lowercase()
         val list = if (curFilterValue.isBlank()) {
@@ -90,6 +90,6 @@ class SelectSearchTokenViewModel @Inject constructor(
                 )
             }
         }
-        _state.value = _state.value.copy(list = list)
+        _state.value = _state.value.copy(list = list, loading = loading)
     }
 }

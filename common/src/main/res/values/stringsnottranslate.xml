@@ -4,26 +4,26 @@
     <string name="common_english_native" translatable="false">English</string>
     <string name="common_akkadian_native" translatable="false">lišānum akkadītum labīrtum</string>
     <string name="common_egyptian_native" translatable="false">𓌃𓂧𓅱𓀁 𓈖 𓆎𓅓𓏏𓊖</string>
-    <string name="common_chinese_taiwan_native" translatable="false">中國台灣</string>
-    <string name="common_arab_native" translatable="false">عرب</string>
-    <string name="common_finnish_native" translatable="false">Suomalainen</string>
-    <string name="common_indonesian_native" translatable="false">Indonesia</string>
+    <string name="common_chinese_taiwan_native" translatable="false">繁體中文（台灣）</string>
+    <string name="common_arab_native" translatable="false">العربية</string>
+    <string name="common_finnish_native" translatable="false">Suomi</string>
+    <string name="common_indonesian_native" translatable="false">Bahasa Indonesia</string>
     <string name="common_malay_native" translatable="false">Bahasa Melayu</string>
-    <string name="common_turkish_native" translatable="false">Türk</string>
+    <string name="common_turkish_native" translatable="false">Türkçe</string>
     <string name="common_spanish_native" translatable="false">Español</string>
     <string name="common_french_native" translatable="false">Français</string>
     <string name="common_japanese_native" translatable="false">日本語</string>
-    <string name="common_chinese_native" translatable="false">中国語</string>
+    <string name="common_chinese_native" translatable="false">简体中文</string>
     <string name="common_german_native" translatable="false">Deutsch</string>
     <string name="common_hebrew_native" translatable="false">עִברִית</string>
     <string name="common_persian_native" translatable="false">زبان فارسی</string>
     <string name="common_serbian_native" translatable="false">Српски</string>
     <string name="common_vietnamese_native" translatable="false">tiếng Việt</string>
-    <string name="common_azerbaijani_native" translatable="false">Azərbaycan</string>
+    <string name="common_azerbaijani_native" translatable="false">Azərbaycanca</string>
     <string name="common_dutch_native" translatable="false">Nederlands</string>
     <string name="common_portuguese_native" translatable="false">Portuguese</string>
     <string name="common_hindi_native" translatable="false">हिंदी</string>
-    <string name="common_norwegian_native" translatable="false">Norwegian Bokmål</string>
+    <string name="common_norwegian_native" translatable="false">Norsk bokmål</string>
     <string name="xor" translatable="false">XOR</string>
     <string name="asset_ether_fullname" translatable="false">Ethereum</string>
     <string name="asset_sora_fullname" translatable="false">SORA</string>

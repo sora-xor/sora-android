@@ -169,7 +169,7 @@ class NexusXorPagesTest {
     @Test fun aTransferOpensOnTheSora2TransactionPage() {
         val details = nexusTransferDetails(withHistory(), receivedHash)!!
         show {
-            NexusTransferScreen(withHistory(), details, null, rememberScrollState(), { "date:$it" },
+            NexusTransferScreen(withHistory(), details, rememberScrollState(), { "date:$it" },
                 { events += "copy:$it" }, { events += "explorer" }, { events += "close" })
         }
         for (shown in listOf(text(R.string.common_received), "+3.75 XOR", text(R.string.status_successful), "date:1800000000001",
@@ -186,7 +186,7 @@ class NexusXorPagesTest {
     @Test fun aTransferStillBeingCheckedSaysSoOnItsPage() {
         val details = nexusTransferDetails(withHistory(), pendingHash)!!
         show {
-            NexusTransferScreen(withHistory(), details, null, rememberScrollState(), { "date:$it" }, {}, {}, {})
+            NexusTransferScreen(withHistory(), details, rememberScrollState(), { "date:$it" }, {}, {}, {})
         }
         compose.onAllNodesWithText(text(R.string.common_sent)).onFirst().assertExists()
         node(R.string.status_pending).assertExists()
@@ -240,7 +240,7 @@ class NexusXorPagesTest {
         showSend(state)
         compose.onAllNodesWithText(text(R.string.recipient_address)).onFirst().assertExists()
         compose.onNodeWithText(text(R.string.wallet_send_network_notice, "Taira Testnet")).assertExists()
-        compose.onNodeWithText(text(R.string.wallet_available_xor, "25${nbsp}000")).assertExists()
+        compose.onNodeWithText(text(R.string.asset_balance_value, "25${nbsp}000 XOR")).assertExists()
         compose.onNodeWithText(text(R.string.network_fee), substring = true).assertExists()
         compose.onNodeWithTag(review, useUnmergedTree = true).assertIsNotEnabled()
         compose.onAllNodes(hasSetTextAction())[0].performTextReplacement(peer)

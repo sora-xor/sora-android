@@ -69,6 +69,7 @@ import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.base.SoraBaseFragment
 import jp.co.soramitsu.common.base.theOnlyRoute
 import jp.co.soramitsu.common.domain.BottomBarController
+import jp.co.soramitsu.common.presentation.compose.components.NothingFoundText
 import jp.co.soramitsu.common.domain.CardHubType
 import jp.co.soramitsu.common_wallet.presentation.compose.components.AssetItem
 import jp.co.soramitsu.feature_assets_impl.presentation.components.compose.assetslist.CommonAssetsList
@@ -101,15 +102,7 @@ class FullAssetListFragment : SoraBaseFragment<FullAssetListViewModel>() {
             ) {
                 val state = viewModel.state.collectAsStateWithLifecycle().value
                 if (state.topList.isEmpty() && state.bottomList.isEmpty()) {
-                    Text(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .wrapContentHeight(),
-                        text = stringResource(id = R.string.search_empty_state),
-                        style = MaterialTheme.customTypography.headline2,
-                        color = MaterialTheme.customColors.fgPrimary,
-                        textAlign = TextAlign.Center,
-                    )
+                    NothingFoundText(stringResource(if (state.searchMode) R.string.search_empty_state else R.string.portfolio_nothing_listed))
                 } else {
                     Row(
                         modifier = Modifier

@@ -23,7 +23,7 @@
     <string name="network_badge_testnet">テストネット</string>
     <string name="balance_unavailable">残高を取得できません</string>
     <string name="test_networks">テストネットワーク</string>
-    <string name="test_networks_description">Tairaテストネットの残高と取引を表示します。テストネットの資産に金銭的価値はありません。</string>
+    <string name="test_networks_description">Tairaのテスト資産に金銭的価値はありません。</string>
     <string name="wallet_status_failed">未完了</string>
     <string name="wallet_status_pending">承認待ち</string>
     <string name="wallet_status_checking">取引状態を確認中</string>
@@ -37,7 +37,7 @@
     <string name="wallet_check_again">再確認</string>
     <string name="wallet_technical_details">技術的な詳細</string>
     <string name="wallet_hide_details">技術的な詳細を隠す</string>
-    <string name="wallet_receive_notice">このアドレスには%1$s上の資産のみを送信してください。</string>
+    <string name="wallet_receive_notice">%1$sの資産専用です。</string>
     <string name="wallet_available_xor">利用可能：%1$s XOR</string>
     <string name="wallet_send_xor">XORを送金</string>
     <string name="wallet_total_xor">合計：%1$s XOR</string>
@@ -45,9 +45,9 @@
     <string name="wallet_submission_uncertain">ネットワークで結果が確認されていません。二重送金を避けるため、再送信する前に履歴を確認してください。</string>
     <string name="wallet_pending_notice">送金を送信しました。状態は履歴に反映されます。承認待ちの間は再送信しないでください。</string>
     <string name="wallet_submission_failed">送金は完了しませんでした。再試行する前に履歴を確認してください。</string>
-    <string name="wallet_google_explanation">Google Driveの暗号化されたバックアップから復元するか、パスワードで保護したGoogle Driveバックアップ付きのウォレットを作成します。</string>
-    <string name="wallet_create_explanation">ウォレットを作成し、リカバリーフレーズをご自身で保管します。</string>
-    <string name="wallet_import_explanation">リカバリーフレーズ、キー、またはバックアップファイルを使って既存のウォレットを復元します。</string>
+    <string name="wallet_google_explanation">Google ドライブに暗号化バックアップを作成、またはそこから復元します。</string>
+    <string name="wallet_create_explanation">新しいリカバリーフレーズを保管します。</string>
+    <string name="wallet_import_explanation">フレーズ・鍵・バックアップファイルで復元します。</string>
     <string name="wallet_swap_direction">支払うトークンと受け取るトークンを入れ替える</string>
     <string name="wallet_market_empty">この条件に一致する市場はありません。</string>
     <string name="wallet_market_reset">フィルターをリセット</string>

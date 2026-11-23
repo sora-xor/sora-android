@@ -47,9 +47,7 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import jp.co.soramitsu.common.R
-import jp.co.soramitsu.common.domain.DEFAULT_ICON_URI
 import jp.co.soramitsu.common.domain.Market
-import jp.co.soramitsu.common.domain.iconUri
 import jp.co.soramitsu.common.presentation.compose.components.DetailsItem
 import jp.co.soramitsu.common.presentation.compose.components.DetailsItemNetworkFee
 import jp.co.soramitsu.common.presentation.compose.components.TransactionResultBadgeOverlay
@@ -100,16 +98,12 @@ internal fun SwapConfirmScreen(
                     ) {
                         SwapAmountSquare(
                             modifier = Modifier.weight(1f),
-                            icon = state.tokenFromState?.token?.iconUri() ?: DEFAULT_ICON_URI,
-                            amount = state.tokenFromState?.amount?.toPlainString().orEmpty(),
-                            amountFiat = state.tokenFromState?.amountFiat.orEmpty(),
+                            state = state.tokenFromState,
                         )
                         Divider(color = Color.Transparent, modifier = Modifier.width(Dimens.x1))
                         SwapAmountSquare(
                             modifier = Modifier.weight(1f),
-                            icon = state.tokenToState?.token?.iconUri() ?: DEFAULT_ICON_URI,
-                            amount = state.tokenToState?.amount?.toPlainString().orEmpty(),
-                            amountFiat = state.tokenToState?.amountFiat.orEmpty(),
+                            state = state.tokenToState,
                         )
                     }
                     Icon(
@@ -175,6 +169,7 @@ internal fun SwapConfirmScreen(
                     market = stringResource(id = state.market.titleResource),
                     slippage = "${state.slippage}%",
                     isMarketSelectorEnabled = false,
+                    isSlippageSelectorEnabled = false,
                     onMarketClick = {},
                     onSlippageClick = {},
                 )

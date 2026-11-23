@@ -34,7 +34,7 @@ fun DetailsItemNetworkFee(
         modifier = modifier,
         text = stringResource(id = R.string.network_fee),
         hint = stringResource(id = R.string.polkaswap_network_fee_info),
-        value1 = fee,
+        value1 = fee.ifBlank { stringResource(R.string.wallet_value_unknown) },
         value2 = feeFiat,
     )
 }

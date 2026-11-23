@@ -1,5 +1,7 @@
 package jp.co.soramitsu.feature_wallet_impl.presentation.portfolio
 
+import jp.co.soramitsu.common.presentation.compose.components.LoadingRows
+import jp.co.soramitsu.common.presentation.compose.components.NothingFoundText
 import android.os.Build
 import android.text.format.DateUtils
 import androidx.compose.animation.AnimatedContent
@@ -80,7 +82,6 @@ import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.TextUnit
@@ -214,8 +215,6 @@ private fun HeroPlate(reading: Boolean, backdrop: HeroBackdrop?, content: @Compo
             .litPlate(
                 radius = Lit.SheetRadius,
                 elevation = 18.dp,
-                bounce = PortfolioPalette.soraGlow,
-                bounceStrength = 0.9f,
                 sheen = { sweep.value },
                 backdrop = behind,
             )
@@ -580,8 +579,7 @@ private fun RollingTotal(
 private fun ChangeLine(change: Double, fraction: Double, format: PortfolioFormat) {
     val n = MaterialTheme.neon
     val up = change >= 0
-    val color = if (up) n.success else n.error
-    val floor = litTint(color)
+    val color = if (up) n.textPrimary else n.redText
     Text(
         text = buildAnnotatedString {
             withStyle(SpanStyle(color = color)) {
@@ -598,7 +596,7 @@ private fun ChangeLine(change: Double, fraction: Double, format: PortfolioFormat
         maxLines = 1,
         modifier = Modifier
             .padding(top = 6.dp)
-            .litWell(radius = 12.dp, depth = 1.8.dp, floor = floor)
+            .litWell(radius = 12.dp, depth = 1.8.dp)
             .padding(horizontal = 12.dp, vertical = 5.dp),
     )
 }
@@ -614,15 +612,10 @@ private fun TotalCaption(model: PortfolioModel, onClick: () -> Unit) {
     val text = when (model.noTotal) {
         NoTotal.READING -> null
         null -> {
-            val parts = buildList {
-                if (totals.hidden > 0) add(stringResource(R.string.portfolio_excluded_hidden, totals.hidden))
-                if (totals.unpriced > 0) add(stringResource(R.string.portfolio_excluded_unpriced, totals.unpriced))
-                if (totals.testnet > 0) add(stringResource(R.string.portfolio_excluded_testnet, totals.testnet))
-                if (totals.unread > 0) add(stringResource(R.string.portfolio_excluded_unread, totals.unread))
-            }
+            val excluded = totals.hidden + totals.unpriced + totals.testnet + totals.unread
             listOfNotNull(
                 model.pricesAsOf?.let { stringResource(R.string.portfolio_prices_as_of, pricesTime(it)) },
-                if (parts.isEmpty()) null else stringResource(R.string.portfolio_excluded_caption, parts.joinToString(", ")),
+                if (excluded > 0) stringResource(R.string.portfolio_exclusions) else null,
             ).joinToString(" · ").ifEmpty { null }
         }
         else -> noTotalText(model.noTotal)
@@ -630,7 +623,7 @@ private fun TotalCaption(model: PortfolioModel, onClick: () -> Unit) {
     Spacer(Modifier.height(4.dp))
     Row(
         Modifier
-            .heightIn(min = 40.dp)
+            .heightIn(min = 48.dp)
             .clip(RoundedCornerShape(8.dp))
             .clickable(onClickLabel = stringResource(R.string.portfolio_how_we_count), role = Role.Button, onClick = onClick),
         verticalAlignment = Alignment.CenterVertically,
@@ -674,7 +667,7 @@ internal fun FreshnessChip(freshness: WalletFreshness, nowMillis: Long, onClick:
         verticalAlignment = Alignment.CenterVertically,
     ) {
         when (freshness.kind) {
-            FreshnessKind.LIVE -> LitDot(n.success, diameter = 7.dp)
+            FreshnessKind.LIVE -> LitDot(n.textPrimary, diameter = 7.dp)
             FreshnessKind.SAVED, FreshnessKind.READING -> PortfolioGlyph(Glyph.CLOCK, color, Modifier.size(14.dp))
             FreshnessKind.PARTIAL -> PortfolioGlyph(Glyph.WARNING, color, Modifier.size(14.dp))
             FreshnessKind.OFFLINE -> PortfolioGlyph(Glyph.OFFLINE, color, Modifier.size(14.dp))
@@ -725,7 +718,6 @@ private fun LegendChip(
     val description =
         stringResource(R.string.portfolio_legend_description, label, percent.removeSuffix("%"), fiat)
     val shape = RoundedCornerShape(12.dp)
-    val floor = litTint(color)
     val interaction = remember { MutableInteractionSource() }
     val pressed by interaction.collectIsPressedAsState()
     Box(Modifier.minimumInteractiveComponentSize(), contentAlignment = Alignment.Center) {
@@ -734,7 +726,7 @@ private fun LegendChip(
                 .heightIn(min = 36.dp)
                 .litPress(pressed, motion = !LocalFx.current.reduceMotion)
                 // Raised at rest, let in when selected.
-                .then(if (selected) Modifier.litWell(radius = 12.dp, depth = 2.2.dp, floor = floor) else Modifier.litPlate(radius = 12.dp, elevation = 6.dp))
+                .then(if (selected) Modifier.litWell(radius = 12.dp, depth = 2.2.dp) else Modifier.litPlate(radius = 12.dp, elevation = 6.dp))
                 .clip(shape)
                 .clickable(interactionSource = interaction, indication = null, role = Role.Button, onClick = onClick)
                 .clearAndSetSemantics {
@@ -826,20 +818,15 @@ internal fun PortfolioList(model: PortfolioModel, format: PortfolioFormat, actio
                 .semantics { heading() },
         )
         if (groups.isEmpty()) {
-            Text(
-                text = when {
-                    model.noTotal == NoTotal.READING -> stringResource(R.string.portfolio_reading_balances)
-                    model.noTotal == NoTotal.FAILED -> stringResource(R.string.balance_unavailable)
-                    model.holdsAnything -> stringResource(R.string.portfolio_nothing_listed)
-                    else -> stringResource(R.string.portfolio_no_balance_yet)
-                },
-                style = MaterialTheme.customTypography.paragraphS,
-                color = MaterialTheme.neon.textSecondary,
-                textAlign = TextAlign.Center,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 20.dp, end = 20.dp, top = 12.dp, bottom = 28.dp),
-            )
+            if (model.noTotal == NoTotal.READING) {
+                LoadingRows(stringResource(R.string.portfolio_reading_balances), count = 2)
+            } else {
+                NothingFoundText(stringResource(when {
+                    model.noTotal == NoTotal.FAILED -> R.string.balance_unavailable
+                    model.holdsAnything -> R.string.portfolio_nothing_listed
+                    else -> R.string.portfolio_no_balance_yet
+                }))
+            }
         }
         groups.forEachIndexed { index, group ->
             RiseIn(order = index) {
@@ -885,7 +872,7 @@ private fun ChangeBadge(change: Double?, format: PortfolioFormat) {
     Text(
         text = (if (up) "▲ " else "▼ ") + format.signedPercent(change),
         style = MaterialTheme.customTypography.textXSBold,
-        color = if (up) n.success else n.error,
+        color = if (up) n.textPrimary else n.redText,
         maxLines = 1,
     )
 }
@@ -909,6 +896,9 @@ private fun TokenRow(model: PortfolioModel, group: PortfolioGroup, format: Portf
     val whereLabel = stringResource(R.string.portfolio_where_it_lives)
     val moveLabel = stringResource(R.string.portfolio_move)
     val swapLabel = stringResource(R.string.portfolio_swap)
+    val expansionState = if (expandable) stringResource(
+        if (expanded) R.string.portfolio_row_expanded else R.string.portfolio_row_collapsed
+    ) else null
     val first = group.holdings.first()
     Column(Modifier.animateContentSize()) {
         Row(
@@ -920,7 +910,7 @@ private fun TokenRow(model: PortfolioModel, group: PortfolioGroup, format: Portf
                     onClick = { if (expandable) actions.onToggleRow(group.key) else actions.onOpenToken(group.key) },
                 )
                 .semantics {
-                    if (expandable) stateDescription = if (expanded) "expanded" else "collapsed"
+                    expansionState?.let { stateDescription = it }
                     customActions = listOf(
                         CustomAccessibilityAction(whereLabel) {
                             actions.onOpenToken(group.key)
@@ -939,7 +929,7 @@ private fun TokenRow(model: PortfolioModel, group: PortfolioGroup, format: Portf
                 .padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            TokenOrb(token.iconUri, 40.dp)
+            TokenOrb(token, 40.dp)
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -960,7 +950,7 @@ private fun TokenRow(model: PortfolioModel, group: PortfolioGroup, format: Portf
                         subtitle,
                         style = MaterialTheme.customTypography.textS,
                         color = n.textSecondary,
-                        maxLines = 1,
+                        maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.weight(1f, fill = false),
                     )

@@ -177,13 +177,11 @@ private fun NexusTransferDestination(
     val details = balance?.let { nexusTransferDetails(it, transfer) }
     CloseWhenGone(details == null, entry, navController)
     StartAtTop(scrollState)
-    val sora2 by hub.sora2Portfolio.collectAsStateWithLifecycle()
     val uriHandler = LocalUriHandler.current
     if (balance == null || details == null) return
     NexusTransferScreen(
         balance = balance,
         details = details,
-        xorIcon = sora2?.xorIcon,
         scrollState = scrollState,
         dateTime = hub::nexusDateTime,
         onCopy = hub::copyNexusValue,

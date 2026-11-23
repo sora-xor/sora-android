@@ -71,7 +71,7 @@ class SettingsAndAccountsInteractionTest {
             R.string.settings_header_app, R.string.settings_login_title, R.string.settings_invite_title, R.string.settings_information_title)) {
             node(label).performScrollTo().performClick()
         }
-        compose.onNodeWithText("Debug Menu").performScrollTo().performClick()
+        compose.onNodeWithText(compose.activity.getString(R.string.settings_debug)).performScrollTo().performClick()
         compose.runOnIdle { assertEquals(listOf("accounts", "markets", "nodes", "settings", "login", "referral", "information", "debug"), events) }
     }
     @Test fun profileRemovesUnavailableOptionalDestinationsAndUpdatesNodeName() {
@@ -79,7 +79,7 @@ class SettingsAndAccountsInteractionTest {
         show { ProfileItems(state.value, {}, {}, {}, {}, {}, {}, {}, {}) }
         compose.runOnIdle { state.value = profile().copy(nodeName = "Offline node", nodeConnected = false, isDebugMenuAvailable = false, polkamarktVisible = false) }
         node(R.string.polkamarkt_title).assertDoesNotExist()
-        compose.onNodeWithText("Debug Menu").assertDoesNotExist()
+        compose.onNodeWithText(compose.activity.getString(R.string.settings_debug)).assertDoesNotExist()
         compose.onNodeWithText("SORA mainnet").assertDoesNotExist()
         compose.onNodeWithText("Offline node").assertExists()
     }

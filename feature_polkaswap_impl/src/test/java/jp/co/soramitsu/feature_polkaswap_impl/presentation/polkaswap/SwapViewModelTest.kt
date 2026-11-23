@@ -207,6 +207,29 @@ class SwapViewModelTest {
     }
 
     @Test
+    fun `retry restores assets and keeps the pay token out of the open receive picker`() = runTest {
+        initViewModel(emptyCatalog = true)
+        advanceUntilIdle()
+        viewModel.toCardClicked()
+        assertTrue(viewModel.swapTokensFilter.value.tokenIds.isEmpty())
+        val xor = TestAssets.xorAsset()
+        val other = TestAssets.valAsset()
+        given(assetsInteractor.subscribeAssetsActiveOfCurAccount()).willReturn(flowOf(listOf(xor, other)))
+        given(assetsInteractor.getAssetOrThrow(xor.token.id)).willReturn(xor)
+
+        viewModel.retryAssets()
+        advanceUntilIdle()
+
+        kVerify(assetsInteractor).updateBalanceVisibleAssets()
+        val state = viewModel.swapMainState.value
+        assertFalse(state.assetCatalogUnavailable)
+        assertFalse(state.refreshingAssets)
+        assertEquals(xor.token.id, state.tokenFromState?.token?.id)
+        assertEquals(listOf(other.token.id), viewModel.swapTokensFilter.value.tokenIds)
+        assertFalse(state.confirmButtonState.enabled)
+    }
+
+    @Test
     fun init() = runTest {
         initViewModel()
         advanceUntilIdle()

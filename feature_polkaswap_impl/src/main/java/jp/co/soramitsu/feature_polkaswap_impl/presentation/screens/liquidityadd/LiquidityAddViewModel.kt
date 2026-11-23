@@ -141,6 +141,8 @@ class LiquidityAddViewModel @AssistedInject constructor(
     private var pairPresentedJob: Job? = null
     private var liquidityDetails: LiquidityDetails? = null
     private val assets = mutableListOf<Asset>()
+    private var catalogJob: Job? = null
+    private var catalogVersion = 0
     private var hasXorReminderWarningBeenChecked = false
 
     private val amount1Flow = MutableStateFlow(BigDecimal.ZERO)
@@ -178,7 +180,7 @@ class LiquidityAddViewModel @AssistedInject constructor(
      */
     private var estimatedAmounts: Pair<BigDecimal, BigDecimal>? = null
 
-    private val _searchTokenFilter = MutableStateFlow(emptySearchTokenFilter)
+    private val _searchTokenFilter = MutableStateFlow(emptySearchTokenFilter.copy(restrictToTokenIds = true))
     val searchTokenFilter = _searchTokenFilter.asStateFlow()
 
     private val _stateSlippage = MutableStateFlow(0.5)
@@ -222,6 +224,7 @@ class LiquidityAddViewModel @AssistedInject constructor(
         )
     )
     val addState = _addState.asStateFlow()
+    private val emptyForm = _addState.value
 
     override fun startScreen(): String = LiquidityAddRoutes.start
 
@@ -249,30 +252,7 @@ class LiquidityAddViewModel @AssistedInject constructor(
             }
             .launchIn(viewModelScope)
 
-        viewModelScope.launch {
-            assetsInteractor.subscribeAssetsActiveOfCurAccount()
-                .catch { onError(it) }
-                .distinctUntilChanged()
-                .collectLatest {
-                    guarded {
-                        assets.clear()
-                        assets.addAll(it)
-                        if (_addState.value.assetState1 == null) {
-                            val a = assets.first { t -> t.token.id == token1Id }
-                            _addState.value = _addState.value.copy(
-                                assetState1 = buildInitialAssetState(a),
-                            )
-                        }
-                        if (_addState.value.assetState2 == null && token2Id != null) {
-                            val a = assets.first { t -> t.token.id == token2Id }
-                            _addState.value = _addState.value.copy(
-                                assetState2 = buildInitialAssetState(a),
-                            )
-                        }
-                        setTokensFromArgs()
-                    }
-                }
-        }
+        observeCatalog()
         viewModelScope.launch {
             amount1Flow
                 .drop(1)
@@ -305,6 +285,79 @@ class LiquidityAddViewModel @AssistedInject constructor(
                     onChangedProperty.set(false)
                 }
         }
+    }
+
+    private fun observeCatalog() {
+        catalogJob?.cancel()
+        catalogJob = viewModelScope.launch {
+            try {
+                assetsInteractor.subscribeAssetsActiveOfCurAccount().distinctUntilChanged().collect { available ->
+                    updateCatalog(available)
+                }
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (failure: Exception) {
+                WalletDiagnostics.recordException(failure)
+                updateCatalog(emptyList())
+            }
+        }
+    }
+
+    fun retryAssets() {
+        if (_addState.value.refreshingAssets) return
+        _addState.value = _addState.value.copy(refreshingAssets = true)
+        observeCatalog()
+        viewModelScope.launch {
+            try {
+                assetsInteractor.updateBalanceVisibleAssets()
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (failure: Exception) {
+                WalletDiagnostics.recordException(failure)
+            } finally {
+                _addState.value = _addState.value.copy(refreshingAssets = false)
+            }
+        }
+    }
+
+    private fun updateCatalog(available: List<Asset>) {
+        val previous = _addState.value
+        val first = previous.assetState1?.token?.id ?: token1Id
+        val second = previous.assetState2?.token?.id ?: token2Id
+        val firstAsset = available.find { it.token.id == first }
+        val secondAsset = available.find { it.token.id == second }
+        val lostSelection = (previous.assetState1 != null && firstAsset == null) ||
+            (previous.assetState2 != null && secondAsset == null)
+        assets.clear()
+        assets.addAll(available)
+
+        if (available.isEmpty() || lostSelection) {
+            catalogVersion++
+            cleanUpSubscriptions()
+            amountFrom = BigDecimal.ZERO
+            amountTo = BigDecimal.ZERO
+            amount1Flow.value = BigDecimal.ZERO
+            amount2Flow.value = BigDecimal.ZERO
+            balance1 = BigDecimal.ZERO
+            balance2 = BigDecimal.ZERO
+            balanceFee = BigDecimal.ZERO
+            networkFee = BigDecimal.ZERO
+            hasXorReminderWarningBeenChecked = false
+            _searchTokenFilter.value = emptySearchTokenFilter.copy(restrictToTokenIds = true)
+            _addState.value = emptyForm.copy(
+                assetCatalogUnavailable = available.isEmpty(),
+                refreshingAssets = previous.refreshingAssets,
+                confirm = previous.confirm.copy(btnState = previous.confirm.btnState.copy(enabled = false)),
+            )
+        }
+
+        val state = _addState.value
+        _addState.value = state.copy(
+            assetCatalogUnavailable = available.isEmpty(),
+            assetState1 = state.assetState1 ?: firstAsset?.let(::buildInitialAssetState),
+            assetState2 = state.assetState2 ?: secondAsset?.let(::buildInitialAssetState),
+        )
+        setTokensFromArgs()
     }
 
     override fun onToolbarSearch(value: String) {
@@ -376,7 +429,7 @@ class LiquidityAddViewModel @AssistedInject constructor(
         } else !(SubstrateOptionsProvider.feeAssetId == addToken1 && (amountFrom + networkFee) > balance1)
 
         val (text, enabled) = when {
-            (_addState.value.assetState2?.token == null) -> {
+            (_addState.value.assetState1 == null || _addState.value.assetState2 == null) -> {
                 resourceManager.getString(R.string.choose_tokens) to false
             }
 
@@ -445,6 +498,7 @@ class LiquidityAddViewModel @AssistedInject constructor(
         // Nothing is estimated against reserves that were never read.
         if (!reservesReady) return
 
+        val version = catalogVersion
         setButtonLoading(true)
         try {
             val details = poolsInteractor.calcLiquidityDetails(
@@ -461,6 +515,7 @@ class LiquidityAddViewModel @AssistedInject constructor(
                 pairPresented
             )
 
+            if (version != catalogVersion) return
             networkFee = details.networkFee
             liquidityDetails = details
             details.targetAmount.let {
@@ -491,15 +546,16 @@ class LiquidityAddViewModel @AssistedInject constructor(
                 }
             }
 
-            updateLiquidityDetails(details)
+            updateLiquidityDetails(details, version)
+            if (version != catalogVersion) return
             estimatedAmounts = amountFrom to amountTo
             clearEstimateNotice()
         } catch (cancellation: CancellationException) {
             throw cancellation
         } catch (t: Throwable) {
-            onEstimateUnavailable(t)
+            if (version == catalogVersion) onEstimateUnavailable(t)
         } finally {
-            setButtonLoading(false)
+            if (version == catalogVersion) setButtonLoading(false)
         }
     }
 
@@ -549,7 +605,7 @@ class LiquidityAddViewModel @AssistedInject constructor(
         }
     }
 
-    private suspend fun updateLiquidityDetails(details: LiquidityDetails) {
+    private suspend fun updateLiquidityDetails(details: LiquidityDetails, version: Int) {
         val tokenFrom = _addState.value.assetState1?.token
         val tokenTo = _addState.value.assetState2?.token
 
@@ -557,6 +613,8 @@ class LiquidityAddViewModel @AssistedInject constructor(
             return
         }
 
+        val feeSymbol = feeToken().symbol
+        if (version != catalogVersion) return
         _addState.value = _addState.value.copy(
             estimated = _addState.value.estimated.copy(
                 token1 = tokenFrom.symbol,
@@ -592,7 +650,7 @@ class LiquidityAddViewModel @AssistedInject constructor(
                         details.networkFee,
                         NETWORK_FEE_PRECISION
                     ),
-                    feeToken().symbol,
+                    feeSymbol,
                 ),
                 apy = liquidityData.sbApy?.let { d ->
                     PERCENT_FORMAT.format(
@@ -637,6 +695,7 @@ class LiquidityAddViewModel @AssistedInject constructor(
                     )
                     _searchTokenFilter.value = _searchTokenFilter.value.copy(
                         tokenIds = list.map { it.token.id },
+                        restrictToTokenIds = true,
                     )
                 }
             }
@@ -668,6 +727,7 @@ class LiquidityAddViewModel @AssistedInject constructor(
                     )
                     _searchTokenFilter.value = _searchTokenFilter.value.copy(
                         tokenIds = list.map { it.token.id },
+                        restrictToTokenIds = true,
                     )
                 }
             }
@@ -676,23 +736,22 @@ class LiquidityAddViewModel @AssistedInject constructor(
 
     fun onToken1Change(id: String) {
         if (id == _addState.value.assetState1?.token?.id) return
-        _addState.value.assetState1?.let { state ->
-            val a = assets.first { t -> t.token.id == id }
-            _addState.value = _addState.value.copy(
-                assetState1 = state.copy(
-                    token = a.token,
-                    balance = getAssetBalanceText(a),
-                    amountFiat = a.token.printFiat(state.amount.orZero(), numbersFormatter)
-                ),
-            )
-            hasXorReminderWarningBeenChecked = false
-        }
+        val asset = assets.find { it.token.id == id } ?: return
+        val state = _addState.value.assetState1
+        _addState.value = _addState.value.copy(
+            assetState1 = state?.copy(
+                token = asset.token,
+                balance = getAssetBalanceText(asset),
+                amountFiat = asset.token.printFiat(state.amount.orZero(), numbersFormatter),
+            ) ?: buildInitialAssetState(asset),
+        )
+        hasXorReminderWarningBeenChecked = false
         setTokensFromArgs()
     }
 
     fun onToken2Change(id: String) {
         if (id == _addState.value.assetState2?.token?.id) return
-        val a = assets.first { t -> t.token.id == id }
+        val a = assets.find { it.token.id == id } ?: return
         val state = _addState.value.assetState2
         _addState.value = _addState.value.copy(
             assetState2 = state?.copy(

@@ -93,7 +93,7 @@ internal class NodeDetailsViewModel @AssistedInject constructor(
 
     init {
         _toolbarState.value = initSmallTitle2(
-            title = R.string.select_node_node_details,
+            title = if (nodeAddress == null) R.string.select_node_add_custom_node else R.string.select_node_node_details,
         )
         subscribeAddressChanges()
         subscribeNodeManagerEvents()

@@ -20,6 +20,7 @@ limitations under the License.
 package jp.co.soramitsu.feature_main_impl.presentation
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
@@ -40,18 +41,14 @@ import androidx.core.view.get
 import android.os.Bundle
 import android.view.KeyEvent
 import android.view.View
-import android.view.animation.Animation
-import android.view.animation.TranslateAnimation
 import androidx.activity.viewModels
 import androidx.annotation.AttrRes
-import androidx.annotation.StringRes
 import androidx.core.view.ViewCompat
 import androidx.navigation.NavController
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.ui.NavigationUI
 import dagger.hilt.android.AndroidEntryPoint
 import dev.chrisbanes.insetter.Insetter
-import dev.chrisbanes.insetter.applyInsetter
 import dev.chrisbanes.insetter.windowInsetTypesOf
 import java.util.Date
 import javax.inject.Inject
@@ -96,8 +93,6 @@ class MainActivity :
             "jp.co.soramitsu.feature_main_impl.DARK_THEME"
 
         private const val IDLE_MINUTES: Long = 5
-        private const val ANIM_START_POSITION = 100f
-        private const val ANIM_DURATION = 150L
 
         /**
          * Opens the wallet in a task of its own. When the task of the screen that opens it is
@@ -193,12 +188,12 @@ class MainActivity :
         }
         Insetter.builder()
             .paddingTop(windowInsetTypesOf(statusBars = true))
-            .applyToView(binding.flContainer)
-        Insetter.builder()
             .paddingBottom(windowInsetTypesOf(navigationBars = true) or windowInsetTypesOf(ime = true))
             .applyToView(binding.clMainContainer)
 
         binding.bottomNavigationView.menu[2].isEnabled = false
+        binding.bottomNavigationView.findViewById<View>(R.id.polkaswap_nav_graph)
+            .importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS
 
         ViewCompat.setAccessibilityDelegate(binding.fabMain, object : androidx.core.view.AccessibilityDelegateCompat() {
             override fun onInitializeAccessibilityNodeInfo(host: View, info: androidx.core.view.accessibility.AccessibilityNodeInfoCompat) {
@@ -212,12 +207,12 @@ class MainActivity :
         binding.fabMain.onPressedChange = { discPressed.value = it }
         binding.fabDome.setContent {
             SoraAppTheme {
-                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Box(Modifier.fillMaxSize().padding(top = 2.dp), contentAlignment = Alignment.TopCenter) {
                     LitCutGlassPiece(
-                        size = DpSize(56.dp, 56.dp),
-                        radius = 28.dp,
+                        size = DpSize(35.dp, 35.dp),
+                        radius = 17.5.dp,
                         glyph = painterResource(jp.co.soramitsu.common.R.drawable.ic_polkaswap_40),
-                        glyphSize = DpSize(40.dp, 40.dp),
+                        glyphSize = DpSize(25.dp, 25.dp),
                         glyphKey = "polkaswap",
                         pressed = discPressed.value,
                     )
@@ -251,12 +246,6 @@ class MainActivity :
             }
         }
 
-        binding.badConnectionView.applyInsetter {
-            type(statusBars = true) {
-                padding(top = true)
-            }
-        }
-
         // The flight through the gate of heaven: once for each start of the app, over the first screen.
         if (!restoredFromSavedState) {
             TenmonFlight.launchOnce(this, FxPolicy.from(DeviceFxSignals.read(this)).litMotion)
@@ -274,11 +263,7 @@ class MainActivity :
         viewModel.badConnectionVisibilityLiveData.observe(
             this
         ) {
-            if (it) {
-                showBadConnectionView()
-            } else {
-                hideBadConnectionView()
-            }
+            binding.badConnectionView.visibility = if (it) View.VISIBLE else View.GONE
         }
 
         // Always the ordinary unlock, also for a 4-digit PIN from SORA 2.x: the PIN screen takes
@@ -292,39 +277,6 @@ class MainActivity :
         val barColor = attrColor(color)
         window.setStatusBarColorCompat(barColor)
         window.setNavigationBarColorCompat(barColor)
-    }
-
-    /** The notice slides down over the top of the page; the system bars keep the page's colour. */
-    private fun showBadConnectionView(@StringRes content: Int = R.string.common_connecting) {
-        if (View.GONE == binding.badConnectionView.visibility) {
-            binding.badConnectionView.setText(content)
-            val animation = TranslateAnimation(0f, 0f, -ANIM_START_POSITION, 0f)
-            animation.duration = ANIM_DURATION
-            binding.badConnectionView.startAnimation(animation)
-            binding.badConnectionView.show()
-        }
-    }
-
-    /** Says the connection is back for a moment, then slides away. */
-    private fun hideBadConnectionView(@StringRes content: Int = R.string.common_connected) {
-        if (View.VISIBLE == binding.badConnectionView.visibility) {
-            binding.badConnectionView.setText(content)
-            val animation = TranslateAnimation(0f, 0f, 0f, -ANIM_START_POSITION)
-            animation.duration = ANIM_DURATION
-            animation.startOffset = 500
-            animation.setAnimationListener(object : Animation.AnimationListener {
-                override fun onAnimationRepeat(p0: Animation?) {
-                }
-
-                override fun onAnimationEnd(p0: Animation?) {
-                    binding.badConnectionView.gone()
-                }
-
-                override fun onAnimationStart(p0: Animation?) {
-                }
-            })
-            binding.badConnectionView.startAnimation(animation)
-        }
     }
 
     override fun showBottomBar() {

@@ -51,7 +51,6 @@ internal fun ProfileItems(
                 top = Dimens.x3
             ),
         title = stringResource(id = R.string.settings_crypto_accounts),
-        subtitle = stringResource(id = R.string.settings_accounts_subtitle),
         icon = R.drawable.ic_settings_account,
         onClick = onAccountsClick,
     )
@@ -70,7 +69,7 @@ internal fun ProfileItems(
         modifier = Modifier
             .testTagAsId("Nodes")
             .padding(
-                top = Dimens.x4
+                top = Dimens.x2
             ),
         title = stringResource(id = R.string.settings_nodes),
         subtitle = state.nodeName,
@@ -85,7 +84,6 @@ internal fun ProfileItems(
                 top = Dimens.x2
             ),
         title = stringResource(id = R.string.settings_header_app),
-        subtitle = stringResource(id = R.string.settings_app_subtitle),
         icon = R.drawable.ic_settings_app,
         onClick = onAppSettingsClick,
     )
@@ -96,7 +94,6 @@ internal fun ProfileItems(
                 top = Dimens.x2
             ),
         title = stringResource(id = R.string.settings_login_title),
-        subtitle = stringResource(id = R.string.settings_login_subtitle),
         icon = R.drawable.ic_settings_bio,
         onClick = onLoginClick,
     )
@@ -104,10 +101,9 @@ internal fun ProfileItems(
         modifier = Modifier
             .testTagAsId("Invite")
             .padding(
-                top = Dimens.x4
+                top = Dimens.x2
             ),
         title = stringResource(id = R.string.settings_invite_title),
-        subtitle = stringResource(id = R.string.settings_invite_subtitle),
         icon = R.drawable.ic_settings_heart,
         onClick = onReferralClick,
     )
@@ -118,7 +114,6 @@ internal fun ProfileItems(
                 top = Dimens.x2
             ),
         title = stringResource(id = R.string.settings_information_title),
-        subtitle = stringResource(id = R.string.settings_information_subtitle),
         icon = R.drawable.ic_settings_info,
         onClick = onAboutClick,
     )
@@ -129,7 +124,7 @@ internal fun ProfileItems(
                 .padding(
                     top = Dimens.x2
                 ),
-            title = "Debug Menu",
+            title = stringResource(R.string.settings_debug),
             onClick = onDebugMenuClick,
         )
 }

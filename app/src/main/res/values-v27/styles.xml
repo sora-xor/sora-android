@@ -1,13 +1,13 @@
 <resources>
   <style name="SplashTheme" parent="Theme.SplashScreen">
-    <item name="windowSplashScreenBackground">#06060B</item>
+    <item name="windowSplashScreenBackground">@android:color/white</item>
     <item name="windowSplashScreenAnimatedIcon">@drawable/notification_brand</item>
     <item name="postSplashScreenTheme">@style/AppTheme</item>
-    <item name="android:windowBackground">#06060B</item>
-    <item name="android:colorBackground">#06060B</item>
-    <item name="android:statusBarColor">#06060B</item>
-    <item name="android:navigationBarColor">#06060B</item>
-    <item name="android:windowLightStatusBar">false</item>
-    <item name="android:windowLightNavigationBar">false</item>
+    <item name="android:windowBackground">@android:color/white</item>
+    <item name="android:colorBackground">@android:color/white</item>
+    <item name="android:statusBarColor">@android:color/white</item>
+    <item name="android:navigationBarColor">@android:color/white</item>
+    <item name="android:windowLightStatusBar">true</item>
+    <item name="android:windowLightNavigationBar">true</item>
   </style>
 </resources>

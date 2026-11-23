@@ -24,17 +24,21 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.material.Text
+import androidx.compose.material.MaterialTheme
+import androidx.compose.ui.text.style.TextAlign
+import jp.co.soramitsu.ui_core.theme.customColors
+import jp.co.soramitsu.ui_core.theme.customTypography
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import jp.co.soramitsu.common.R
-import jp.co.soramitsu.common.domain.OptionsProvider
 import jp.co.soramitsu.common.presentation.compose.components.Option
-import jp.co.soramitsu.common.util.ext.removeWebPrefix
 import jp.co.soramitsu.common.presentation.compose.neon.ContentCard
 import jp.co.soramitsu.ui_core.resources.Dimens
 
@@ -79,7 +83,6 @@ internal fun InformationScreen(
                 icon = painterResource(id = R.drawable.ic_neu_heart),
                 label = stringResource(id = R.string.about_ask_support),
                 bottomDivider = false,
-                description = OptionsProvider.telegramHappinessLink.removeWebPrefix(),
                 iconEnd = R.drawable.ic_arrow_top_right_24,
                 onClick = onAskForSupportClick,
             )
@@ -127,7 +130,6 @@ internal fun InformationScreen(
                 icon = painterResource(id = R.drawable.ic_0x0200000000000000000000000000000000000000000000000000000000000000),
                 label = stringResource(id = R.string.about_website),
                 bottomDivider = true,
-                description = OptionsProvider.website.removeWebPrefix(),
                 iconEnd = R.drawable.ic_arrow_top_right_24,
                 tint = false,
                 onClick = onWebsite,
@@ -136,7 +138,6 @@ internal fun InformationScreen(
                 icon = painterResource(id = R.drawable.ic_github_24),
                 label = stringResource(id = R.string.about_source_code),
                 bottomDivider = true,
-                description = appVersion,
                 iconEnd = R.drawable.ic_arrow_top_right_24,
                 onClick = onGithub,
             )
@@ -144,7 +145,6 @@ internal fun InformationScreen(
                 icon = painterResource(id = R.drawable.ic_twitter),
                 label = stringResource(id = R.string.about_twitter),
                 bottomDivider = true,
-                description = OptionsProvider.twitterLink.removeWebPrefix(),
                 iconEnd = R.drawable.ic_arrow_top_right_24,
                 onClick = onTwitter,
             )
@@ -152,7 +152,6 @@ internal fun InformationScreen(
                 icon = painterResource(id = R.drawable.ic_youtube),
                 label = stringResource(id = R.string.about_youtube),
                 bottomDivider = true,
-                description = OptionsProvider.youtubeLink.removeWebPrefix(),
                 iconEnd = R.drawable.ic_arrow_top_right_24,
                 onClick = onYoutube,
             )
@@ -160,7 +159,6 @@ internal fun InformationScreen(
                 icon = painterResource(id = R.drawable.ic_neu_instagram),
                 label = stringResource(id = R.string.about_instagram),
                 bottomDivider = true,
-                description = OptionsProvider.instagramLink.removeWebPrefix(),
                 iconEnd = R.drawable.ic_arrow_top_right_24,
                 onClick = onInstagram,
             )
@@ -168,7 +166,6 @@ internal fun InformationScreen(
                 icon = painterResource(id = R.drawable.ic_neu_medium),
                 label = stringResource(id = R.string.about_medium),
                 bottomDivider = true,
-                description = OptionsProvider.mediumLink.removeWebPrefix(),
                 iconEnd = R.drawable.ic_arrow_top_right_24,
                 onClick = onMedium,
             )
@@ -176,7 +173,6 @@ internal fun InformationScreen(
                 icon = painterResource(id = R.drawable.ic_neu_question),
                 label = stringResource(id = R.string.about_wiki),
                 bottomDivider = true,
-                description = OptionsProvider.wikiLink.removeWebPrefix(),
                 iconEnd = R.drawable.ic_arrow_top_right_24,
                 onClick = onWiki,
             )
@@ -184,7 +180,6 @@ internal fun InformationScreen(
                 icon = painterResource(id = R.drawable.ic_tg_24),
                 label = stringResource(id = R.string.about_telegram),
                 bottomDivider = true,
-                description = OptionsProvider.telegramLink.removeWebPrefix(),
                 iconEnd = R.drawable.ic_arrow_top_right_24,
                 onClick = onTelegram,
             )
@@ -192,7 +187,6 @@ internal fun InformationScreen(
                 icon = painterResource(id = R.drawable.ic_neu_wifi),
                 label = stringResource(id = R.string.about_announcements),
                 bottomDivider = true,
-                description = OptionsProvider.telegramAnnouncementsLink.removeWebPrefix(),
                 iconEnd = R.drawable.ic_arrow_top_right_24,
                 onClick = onAnnouncements,
             )
@@ -200,12 +194,18 @@ internal fun InformationScreen(
                 icon = painterResource(id = R.drawable.ic_email_24),
                 label = stringResource(id = R.string.about_contact_us),
                 bottomDivider = false,
-                description = OptionsProvider.email,
                 iconEnd = R.drawable.ic_arrow_top_right_24,
                 onClick = onEmailClick,
             )
         }
     }
+    Text(
+        text = appVersion,
+        modifier = Modifier.fillMaxWidth().padding(Dimens.x2),
+        textAlign = TextAlign.Center,
+        style = MaterialTheme.customTypography.textXS,
+        color = MaterialTheme.customColors.fgSecondary,
+    )
 }
 
 @Preview

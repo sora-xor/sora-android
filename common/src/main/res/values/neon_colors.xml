@@ -25,8 +25,8 @@
     <color name="neon_polkaswap">#DA2530</color>
     <color name="neon_polkaswap_text">#C21C26</color>
 
-    <color name="neon_success">#286448</color>
-    <color name="neon_success_container">#DCEBE2</color>
+    <color name="neon_success">#232220</color>
+    <color name="neon_success_container">#F6F4F0</color>
     <color name="neon_warning">#8A5A0C</color>
     <color name="neon_warning_container">#F3E9D2</color>
     <color name="neon_error">#9E1620</color>

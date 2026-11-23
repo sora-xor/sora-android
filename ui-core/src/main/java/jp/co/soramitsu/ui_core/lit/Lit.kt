@@ -16,6 +16,8 @@ import android.os.PowerManager
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.LinearOutSlowInEasing
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
@@ -269,13 +271,15 @@ fun Modifier.litParallax(depth: Dp? = null): Modifier = graphicsLayer {
 
 /** The press every soft control shares: set down quickly, let up without a bounce. */
 fun Modifier.litPress(pressed: Boolean, scale: Float = 0.97f, motion: Boolean = true): Modifier = composed {
+    if (!motion) return@composed this
     val press by animateFloatAsState(
         targetValue = if (pressed) 1f else 0f,
-        animationSpec = tween(if (pressed) 70 else 140, easing = LinearOutSlowInEasing),
+        animationSpec = if (pressed) tween(70, easing = LinearOutSlowInEasing) else
+            spring(dampingRatio = .76f, stiffness = Spring.StiffnessMedium),
         label = "litPress",
     )
     graphicsLayer {
-        val s = if (motion) 1f - (1f - scale) * press else 1f
+        val s = 1f - (1f - scale) * press
         scaleX = s
         scaleY = s
         translationY = press * 1.dp.toPx()

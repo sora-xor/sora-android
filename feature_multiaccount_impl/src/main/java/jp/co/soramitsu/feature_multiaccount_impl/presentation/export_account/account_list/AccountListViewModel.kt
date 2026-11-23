@@ -181,7 +181,8 @@ class AccountListViewModel @Inject constructor(
                 _toolbarState.value = state.copy(
                     basic = state.basic.copy(
                         navIcon = R.drawable.ic_cross_red_16,
-                        title = count.toString(),
+                        title = R.string.backup_selected_count,
+                        titleArgs = arrayOf(count),
                         actionLabel = R.string.common_backup,
                     ),
                 )
@@ -189,6 +190,7 @@ class AccountListViewModel @Inject constructor(
                 _toolbarState.value = state.copy(
                     basic = state.basic.copy(
                         title = R.string.settings_accounts,
+                        titleArgs = null,
                         navIcon = R.drawable.ic_arrow_left,
                         actionLabel = null,
                     )

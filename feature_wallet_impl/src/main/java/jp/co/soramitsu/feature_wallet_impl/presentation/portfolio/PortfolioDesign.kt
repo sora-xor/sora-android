@@ -54,7 +54,6 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.lerp
-import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.layout.layout
@@ -63,6 +62,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -75,7 +75,7 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.window.DialogWindowProvider
 import androidx.core.view.WindowCompat
 import jp.co.soramitsu.common.R
-import jp.co.soramitsu.common.domain.DEFAULT_ICON_URI
+import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.PortfolioToken
 import jp.co.soramitsu.common.nexus.WalletNetworkDirectory
 import jp.co.soramitsu.common.nexus.WalletNetworkId
 import jp.co.soramitsu.common.nexus.WalletNetworkTag
@@ -86,10 +86,9 @@ import jp.co.soramitsu.common.presentation.compose.neon.NeonVariant
 import jp.co.soramitsu.common.presentation.compose.neon.NeumorphicSurface
 import jp.co.soramitsu.common.presentation.compose.theme.neon.neon
 import jp.co.soramitsu.common.presentation.compose.theme.tokens.NeonType
-import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.isTestnet
 import jp.co.soramitsu.feature_wallet_impl.presentation.cardshub.NetworkTagChip
 import jp.co.soramitsu.ui_core.component.button.properties.Size as ButtonSize
-import jp.co.soramitsu.ui_core.component.icons.TokenIcon
+import jp.co.soramitsu.common.presentation.compose.TokenBadge
 import jp.co.soramitsu.ui_core.lit.LitEngravedLine
 import jp.co.soramitsu.ui_core.lit.Lit
 import jp.co.soramitsu.ui_core.lit.LitDot
@@ -108,14 +107,14 @@ internal object PortfolioPalette {
     private val daySlots = listOf(
         Color(0xFFDA2530),
         Color(0xFF3A3836),
-        Color(0xFFEE8A84),
+        Color(0xFF8D8780),
         Color(0xFF86131B),
         Color(0xFFB9B2A6),
     )
     private val nightSlots = listOf(
         Color(0xFFE2452C),
         Color(0xFFF8F4EE),
-        Color(0xFFEE8A84),
+        Color(0xFF8D8780),
         Color(0xFFA8382C),
         Color(0xFF8C857A),
     )
@@ -143,9 +142,6 @@ internal object PortfolioPalette {
     val hazeCyan = Color(0xFF22D3EE)
     val starlight = Color(0xFFFFE9E4)
 }
-
-/** Ink or white, whichever reads on a mark of [fill]. */
-internal fun inkOn(fill: Color): Color = if (fill.luminance() > 0.36f) Color(0xFF232220) else Color.White
 
 internal val isDarkTheme: Boolean
     @Composable get() = MaterialTheme.neon.isDark
@@ -270,14 +266,12 @@ internal fun NetworkBadge(network: WalletNetworkId, size: Dp, modifier: Modifier
     Box(
         modifier = modifier
             .size(size)
-            .litCoin()
-            .clip(CircleShape)
-            .background(if (network.isTestnet) lit.inkTertiary else lit.inkSecondary),
+            .litCoin(),
         contentAlignment = Alignment.Center,
     ) {
         Text(
             text = networkMonogram(network),
-            color = lit.surface,
+            color = lit.redText,
             maxLines = 1,
             style = MaterialTheme.customTypography.textXSBold.copy(
                 fontSize = (size.value * 0.34f).sp,
@@ -288,37 +282,30 @@ internal fun NetworkBadge(network: WalletNetworkId, size: Dp, modifier: Modifier
     }
 }
 
-/** A wallet's avatar: its initial on its slot colour (the colour of its dots and rays). */
+/** The initial identifies the wallet and the small dot matches its chart legend. */
 @Composable
 internal fun WalletAvatar(name: String, color: Color, size: Dp, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
             .size(size)
-            .litCoin()
-            .clip(CircleShape)
-            .background(color),
+            .litCoin(),
         contentAlignment = Alignment.Center,
     ) {
         Text(
             text = name.trim().firstOrNull()?.uppercase() ?: "?",
-            color = inkOn(color),
+            color = LocalLitPalette.current.redText,
             style = MaterialTheme.customTypography.headline3.copy(fontSize = (size.value * 0.42f).sp, lineHeight = (size.value * 0.5f).sp),
             maxLines = 1,
         )
+        LitDot(color, Modifier.align(Alignment.BottomEnd).padding(2.dp), diameter = size * .18f)
     }
 }
 
 /** The SORA mark as the logo is: a red disc with 天 in white. "All wallets" and the SORA2 network wear it. */
 @Composable
 internal fun SoraMark(size: Dp, modifier: Modifier = Modifier) {
-    val glyph = remember { soraGlyphPath() }
-    Canvas(modifier.size(size).litCoin()) {
-        val r = this.size.minDimension / 2f
-        drawCircle(PortfolioPalette.soraRed, radius = r)
-        scale(2f * r / SORA_GLYPH_VIEWPORT, 2f * r / SORA_GLYPH_VIEWPORT, Offset.Zero) {
-            drawPath(glyph, Color.White)
-        }
-    }
+    Image(painterResource(R.drawable.ic_0x0200000000000000000000000000000000000000000000000000000000000000),
+        contentDescription = null, modifier = modifier.size(size).litCoin())
 }
 
 /** One small dot per wallet that holds a token. */
@@ -329,15 +316,9 @@ internal fun WalletDots(colors: List<Color>, modifier: Modifier = Modifier) {
     }
 }
 
-/**
- * A token's icon from the app's own icon source (the whitelist icons the asset list and asset
- * details show); a token without one shows the app's default token icon, as everywhere else.
- */
 @Composable
-internal fun TokenOrb(iconUri: String?, size: Dp, modifier: Modifier = Modifier) {
-    Box(modifier.size(size).litCoin().clip(CircleShape), contentAlignment = Alignment.Center) {
-        TokenIcon(uri = iconUri ?: DEFAULT_ICON_URI, size = size)
-    }
+internal fun TokenOrb(token: PortfolioToken, size: Dp, modifier: Modifier = Modifier) {
+    TokenBadge(token.id, token.symbol, token.iconUri, size, modifier.litCoin())
 }
 
 /** Readiness chip: Swap-ready (with the flower) or the directory's Testnet tag. "No route" has no chip. */
@@ -348,7 +329,7 @@ internal fun ReadinessChip(ready: Boolean, modifier: Modifier = Modifier) {
         Row(
             modifier = modifier
                 .clip(RoundedCornerShape(11.dp))
-                .background(n.polkaswapBrand.copy(alpha = 0.13f))
+                .background(n.glassSolid)
                 .border(1.dp, n.polkaswapBrand.copy(alpha = 0.45f), RoundedCornerShape(11.dp))
                 .padding(start = 6.dp, end = 8.dp, top = 2.dp, bottom = 2.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -391,13 +372,6 @@ internal fun PortfolioCard(
     }
 }
 
-/** The floor of a well that means something: mostly white, a breath of the colour. */
-@Composable
-internal fun litTint(color: Color): Color {
-    val palette = LocalLitPalette.current
-    return if (palette.dark) lerp(palette.wellFloor, color, 0.12f) else lerp(lerp(palette.wellFloor, Color.White, 0.42f), color, 0.09f)
-}
-
 /** Lays this out larger than its slot by these margins, without moving what is round it. */
 internal fun Modifier.bleed(horizontal: Dp, vertical: Dp): Modifier = layout { measurable, constraints ->
     val h = horizontal.roundToPx()
@@ -430,12 +404,11 @@ internal fun PortfolioBanner(
     content: @Composable ColumnScope.() -> Unit = {},
 ) {
     val n = MaterialTheme.neon
-    val edge = if (warning) n.warning else n.info
-    val floor = litTint(edge)
+    val edge = if (warning) n.redText else n.textSecondary
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .litWell(radius = 12.dp, depth = 2.2.dp, floor = floor)
+            .litWell(radius = 12.dp, depth = 2.2.dp)
             .padding(14.dp),
     ) {
         PortfolioGlyph(if (warning) Glyph.WARNING else Glyph.INFO, edge, Modifier.size(20.dp))
@@ -585,22 +558,22 @@ internal fun SheetRow(
 ) {
     val n = MaterialTheme.neon
     val shape = RoundedCornerShape(14.dp)
-    val floor = litTint(n.brandRed)
     Row(
         modifier = modifier
             .fillMaxWidth()
             .heightIn(min = 68.dp)
             // Raised at rest, let in when it is the current choice.
-            .then(if (selected) Modifier.litWell(radius = 14.dp, depth = 2.6.dp, floor = floor) else Modifier.litPlate(radius = 14.dp, elevation = 8.dp))
+            .then(if (selected) Modifier.litWell(radius = 14.dp, depth = 2.6.dp).border(1.dp, n.redText, shape) else Modifier.litPlate(radius = 14.dp, elevation = 8.dp))
             .clip(shape)
             .clickable(role = role, onClick = onClick)
+            .semantics { if (role == Role.RadioButton) this.selected = selected }
             .padding(horizontal = 14.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         leading()
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f)) {
-            Text(title, style = MaterialTheme.customTypography.headline3, color = n.textPrimary, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(title, style = MaterialTheme.customTypography.headline3, color = n.textPrimary, maxLines = 2, overflow = TextOverflow.Ellipsis)
             subtitle?.takeIf { it.isNotBlank() }?.let {
                 Spacer(Modifier.height(2.dp))
                 Text(it, style = MaterialTheme.customTypography.textS, color = n.textSecondary, maxLines = 2)
@@ -608,12 +581,12 @@ internal fun SheetRow(
         }
         if (trailingTop != null || trailingBottom != null) {
             Spacer(Modifier.width(8.dp))
-            Column(horizontalAlignment = Alignment.End) {
+            Column(Modifier.weight(.85f), horizontalAlignment = Alignment.End) {
                 trailingTop?.let {
-                    Text(it, style = NeonType.amountM, color = n.textPrimary, maxLines = 1, textAlign = TextAlign.End)
+                    Text(it, style = NeonType.amountM, color = n.textPrimary, textAlign = TextAlign.End)
                 }
                 trailingBottom?.let {
-                    Text(it, style = NeonType.amountS, color = n.textSecondary, maxLines = 1, textAlign = TextAlign.End)
+                    Text(it, style = NeonType.amountS, color = n.textSecondary, textAlign = TextAlign.End)
                 }
             }
         }
@@ -630,9 +603,9 @@ internal fun KeyValueRow(key: String, value: String, modifier: Modifier = Modifi
             .padding(horizontal = 16.dp, vertical = 12.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
-        Text(key, style = MaterialTheme.customTypography.textS, color = n.textSecondary)
+        Text(key, style = MaterialTheme.customTypography.textS, color = n.textSecondary, modifier = Modifier.weight(1f))
         Spacer(Modifier.width(12.dp))
-        Text(value, style = MaterialTheme.customTypography.textSBold, color = n.textPrimary, textAlign = TextAlign.End)
+        Text(value, style = MaterialTheme.customTypography.textSBold, color = n.textPrimary, textAlign = TextAlign.End, modifier = Modifier.weight(1f))
     }
 }
 
@@ -641,7 +614,7 @@ internal fun KeyValueRow(key: String, value: String, modifier: Modifier = Modifi
 internal fun CheckLine(text: String, ok: Boolean, modifier: Modifier = Modifier) {
     val n = MaterialTheme.neon
     Row(modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-        PortfolioGlyph(if (ok) Glyph.CHECK else Glyph.INFO, if (ok) n.success else n.warning, Modifier.size(18.dp))
+        PortfolioGlyph(if (ok) Glyph.CHECK else Glyph.INFO, if (ok) n.textPrimary else n.redText, Modifier.size(18.dp))
         Spacer(Modifier.width(10.dp))
         Text(text, style = MaterialTheme.customTypography.paragraphS, color = n.textPrimary)
     }

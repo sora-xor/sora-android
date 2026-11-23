@@ -20,6 +20,10 @@ limitations under the License.
 package jp.co.soramitsu.common.presentation.compose.components
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -66,8 +70,11 @@ fun OptionSwitch(
     ) {
         Row(
             modifier = Modifier
-                .padding(vertical = 13.dp)
                 .fillMaxWidth()
+                .heightIn(min = 56.dp)
+                .toggleable(value = checked, enabled = available, role = Role.Switch, onValueChange = onClick)
+                .semantics { contentDescription = label }
+                .padding(vertical = 6.dp)
                 .wrapContentHeight(),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -90,18 +97,17 @@ fun OptionSwitch(
             ) {
                 Text(
                     text = label,
-                    modifier = Modifier.weight(1f).padding(end = Dimens.x1),
+                    modifier = Modifier.weight(1f).padding(end = Dimens.x1).clearAndSetSemantics { },
                     color = MaterialTheme.customColors.fgPrimary,
                     style = MaterialTheme.customTypography.textM,
                     overflow = TextOverflow.Ellipsis,
                 )
                 Switch(
                     modifier = Modifier
-                        .size(50.dp, 30.dp)
-                        .semantics { contentDescription = label },
+                        .size(50.dp, 30.dp),
                     checked = checked,
                     enabled = available,
-                    onCheckedChange = onClick,
+                    onCheckedChange = null,
                     // SORA Neon toggle (design spec 7.8): cyan track when on; when off, a grey
                     // thumb (border.input, 3:1 on the card) so the state never relies on a
                     // white-on-white thumb.

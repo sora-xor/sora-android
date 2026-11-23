@@ -1,0 +1,25 @@
+<resources>
+    <string name="debug_app_id">App ID</string>
+    <string name="debug_version">Version</string>
+    <string name="debug_version_code">Version code</string>
+    <string name="debug_manufacturer">Manufacturer</string>
+    <string name="debug_model">Model</string>
+    <string name="debug_os">Android</string>
+    <string name="debug_api">API level</string>
+    <string name="debug_arch">Architecture</string>
+    <string name="debug_java">Java specification</string>
+    <string name="debug_vm">Virtual machine</string>
+    <string name="debug_build">Build type</string>
+    <string name="debug_flavor">Build flavor</string>
+    <string name="debug_display">Display</string>
+    <string name="debug_display_size">%1$d × %2$d px · %3$.2f×</string>
+    <string name="debug_google_account">Change Google account</string>
+    <string name="debug_google_changed">Google account changed</string>
+    <string name="debug_reset_runtime">Reset runtime</string>
+    <string name="contacts_none">No recent recipients</string>
+    <string name="pin_delete_last_digit">Delete last digit</string>
+    <string name="backup_selected_count">%1$d selected</string>
+    <string name="contacts_lookup_unavailable">Address lookup unavailable</string>
+    <string name="portfolio_positive_amount">Enter an amount above zero.</string>
+    <string name="portfolio_continue_wallet">Continue with %1$s</string>
+</resources>

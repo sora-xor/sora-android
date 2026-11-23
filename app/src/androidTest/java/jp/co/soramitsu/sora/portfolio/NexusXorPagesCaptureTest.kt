@@ -160,7 +160,7 @@ class NexusXorPagesCaptureTest {
     @Test fun tairaTransferPage() = shoot("fixture-taira-transfer-details") {
         Page(initNoToolbar()) { scroll ->
             val balance = taira()
-            NexusTransferScreen(balance, nexusTransferDetails(balance, "cd".repeat(32))!!, DEFAULT_ICON_URI, scroll,
+            NexusTransferScreen(balance, nexusTransferDetails(balance, "cd".repeat(32))!!, scroll,
                 { "05 Nov. 2026, 18:13" }, {}, {}, {})
         }
     }

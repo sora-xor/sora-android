@@ -26,11 +26,15 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.draw.rotate
+import jp.co.soramitsu.common.presentation.compose.neon.ContentCard
 import jp.co.soramitsu.common.presentation.compose.neon.NeumorphicSurface
 import jp.co.soramitsu.common.presentation.compose.theme.neon.LocalFx
 import jp.co.soramitsu.common.presentation.compose.theme.neon.neon
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -48,6 +52,7 @@ import androidx.compose.material.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.graphics.Color
@@ -57,6 +62,7 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
+import androidx.constraintlayout.compose.Dimension
 import java.math.BigDecimal
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.domain.Market
@@ -90,6 +96,7 @@ internal fun SwapMainScreen(
     onTokenSwapClick: () -> Unit,
     onSwapClick: () -> Unit,
     onRetryFee: () -> Unit = {},
+    onRetryAssets: () -> Unit = {},
 ) {
     Column(
         modifier = Modifier
@@ -110,8 +117,11 @@ internal fun SwapMainScreen(
                 modifier = Modifier.constrainAs(token1) {
                     top.linkTo(parent.top)
                     start.linkTo(parent.start)
+                    end.linkTo(parent.end)
+                    width = Dimension.fillToConstraints
                 },
                 state = state.tokenFromState,
+                label = stringResource(R.string.swap_pay_label),
                 onAmountChange = onAmountChangeFrom,
                 onSelectToken = onSelectFrom,
                 onFocusChange = {
@@ -122,10 +132,13 @@ internal fun SwapMainScreen(
             )
             AssetAmountInput(
                 modifier = Modifier.constrainAs(token2) {
-                    top.linkTo(token1.bottom, 8.dp)
+                    top.linkTo(token1.bottom, 22.dp)
                     start.linkTo(parent.start)
+                    end.linkTo(parent.end)
+                    width = Dimension.fillToConstraints
                 },
                 state = state.tokenToState,
+                label = stringResource(R.string.swap_receive_label),
                 onAmountChange = onAmountChangeTo,
                 onSelectToken = onSelectTo,
                 onFocusChange = {
@@ -143,23 +156,28 @@ internal fun SwapMainScreen(
                 modifier = Modifier
                     .size(48.dp)
                     .constrainAs(arrow) {
-                        top.linkTo(token1.bottom, (-20).dp)
+                        top.linkTo(token1.bottom, (-13).dp)
                         start.linkTo(parent.start)
                         end.linkTo(parent.end)
                     }
-                    .clickable(interactionSource = interaction, indication = null) {
+                    .clickable(
+                        enabled = state.tokenFromState != null || state.tokenToState != null,
+                        interactionSource = interaction,
+                        indication = null,
+                        role = androidx.compose.ui.semantics.Role.Button,
+                    ) {
                         turns += 180f
                         onTokenSwapClick()
-                        if (focusPosition1.value) {
+                        if (focusPosition1.value && state.tokenToState != null) {
                             focus2.requestFocus()
-                        } else if (focusPosition2.value) {
+                        } else if (focusPosition2.value && state.tokenFromState != null) {
                             focus1.requestFocus()
                         }
                     },
             ) {
                 Icon(
                     modifier = Modifier.size(24.dp).rotate(rotation),
-                    painter = painterResource(id = R.drawable.ic_neon_swap_direction),
+                    painter = painterResource(id = R.drawable.ic_polkaswap_40),
                     tint = MaterialTheme.neon.cyan,
                     contentDescription = stringResource(R.string.wallet_swap_direction),
                 )
@@ -169,7 +187,7 @@ internal fun SwapMainScreen(
         SwapMarketSlippageSelector(
             market = stringResource(id = state.market.titleResource),
             slippage = "${state.slippage}%",
-            isMarketSelectorEnabled = state.tokenFromState != null && state.tokenToState != null,
+            isMarketSelectorEnabled = true,
             onMarketClick = onMarketClick,
             onSlippageClick = onSlippageClick,
         )
@@ -184,12 +202,8 @@ internal fun SwapMainScreen(
         }
         Spacer(modifier = Modifier.size(Dimens.x2))
         if (state.assetCatalogUnavailable) {
-            Text(
-                text = stringResource(R.string.wallet_assets_unavailable_details),
-                color = MaterialTheme.customColors.fgPrimary,
-                style = MaterialTheme.customTypography.paragraphS,
-            )
-            Spacer(modifier = Modifier.size(Dimens.x2))
+            SwapAssetsUnavailable(state.refreshingAssets, onRetryAssets)
+            return@Column
         }
         state.feeUnavailable?.let { reason ->
             NetworkFeeUnavailableNotice(
@@ -212,18 +226,22 @@ internal fun SwapMainScreen(
                 onClick = onSwapClick,
             )
         }
-        Spacer(modifier = Modifier.size(Dimens.x2))
-        DetailsItem(
-            text = stringResource(id = state.details.minmaxTitle),
-            hint = stringResource(id = state.details.minmaxHint),
-            value1 = state.details.minmaxValue,
-            value2 = state.details.minmaxValueFiat,
-        )
-        Spacer(modifier = Modifier.size(Dimens.x2))
-        DetailsItemNetworkFee(
-            fee = state.details.transactionFee,
-            feeFiat = state.details.transactionFeeFiat,
-        )
+        if (state.details.minmaxValue.isNotBlank()) {
+            Spacer(modifier = Modifier.size(Dimens.x2))
+            DetailsItem(
+                text = stringResource(id = state.details.minmaxTitle),
+                hint = stringResource(id = state.details.minmaxHint),
+                value1 = state.details.minmaxValue,
+                value2 = state.details.minmaxValueFiat,
+            )
+        }
+        if (state.details.transactionFee.isNotBlank()) {
+            Spacer(modifier = Modifier.size(Dimens.x2))
+            DetailsItemNetworkFee(
+                fee = state.details.transactionFee,
+                feeFiat = state.details.transactionFeeFiat,
+            )
+        }
         if (state.details.priceFromToTitle.isNotEmpty()) {
             Spacer(modifier = Modifier.size(Dimens.x2))
             DetailsItem(
@@ -243,6 +261,36 @@ internal fun SwapMainScreen(
             DetailsItem(
                 text = stringResource(id = R.string.route),
                 value1 = state.details.route,
+            )
+        }
+    }
+}
+
+@Composable
+internal fun SwapAssetsUnavailable(refreshing: Boolean, onRetry: () -> Unit) {
+    ContentCard(
+        modifier = Modifier.fillMaxWidth(),
+        innerPadding = PaddingValues(Dimens.x2),
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(Dimens.x2)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Dimens.x1)) {
+                Icon(
+                    painterResource(R.drawable.ic_menu_wallet_24), null,
+                    modifier = Modifier.size(24.dp), tint = MaterialTheme.neon.cyan,
+                )
+                Text(
+                    stringResource(if (refreshing) R.string.common_loading else R.string.wallet_assets_unavailable),
+                    style = MaterialTheme.customTypography.textMBold,
+                    color = MaterialTheme.customColors.fgPrimary,
+                )
+            }
+            FilledButton(
+                modifier = Modifier.fillMaxWidth().testTagAsId("RetryAssets"),
+                enabled = !refreshing,
+                order = Order.PRIMARY,
+                size = Size.Large,
+                text = stringResource(R.string.asset_catalog_retry),
+                onClick = onRetry,
             )
         }
     }

@@ -31,6 +31,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import jp.co.soramitsu.androidfoundation.fragment.SingleLiveEvent
 import jp.co.soramitsu.androidfoundation.fragment.trigger
+import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.BuildConfig
 import jp.co.soramitsu.common.domain.OptionsProvider
 import jp.co.soramitsu.common.presentation.compose.components.initSmallTitle2
@@ -61,43 +62,43 @@ class DebugMenuViewModel @Inject constructor(
 
     init {
         _toolbarState.value = initSmallTitle2(
-            title = "Debug Menu",
+            title = R.string.settings_debug,
         )
 
         state = state.copy(
             settings = mutableListOf<SettingOption>().apply {
-                add(SettingOption(name = "App ID:", value = OptionsProvider.APPLICATION_ID))
+                add(SettingOption(label = R.string.debug_app_id, value = OptionsProvider.APPLICATION_ID))
                 add(
                     SettingOption(
-                        name = "Version Name:",
+                        label = R.string.debug_version,
                         value = OptionsProvider.CURRENT_VERSION_NAME
                     )
                 )
                 add(
                     SettingOption(
-                        name = "Version Code:",
+                        label = R.string.debug_version_code,
                         value = OptionsProvider.CURRENT_VERSION_CODE.toString()
                     )
                 )
-                add(SettingOption(name = "Manufacturer:", value = Build.MANUFACTURER))
-                add(SettingOption(name = "Model:", value = Build.MODEL))
-                add(SettingOption(name = "Version:", value = Build.VERSION.RELEASE))
-                add(SettingOption(name = "API level:", value = Build.VERSION.SDK_INT.toString()))
-                add(SettingOption(name = "Arch:", value = Build.SUPPORTED_ABIS.joinToString(",")))
+                add(SettingOption(label = R.string.debug_manufacturer, value = Build.MANUFACTURER))
+                add(SettingOption(label = R.string.debug_model, value = Build.MODEL))
+                add(SettingOption(label = R.string.debug_os, value = Build.VERSION.RELEASE))
+                add(SettingOption(label = R.string.debug_api, value = Build.VERSION.SDK_INT.toString()))
+                add(SettingOption(label = R.string.debug_arch, value = Build.SUPPORTED_ABIS.joinToString(",")))
                 add(
                     SettingOption(
-                        name = "Java:",
+                        label = R.string.debug_java,
                         value = System.getProperty("java.specification.version").orEmpty()
                     )
                 )
                 add(
                     SettingOption(
-                        name = "Java:",
+                        label = R.string.debug_vm,
                         value = System.getProperty("java.vm.name").orEmpty()
                     )
                 )
-                add(SettingOption(name = "Build Type:", value = BuildConfig.BUILD_TYPE))
-                add(SettingOption(name = "Build Flavor:", value = BuildConfig.FLAVOR))
+                add(SettingOption(label = R.string.debug_build, value = BuildConfig.BUILD_TYPE))
+                add(SettingOption(label = R.string.debug_flavor, value = BuildConfig.FLAVOR))
             }
         )
     }

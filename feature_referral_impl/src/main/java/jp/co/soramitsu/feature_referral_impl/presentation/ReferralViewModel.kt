@@ -29,6 +29,7 @@ import jp.co.soramitsu.androidfoundation.format.orZero
 import jp.co.soramitsu.androidfoundation.fragment.SingleLiveEvent
 import jp.co.soramitsu.androidfoundation.resource.ResourceManager
 import jp.co.soramitsu.common.R
+import jp.co.soramitsu.common.logger.WalletDiagnostics
 import jp.co.soramitsu.common.domain.AssetHolder
 import jp.co.soramitsu.common.domain.DuplicateWaitingTransactionException
 import jp.co.soramitsu.common.domain.Token
@@ -109,6 +110,7 @@ class ReferralViewModel @Inject constructor(
 
     private var referrer: String? = null
     private var programJob: Job? = null
+    private var programReady = false
 
     /**
      * A tapped bond, unbond or set-referrer is on its way and reports its own result. Set before
@@ -147,6 +149,7 @@ class ReferralViewModel @Inject constructor(
      */
     private fun loadProgram() {
         programJob?.cancel()
+        programReady = false
         programJob = interactor.observeReferrerBalance()
             .onStart {
                 extrinsicFee = interactor.calcBondFee()
@@ -208,6 +211,7 @@ class ReferralViewModel @Inject constructor(
                             )
                         )
                     }
+                programReady = true
                 if (currentDestination == ReferralFeatureRoutes.WELCOME_PROGRESS) {
                     _navToStart.value = if (_referralScreenState.value.isInitialized()) REFERRAL_PROGRAM else WELCOME_PAGE
                 }
@@ -218,7 +222,9 @@ class ReferralViewModel @Inject constructor(
     }
 
     private fun onProgramUnavailable(error: Throwable) {
-        onError(error)
+        programReady = false
+        WalletDiagnostics.recordException(error)
+        onErrorResetProgress()
         showFeesUnavailable(
             resourceManager = resourceManager,
             error = error,
@@ -240,25 +246,31 @@ class ReferralViewModel @Inject constructor(
                 _referralScreenState.value =
                     _referralScreenState.value.copy(common = _referralScreenState.value.common.copy(referrer = referrer))
             }
-            .catch { onError(it) }
+            .catch { onBackgroundError(it) }
             .launchIn(viewModelScope)
 
         interactor.observeReferrals()
             .debounce(1000)
             .distinctUntilChanged()
             .onEach {
-                tryCatch { interactor.updateReferrals() }
+                try {
+                    interactor.updateReferrals()
+                } catch (cancelled: CancellationException) {
+                    throw cancelled
+                } catch (failure: Exception) {
+                    onBackgroundError(failure)
+                }
             }
-            .catch { onError(it) }
+            .catch { onBackgroundError(it) }
             .launchIn(viewModelScope)
 
         assetsInteractor.subscribeAssetOfCurAccount(SubstrateOptionsProvider.feeAssetId)
             .distinctUntilChanged()
             .onEach { asset ->
                 xorBalance = asset?.balance?.transferable ?: BigDecimal.ZERO
-                tryCatch { reCalcOnChange(currentDestination) }
+                if (programReady) reCalcOnChange(currentDestination)
             }
-            .catch { onError(it) }
+            .catch { onBackgroundError(it) }
             .launchIn(viewModelScope)
 
         interactor.getReferrals()
@@ -277,7 +289,7 @@ class ReferralViewModel @Inject constructor(
                     isExpanded = referralsState.isExpanded,
                 )
             }
-            .catch { onError(it) }
+            .catch { onBackgroundError(it) }
             .launchIn(viewModelScope)
     }
 

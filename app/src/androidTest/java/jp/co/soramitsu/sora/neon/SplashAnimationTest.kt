@@ -62,7 +62,7 @@ class SplashAnimationTest {
             for (attribute in attributes) {
                 val value = TypedValue()
                 assertTrue(themed.theme.resolveAttribute(attribute, value, true))
-                assertEquals("OS launch background must not depend on system appearance", 0xff06060b.toInt(), value.data)
+                assertEquals("OS launch background must not depend on system appearance", android.graphics.Color.WHITE, value.data)
             }
         }
     }

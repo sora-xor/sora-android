@@ -54,6 +54,7 @@ import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.PortfolioHolding
 import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.PortfolioLens
 import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.PortfolioReadiness
 import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.PortfolioScope
+import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.PortfolioToken
 import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.PortfolioSlots
 import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.SwapBlock
 import jp.co.soramitsu.ui_core.component.button.properties.Size as ButtonSize
@@ -193,7 +194,11 @@ private fun HowWeCountSheet(model: PortfolioModel, format: PortfolioFormat, acti
             RowDivider()
             KeyValueRow(stringResource(R.string.portfolio_without_price), pluralStringResource(R.plurals.portfolio_assets_not_included, totals.unpriced, totals.unpriced))
             RowDivider()
-            KeyValueRow(stringResource(R.string.portfolio_testnets), stringResource(R.string.portfolio_never_counted))
+            KeyValueRow(stringResource(R.string.portfolio_testnets), pluralStringResource(R.plurals.portfolio_assets_not_included, totals.testnet, totals.testnet))
+            if (totals.unread > 0) {
+                RowDivider()
+                KeyValueRow(stringResource(R.string.balance_unavailable), pluralStringResource(R.plurals.portfolio_wallets, totals.unread, totals.unread))
+            }
             RowDivider()
             KeyValueRow(stringResource(R.string.portfolio_pool_stakes), stringResource(R.string.portfolio_not_included))
         }
@@ -275,7 +280,7 @@ private fun HoldingCard(model: PortfolioModel, holding: PortfolioHolding, line: 
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box {
-            TokenOrb(holding.token.iconUri, 38.dp)
+            TokenOrb(holding.token, 38.dp)
             NetworkBadge(holding.network, 17.dp, Modifier.align(Alignment.BottomEnd))
         }
         Spacer(Modifier.width(12.dp))
@@ -306,7 +311,7 @@ private fun HoldingChooser(model: PortfolioModel, candidates: List<PortfolioHold
                 role = Role.Button,
                 leading = {
                     Box {
-                        TokenOrb(holding.token.iconUri, 38.dp)
+                        TokenOrb(holding.token, 38.dp)
                         NetworkBadge(holding.network, 17.dp, Modifier.align(Alignment.BottomEnd))
                     }
                 },
@@ -351,8 +356,12 @@ private fun MoveSheet(model: PortfolioModel, holdingKey: String?, format: Portfo
         var amountText by rememberSaveable(holding.key) { mutableStateOf("") }
         val amount = amountText.replace(',', '.').toBigDecimalOrNull()
         // Blank means enter the amount in Send; nonempty input must be a positive balance.
-        val invalidAmount = amountText.isNotEmpty() &&
-            (amount == null || amount.signum() <= 0 || amount > holding.transferable)
+        val amountError = when {
+            amountText.isEmpty() -> null
+            amount == null || amount.signum() <= 0 -> R.string.portfolio_positive_amount
+            amount > holding.transferable -> R.string.portfolio_amount_too_high
+            else -> null
+        }
         val symbol = holding.token.symbol
         val network = networkName(holding.network)
         SwitchNote(model, holding.walletId)
@@ -392,29 +401,28 @@ private fun MoveSheet(model: PortfolioModel, holdingKey: String?, format: Portfo
         Overline(stringResource(R.string.portfolio_amount))
         AmountField(
             value = amountText,
-            symbol = symbol,
-            iconUri = holding.token.iconUri,
-            error = invalidAmount,
+            token = holding.token,
+            error = amountError,
             onValueChange = { text -> if (isAmountInput(text)) amountText = text },
             onMax = { amountText = PortfolioReadiness.maxAmount(holding).stripTrailingZeros().toPlainString() },
         )
         SheetCard {
             KeyValueRow(stringResource(R.string.portfolio_network), network)
             RowDivider()
-            KeyValueRow(stringResource(R.string.portfolio_route), stringResource(R.string.portfolio_route_same_network))
-            RowDivider()
             KeyValueRow(stringResource(R.string.network_fee), stringResource(R.string.portfolio_fee_in_send))
         }
-        PortfolioBanner(stringResource(R.string.portfolio_move_note))
         val wallet = model.wallet(holding.walletId)
         NeonButton(
             modifier = Modifier.fillMaxWidth(),
             size = ButtonSize.Large,
             variant = NeonVariant.Primary,
-            enabled = !busy && destination != null && !invalidAmount,
+            enabled = !busy && destination != null && amountError == null,
             loading = busy,
             text = if (wallet != null && !wallet.selected) {
-                stringResource(R.string.portfolio_switch_and_review, wallet.name)
+                val label = if (amountText.isEmpty()) R.string.portfolio_continue_wallet else R.string.portfolio_switch_and_review
+                stringResource(label, wallet.name)
+            } else if (amountText.isEmpty()) {
+                stringResource(R.string.common_enter_amount)
             } else {
                 stringResource(R.string.portfolio_review_in_send)
             },
@@ -426,13 +434,13 @@ private fun MoveSheet(model: PortfolioModel, holdingKey: String?, format: Portfo
 @Composable
 private fun AmountField(
     value: String,
-    symbol: String,
-    iconUri: String?,
-    error: Boolean,
+    token: PortfolioToken,
+    error: Int?,
     onValueChange: (String) -> Unit,
     onMax: () -> Unit,
 ) {
     val n = MaterialTheme.neon
+    val symbol = token.symbol
     val shape = RoundedCornerShape(16.dp)
     Row(
         Modifier
@@ -441,7 +449,7 @@ private fun AmountField(
             // A field is a well pressed into the sheet.
             .litWell(radius = 12.dp, depth = 2.6.dp)
             .clip(shape)
-            .then(if (error) Modifier.border(1.5.dp, n.error, shape) else Modifier)
+            .then(if (error != null) Modifier.border(1.5.dp, n.error, shape) else Modifier)
             .padding(start = 16.dp, end = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -461,14 +469,14 @@ private fun AmountField(
                     .semantics { contentDescription = symbol },
             )
         }
-        TokenOrb(iconUri, 24.dp)
+        TokenOrb(token, 24.dp)
         Spacer(Modifier.width(6.dp))
         Text(symbol, style = MaterialTheme.customTypography.headline3, color = n.textPrimary)
         Spacer(Modifier.width(8.dp))
         NeonButton(size = ButtonSize.ExtraSmall, variant = NeonVariant.Secondary, text = stringResource(R.string.portfolio_max), onClick = onMax)
     }
-    if (error) {
-        Text(stringResource(R.string.portfolio_amount_too_high), style = MaterialTheme.customTypography.textS, color = n.error)
+    if (error != null) {
+        Text(stringResource(error), style = MaterialTheme.customTypography.textS, color = n.error)
     }
 }
 
@@ -533,12 +541,11 @@ private fun SwapSheet(model: PortfolioModel, holdingKey: String?, format: Portfo
                 val on = id == target
                 val color = PortfolioPalette.slot(PortfolioSlots.seed(PortfolioLens.TOKENS)[id], isDarkTheme)
                 val shape = RoundedCornerShape(12.dp)
-                val floor = litTint(color)
                 Row(
                     Modifier
                         .heightIn(min = 48.dp)
                         // Raised at rest, let in when chosen.
-                        .then(if (on) Modifier.litWell(radius = 12.dp, depth = 2.2.dp, floor = floor) else Modifier.litPlate(radius = 12.dp, elevation = 6.dp))
+                        .then(if (on) Modifier.litWell(radius = 12.dp, depth = 2.2.dp) else Modifier.litPlate(radius = 12.dp, elevation = 6.dp))
                         .clip(shape)
                         .clickable(role = Role.RadioButton, onClick = { target = id })
                         .semantics { selected = on }
@@ -551,19 +558,10 @@ private fun SwapSheet(model: PortfolioModel, holdingKey: String?, format: Portfo
                 }
             }
         }
-        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            CheckLine(stringResource(R.string.portfolio_check_account, wallet?.name.orEmpty()), ok = true)
-            CheckLine(stringResource(R.string.portfolio_check_available), ok = true)
-            CheckLine(
-                stringResource(if (model.swapDisclaimerPending) R.string.portfolio_check_disclaimer_pending else R.string.portfolio_check_disclaimer_done),
-                ok = !model.swapDisclaimerPending,
-            )
+        if (model.swapDisclaimerPending) {
+            Text(stringResource(R.string.portfolio_check_disclaimer_pending),
+                style = MaterialTheme.customTypography.textS, color = n.textSecondary)
         }
-        Text(
-            stringResource(R.string.portfolio_swap_note),
-            style = MaterialTheme.customTypography.paragraphS,
-            color = n.textSecondary,
-        )
         NeonButton(
             modifier = Modifier.fillMaxWidth(),
             size = ButtonSize.Large,
@@ -597,7 +595,7 @@ private fun PickWalletSheet(model: PortfolioModel, action: WalletAction, format:
                     role = Role.Button,
                     leading = { WalletAvatar(wallet.name, model.colorOfWallet(wallet.id, isDarkTheme), 42.dp) },
                     title = wallet.name,
-                    subtitle = if (wallet.selected) stringResource(R.string.portfolio_selected) else stringResource(R.string.portfolio_switch_first),
+                    subtitle = if (wallet.selected) stringResource(R.string.portfolio_selected) else null,
                     trailingTop = format.total(summary.totals),
                 )
             }

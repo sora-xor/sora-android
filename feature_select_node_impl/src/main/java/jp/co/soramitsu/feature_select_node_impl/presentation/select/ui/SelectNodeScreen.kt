@@ -40,7 +40,7 @@ import jp.co.soramitsu.common.presentation.compose.theme.SoraAppTheme
 import jp.co.soramitsu.feature_select_node_impl.R
 import jp.co.soramitsu.feature_select_node_impl.presentation.select.SelectNodeViewModel
 import jp.co.soramitsu.feature_select_node_impl.presentation.select.model.SelectNodeState
-import jp.co.soramitsu.common.presentation.compose.neon.BleachedButton
+import jp.co.soramitsu.common.presentation.compose.neon.FilledButton
 import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.component.button.properties.Size
 import jp.co.soramitsu.common.presentation.compose.neon.ContentCard
@@ -119,7 +119,7 @@ private fun SelectNodeContent(
                     onNodeRemoveClicked = onNodeRemoveClicked
                 )
             }
-            BleachedButton(
+            FilledButton(
                 size = Size.Large,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -167,12 +167,7 @@ fun NodesCard(
 
             nodes.forEach { node ->
                 SelectableItem(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(
-                            top = x2,
-                            bottom = x2
-                        ),
+                    modifier = Modifier.fillMaxWidth(),
                     isSelected = node.isSelected,
                     isMenuIconVisible = !node.isDefault,
                     title = node.name,

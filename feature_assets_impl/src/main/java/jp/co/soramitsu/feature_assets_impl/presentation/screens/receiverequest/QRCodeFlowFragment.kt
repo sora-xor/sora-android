@@ -66,7 +66,12 @@ class QRCodeFlowFragment : SoraBaseFragment<QRCodeFlowViewModel>() {
         super.onViewCreated(view, savedInstanceState)
         (activity as BottomBarController).hideBottomBar()
 
-        parseFragmentArguments()
+        // Consume the shortcut once. Returning from the scanner or a reviewed payment
+        // can recreate this view and should leave the Receive page available.
+        if (savedInstanceState == null && arguments?.getBoolean(NAVIGATE_TO_SCANNER_DIRECTLY_KEY) == true) {
+            arguments?.remove(NAVIGATE_TO_SCANNER_DIRECTLY_KEY)
+            barcodeLauncher.launch(barcodeScanOptions)
+        }
 
         viewModel.shareQrCodeEvent.observe { (qrCodeFileUri, message) ->
             context?.let { context ->
@@ -79,15 +84,6 @@ class QRCodeFlowFragment : SoraBaseFragment<QRCodeFlowViewModel>() {
             }
         }
     }
-
-    private fun parseFragmentArguments() =
-        with(arguments) {
-            if (this == null)
-                return@with
-
-            if (getBoolean(NAVIGATE_TO_SCANNER_DIRECTLY_KEY))
-                barcodeLauncher.launch(barcodeScanOptions)
-        }
 
     override fun NavGraphBuilder.content(
         scrollState: ScrollState,

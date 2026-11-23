@@ -136,7 +136,7 @@ private fun classic(
     onAccent = lit.inlay, link = lit.redText,
     brandRed = accent, redText = lit.redText, cyan = accent, steel = lit.inkSecondary,
     magenta = accent, polkaswapBrand = accent, polkaswapText = lit.redText,
-    ctaPrimary = SolidColor(lit.red), ctaSwap = SolidColor(lit.red), ctaSafe = SolidColor(if (lit.dark) c(0xFF2C6E50) else success),
+    ctaPrimary = SolidColor(lit.red), ctaSwap = SolidColor(lit.red), ctaSafe = SolidColor(lit.red),
     ctaDisabled = lit.wellFloor,
     success = success, successContainer = successContainer, warning = warning, warningContainer = warningContainer,
     warningFill = warningFill, onWarningFill = LitDay.ink, error = error, errorContainer = errorContainer,

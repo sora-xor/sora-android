@@ -45,8 +45,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import jp.co.soramitsu.common.R
-import jp.co.soramitsu.common.domain.DEFAULT_ICON_URI
-import jp.co.soramitsu.common.domain.iconUri
 import jp.co.soramitsu.common.presentation.compose.components.DetailsItem
 import jp.co.soramitsu.common.presentation.compose.components.DetailsItemNetworkFee
 import jp.co.soramitsu.common.presentation.compose.components.TransactionResultBadgeOverlay
@@ -99,16 +97,12 @@ internal fun LiquidityRemoveConfirmScreen(
                     ) {
                         SwapAmountSquare(
                             modifier = Modifier.weight(1f),
-                            icon = state.assetState1?.token?.iconUri() ?: DEFAULT_ICON_URI,
-                            amount = state.assetState1?.amount?.toPlainString().orEmpty(),
-                            amountFiat = state.assetState1?.amountFiat.orEmpty(),
+                            state = state.assetState1,
                         )
                         Divider(color = Color.Transparent, modifier = Modifier.width(Dimens.x1))
                         SwapAmountSquare(
                             modifier = Modifier.weight(1f),
-                            icon = state.assetState2?.token?.iconUri() ?: DEFAULT_ICON_URI,
-                            amount = state.assetState2?.amount?.toPlainString().orEmpty(),
-                            amountFiat = state.assetState2?.amountFiat.orEmpty(),
+                            state = state.assetState2,
                         )
                     }
                     Icon(

@@ -13,7 +13,7 @@
         app:layout_constraintBottom_toTopOf="@id/bottomNavigationView"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintTop_toBottomOf="@id/badConnectionView">
 
         <androidx.fragment.app.FragmentContainerView
             android:id="@+id/fragmentNavHostMain"
@@ -30,8 +30,10 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:background="@drawable/bg_lit_banner"
-        android:gravity="center_horizontal"
-        android:paddingBottom="4dp"
+        android:gravity="center"
+        android:minHeight="24dp"
+        android:accessibilityLiveRegion="polite"
+        android:paddingVertical="2dp"
         android:text="@string/common_connecting"
         android:textColor="?attr/contentPrimary"
         android:visibility="gone"
@@ -75,9 +77,10 @@
     <!-- The Polkaswap disc: cut red glass with the flower inlaid, and room round it for its shadow. -->
     <jp.co.soramitsu.feature_main_impl.presentation.PressAwareFrameLayout
         android:id="@+id/fabMain"
-        android:layout_width="88dp"
-        android:layout_height="88dp"
-        android:layout_marginBottom="12dp"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintWidth_percent="0.20"
+        app:layout_constraintTop_toTopOf="@id/bottomNavigationView"
         android:clickable="true"
         android:elevation="4dp"
         android:focusable="true"
@@ -89,8 +92,8 @@
         app:layout_constraintStart_toStartOf="@id/bottomNavigationView">
         <androidx.compose.ui.platform.ComposeView
             android:id="@+id/fabDome"
-            android:layout_width="88dp"
-            android:layout_height="88dp"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
             android:layout_gravity="center"
             android:elevation="4dp"
             android:importantForAccessibility="no" />

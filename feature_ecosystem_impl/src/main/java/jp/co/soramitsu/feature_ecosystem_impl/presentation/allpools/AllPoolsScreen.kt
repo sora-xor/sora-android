@@ -19,6 +19,7 @@ limitations under the License.
 
 package jp.co.soramitsu.feature_ecosystem_impl.presentation.allpools
 
+import jp.co.soramitsu.common.presentation.compose.components.LoadingRows
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -31,7 +32,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
@@ -86,17 +86,7 @@ private fun AllPoolsInternal(
         ),
     ) {
         if (state.loading) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator(
-                    modifier = Modifier
-                        .size(Dimens.x6)
-                        .padding(Dimens.x1),
-                    color = MaterialTheme.customColors.accentPrimary
-                )
-            }
+            LoadingRows(stringResource(R.string.common_loading))
         } else {
             Column(
                 modifier = Modifier.fillMaxSize(),
@@ -120,17 +110,13 @@ private fun AllPoolsInternal(
                             maxLines = 1,
                         )
 
-                        Text(
-                            text = stringResource(id = R.string.explore_provide_and_earn),
-                            style = MaterialTheme.customTypography.textXSBold,
-                            color = MaterialTheme.customColors.fgSecondary,
-                            maxLines = 1,
-                        )
+
                     }
                     Icon(
                         modifier = Modifier
-                            .size(Dimens.x3)
-                            .clickable(onClick = onAddPoolClicked),
+                            .size(Dimens.x6)
+                            .clickable(onClick = onAddPoolClicked)
+                            .padding(Dimens.x1_2),
                         painter = painterResource(
                             id = jp.co.soramitsu.common.R.drawable.ic_plus,
                         ),

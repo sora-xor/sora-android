@@ -34,6 +34,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import jp.co.soramitsu.common.R
+import jp.co.soramitsu.common.presentation.compose.TokenBadge
 import jp.co.soramitsu.common.util.testTagAsId
 import jp.co.soramitsu.common_wallet.presentation.compose.states.AssetItemCardState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.previewAssetItemCardStateList
@@ -53,6 +54,7 @@ fun AssetItem(
             .testTagAsId(testTag)
             .padding(horizontal = Dimens.x3),
         icon = assetState.tokenIcon.toUri(),
+        tokenBadge = { TokenBadge(assetState.tokenId, assetState.tokenSymbol, assetState.tokenIcon, Dimens.AssetIconSize) },
         name = assetState.tokenName,
         balance = assetState.assetAmount,
         symbol = frozenSuffix(assetState),
@@ -101,6 +103,7 @@ fun AssetItemEnumerated(
             modifier = Modifier
                 .testTagAsId(testTag),
             icon = assetState.tokenIcon.toUri(),
+            tokenBadge = { TokenBadge(assetState.tokenId, assetState.tokenSymbol, assetState.tokenIcon, Dimens.AssetIconSize) },
             name = assetState.tokenName,
             balance = assetState.assetAmount,
             symbol = frozenSuffix(assetState),

@@ -21,6 +21,18 @@ package jp.co.soramitsu.common.presentation.compose.components
 
 import android.content.res.Configuration
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.material.Icon
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.Alignment
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.unit.dp
+import androidx.compose.material.TextButton
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import jp.co.soramitsu.common.presentation.compose.theme.neon.neon
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -49,6 +61,7 @@ import jp.co.soramitsu.ui_core.theme.customTypography
 fun PolkaswapDisclaimer(
     onDisclaimerClose: () -> Unit,
 ) {
+    var expanded by rememberSaveable { mutableStateOf(false) }
     ContentCard(
         modifier = Modifier
             .fillMaxWidth()
@@ -58,8 +71,11 @@ fun PolkaswapDisclaimer(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .wrapContentHeight()
+                .wrapContentHeight(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(Dimens.x1),
         ) {
+            Icon(painterResource(R.drawable.ic_polkaswap_40), null, Modifier.size(40.dp), tint = MaterialTheme.neon.cyan)
             Text(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -69,15 +85,25 @@ fun PolkaswapDisclaimer(
                 style = MaterialTheme.customTypography.headline3,
                 color = MaterialTheme.customColors.fgPrimary,
             )
-            AndroidView(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = Dimens.x2),
-                update = { },
-                factory = { context ->
-                    PolkaswapDisclaimerView(context)
-                }
+            Text(
+                text = stringResource(R.string.swap_terms_summary),
+                textAlign = TextAlign.Center,
+                style = MaterialTheme.customTypography.textS,
+                color = MaterialTheme.customColors.fgSecondary,
             )
+            TextButton(onClick = { expanded = !expanded }) {
+                Text(
+                    stringResource(if (expanded) R.string.swap_hide_terms else R.string.swap_show_terms),
+                    color = MaterialTheme.neon.cyan,
+                    style = MaterialTheme.customTypography.textSBold,
+                )
+            }
+            if (expanded) {
+                AndroidView(
+                    modifier = Modifier.fillMaxWidth().padding(vertical = Dimens.x1),
+                    factory = { PolkaswapDisclaimerView(it) },
+                )
+            }
             TonalButton(
                 modifier = Modifier
                     .testTagAsId("Close")

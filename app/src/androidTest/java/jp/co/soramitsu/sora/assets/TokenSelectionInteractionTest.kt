@@ -47,11 +47,13 @@ class TokenSelectionInteractionTest {
         compose.runOnIdle { assertEquals(listOf("token-dai"), selected) }
     }
     @Test fun emptySearchHasNoStaleSelectableAsset() {
+        query.value = SearchTokenFilter("missing", emptyList())
         show(); compose.runOnIdle { screenState.value = SelectSearchAssetState(emptyList()) }
         emptyMessage().assertIsDisplayed(); compose.onNodeWithText("Asset xor").assertDoesNotExist()
         compose.onAllNodes(hasClickAction()).assertCountEquals(0)
     }
     @Test fun newMatchesReplaceTheEmptySearchExplanation() {
+        query.value = SearchTokenFilter("val", emptyList())
         screenState.value = SelectSearchAssetState(emptyList()); show()
         compose.runOnIdle { screenState.value = SelectSearchAssetState(listOf(row("val"))) }
         emptyMessage().assertDoesNotExist(); compose.onNodeWithText("Asset val").assertIsDisplayed()
