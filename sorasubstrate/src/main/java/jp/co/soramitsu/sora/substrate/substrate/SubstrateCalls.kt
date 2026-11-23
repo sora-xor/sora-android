@@ -50,21 +50,19 @@ import jp.co.soramitsu.sora.substrate.runtime.Storage
 import jp.co.soramitsu.sora.substrate.runtime.assetIdFromKey
 import jp.co.soramitsu.sora.substrate.runtime.createAsset
 import jp.co.soramitsu.sora.substrate.runtime.mapCodeToken
+import jp.co.soramitsu.xcrypto.util.fromHex
 import jp.co.soramitsu.xsubstrate.runtime.definitions.types.composite.DictEnum
 import jp.co.soramitsu.xsubstrate.runtime.definitions.types.composite.Struct
 import jp.co.soramitsu.xsubstrate.runtime.definitions.types.fromHex
 import jp.co.soramitsu.xsubstrate.runtime.metadata.module
 import jp.co.soramitsu.xsubstrate.runtime.metadata.storage
 import jp.co.soramitsu.xsubstrate.runtime.metadata.storageKey
-import jp.co.soramitsu.xsubstrate.scale.EncodableStruct
 import jp.co.soramitsu.xsubstrate.ss58.SS58Encoder.toAccountId
 import jp.co.soramitsu.xsubstrate.wsrpc.SocketService
-import jp.co.soramitsu.xsubstrate.wsrpc.executeAsync
 import jp.co.soramitsu.xsubstrate.wsrpc.executeAsyncMapped
 import jp.co.soramitsu.xsubstrate.wsrpc.mappers.nonNull
 import jp.co.soramitsu.xsubstrate.wsrpc.mappers.pojo
 import jp.co.soramitsu.xsubstrate.wsrpc.mappers.pojoList
-import jp.co.soramitsu.xsubstrate.wsrpc.mappers.scale
 import jp.co.soramitsu.xsubstrate.wsrpc.request.runtime.RuntimeRequest
 import jp.co.soramitsu.xsubstrate.wsrpc.request.runtime.author.SubmitAndWatchExtrinsicRequest
 import jp.co.soramitsu.xsubstrate.wsrpc.request.runtime.author.SubmitExtrinsicRequest
@@ -74,10 +72,10 @@ import jp.co.soramitsu.xsubstrate.wsrpc.request.runtime.storage.SubscribeStorage
 import jp.co.soramitsu.xsubstrate.wsrpc.request.runtime.storage.storageChange
 import jp.co.soramitsu.xsubstrate.wsrpc.subscriptionFlow
 import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emitAll
-import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import org.bouncycastle.util.encoders.Hex
@@ -144,130 +142,107 @@ class SubstrateCalls @Inject constructor(
             mapper = pojoList<String>(),
         ).result ?: emptyList()
 
+    /**
+     * The XOR balance of an account, with what is staked and bonded.
+     *
+     * The account, its staking controller, the active era and its referral bond are one read of
+     * four keys at one block, so the parts always belong together: XOR that moves from the free
+     * balance into the referral bond between two reads can no longer be counted twice. The
+     * staking ledger needs the controller first and is read at that same block. Until
+     * 2026-11-22 these were up to five separate requests and a subscription.
+     *
+     * Zero only for an account the node answers has no storage. A node error, an answer that
+     * is not the read that was asked for, or a stored value that does not decode, fails the
+     * read: whoever asked keeps the balance it had, and never shows 0 for it.
+     *
+     * [forDisplay]: the amounts are shown, so every part of the total must have been read. The
+     * check before a transfer leaves this false and keeps the tolerance it always had for the
+     * parts it does not use: a referral bond that does not decode counts as none, and a record
+     * without a reserved balance as zero reserved. What a transfer may spend (the free balance and
+     * its locks) is read strictly either way.
+     */
     suspend fun fetchXORBalances(
         accountId: String,
-    ): XorBalanceDto = coroutineScope {
-        val storage = runtimeManager.getRuntimeSnapshot().metadata.module(Pallete.SYSTEM.palletName)
+        forDisplay: Boolean = false,
+    ): XorBalanceDto {
+        val runtime = runtimeManager.getRuntimeSnapshot()
+        val account = runtime.metadata.module(Pallete.SYSTEM.palletName)
             .storage(Storage.ACCOUNT.storageName)
-        val storageKey =
-            storage.storageKey(runtimeManager.getRuntimeSnapshot(), accountId.toAccountId())
-        // The staking ledger, the active era and the referral bond do not depend on the account
-        // record, so they are asked for together with it instead of one after another: two round
-        // trips to the node (the ledger needs its controller first) instead of up to five. They
-        // count only when the account exists; then any of them failing fails the read, as it did
-        // when they were read in turn.
-        val stakingRead = async { runCatching { fetchStakingLedgerXORBalance(accountId) } }
-        val eraRead = async { runCatching { fetchActiveEra() } }
-        val bondRead = async { runCatching { observeReferrerBalance(accountId).firstOrNull() } }
-        val sideReads = listOf(stakingRead, eraRead, bondRead)
-        val hexString = try {
-            socketService.executeAsyncMapped(
-                request = GetStorageRequest(listOf(storageKey)),
-                mapper = pojo<String>(),
-            )
-        } catch (error: Throwable) {
-            sideReads.forEach { it.cancel() }
-            throw error
-        }
+        val staking = runtime.metadata.module(Pallete.STAKING.palletName)
+        val referral = runtime.metadata.module(Pallete.Referrals.palletName)
+            .storage(Storage.REFERRER_BALANCE.storageName)
+        val accountKey = account.storageKey(runtime, accountId.toAccountId())
+        val controllerKey = staking.storage(Storage.BONDED.storageName)
+            .storageKey(runtime, accountId.toAccountId())
+        val eraKey = staking.storage(Storage.ACTIVE_ERA.storageName).storageKey()
+        val referralKey = referral.storageKey(runtime, accountId.toAccountId())
+        val keys = listOf(accountKey, controllerKey, eraKey, referralKey)
+        val answer = socketService.executeAsyncMapped(
+            request = StateQueryStorageAt(listOf(keys)),
+            mapper = pojoList<StateQueryResponse>().nonNull(),
+        ).single()
+        val (accountHex, controllerHex, eraHex, referralHex) = answer.valuesOf(keys)
+        // The ledger is read at this block: an answer that does not name one cannot be joined.
+        val block = answer.requireBlock()
 
-        hexString.result?.let {
-            val account = decodeXorAccountData(
-                runtime = runtimeManager.getRuntimeSnapshot(),
-                accountStorage = storage,
-                storageHex = it,
-            )
-
-            val stakingLedgerXorBalance = stakingRead.await().getOrThrow()
-            val activeEra = eraRead.await().getOrThrow()
-            var redeemable = BigInteger.ZERO
-            var unbonding = BigInteger.ZERO
-            val bonded = bondRead.await().getOrThrow() ?: BigInteger.ZERO
-
-            stakingLedgerXorBalance?.let { stakingXorBalance ->
-                redeemable = stakingXorBalance[StakingLedger.unlocking].filter {
-                    it[UnlockChunk.era] <= activeEra
-                }.sumByBigInteger { it[UnlockChunk.value] }
-                unbonding = stakingXorBalance[StakingLedger.unlocking].filter {
-                    it[UnlockChunk.era] > activeEra
-                }.sumByBigInteger { it[UnlockChunk.value] }
-
-                stakingXorBalance[StakingLedger.active]
-            }
-
-            return@coroutineScope XorBalanceDto(
-                account.free,
-                account.reserved,
-                account.miscFrozen,
-                account.feeFrozen,
-                bonded,
-                redeemable,
-                unbonding,
+        if (accountHex == null) {
+            // No account: nothing staked or bonded either.
+            return XorBalanceDto(
+                BigInteger.ZERO,
+                BigInteger.ZERO,
+                BigInteger.ZERO,
+                BigInteger.ZERO,
+                BigInteger.ZERO,
+                BigInteger.ZERO,
+                BigInteger.ZERO
             )
         }
-
-        // No account: nothing staked or bonded either; the side reads are not needed.
-        sideReads.forEach { it.cancel() }
-        XorBalanceDto(
-            BigInteger.ZERO,
-            BigInteger.ZERO,
-            BigInteger.ZERO,
-            BigInteger.ZERO,
-            BigInteger.ZERO,
-            BigInteger.ZERO,
-            BigInteger.ZERO
+        val balance = decodeXorAccountData(
+            runtime = runtime,
+            accountStorage = account,
+            storageHex = accountHex,
+            requireReserved = forDisplay,
         )
-    }
-
-    private suspend fun fetchStakingLedgerXORBalance(
-        accountId: String
-    ): EncodableStruct<StakingLedger>? {
-        return fetchControllerAccountId(accountId)
-            .let {
-                if (it == null) {
-                    return null
-                }
-
-                val storageKey =
-                    runtimeManager.getRuntimeSnapshot().metadata.module(Pallete.STAKING.palletName)
-                        .storage(Storage.LEDGER.storageName)
-                        .storageKey(runtimeManager.getRuntimeSnapshot(), it.toAccountId())
-                socketService.executeAsyncMapped(
-                    request = GetStorageRequest(listOf(storageKey)),
-                    mapper = scale(StakingLedger).nonNull()
-                )
-            }
-    }
-
-    private suspend fun fetchActiveEra(): BigInteger {
-        val storageKey =
-            runtimeManager.getRuntimeSnapshot().metadata.module(Pallete.STAKING.palletName)
-                .storage(Storage.ACTIVE_ERA.storageName)
-                .storageKey()
-        return socketService.executeAsyncMapped(
-            request = GetStorageRequest(listOf(storageKey)),
-            mapper = scale(ActiveEraInfo).nonNull()
-        ).let {
-            it[ActiveEraInfo.index].toLong().toBigInteger()
+        val bonded = referralHex?.let {
+            val bond = runCatching { referral.type.value?.fromHex(runtime, it)?.safeCast<BigInteger>() }.getOrNull()
+            bond ?: if (forDisplay) throw IllegalStateException("SORA2_REFERRAL_BOND_INVALID") else BigInteger.ZERO
+        } ?: BigInteger.ZERO
+        // The era is read for every account that exists, staking or not, as it always was: an
+        // answer without it fails the read.
+        val activeEra = ActiveEraInfo.read(
+            (eraHex ?: throw IllegalStateException("SORA2_ACTIVE_ERA_MISSING")).fromHex()
+        )[ActiveEraInfo.index].toLong().toBigInteger()
+        var redeemable = BigInteger.ZERO
+        var unbonding = BigInteger.ZERO
+        val controller = controllerHex?.let {
+            runtimeManager.toSoraAddressOrNull(ScaleCodecReader(Hex.decode(it.removeHexPrefix())).readByteArray(32))
         }
-    }
+        if (controller != null) {
+            val ledgerKey = staking.storage(Storage.LEDGER.storageName)
+                .storageKey(runtime, controller.toAccountId())
+            val ledgerHex = socketService.executeAsyncMapped(
+                request = StateQueryStorageAt(listOf(listOf(ledgerKey), block)),
+                mapper = pojoList<StateQueryResponse>().nonNull(),
+            ).single().valuesOf(listOf(ledgerKey), atBlock = block).single()
+                ?: throw IllegalStateException("SORA2_STAKING_LEDGER_MISSING")
+            val ledger = StakingLedger.read(ledgerHex.fromHex())
+            redeemable = ledger[StakingLedger.unlocking].filter {
+                it[UnlockChunk.era] <= activeEra
+            }.sumByBigInteger { it[UnlockChunk.value] }
+            unbonding = ledger[StakingLedger.unlocking].filter {
+                it[UnlockChunk.era] > activeEra
+            }.sumByBigInteger { it[UnlockChunk.value] }
+        }
 
-    private suspend fun fetchControllerAccountId(
-        accountId: String
-    ): String? {
-        val storageKey =
-            runtimeManager.getRuntimeSnapshot().metadata.module(Pallete.STAKING.palletName)
-                .storage(Storage.BONDED.storageName)
-                .storageKey(runtimeManager.getRuntimeSnapshot(), accountId.toAccountId())
-        val response = socketService.executeAsync(
-            request = GetStorageRequest(listOf(storageKey)),
+        return XorBalanceDto(
+            balance.free,
+            balance.reserved,
+            balance.miscFrozen,
+            balance.feeFrozen,
+            bonded,
+            redeemable,
+            unbonding,
         )
-        val mapped = response.result?.let {
-            val withoutPrefix = (it as String).removeHexPrefix()
-            val bytes = Hex.decode(withoutPrefix)
-            val reader = ScaleCodecReader(bytes)
-            runtimeManager.toSoraAddressOrNull(reader.readByteArray(32))
-        }
-        return mapped
     }
 
     suspend fun fetchAssetsList(): List<TokenInfoDto> {
@@ -332,41 +307,51 @@ class SubstrateCalls @Inject constructor(
         accountId: String,
         assetIds: List<String>,
         blockHash: String? = null,
-    ): List<BigInteger> {
+    ): List<BigInteger> = coroutineScope {
         val chunks = assetIds.chunked(DEFAULT_ASSETS_PAGE_SIZE)
         val storage = runtimeManager.getRuntimeSnapshot().metadata.module(Pallete.TOKENS.palletName)
             .storage(Storage.ACCOUNTS.storageName)
 
-        return chunks.fold(mutableListOf()) { acc, chunk ->
-            val storageKeys = chunk.map { assetId ->
-                storage.storageKey(
-                    runtimeManager.getRuntimeSnapshot(),
-                    accountId.toAccountId(),
-                    assetId.mapCodeToken(),
+        // The pages do not depend on each other, so they are asked for together: the whole
+        // whitelist (three pages) takes about one answer from the node instead of three in turn.
+        // Any page failing fails the read, as it did when they were read in turn.
+        chunks.map { chunk ->
+            async {
+                val storageKeys = chunk.map { assetId ->
+                    storage.storageKey(
+                        runtimeManager.getRuntimeSnapshot(),
+                        accountId.toAccountId(),
+                        assetId.mapCodeToken(),
+                    )
+                }
+                // Each key is asked for once, so the answer can be checked key by key.
+                val asked = storageKeys.distinct()
+                val request = StateQueryStorageAt(
+                    if (blockHash == null) listOf(asked) else listOf(asked, blockHash)
                 )
+                // Zero only for a key the node answered with no storage. A key it left out, or
+                // a stored value that does not decode, was not read: the read fails, and whoever
+                // asked keeps the last balance it had instead of showing 0.
+                val stored = socketService.executeAsyncMapped(
+                    request,
+                    mapper = pojoList<StateQueryResponse>().nonNull()
+                ).single().valuesOf(asked, atBlock = blockHash)
+                val free = asked.zip(stored).associate { (storageKey, hex) ->
+                    storageKey to if (hex == null) {
+                        BigInteger.ZERO
+                    } else {
+                        val value =
+                            storage.type.value?.fromHex(
+                                runtimeManager.getRuntimeSnapshot(),
+                                hex
+                            )
+                        value.safeCast<Struct.Instance>()?.get<BigInteger>("free")
+                            ?: throw IllegalStateException("SORA2_TOKEN_BALANCE_INVALID")
+                    }
+                }
+                storageKeys.map { free.getValue(it) }
             }
-            val request = StateQueryStorageAt(
-                if (blockHash == null) listOf(storageKeys) else listOf(storageKeys, blockHash)
-            )
-            val chunkValues = socketService.executeAsyncMapped(
-                request,
-                mapper = pojoList<StateQueryResponse>().nonNull()
-            ).first().changesAsMap()
-
-            val results = storageKeys.map { storageKey ->
-                chunkValues[storageKey]?.let {
-                    val value =
-                        storage.type.value?.fromHex(
-                            runtimeManager.getRuntimeSnapshot(),
-                            it
-                        )
-                    value.safeCast<Struct.Instance>()?.get<BigInteger>("free") ?: BigInteger.ZERO
-                } ?: BigInteger.ZERO
-            }
-
-            acc.addAll(results)
-            acc
-        }
+        }.awaitAll().flatten()
     }
 
     /**

@@ -9,10 +9,14 @@ import jp.co.soramitsu.xsubstrate.runtime.metadata.*
 import jp.co.soramitsu.xsubstrate.ss58.SS58Encoder.toAddress
 import jp.co.soramitsu.xsubstrate.wsrpc.SocketService
 import jp.co.soramitsu.xsubstrate.wsrpc.request.runtime.RuntimeRequest
+import jp.co.soramitsu.xsubstrate.wsrpc.exception.RpcException
+import jp.co.soramitsu.xsubstrate.wsrpc.response.RpcError
 import jp.co.soramitsu.xsubstrate.wsrpc.response.RpcResponse
 import jp.co.soramitsu.xsubstrate.wsrpc.subscription.response.SubscriptionChange
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.*
 import org.junit.Assert.*
@@ -27,6 +31,8 @@ class SubstrateReadFlowTest {
     private val cancelled = mockk<SocketService.Cancellable>(relaxed = true)
     private val requests = Collections.synchronizedList(mutableListOf<RuntimeRequest>())
     private var answer: (RuntimeRequest) -> Any? = { error("Unexpected RPC ${it.method}") }
+    /** A request the node answers with a JSON-RPC error instead of a result. */
+    private var nodeError: (RuntimeRequest) -> RpcError? = { null }
     private var changes = listOf<Any>()
     private val subject = SubstrateCalls(socket, runtime, connection)
     private val publicKey = "d43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d"
@@ -38,11 +44,15 @@ class SubstrateReadFlowTest {
     @Before fun setup() {
         every { socket.jsonMapper } returns Gson()
         coEvery { runtime.getRuntimeSnapshot() } returns TestRuntimeSnapshots.mainnet133
+        every { runtime.toSoraAddressOrNull(any()) } answers { firstArg<ByteArray?>()?.toAddress(42.toShort()) }
         every { connection.acquireReviewedSora2MutationTransport() } returns lease
         every { socket.executeRequest(any(), any(), any()) } answers {
             val request = firstArg<RuntimeRequest>(); requests.add(request)
             val callback = thirdArg<SocketService.ResponseListener<RpcResponse>>()
-            try { callback.onNext(RpcResponse("2.0", answer(request), request.id, null)) }
+            try {
+                val failure = nodeError(request)
+                callback.onNext(RpcResponse("2.0", if (failure == null) answer(request) else null, request.id, failure))
+            }
             catch (error: Throwable) { callback.onError(error) }
             cancelled
         }
@@ -98,10 +108,42 @@ class SubstrateReadFlowTest {
         answer = { request -> listOf(storageChanges((request.params[0] as List<*>).single() as String, tokenBalance(BigInteger.ONE, BigInteger.TEN))) }
         assertEquals(listOf(BigInteger.ZERO), subject.fetchTransferableBalances(owner, listOf(valId)))
     }
-    @Test fun `missing token accounts are zero in both balance projections`() = runTest {
-        answer = { listOf(mapOf("block" to block, "changes" to emptyList<Any>())) }
+    @Test fun `token accounts with no storage are zero in both balance projections`() = runTest {
+        // What the node answers for an account that never held the token: the key, with null.
+        answer = { request -> listOf(mapOf("block" to block, "changes" to (request.params[0] as List<*>).map { listOf(it, null) })) }
         assertEquals(listOf(BigInteger.ZERO, BigInteger.ZERO), subject.fetchBalances(owner, listOf(xor, valId)))
         assertEquals(listOf(BigInteger.ZERO), subject.fetchTransferableBalances(owner, listOf(valId)))
+    }
+    @Test fun `a token key the node leaves out fails the read and is never zero`() = runTest {
+        answer = { request ->
+            val keys = request.params[0] as List<*>
+            listOf(mapOf("block" to block, "changes" to listOf(listOf(keys[0], tokenBalance(large)))))
+        }
+        val error = runCatching { subject.fetchBalances(owner, listOf(xor, valId)) }.exceptionOrNull()
+        assertEquals("SORA2_STORAGE_ANSWER_INCOMPLETE", (error as IllegalStateException).message)
+        answer = { listOf(mapOf("block" to block, "changes" to emptyList<Any>())) }
+        assertTrue(runCatching { subject.fetchBalances(owner, listOf(valId)) }.exceptionOrNull() is IllegalStateException)
+    }
+    @Test fun `a token key listed twice or one that was not asked for fails the read`() = runTest {
+        answer = { request ->
+            val key = (request.params[0] as List<*>).single()
+            listOf(mapOf("block" to block, "changes" to listOf(listOf(key, null), listOf(key, tokenBalance(large)))))
+        }
+        assertTrue(runCatching { subject.fetchBalances(owner, listOf(valId)) }.exceptionOrNull() is IllegalStateException)
+        answer = { request ->
+            val key = (request.params[0] as List<*>).single()
+            listOf(mapOf("block" to block, "changes" to listOf(listOf(key, tokenBalance(large)), listOf("0xother", null))))
+        }
+        assertTrue(runCatching { subject.fetchBalances(owner, listOf(valId)) }.exceptionOrNull() is IllegalStateException)
+    }
+    @Test fun `a stored token balance that does not decode fails the read and is never zero`() = runTest {
+        answer = { request -> listOf(storageChanges((request.params[0] as List<*>).single() as String, "0x01")) }
+        assertTrue(runCatching { subject.fetchBalances(owner, listOf(valId)) }.isFailure)
+    }
+    @Test fun `the same token asked for twice is answered twice from one key`() = runTest {
+        answer = { request -> listOf(mapOf("block" to block, "changes" to (request.params[0] as List<*>).map { listOf(it, tokenBalance(BigInteger.TEN)) })) }
+        assertEquals(listOf(BigInteger.TEN, BigInteger.TEN), subject.fetchBalances(owner, listOf(valId, valId)))
+        assertEquals(1, (requests.single().params[0] as List<*>).size)
     }
     @Test fun `present malformed token balance fails closed`() = runTest {
         answer = { request -> listOf(storageChanges((request.params[0] as List<*>).single() as String, "0x01")) }
@@ -117,36 +159,148 @@ class SubstrateReadFlowTest {
         assertEquals(listOf(100, 100, 5), requests.map { (it.params[0] as List<*>).size })
         assertTrue(requests.all { it.params[1] == block })
     }
+    @Test fun `the pages of a large token read are asked for together and answered in the order asked`() = runTest {
+        val ids = (1..205).map { "0x" + it.toString(16).padStart(64, '0') }
+        // The node holds every answer back until all three pages have been asked for: pages read
+        // in turn would never get past the first.
+        val held = mutableListOf<Pair<RuntimeRequest, SocketService.ResponseListener<RpcResponse>>>()
+        every { socket.executeRequest(any(), any(), any()) } answers {
+            val request = firstArg<RuntimeRequest>(); requests.add(request)
+            synchronized(held) { held += request to thirdArg<SocketService.ResponseListener<RpcResponse>>() }
+            cancelled
+        }
+        val read = async { subject.fetchBalances(owner, ids, block) }
+        runCurrent()
+        assertEquals(listOf(100, 100, 5), requests.map { (it.params[0] as List<*>).size })
+        // Answered last page first, each key with its own position as the balance.
+        val position = requests.flatMap { it.params[0] as List<*> }.withIndex().associate { (index, key) -> key to index }
+        held.reversed().forEach { (request, listener) ->
+            val keys = request.params[0] as List<*>
+            listener.onNext(RpcResponse("2.0", listOf(mapOf("block" to block, "changes" to keys.map { listOf(it, tokenBalance(BigInteger.valueOf(position.getValue(it).toLong()))) })), request.id, null))
+        }
+        assertEquals(List(205) { BigInteger.valueOf(it.toLong()) }, read.await())
+        assertTrue(requests.all { it.params[1] == block })
+    }
+    @Test fun `one page failing fails the whole token read`() = runTest {
+        val ids = (1..150).map { "0x" + it.toString(16).padStart(64, '0') }
+        answer = { request ->
+            val keys = request.params[0] as List<*>
+            if (keys.size == 50) error("page lost")
+            listOf(mapOf("block" to block, "changes" to keys.map { listOf(it, tokenBalance(BigInteger.ONE)) }))
+        }
+        assertTrue(runCatching { subject.fetchBalances(owner, ids) }.isFailure)
+    }
     @Test fun `empty token queries do not contact the node`() = runTest {
         assertTrue(subject.fetchBalances(owner, emptyList()).isEmpty()); assertTrue(subject.fetchTransferableBalances(owner, emptyList()).isEmpty())
         assertTrue(requests.isEmpty())
     }
+    private val snapshot get() = TestRuntimeSnapshots.mainnet133
+    private val accountKey get() = snapshot.metadata.module("System").storage("Account").storageKey(snapshot, publicKey.fromHex())
+    private val controllerKey get() = snapshot.metadata.module("Staking").storage("Bonded").storageKey(snapshot, publicKey.fromHex())
+    private val eraKey get() = snapshot.metadata.module("Staking").storage("ActiveEra").storageKey()
+    private val referralKey get() = snapshot.metadata.module("Referrals").storage("ReferrerBalances").storageKey(snapshot, publicKey.fromHex())
+    private val controller = "01".repeat(32)
+    private val ledgerKey get() = snapshot.metadata.module("Staking").storage("Ledger").storageKey(snapshot, controller.fromHex())
+    private fun xorAccount(free: BigInteger, frozen: BigInteger = BigInteger.ZERO) = "0x" + "00000000".repeat(4) + u128(free) + u128(BigInteger.ZERO) + u128(frozen) + u128(BigInteger.ZERO)
+    /** The node's answer to a keyed read: every key that was asked for, with [stored]'s value or null. */
+    private fun keyed(request: RuntimeRequest, stored: Map<String, String?>) =
+        listOf(mapOf("block" to block, "changes" to (request.params[0] as List<*>).map { listOf(it, stored[it]) }))
     @Test fun `XOR account absent returns all zero balance components`() = runTest {
-        answer = { null }
+        answer = { keyed(it, emptyMap()) }
         val balance = subject.fetchXORBalances(owner)
         assertEquals(BigInteger.ZERO, balance.free); assertEquals(BigInteger.ZERO, balance.reserved)
         assertEquals(BigInteger.ZERO, balance.bonded); assertEquals(BigInteger.ZERO, balance.redeemable); assertEquals(BigInteger.ZERO, balance.unbonding)
-        // The staking, era and referral reads go out with the account read; with no account their
-        // answers (here: none at all, which would fail them) are not used.
-        val snapshot = TestRuntimeSnapshots.mainnet133
-        val accountKey = snapshot.metadata.module("System").storage("Account").storageKey(snapshot, publicKey.fromHex())
-        assertTrue(requests.any { it.method == "state_getStorage" && it.params.firstOrNull() == accountKey })
+        // The account, the staking controller, the active era and the referral bond are one read.
+        val request = requests.single()
+        assertEquals("state_queryStorageAt", request.method)
+        assertEquals(listOf(accountKey, controllerKey, eraKey, referralKey), request.params[0])
+    }
+    @Test fun `a node error on the XOR read is not an account without XOR`() = runTest {
+        answer = { null }
+        nodeError = { RpcError(-32000, "Client error: state pruned") }
+        val error = runCatching { subject.fetchXORBalances(owner) }.exceptionOrNull()
+        assertTrue(error is RpcException); assertEquals("Client error: state pruned", error?.message)
+    }
+    @Test fun `an XOR answer that leaves a key out, or is not one answer, fails the read`() = runTest {
+        answer = { request -> listOf(mapOf("block" to block, "changes" to (request.params[0] as List<*>).drop(1).map { listOf(it, null) })) }
+        assertEquals("SORA2_STORAGE_ANSWER_INCOMPLETE", runCatching { subject.fetchXORBalances(owner) }.exceptionOrNull()?.message)
+        answer = { request -> keyed(request, emptyMap()) + keyed(request, mapOf(accountKey to xorAccount(large))) }
+        assertTrue(runCatching { subject.fetchXORBalances(owner) }.isFailure)
+        answer = { emptyList<Any>() }
+        assertTrue(runCatching { subject.fetchXORBalances(owner) }.isFailure)
+    }
+    @Test fun `a stored XOR account that does not decode fails the read and is never zero`() = runTest {
+        answer = { keyed(it, mapOf(accountKey to "0x01", eraKey to "0x05000000")) }
+        assertTrue(runCatching { subject.fetchXORBalances(owner) }.isFailure)
+        assertTrue(runCatching { subject.fetchXORBalances(owner, forDisplay = true) }.isFailure)
+        // The same answer with an account that decodes is read.
+        answer = { keyed(it, mapOf(accountKey to xorAccount(large), eraKey to "0x05000000")) }
+        assertEquals(large, subject.fetchXORBalances(owner).free)
+    }
+    @Test fun `a stored referral bond that does not decode fails a read for display and is never zero there`() = runTest {
+        answer = { keyed(it, mapOf(accountKey to xorAccount(large), eraKey to "0x05000000", referralKey to "0x01")) }
+        assertEquals("SORA2_REFERRAL_BOND_INVALID", runCatching { subject.fetchXORBalances(owner, forDisplay = true) }.exceptionOrNull()?.message)
+        // The check before a transfer does not use the bond, and keeps its tolerance for it.
+        val forTransfer = subject.fetchXORBalances(owner)
+        assertEquals(large, forTransfer.free); assertEquals(BigInteger.ZERO, forTransfer.bonded)
+        // The same account with a bond that decodes is read either way.
+        answer = { keyed(it, mapOf(accountKey to xorAccount(large), eraKey to "0x05000000", referralKey to "0x" + u128(BigInteger.ONE))) }
+        assertEquals(BigInteger.ONE, subject.fetchXORBalances(owner, forDisplay = true).bonded)
+        assertEquals(BigInteger.ONE, subject.fetchXORBalances(owner).bonded)
+    }
+    @Test fun `an XOR answer without a block hash is not joined with a ledger read`() = runTest {
+        val ledger = "0x" + "02".repeat(32) + "9101" + "a0" + "00" + "00"
+        val stored = mapOf(accountKey to xorAccount(large), controllerKey to "0x$controller", eraKey to "0x05000000", ledgerKey to ledger)
+        // Left out, sent as null, too short, without its prefix, not hex.
+        val leftOut = Any()
+        for (hash in listOf<Any?>(leftOut, null, "0x00", "ab".repeat(32), "0x" + "zz".repeat(32))) {
+            requests.clear()
+            answer = { request ->
+                val keys = request.params[0] as List<*>
+                val set = mutableMapOf<String, Any?>("changes" to keys.map { listOf(it, stored[it]) })
+                if (hash !== leftOut) set["block"] = hash
+                listOf(set)
+            }
+            assertEquals("SORA2_STORAGE_ANSWER_INCOMPLETE", runCatching { subject.fetchXORBalances(owner) }.exceptionOrNull()?.message)
+            // The ledger was never asked for.
+            assertEquals(1, requests.size)
+        }
+    }
+    @Test fun `an account that exists is not read without the active era, staking or not`() = runTest {
+        answer = { keyed(it, mapOf(accountKey to xorAccount(large))) }
+        assertEquals("SORA2_ACTIVE_ERA_MISSING", runCatching { subject.fetchXORBalances(owner) }.exceptionOrNull()?.message)
+    }
+    @Test fun `a ledger answered from another block than the account fails the XOR read`() = runTest {
+        val other = "0x" + "cd".repeat(32)
+        val ledger = "0x" + "02".repeat(32) + "9101" + "a0" + "00" + "00"
+        answer = { request ->
+            val stored = mapOf(accountKey to xorAccount(large), controllerKey to "0x$controller", eraKey to "0x05000000", ledgerKey to ledger)
+            val keys = request.params[0] as List<*>
+            listOf(mapOf("block" to (if (keys == listOf(ledgerKey)) other else block), "changes" to keys.map { listOf(it, stored[it]) }))
+        }
+        assertEquals("SORA2_STORAGE_ANSWER_INCOMPLETE", runCatching { subject.fetchXORBalances(owner) }.exceptionOrNull()?.message)
+    }
+    @Test fun `token balances asked for at a block are not taken from another block`() = runTest {
+        val other = "0x" + "cd".repeat(32)
+        answer = { request -> listOf(mapOf("block" to other, "changes" to (request.params[0] as List<*>).map { listOf(it, tokenBalance(BigInteger.TEN)) })) }
+        assertEquals("SORA2_STORAGE_ANSWER_INCOMPLETE", runCatching { subject.fetchBalances(owner, listOf(valId), block) }.exceptionOrNull()?.message)
+        // Without a block named, the node's own choice of block is the answer.
+        assertEquals(listOf(BigInteger.TEN), subject.fetchBalances(owner, listOf(valId)))
     }
     @Test fun `XOR balances include referral bond and runtime frozen floor`() = runTest {
-        val snapshot = TestRuntimeSnapshots.mainnet133
-        val accountKey = snapshot.metadata.module("System").storage("Account").storageKey(snapshot, publicKey.fromHex())
-        val bondedKey = snapshot.metadata.module("Staking").storage("Bonded").storageKey(snapshot, publicKey.fromHex())
-        val eraKey = snapshot.metadata.module("Staking").storage("ActiveEra").storageKey()
-        answer = { request -> when (request.params[0]) {
-            accountKey -> "0x" + "00000000".repeat(4) + u128(large) + u128(BigInteger.ZERO) + u128(BigInteger.TEN) + u128(BigInteger.ZERO)
-            bondedKey -> null
-            eraKey -> "0x05000000"
-            else -> error("Unexpected storage key")
-        } }
-        changes = listOf(storageChanges("referral", "0x" + u128(BigInteger.valueOf(7))))
+        answer = { keyed(it, mapOf(accountKey to xorAccount(large, frozen = BigInteger.TEN), eraKey to "0x05000000", referralKey to "0x" + u128(BigInteger.valueOf(7)))) }
         val balance = subject.fetchXORBalances(owner)
         assertEquals(large, balance.free); assertEquals(BigInteger.TEN, balance.miscFrozen); assertEquals(BigInteger.TEN, balance.feeFrozen)
         assertEquals(BigInteger.valueOf(7), balance.bonded); assertEquals(BigInteger.ZERO, balance.unbonding)
+        // No controller: no second request, and no subscription for the referral bond.
+        assertEquals(listOf("state_queryStorageAt"), requests.map { it.method })
+    }
+    @Test fun `a controller without a ledger, or without an active era, fails the XOR read`() = runTest {
+        answer = { keyed(it, mapOf(accountKey to xorAccount(large), controllerKey to "0x$controller", eraKey to "0x05000000")) }
+        assertEquals("SORA2_STAKING_LEDGER_MISSING", runCatching { subject.fetchXORBalances(owner) }.exceptionOrNull()?.message)
+        val ledger = "0x" + "02".repeat(32) + "9101" + "a0" + "00" + "00"
+        answer = { keyed(it, mapOf(accountKey to xorAccount(large), controllerKey to "0x$controller", ledgerKey to ledger)) }
+        assertEquals("SORA2_ACTIVE_ERA_MISSING", runCatching { subject.fetchXORBalances(owner) }.exceptionOrNull()?.message)
     }
     @Test fun `empty asset registry avoids a storage value query`() = runTest {
         answer = { assertEquals("state_getKeysPaged", it.method); emptyList<String>() }
@@ -265,27 +419,25 @@ class SubstrateReadFlowTest {
         assertEquals("0x02", BulkRetriever().queryKey(socket, "requested"))
     }
     @Test fun `staking ledger separates mature unlocks from future locks without losing referral bond`() = runTest {
-        val snapshot = TestRuntimeSnapshots.mainnet133
-        val accountKey = snapshot.metadata.module("System").storage("Account").storageKey(snapshot, publicKey.fromHex())
-        val bondedKey = snapshot.metadata.module("Staking").storage("Bonded").storageKey(snapshot, publicKey.fromHex())
-        val ledgerKey = snapshot.metadata.module("Staking").storage("Ledger").storageKey(snapshot, publicKey.fromHex())
-        val eraKey = snapshot.metadata.module("Staking").storage("ActiveEra").storageKey()
+        // The account is its own controller.
+        val ownLedgerKey = snapshot.metadata.module("Staking").storage("Ledger").storageKey(snapshot, publicKey.fromHex())
         every { runtime.toSoraAddressOrNull(any()) } returns owner
-        answer = { request -> when (request.params[0]) {
-            accountKey -> "0x" + "00000000".repeat(4) + u128(large) + u128(BigInteger.ZERO) + u128(BigInteger.TEN) + u128(BigInteger.ZERO)
-            bondedKey -> "0x" + publicKey
+        answer = { keyed(it, mapOf(
+            accountKey to xorAccount(large, frozen = BigInteger.TEN),
+            controllerKey to "0x$publicKey",
             // Stash, compact total=25, active=10, 3 unlocks: (3,4), (5,5), (7,6), no claimed rewards.
-            ledgerKey -> "0x" + publicKey + "64280c0c1014141c1800"
-            eraKey -> "0x05000000"
-            else -> error("Unexpected storage key")
-        } }
-        changes = listOf(storageChanges("referral", "0x" + u128(BigInteger.valueOf(7))))
+            ownLedgerKey to "0x" + publicKey + "64280c0c1014141c1800",
+            eraKey to "0x05000000",
+            referralKey to "0x" + u128(BigInteger.valueOf(7)),
+        )) }
         val balance = subject.fetchXORBalances(owner)
         assertEquals(BigInteger.valueOf(7), balance.bonded)
         assertEquals(BigInteger.valueOf(8), balance.redeemable)
         assertEquals(BigInteger.valueOf(7), balance.unbonding)
         verify(exactly = 1) { runtime.toSoraAddressOrNull(match { it.contentEquals(publicKey.fromHex()) }) }
-        assertTrue(requests.any { it.params.first() == ledgerKey })
+        // Two requests: the four keys, then the ledger at the block they were read at.
+        assertEquals(2, requests.size)
+        assertEquals(listOf(listOf(ownLedgerKey), block), requests[1].params)
     }
 
 

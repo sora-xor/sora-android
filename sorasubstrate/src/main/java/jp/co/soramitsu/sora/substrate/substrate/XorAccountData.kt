@@ -36,16 +36,7 @@ internal data class XorAccountData(
     val reserved: BigInteger,
     val miscFrozen: BigInteger,
     val feeFrozen: BigInteger,
-) {
-    companion object {
-        val EMPTY = XorAccountData(
-            BigInteger.ZERO,
-            BigInteger.ZERO,
-            BigInteger.ZERO,
-            BigInteger.ZERO,
-        )
-    }
-}
+)
 
 /**
  * Decodes the balance part of a `System.Account` storage value with the runtime that is live.
@@ -65,15 +56,23 @@ internal data class XorAccountData(
  * `frozen`. Both limits are kept, so that an account with reserved and frozen XOR is not
  * promised an amount whose fee it cannot pay.
  */
+internal const val XOR_ACCOUNT_INVALID = "SORA2_XOR_ACCOUNT_INVALID"
+
 internal fun decodeXorAccountData(
     runtime: RuntimeSnapshot,
     accountStorage: StorageEntry,
     storageHex: String,
+    requireReserved: Boolean = true,
 ): XorAccountData {
+    // A stored account whose balance does not decode has not been read: that fails, so nobody
+    // takes it for an account with no XOR.
     val account = accountStorage.type.value?.fromHex(runtime, storageHex) as? Struct.Instance
-    val data = account?.get<Struct.Instance>("data") ?: return XorAccountData.EMPTY
-    val free = data.get<BigInteger>("free") ?: BigInteger.ZERO
-    val reserved = data.get<BigInteger>("reserved") ?: BigInteger.ZERO
+    val data = account?.get<Struct.Instance>("data") ?: throw IllegalStateException(XOR_ACCOUNT_INVALID)
+    val free = data.get<BigInteger>("free") ?: throw IllegalStateException(XOR_ACCOUNT_INVALID)
+    // The total that is shown includes the reserved balance, so it must be there. The check
+    // before a transfer does not use it beyond the lock floor, where zero is the careful value.
+    val reserved = data.get<BigInteger>("reserved")
+        ?: if (requireReserved) throw IllegalStateException(XOR_ACCOUNT_INVALID) else BigInteger.ZERO
     val frozen = data.get<BigInteger>("frozen")
     if (frozen != null) {
         return XorAccountData(
@@ -87,8 +86,9 @@ internal fun decodeXorAccountData(
             feeFrozen = BalanceWrapper.feeLockedFreeBalance(free = free, frozen = frozen),
         )
     }
-    val miscFrozen = data.get<BigInteger>("miscFrozen") ?: BigInteger.ZERO
-    val feeFrozen = data.get<BigInteger>("feeFrozen") ?: BigInteger.ZERO
+    // Neither layout: the locks cannot be read, so nothing is promised as transferable.
+    val miscFrozen = data.get<BigInteger>("miscFrozen") ?: throw IllegalStateException(XOR_ACCOUNT_INVALID)
+    val feeFrozen = data.get<BigInteger>("feeFrozen") ?: throw IllegalStateException(XOR_ACCOUNT_INVALID)
     return XorAccountData(
         free = free,
         reserved = reserved,

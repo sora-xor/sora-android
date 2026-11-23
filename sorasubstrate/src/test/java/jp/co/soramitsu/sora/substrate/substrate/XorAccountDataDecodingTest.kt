@@ -8,8 +8,11 @@ import jp.co.soramitsu.sora.substrate.runtime.Storage
 import jp.co.soramitsu.sora.substrate.testing.TestRuntimeSnapshots
 import jp.co.soramitsu.xsubstrate.runtime.RuntimeSnapshot
 import jp.co.soramitsu.xsubstrate.runtime.definitions.types.composite.Struct
+import jp.co.soramitsu.xsubstrate.runtime.definitions.types.TypeReference
 import jp.co.soramitsu.xsubstrate.runtime.definitions.types.fromHex
 import jp.co.soramitsu.xsubstrate.runtime.metadata.module
+import jp.co.soramitsu.xsubstrate.runtime.metadata.module.StorageEntry
+import jp.co.soramitsu.xsubstrate.runtime.metadata.module.StorageEntryType
 import jp.co.soramitsu.xsubstrate.runtime.metadata.storage
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -139,6 +142,34 @@ class XorAccountDataDecodingTest {
         assertEquals(BigInteger.valueOf(3), account.reserved)
         assertEquals(BigInteger.ZERO, account.miscFrozen)
         assertEquals(BigInteger.valueOf(7), transferable(account))
+    }
+
+    @Test
+    fun `a layout without the reserved balance is not shown, and holds back the whole lock before a transfer`() {
+        // No runtime this app has met leaves `reserved` out; the schema is made here from the
+        // real one's u128, with the fields free and frozen only.
+        val runtime = TestRuntimeSnapshots.mainnet133
+        val real = runtime.metadata.module(Pallete.SYSTEM.palletName).storage(Storage.ACCOUNT.storageName)
+        val u128 = TypeReference(checkNotNull(runtime.typeRegistry["u128"]))
+        val data = Struct("AccountData", linkedMapOf("free" to u128, "frozen" to u128))
+        val info = Struct("AccountInfo", linkedMapOf("data" to TypeReference(data)))
+        val storage = StorageEntry(
+            real.name, real.modifier, StorageEntryType.Plain(info), real.default, real.documentation, real.moduleName,
+        )
+        val stored = "0x" + littleEndian(100, 16) + littleEndian(30, 16)
+
+        // The total that is shown includes the reserved balance: without it nothing is shown.
+        assertEquals(
+            XOR_ACCOUNT_INVALID,
+            runCatching { decodeXorAccountData(runtime, storage, stored) }.exceptionOrNull()?.message,
+        )
+        // The check before a transfer reads it as no reserved balance, which holds back the
+        // whole lock from the free balance.
+        val forTransfer = decodeXorAccountData(runtime, storage, stored, requireReserved = false)
+        assertEquals(BigInteger.valueOf(100), forTransfer.free)
+        assertEquals(BigInteger.ZERO, forTransfer.reserved)
+        assertEquals(BigInteger.valueOf(30), forTransfer.miscFrozen)
+        assertEquals(BigInteger.valueOf(70), transferable(forTransfer))
     }
 
     @Test
