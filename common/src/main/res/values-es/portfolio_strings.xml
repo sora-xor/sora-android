@@ -46,7 +46,6 @@
     <string name="portfolio_review_in_send">Revisar en Enviar</string>
     <string name="portfolio_switch_and_review">Cambiar a %1$s y revisar</string>
     <string name="portfolio_switch_note">Estos fondos están en %1$s. Primero cambiamos a esa billetera.</string>
-    <string name="portfolio_switch_first">Primero cambiamos a esa billetera</string>
     <string name="portfolio_switch_failed">No se pudo cambiar de billetera. No se modificó nada.</string>
     <string name="portfolio_route_runs_on_sora2">Los intercambios de Polkaswap se realizan en SORA2.</string>
     <string name="portfolio_route_none">No hay una ruta desde %1$s en esta versión.</string>
@@ -63,16 +62,12 @@
     <string name="portfolio_how_we_count">Cómo calculamos tu saldo</string>
     <string name="portfolio_how_we_count_body">El total suma el saldo completo de cada activo visible que tiene un precio en las redes principales. Las posiciones ocultas, sin precio y de redes de pruebas se excluyen y se indican; nunca se omiten sin explicación.</string>
     <string name="portfolio_all_wallets_sum">Todas las billeteras suma el total de cada billetera, teniendo en cuenta los activos ocultos de cada una.</string>
-    <string name="portfolio_excluded_hidden">Ocultos: %1$d</string>
     <string name="portfolio_excluded_unpriced">Sin precio: %1$d</string>
-    <string name="portfolio_excluded_testnet">Activos de redes de pruebas: %1$d</string>
-    <string name="portfolio_excluded_caption">%1$s no incluido</string>
     <string name="portfolio_prices_as_of">Precios de %1$s</string>
     <string name="portfolio_counted">Contabilizado</string>
     <string name="portfolio_hidden_by_you">Oculto por ti</string>
     <string name="portfolio_without_price">Sin precio</string>
     <string name="portfolio_testnets">Redes de pruebas (Taira)</string>
-    <string name="portfolio_never_counted">Nunca contabilizados</string>
     <string name="portfolio_pool_stakes">Participaciones en pools</string>
     <string name="portfolio_not_included">No incluido</string>
     <string name="portfolio_manage_hidden">Gestionar activos ocultos</string>
@@ -84,7 +79,6 @@
     <string name="portfolio_state_offline">SIN CONEXIÓN</string>
     <string name="portfolio_state_reading">LEYENDO</string>
     <string name="portfolio_reading_balances">Leyendo saldos…</string>
-    <string name="portfolio_excluded_unread">Billeteras aún sin leer: %1$d</string>
     <string name="portfolio_age_seconds">%1$d s</string>
     <string name="portfolio_age_minutes">%1$d min</string>
     <string name="portfolio_age_hours">%1$d h</string>
@@ -128,14 +122,10 @@
     <string name="portfolio_amount_too_high">Supera el saldo transferible.</string>
     <string name="portfolio_arrives_on">Llega como %1$s en %2$s</string>
     <string name="portfolio_network">Red</string>
-    <string name="portfolio_route">Ruta</string>
-    <string name="portfolio_route_same_network">Misma red, entre tus billeteras</string>
     <string name="portfolio_fee_in_send">Se muestra en Enviar antes de confirmar</string>
-    <string name="portfolio_move_note">Enviar muestra la comisión y la cantidad final. No se mueve ningún fondo hasta que confirmes allí.</string>
     <string name="portfolio_choose_holding">Elegir una posición</string>
     <string name="portfolio_you_pay">Pagas</string>
     <string name="portfolio_you_get">Recibes</string>
-    <string name="portfolio_swap_note">Polkaswap muestra el precio, la comisión y el impacto antes de que firmes. Aquí solo se elige el par.</string>
     <string name="portfolio_send_from">¿Enviar desde qué billetera?</string>
     <string name="portfolio_receive_to">¿Recibir en qué billetera?</string>
     <string name="portfolio_sample_handoff_off">Cartera de ejemplo: las direcciones son ficticias, por lo que no se abre Enviar.</string>

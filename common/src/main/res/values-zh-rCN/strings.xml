@@ -76,7 +76,6 @@
   <string name="common_close">关闭</string>
   <string name="tx_details_view_on_explorer">在区块浏览器中查看</string>
   <string name="common_confirm">确认</string>
-  <string name="common_connected">已连接</string>
   <string name="common_connecting">正在连接…</string>
   <string name="common_continue">继续</string>
   <string name="common_copied">复制到剪贴板</string>
@@ -214,10 +213,7 @@
   <string name="eth_tx_address">以太坊账户地址</string>
   <string name="eth_tx_hash">以太坊交易哈希</string>
   <string name="explore_create_pool">创建池子</string>
-  <string name="explore_demeter_subtitle">质押您的流动池份额并赚取额外奖励</string>
   <string name="explore_demeter_title">Demeter农业</string>
-  <string name="explore_provide_and_earn">提供流动性并获得奖励</string>
-  <string name="explore_swap_tokens_on_sora">在SORA网络上进行代币兑换</string>
   <string name="export_account_details_backup_description">如果你无法访问这台设备，除非你进行备份，否则你的资金将会丢失！</string>
   <string name="export_account_details_backup_options">备份选项</string>
   <string name="export_account_details_show_passphrase">显示密码短语</string>
@@ -337,7 +333,6 @@
   <string name="pool_share_title_1">您的流动池份额</string>
   <string name="pooled_assets">流动池化资产</string>
   <string name="profile_biometry_title">生物特征认证</string>
-  <string name="protect_loss_access_funds">保护自己免于失去对资金的访问权限</string>
   <string name="qr_code">QR 代码</string>
   <string name="receive_tokens">接收代币</string>
   <string name="received_from_adar">从 ADAR 收到</string>
@@ -407,15 +402,10 @@
   <string name="select_pool_share">选择您要质押的流动池份额</string>
   <string name="select_recipient">选择接收人地址</string>
   <string name="settings_accounts">账户</string>
-  <string name="settings_accounts_subtitle">管理账户，备份密码短语</string>
-  <string name="settings_app_subtitle">语言、外观</string>
   <string name="settings_crypto_accounts">加密账户</string>
   <string name="settings_header_app">应用设置</string>
-  <string name="settings_information_subtitle">免责声明，常见问题解答，关于应用程序</string>
   <string name="settings_information_title">信息</string>
-  <string name="settings_invite_subtitle">分享邀请链接</string>
   <string name="settings_invite_title">邀请朋友并获得收益</string>
-  <string name="settings_login_subtitle">PIN 和生物识别身份验证</string>
   <string name="settings_login_title">登录 &amp; 安全</string>
   <string name="settings_nodes">节点</string>
   <string name="show_more">显示更多</string>
@@ -431,7 +421,6 @@
   <string name="transaction_date_1">日期和时间</string>
   <string name="transaction_id">外部哈希</string>
   <string name="tutorial_many_world">万千世界，\n一个经济体！</string>
-  <string name="tutorial_many_world_desc">SORA正在努力成为一个去中心化的多元宇宙经济系统，资助新颖有趣应用程序的创造，并在SORA议会民主监督下进行。</string>
   <string name="tutorial_privacy_policy">隐私协议</string>
   <string name="tutorial_terms_and_conditions_3">条款及细则</string>
   <string name="tutorial_terms_and_conditions_template_1">继续操作即表示您同意</string>

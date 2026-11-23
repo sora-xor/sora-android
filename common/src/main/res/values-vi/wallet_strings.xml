@@ -155,7 +155,6 @@
     <string name="wallet_market_activity">Thị trường hoạt động: %1$d · Nhà giao dịch: %2$d</string>
     <string name="wallet_send_network_notice">Dùng địa chỉ người nhận thuộc %1$s.</string>
     <string name="wallet_assets_unavailable">Tài sản không khả dụng</string>
-    <string name="wallet_assets_unavailable_details">Không thể tải tài sản. Kiểm tra kết nối rồi mở lại Swap.</string>
     <string name="asset_reorder">Sắp xếp lại mục</string>
     <string name="asset_move_up">Di chuyển lên</string>
     <string name="asset_move_down">Di chuyển xuống</string>

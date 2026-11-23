@@ -76,7 +76,6 @@
   <string name="common_close">Tutup</string>
   <string name="tx_details_view_on_explorer">Lihat di explorer</string>
   <string name="common_confirm">Sahkan</string>
-  <string name="common_connected">Disambungkan</string>
   <string name="common_connecting">Menyambung …</string>
   <string name="common_continue">Teruskan</string>
   <string name="common_copied">Disalin ke papan klip</string>
@@ -214,10 +213,7 @@
   <string name="eth_tx_address">Ethereum account address</string>
   <string name="eth_tx_hash">Ethereum transaction hash</string>
   <string name="explore_create_pool">Create pool</string>
-  <string name="explore_demeter_subtitle">Stake your pool share and earn additional rewards</string>
   <string name="explore_demeter_title">Demeter Farming</string>
-  <string name="explore_provide_and_earn">Provide liquidity and earn rewards</string>
-  <string name="explore_swap_tokens_on_sora">Swap tokens on SORA network</string>
   <string name="export_account_details_backup_description">Jika anda kehilangan akses kepada peranti ini, dana anda akan hilang, melainkan anda membuat sandaran!</string>
   <string name="export_account_details_backup_options">Pilihan sandaran</string>
   <string name="export_account_details_show_passphrase">Tunjukkan Frasa Laluan</string>
@@ -338,7 +334,6 @@
   <string name="pool_share_title_1">Bahagian kolam anda</string>
   <string name="pooled_assets">Aset terkumpul</string>
   <string name="profile_biometry_title">Pengesahan biometri</string>
-  <string name="protect_loss_access_funds">Protect yourself from losing access to your funds</string>
   <string name="qr_code">Kod QR</string>
   <string name="receive_tokens">Terima token</string>
   <string name="received_from_adar">Received from ADAR</string>
@@ -408,15 +403,10 @@
   <string name="select_pool_share">Select your pool share to stake</string>
   <string name="select_recipient">Pilih penerima</string>
   <string name="settings_accounts">Akaun</string>
-  <string name="settings_accounts_subtitle">Urus akaun, frasa laluan sandaran</string>
-  <string name="settings_app_subtitle">Bahasa, Penampilan</string>
   <string name="settings_crypto_accounts">Akaun Crypto</string>
   <string name="settings_header_app">Seting aplikasi</string>
-  <string name="settings_information_subtitle">Penafian, Soalan Lazim, Perihal apl</string>
   <string name="settings_information_title">Maklumat</string>
-  <string name="settings_invite_subtitle">Kongsi pautan jemputan</string>
   <string name="settings_invite_title">Jemput Rakan &amp; Peroleh</string>
-  <string name="settings_login_subtitle">PIN dan pengesahan Biometrik</string>
   <string name="settings_login_title">Log Masuk &amp; Keselamatan</string>
   <string name="settings_nodes">Nod</string>
   <string name="show_more">Tunjukkan lagi</string>
@@ -432,7 +422,6 @@
   <string name="transaction_date_1">Tarikh dan masa</string>
   <string name="transaction_id">Transaksi hash</string>
   <string name="tutorial_many_world">Banyak Dunia.\n Satu Ekonomi.</string>
-  <string name="tutorial_many_world_desc">SORA berusaha untuk menjadi sistem ekonomi multiverse yang terdesentralisasi, membiayai penciptaan aplikasi baru dan menarik, di bawah pengawasan demokratik Parlimen SORA.</string>
   <string name="tutorial_privacy_policy">Dasar Privasi</string>
   <string name="tutorial_terms_and_conditions_3">Terma &amp; Syarat</string>
   <string name="tutorial_terms_and_conditions_template_1">Dengan meneruskan anda bersetuju dengan</string>

@@ -42,7 +42,6 @@
     <string name="portfolio_review_in_send">Unter Senden prüfen</string>
     <string name="portfolio_switch_and_review">Zu %1$s wechseln und prüfen</string>
     <string name="portfolio_switch_note">Diese Mittel liegen in %1$s. Wir wechseln zuerst zu dieser Wallet.</string>
-    <string name="portfolio_switch_first">Wir wechseln zuerst zu dieser Wallet</string>
     <string name="portfolio_switch_failed">Wallet-Wechsel fehlgeschlagen. Es wurde nichts geändert.</string>
     <string name="portfolio_route_runs_on_sora2">Polkaswap-Tauschvorgänge finden auf SORA2 statt.</string>
     <string name="portfolio_route_none">In dieser Version gibt es keine Route von %1$s.</string>
@@ -59,16 +58,12 @@
     <string name="portfolio_how_we_count">So berechnen wir dein Guthaben</string>
     <string name="portfolio_how_we_count_body">Die Summe umfasst das gesamte Guthaben jedes sichtbaren Vermögenswerts mit einem Preis in Hauptnetzen. Ausgeblendete Positionen, Positionen ohne Preis und Testnetz-Positionen werden ausgeschlossen und aufgeführt, niemals stillschweigend weggelassen.</string>
     <string name="portfolio_all_wallets_sum">Alle Wallets addiert die Summe jeder Wallet unter Berücksichtigung ihrer jeweils ausgeblendeten Vermögenswerte.</string>
-    <string name="portfolio_excluded_hidden">Ausgeblendet: %1$d</string>
     <string name="portfolio_excluded_unpriced">Ohne Preis: %1$d</string>
-    <string name="portfolio_excluded_testnet">Testnetz-Vermögenswerte: %1$d</string>
-    <string name="portfolio_excluded_caption">%1$s nicht enthalten</string>
     <string name="portfolio_prices_as_of">Preise vom %1$s</string>
     <string name="portfolio_counted">Berücksichtigt</string>
     <string name="portfolio_hidden_by_you">Von dir ausgeblendet</string>
     <string name="portfolio_without_price">Kein Preis</string>
     <string name="portfolio_testnets">Testnetze (Taira)</string>
-    <string name="portfolio_never_counted">Nie berücksichtigt</string>
     <string name="portfolio_pool_stakes">Pool-Anteile</string>
     <string name="portfolio_not_included">Nicht enthalten</string>
     <string name="portfolio_manage_hidden">Ausgeblendete Vermögenswerte verwalten</string>
@@ -80,7 +75,6 @@
     <string name="portfolio_state_offline">OFFLINE</string>
     <string name="portfolio_state_reading">WIRD GELESEN</string>
     <string name="portfolio_reading_balances">Guthaben werden gelesen…</string>
-    <string name="portfolio_excluded_unread">Noch nicht gelesene Wallets: %1$d</string>
     <string name="portfolio_age_seconds">%1$d s</string>
     <string name="portfolio_age_minutes">%1$d min</string>
     <string name="portfolio_age_hours">%1$d h</string>
@@ -124,14 +118,10 @@
     <string name="portfolio_amount_too_high">Übersteigt das übertragbare Guthaben.</string>
     <string name="portfolio_arrives_on">Kommt als %1$s auf %2$s an</string>
     <string name="portfolio_network">Netzwerk</string>
-    <string name="portfolio_route">Route</string>
-    <string name="portfolio_route_same_network">Gleiches Netzwerk, zwischen deinen Wallets</string>
     <string name="portfolio_fee_in_send">Wird unter Senden vor der Bestätigung angezeigt</string>
-    <string name="portfolio_move_note">Unter Senden werden die Gebühr und der endgültige Betrag angezeigt. Ohne deine Bestätigung dort werden keine Mittel verschoben.</string>
     <string name="portfolio_choose_holding">Position auswählen</string>
     <string name="portfolio_you_pay">Du zahlst</string>
     <string name="portfolio_you_get">Du erhältst</string>
-    <string name="portfolio_swap_note">Polkaswap zeigt Preis, Gebühr und Preiseinfluss vor der Unterschrift an. Hier wird nur das Paar ausgewählt.</string>
     <string name="portfolio_send_from">Von welcher Wallet senden?</string>
     <string name="portfolio_receive_to">Auf welche Wallet empfangen?</string>
     <string name="portfolio_sample_handoff_off">Beispielportfolio: Die Adressen sind erfunden, daher wird Senden nicht geöffnet.</string>

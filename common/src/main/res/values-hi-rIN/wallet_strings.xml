@@ -157,7 +157,6 @@
     <string name="wallet_market_activity">सक्रिय बाज़ार: %1$d · व्यापारी: %2$d</string>
     <string name="wallet_send_network_notice">%1$s नेटवर्क का प्राप्तकर्ता पता इस्तेमाल करें।</string>
     <string name="wallet_assets_unavailable">संपत्तियाँ उपलब्ध नहीं हैं</string>
-    <string name="wallet_assets_unavailable_details">संपत्तियाँ लोड नहीं हो सकीं। कनेक्शन जाँचें, फिर Swap दोबारा खोलें।</string>
     <string name="asset_reorder">आइटम का क्रम बदलें</string>
     <string name="asset_move_up">ऊपर ले जाएँ</string>
     <string name="asset_move_down">नीचे ले जाएँ</string>

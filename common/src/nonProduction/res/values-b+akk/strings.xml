@@ -74,7 +74,6 @@
   <string name="common_close">Edēlum</string>
   <string name="tx_details_view_on_explorer">Ina bāqir ṭuppī amārum</string>
   <string name="common_confirm">Kunnûm</string>
-  <string name="common_connected">Rakis</string>
   <string name="common_connecting">Irakkas…</string>
   <string name="common_continue">Alākum</string>
   <string name="common_copied">Ana ṭuppim qātim nussiḫ</string>
@@ -210,10 +209,7 @@
   <string name="eth_tx_address">Ašar nikkassim Ethereum</string>
   <string name="eth_tx_hash">Kunuk tērtim Ethereum</string>
   <string name="explore_create_pool">Būrtam banûm</string>
-  <string name="explore_demeter_subtitle">Zittat būrtika rukusma qīšātam šanîtim leqe</string>
   <string name="explore_demeter_title">Errešūtum Demeter</string>
-  <string name="explore_provide_and_earn">Mê kaspim idinma qīšātam leqe</string>
-  <string name="explore_swap_tokens_on_sora">Kaspī ina ḫarrān SORA šanûm</string>
   <string name="export_account_details_backup_description">Šumma petê unūtim annītim telteqi, kaspūka ḫalqū, ela ṭuppam šanâm teppušu</string>
   <string name="export_account_details_backup_options">Ḫarrānū ṭuppim šanîm</string>
   <string name="export_account_details_show_passphrase">Ṣerret awātim kullum</string>
@@ -327,7 +323,6 @@
   <string name="pool_share_title_1">Zittat būrtika</string>
   <string name="pooled_assets">Makkūrū ša būrtim</string>
   <string name="profile_biometry_title">Kunuk zumrim</string>
-  <string name="protect_loss_access_funds">Ramānka ištu petê kaspīka ḫalāqim uṣur</string>
   <string name="qr_code">Kunukkum QR</string>
   <string name="receive_tokens">Kaspī maḫārum</string>
   <string name="received_from_adar">Ištu ADAR maḫir</string>
@@ -398,15 +393,10 @@
   <string name="select_pool_share">Zittat būrtika ana rakāsim ḫayyārum</string>
   <string name="select_recipient">Ašar maḫirim ḫayyārum</string>
   <string name="settings_accounts">Nikkassū</string>
-  <string name="settings_accounts_subtitle">Nikkassī paqādum, ṣerret awātim ina ṭuppim šanîm šakānum</string>
-  <string name="settings_app_subtitle">Lišānum, siknum</string>
   <string name="settings_crypto_accounts">Nikkassū kaspim niṣirtim</string>
   <string name="settings_header_app">Šīmāt ṭuppim</string>
-  <string name="settings_information_subtitle">Nēḫtum, šaʾalātum u pitrātum, ṭēm ṭuppim</string>
   <string name="settings_information_title">Ṭuppū tērtim</string>
-  <string name="settings_invite_subtitle">Rikis qerītim nadānum</string>
   <string name="settings_invite_title">Tappê qerâm u qīštam leqûm</string>
-  <string name="settings_login_subtitle">PIN u kunuk zumrim</string>
   <string name="settings_login_title">Erēbum u maṣṣartum</string>
   <string name="settings_nodes">Bābū</string>
   <string name="show_more">Mādam kullum</string>
@@ -421,7 +411,6 @@
   <string name="transaction_date_1">Ūmum u adannum</string>
   <string name="transaction_id">Kunuk tērtim bārītim</string>
   <string name="tutorial_many_world">Mātātum maʾdātum.\nBīt kaspim ištēn</string>
-  <string name="tutorial_many_world_desc">SORA bīt kaspim ša mātātim maʾdātim lā bēlim ibanni, ana šiprī eššūtim u libba mārṣūtim kaspam inaddin, ina maṣṣarat dīn puḫur SORA</string>
   <string name="tutorial_privacy_policy">Dīn niṣirtim</string>
   <string name="tutorial_terms_and_conditions_3">Šīmātum u rikisū</string>
   <string name="tutorial_terms_and_conditions_template_1">Ina alākim annâtim taleqqe: </string>

@@ -160,7 +160,6 @@
     <string name="wallet_market_activity">活躍市場：%1$d · 交易者：%2$d</string>
     <string name="wallet_send_network_notice">請使用%1$s的收款地址。</string>
     <string name="wallet_assets_unavailable">資產不可用</string>
-    <string name="wallet_assets_unavailable_details">無法載入資產。請檢查連線，然後重新開啟Swap。</string>
     <string name="asset_reorder">重新排列項目</string>
     <string name="asset_move_up">上移</string>
     <string name="asset_move_down">下移</string>

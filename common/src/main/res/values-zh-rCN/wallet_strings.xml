@@ -156,7 +156,6 @@
     <string name="wallet_market_activity">活跃市场：%1$d · 交易者：%2$d</string>
     <string name="wallet_send_network_notice">请使用%1$s的收款地址。</string>
     <string name="wallet_assets_unavailable">资产不可用</string>
-    <string name="wallet_assets_unavailable_details">无法加载资产。请检查连接，然后重新打开Swap。</string>
     <string name="asset_reorder">重新排列项目</string>
     <string name="asset_move_up">上移</string>
     <string name="asset_move_down">下移</string>

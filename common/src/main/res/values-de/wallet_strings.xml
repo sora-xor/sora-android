@@ -161,7 +161,6 @@
     <string name="wallet_market_activity">Aktive Märkte: %1$d · Händler: %2$d</string>
     <string name="wallet_send_network_notice">Verwende eine Empfängeradresse aus %1$s.</string>
     <string name="wallet_assets_unavailable">Vermögenswerte nicht verfügbar</string>
-    <string name="wallet_assets_unavailable_details">Die Vermögenswerte konnten nicht geladen werden. Prüfe deine Verbindung und öffne Swap erneut.</string>
     <string name="asset_reorder">Element neu anordnen</string>
     <string name="asset_move_up">Nach oben verschieben</string>
     <string name="asset_move_down">Nach unten verschieben</string>

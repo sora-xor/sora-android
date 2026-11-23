@@ -58,7 +58,6 @@
     <string name="portfolio_review_in_send">المراجعة في شاشة الإرسال</string>
     <string name="portfolio_switch_and_review">التبديل إلى %1$s والمراجعة</string>
     <string name="portfolio_switch_note">هذا الأصل موجود في %1$s. سننتقل إلى تلك المحفظة أولًا.</string>
-    <string name="portfolio_switch_first">سننتقل إلى تلك المحفظة أولًا</string>
     <string name="portfolio_switch_failed">تعذر التبديل بين المحافظ. لم يتغير شيء.</string>
     <string name="portfolio_route_runs_on_sora2">تجري مبادلات Polkaswap على SORA2.</string>
     <string name="portfolio_route_none">لا يوجد مسار من %1$s في هذا الإصدار.</string>
@@ -75,16 +74,12 @@
     <string name="portfolio_how_we_count">كيف نحسب رصيدك</string>
     <string name="portfolio_how_we_count_body">يجمع الإجمالي الرصيد الكامل لكل أصل ظاهر وله سعر على الشبكات الرئيسية. تُستبعد الحيازات المخفية وتلك التي بلا سعر وحيازات شبكات الاختبار، مع ذكرها صراحةً بدلًا من إغفالها دون توضيح.</string>
     <string name="portfolio_all_wallets_sum">يجمع عرض كل المحافظ إجمالي كل محفظة مع مراعاة إعدادات إخفاء الأصول الخاصة بكل منها.</string>
-    <string name="portfolio_excluded_hidden">مخفية: %1$d</string>
     <string name="portfolio_excluded_unpriced">بلا سعر: %1$d</string>
-    <string name="portfolio_excluded_testnet">أصول شبكة الاختبار: %1$d</string>
-    <string name="portfolio_excluded_caption">%1$s غير مشمول</string>
     <string name="portfolio_prices_as_of">الأسعار حتى %1$s</string>
     <string name="portfolio_counted">محتسب</string>
     <string name="portfolio_hidden_by_you">أخفيتها أنت</string>
     <string name="portfolio_without_price">بلا سعر</string>
     <string name="portfolio_testnets">شبكات الاختبار (Taira)</string>
-    <string name="portfolio_never_counted">لا تُحتسب مطلقًا</string>
     <string name="portfolio_pool_stakes">حصص مجمعات السيولة</string>
     <string name="portfolio_not_included">غير مشمول</string>
     <string name="portfolio_manage_hidden">إدارة الأصول المخفية</string>
@@ -96,7 +91,6 @@
     <string name="portfolio_state_offline">غير متصل</string>
     <string name="portfolio_state_reading">جارٍ القراءة</string>
     <string name="portfolio_reading_balances">جارٍ قراءة الأرصدة…</string>
-    <string name="portfolio_excluded_unread">محافظ لم تُقرأ بعد: %1$d</string>
     <string name="portfolio_age_seconds">%1$d ث</string>
     <string name="portfolio_age_minutes">%1$d د</string>
     <string name="portfolio_age_hours">%1$d س</string>
@@ -140,14 +134,10 @@
     <string name="portfolio_amount_too_high">يتجاوز الرصيد القابل للتحويل.</string>
     <string name="portfolio_arrives_on">يصل بصيغة %1$s على %2$s</string>
     <string name="portfolio_network">الشبكة</string>
-    <string name="portfolio_route">المسار</string>
-    <string name="portfolio_route_same_network">الشبكة نفسها، بين محافظك</string>
     <string name="portfolio_fee_in_send">يظهر في شاشة الإرسال قبل التأكيد</string>
-    <string name="portfolio_move_note">تعرض شاشة الإرسال الرسوم والمبلغ النهائي. لن تُنقل الأموال حتى تؤكد هناك.</string>
     <string name="portfolio_choose_holding">اختر حيازة</string>
     <string name="portfolio_you_pay">تدفع</string>
     <string name="portfolio_you_get">تستلم</string>
-    <string name="portfolio_swap_note">يعرض Polkaswap السعر والرسوم وتأثير السعر قبل التوقيع. هنا تختار الزوج فقط.</string>
     <string name="portfolio_send_from">الإرسال من أي محفظة؟</string>
     <string name="portfolio_receive_to">الاستلام إلى أي محفظة؟</string>
     <string name="portfolio_sample_handoff_off">محفظة أصول تجريبية: العناوين وهمية، لذا لا تُفتح شاشة الإرسال.</string>

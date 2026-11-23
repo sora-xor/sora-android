@@ -46,7 +46,6 @@
     <string name="portfolio_review_in_send">בדיקה במסך השליחה</string>
     <string name="portfolio_switch_and_review">מעבר אל %1$s ובדיקה</string>
     <string name="portfolio_switch_note">הנכס נמצא ב-%1$s. קודם נעבור לארנק הזה.</string>
-    <string name="portfolio_switch_first">קודם נעבור לארנק הזה</string>
     <string name="portfolio_switch_failed">לא ניתן לעבור בין הארנקים. דבר לא השתנה.</string>
     <string name="portfolio_route_runs_on_sora2">החלפות ב-Polkaswap מתבצעות ב-SORA2.</string>
     <string name="portfolio_route_none">בגרסה זו אין מסלול מ-%1$s.</string>
@@ -63,16 +62,12 @@
     <string name="portfolio_how_we_count">איך היתרה מחושבת</string>
     <string name="portfolio_how_we_count_body">הסכום הכולל מחבר את מלוא היתרה של כל נכס גלוי שיש לו מחיר ברשתות ראשיות. החזקות מוסתרות, ללא מחיר או ברשת בדיקה אינן נכללות, ומצוינות במפורש במקום להישמט ללא הסבר.</string>
     <string name="portfolio_all_wallets_sum">התצוגה של כל הארנקים מחברת את הסכום של כל ארנק תוך התחשבות בהגדרות הסתרת הנכסים שלו.</string>
-    <string name="portfolio_excluded_hidden">מוסתרים: %1$d</string>
     <string name="portfolio_excluded_unpriced">ללא מחיר: %1$d</string>
-    <string name="portfolio_excluded_testnet">נכסי רשת בדיקה: %1$d</string>
-    <string name="portfolio_excluded_caption">%1$s לא נכלל</string>
     <string name="portfolio_prices_as_of">מחירים נכון ל-%1$s</string>
     <string name="portfolio_counted">נכלל בחישוב</string>
     <string name="portfolio_hidden_by_you">הוסתר על ידך</string>
     <string name="portfolio_without_price">אין מחיר</string>
     <string name="portfolio_testnets">רשתות בדיקה (Taira)</string>
-    <string name="portfolio_never_counted">לעולם לא נכלל בחישוב</string>
     <string name="portfolio_pool_stakes">חלקים במאגרי נזילות</string>
     <string name="portfolio_not_included">לא נכלל</string>
     <string name="portfolio_manage_hidden">ניהול נכסים מוסתרים</string>
@@ -84,7 +79,6 @@
     <string name="portfolio_state_offline">לא מקוון</string>
     <string name="portfolio_state_reading">בקריאה</string>
     <string name="portfolio_reading_balances">קורא יתרות…</string>
-    <string name="portfolio_excluded_unread">ארנקים שעדיין לא נקראו: %1$d</string>
     <string name="portfolio_age_seconds">%1$d שנ׳</string>
     <string name="portfolio_age_minutes">%1$d דק׳</string>
     <string name="portfolio_age_hours">%1$d שע׳</string>
@@ -128,14 +122,10 @@
     <string name="portfolio_amount_too_high">יותר מהיתרה הניתנת להעברה.</string>
     <string name="portfolio_arrives_on">מתקבל בתור %1$s ברשת %2$s</string>
     <string name="portfolio_network">רשת</string>
-    <string name="portfolio_route">מסלול</string>
-    <string name="portfolio_route_same_network">באותה רשת, בין הארנקים שלך</string>
     <string name="portfolio_fee_in_send">מוצג במסך השליחה לפני האישור</string>
-    <string name="portfolio_move_note">מסך השליחה מציג את העמלה והסכום הסופי. לא יועברו כספים עד לאישור שם.</string>
     <string name="portfolio_choose_holding">בחירת החזקה</string>
     <string name="portfolio_you_pay">לתשלום</string>
     <string name="portfolio_you_get">לקבלה</string>
-    <string name="portfolio_swap_note">Polkaswap מציג מחיר, עמלה והשפעה על המחיר לפני החתימה. כאן נבחר רק הצמד.</string>
     <string name="portfolio_send_from">לשלוח מאיזה ארנק?</string>
     <string name="portfolio_receive_to">לקבל לאיזה ארנק?</string>
     <string name="portfolio_sample_handoff_off">תיק לדוגמה: הכתובות בדויות, ולכן מסך השליחה לא נפתח.</string>

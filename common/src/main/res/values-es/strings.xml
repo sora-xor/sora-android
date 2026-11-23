@@ -76,7 +76,6 @@
   <string name="common_close">Cerrar</string>
   <string name="tx_details_view_on_explorer">Ver en el explorador</string>
   <string name="common_confirm">Confirmar</string>
-  <string name="common_connected">Conectado</string>
   <string name="common_connecting">Conectando …</string>
   <string name="common_continue">Seguir</string>
   <string name="common_copied">Copiado al portapapeles</string>
@@ -214,10 +213,7 @@
   <string name="eth_tx_address">Ethereum account address</string>
   <string name="eth_tx_hash">Ethereum transaction hash</string>
   <string name="explore_create_pool">Create pool</string>
-  <string name="explore_demeter_subtitle">Stake your pool share and earn additional rewards</string>
   <string name="explore_demeter_title">Demeter Farming</string>
-  <string name="explore_provide_and_earn">Provide liquidity and earn rewards</string>
-  <string name="explore_swap_tokens_on_sora">Swap tokens on SORA network</string>
   <string name="export_account_details_backup_description">If you lose access to this device, your funds will be lost, unless you back up!</string>
   <string name="export_account_details_backup_options">Backup options</string>
   <string name="export_account_details_show_passphrase">Show Passphrase</string>
@@ -337,7 +333,6 @@
   <string name="pool_share_title_1">Your pool share</string>
   <string name="pooled_assets">Activos en Liquidez</string>
   <string name="profile_biometry_title">Autenticación de biometría</string>
-  <string name="protect_loss_access_funds">Protect yourself from losing access to your funds</string>
   <string name="qr_code">Código QR</string>
   <string name="receive_tokens">Recibir tokens</string>
   <string name="received_from_adar">Received from ADAR</string>
@@ -409,15 +404,10 @@
   <string name="select_pool_share">Select your pool share to stake</string>
   <string name="select_recipient">Seleccionar el destinatario</string>
   <string name="settings_accounts">Accounts</string>
-  <string name="settings_accounts_subtitle">Administrar cuentas, frase de contraseña de respaldo</string>
-  <string name="settings_app_subtitle">Lenguaje, Apariencia</string>
   <string name="settings_crypto_accounts">Cuentas Cripto</string>
   <string name="settings_header_app">App settings</string>
-  <string name="settings_information_subtitle">Descargo de responsabilidad, Preguntas frecuentes, Acerca de la aplicación</string>
   <string name="settings_information_title">Informaciòn</string>
-  <string name="settings_invite_subtitle">Compartir enlace de invitación</string>
   <string name="settings_invite_title">Invita amigos &amp; gana</string>
-  <string name="settings_login_subtitle">PIN y autorización Biométrica</string>
   <string name="settings_login_title">Inicio de sesión y seguridad</string>
   <string name="settings_nodes">Nodos</string>
   <string name="show_more">Enseñar más</string>
@@ -433,7 +423,6 @@
   <string name="transaction_date_1">Fecha y hora</string>
   <string name="transaction_id">Hash de la transacción</string>
   <string name="tutorial_many_world">Muchos mundos.\nUna economía.</string>
-  <string name="tutorial_many_world_desc">SORA está trabajando para convertirse en un sistema económico multiverso descentralizado, financiando la creación de aplicaciones nuevas y emocionantes, bajo la supervisión democrática del Parlamento de SORA.</string>
   <string name="tutorial_privacy_policy">Política de privacidad</string>
   <string name="tutorial_terms_and_conditions_3">Términos y condiciones</string>
   <string name="tutorial_terms_and_conditions_template_1">Al continuar usted está de acuerdo con el </string>

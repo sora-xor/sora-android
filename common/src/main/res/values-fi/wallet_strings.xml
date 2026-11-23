@@ -161,7 +161,6 @@
     <string name="wallet_market_activity">Aktiiviset markkinat: %1$d · Kaupankävijät: %2$d</string>
     <string name="wallet_send_network_notice">Käytä vastaanottajan osoitetta verkosta %1$s.</string>
     <string name="wallet_assets_unavailable">Varat eivät ole saatavilla</string>
-    <string name="wallet_assets_unavailable_details">Varoja ei voitu ladata. Tarkista yhteys ja avaa Swap uudelleen.</string>
     <string name="asset_reorder">Järjestä kohde uudelleen</string>
     <string name="asset_move_up">Siirrä ylös</string>
     <string name="asset_move_down">Siirrä alas</string>

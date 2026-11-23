@@ -76,7 +76,6 @@
   <string name="common_close">סגור</string>
   <string name="tx_details_view_on_explorer">הצג בסייר</string>
   <string name="common_confirm">אשר</string>
-  <string name="common_connected">מחובר</string>
   <string name="common_connecting">מתחבר…</string>
   <string name="common_continue">המשך</string>
   <string name="common_copied">הועתק ללוח</string>
@@ -214,10 +213,7 @@
   <string name="eth_tx_address">Ethereum account address</string>
   <string name="eth_tx_hash">Ethereum transaction hash</string>
   <string name="explore_create_pool">צור מאגר</string>
-  <string name="explore_demeter_subtitle">Stake your pool share and earn additional rewards</string>
   <string name="explore_demeter_title">Demeter Farming</string>
-  <string name="explore_provide_and_earn">ספק נזילות והרווח תגמולים</string>
-  <string name="explore_swap_tokens_on_sora">החלף טוקנים ברשת סורה</string>
   <string name="export_account_details_backup_description">אם תאבד את הגישה למכשיר הזה, הכספים שלך יאבדו, אלא אם תעשה גיבוי!</string>
   <string name="export_account_details_backup_options">אפשרויות גיבוי</string>
   <string name="export_account_details_show_passphrase">הצג את מילות המפתח</string>
@@ -338,7 +334,6 @@
   <string name="pool_share_title_1">החלק שלך במאגר</string>
   <string name="pooled_assets">נכסים מצורפים למאגר</string>
   <string name="profile_biometry_title">אימות ביומטרי</string>
-  <string name="protect_loss_access_funds">Protect yourself from losing access to your funds</string>
   <string name="qr_code">קוד QR</string>
   <string name="receive_tokens">קבל טוקנים</string>
   <string name="received_from_adar">Received from ADAR</string>
@@ -410,15 +405,10 @@
   <string name="select_pool_share">Select your pool share to stake</string>
   <string name="select_recipient">בחר כתובת נמען</string>
   <string name="settings_accounts">חשבונות</string>
-  <string name="settings_accounts_subtitle">נהל חשבונות, גיבוי מילות מפתח</string>
-  <string name="settings_app_subtitle">שפה, מראה חיצוני</string>
   <string name="settings_crypto_accounts">חשבונות קריפטו</string>
   <string name="settings_header_app">הגדרות אפליקציה</string>
-  <string name="settings_information_subtitle">כתב ויתור, שאלות נפוצות, אודות האפליקציה</string>
   <string name="settings_information_title">מידע</string>
-  <string name="settings_invite_subtitle">שתף קישור להזמנה</string>
   <string name="settings_invite_title">הזמן חברים והרווח</string>
-  <string name="settings_login_subtitle">PIN ואימות ביומטרי</string>
   <string name="settings_login_title">כניסה ואבטחה</string>
   <string name="settings_nodes">צמתים</string>
   <string name="show_more">הצג עוד</string>
@@ -434,7 +424,6 @@
   <string name="transaction_date_1">תאריך ושעה</string>
   <string name="transaction_id">האש חיצוני</string>
   <string name="tutorial_many_world">עולמות רבים.\nכלכלה אחת.</string>
-  <string name="tutorial_many_world_desc">סורה פועלת להפוך למערכת כלכלית מבוזרת מרובת גוונים, המממנת יצירת אפליקציות חדשות ומרגשות, בפיקוח דמוקרטי של פרלמנט סורה.</string>
   <string name="tutorial_privacy_policy">מדיניות פרטיות</string>
   <string name="tutorial_terms_and_conditions_3">תנאים והגבלות</string>
   <string name="tutorial_terms_and_conditions_template_1">כשאתה ממשיך אתה מסכים עם ה-</string>

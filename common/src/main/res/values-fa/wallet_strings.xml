@@ -159,7 +159,6 @@
     <string name="wallet_market_activity">بازارهای فعال: %1$d · معامله‌گران: %2$d</string>
     <string name="wallet_send_network_notice">از نشانی گیرنده در شبکه %1$s استفاده کنید.</string>
     <string name="wallet_assets_unavailable">دارایی‌ها در دسترس نیستند</string>
-    <string name="wallet_assets_unavailable_details">دارایی‌ها بارگیری نشدند. اتصال را بررسی و Swap را دوباره باز کنید.</string>
     <string name="asset_reorder">تغییر ترتیب مورد</string>
     <string name="asset_move_up">انتقال به بالا</string>
     <string name="asset_move_down">انتقال به پایین</string>

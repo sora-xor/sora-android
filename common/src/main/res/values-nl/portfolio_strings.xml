@@ -42,7 +42,6 @@
     <string name="portfolio_review_in_send">Controleren in Verzenden</string>
     <string name="portfolio_switch_and_review">Overschakelen naar %1$s en controleren</string>
     <string name="portfolio_switch_note">Dit tegoed staat in %1$s. We schakelen eerst over naar die wallet.</string>
-    <string name="portfolio_switch_first">We schakelen eerst over naar die wallet</string>
     <string name="portfolio_switch_failed">Kon niet van wallet wisselen. Er is niets gewijzigd.</string>
     <string name="portfolio_route_runs_on_sora2">Polkaswap-wisselingen vinden plaats op SORA2.</string>
     <string name="portfolio_route_none">Deze versie heeft geen route vanaf %1$s.</string>
@@ -59,16 +58,12 @@
     <string name="portfolio_how_we_count">Zo berekenen we je saldo</string>
     <string name="portfolio_how_we_count_body">Het totaal telt het volledige saldo op van elk zichtbaar activum met een prijs op hoofdnetwerken. Verborgen posities, posities zonder prijs en posities op testnetwerken worden uitgesloten en vermeld, nooit zonder uitleg weggelaten.</string>
     <string name="portfolio_all_wallets_sum">Alle wallets telt het totaal van elke wallet op en houdt rekening met de verborgen activa van elke afzonderlijke wallet.</string>
-    <string name="portfolio_excluded_hidden">Verborgen: %1$d</string>
     <string name="portfolio_excluded_unpriced">Zonder prijs: %1$d</string>
-    <string name="portfolio_excluded_testnet">Activa op testnetwerken: %1$d</string>
-    <string name="portfolio_excluded_caption">%1$s niet meegeteld</string>
     <string name="portfolio_prices_as_of">Prijzen van %1$s</string>
     <string name="portfolio_counted">Meegeteld</string>
     <string name="portfolio_hidden_by_you">Door jou verborgen</string>
     <string name="portfolio_without_price">Geen prijs</string>
     <string name="portfolio_testnets">Testnetwerken (Taira)</string>
-    <string name="portfolio_never_counted">Nooit meegeteld</string>
     <string name="portfolio_pool_stakes">Poolaandelen</string>
     <string name="portfolio_not_included">Niet meegeteld</string>
     <string name="portfolio_manage_hidden">Verborgen activa beheren</string>
@@ -80,7 +75,6 @@
     <string name="portfolio_state_offline">OFFLINE</string>
     <string name="portfolio_state_reading">LEZEN</string>
     <string name="portfolio_reading_balances">Saldi worden gelezen…</string>
-    <string name="portfolio_excluded_unread">Nog niet gelezen wallets: %1$d</string>
     <string name="portfolio_age_seconds">%1$d s</string>
     <string name="portfolio_age_minutes">%1$d min</string>
     <string name="portfolio_age_hours">%1$d u</string>
@@ -124,14 +118,10 @@
     <string name="portfolio_amount_too_high">Meer dan het overdraagbare saldo.</string>
     <string name="portfolio_arrives_on">Komt aan als %1$s op %2$s</string>
     <string name="portfolio_network">Netwerk</string>
-    <string name="portfolio_route">Route</string>
-    <string name="portfolio_route_same_network">Hetzelfde netwerk, tussen je wallets</string>
     <string name="portfolio_fee_in_send">Wordt vóór bevestiging getoond in Verzenden</string>
-    <string name="portfolio_move_note">Verzenden toont de kosten en het definitieve bedrag. Er wordt niets verplaatst totdat je daar bevestigt.</string>
     <string name="portfolio_choose_holding">Kies een positie</string>
     <string name="portfolio_you_pay">Je betaalt</string>
     <string name="portfolio_you_get">Je ontvangt</string>
-    <string name="portfolio_swap_note">Polkaswap toont de prijs, kosten en prijsimpact voordat je ondertekent. Hier kies je alleen het paar.</string>
     <string name="portfolio_send_from">Vanuit welke wallet verzenden?</string>
     <string name="portfolio_receive_to">Op welke wallet ontvangen?</string>
     <string name="portfolio_sample_handoff_off">Voorbeeldportefeuille: de adressen zijn verzonnen, dus Verzenden wordt niet geopend.</string>

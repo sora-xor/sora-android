@@ -27,7 +27,6 @@
     <string name="portfolio_review_in_send">送信画面で確認</string>
     <string name="portfolio_switch_and_review">%1$sに切り替えて確認</string>
     <string name="portfolio_switch_note">この資産は%1$sにあります。まず、そのウォレットに切り替えます。</string>
-    <string name="portfolio_switch_first">このウォレットに切替</string>
     <string name="portfolio_switch_failed">ウォレットを切り替えられませんでした。変更はありません。</string>
     <string name="portfolio_route_runs_on_sora2">PolkaswapのスワップはSORA2上で行われます。</string>
     <string name="portfolio_route_none">このバージョンでは%1$sからのルートはありません。</string>
@@ -44,16 +43,12 @@
     <string name="portfolio_how_we_count">残高の集計方法</string>
     <string name="portfolio_how_we_count_body">合計には、メインネット上の、価格があり表示中の各資産の全残高を加算します。非表示、価格不明、テストネットの保有資産は対象外とし、黙って省略せず一覧に示します。</string>
     <string name="portfolio_all_wallets_sum">「すべてのウォレット」では、各ウォレットの非表示設定を反映して、それぞれの合計を足し合わせます。</string>
-    <string name="portfolio_excluded_hidden">非表示：%1$d</string>
     <string name="portfolio_excluded_unpriced">価格不明：%1$d</string>
-    <string name="portfolio_excluded_testnet">テストネット資産：%1$d</string>
-    <string name="portfolio_excluded_caption">%1$sは集計対象外</string>
     <string name="portfolio_prices_as_of">%1$s 時点の価格</string>
     <string name="portfolio_counted">集計対象</string>
     <string name="portfolio_hidden_by_you">自分で非表示にした資産</string>
     <string name="portfolio_without_price">価格不明</string>
     <string name="portfolio_testnets">テストネット（Taira）</string>
-    <string name="portfolio_never_counted">常に集計対象外</string>
     <string name="portfolio_pool_stakes">プールへの預け入れ</string>
     <string name="portfolio_not_included">集計対象外</string>
     <string name="portfolio_manage_hidden">非表示の資産を管理</string>
@@ -65,7 +60,6 @@
     <string name="portfolio_state_offline">オフライン</string>
     <string name="portfolio_state_reading">読み込み中</string>
     <string name="portfolio_reading_balances">残高を読み込んでいます…</string>
-    <string name="portfolio_excluded_unread">未読み込みのウォレット：%1$d</string>
     <string name="portfolio_age_seconds">%1$d秒</string>
     <string name="portfolio_age_minutes">%1$d分</string>
     <string name="portfolio_age_hours">%1$d時間</string>
@@ -109,14 +103,10 @@
     <string name="portfolio_amount_too_high">送信可能な残高を超えています。</string>
     <string name="portfolio_arrives_on">%1$s · %2$s</string>
     <string name="portfolio_network">ネットワーク</string>
-    <string name="portfolio_route">ルート</string>
-    <string name="portfolio_route_same_network">同じネットワーク上の自分のウォレット間</string>
     <string name="portfolio_fee_in_send">確認画面で表示</string>
-    <string name="portfolio_move_note">送信画面に手数料と最終数量が表示されます。そこで確認するまで資金は移動しません。</string>
     <string name="portfolio_choose_holding">保有資産を選択</string>
     <string name="portfolio_you_pay">支払う数量</string>
     <string name="portfolio_you_get">受け取る数量</string>
-    <string name="portfolio_swap_note">Polkaswapは署名前に価格、手数料、価格への影響を表示します。ここではペアだけを選びます。</string>
     <string name="portfolio_send_from">送信元ウォレット</string>
     <string name="portfolio_receive_to">受取先ウォレット</string>
     <string name="portfolio_sample_handoff_off">サンプルのポートフォリオ：アドレスは架空のため、送信画面は開きません。</string>

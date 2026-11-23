@@ -42,7 +42,6 @@
     <string name="portfolio_review_in_send">Gönder ekranında incele</string>
     <string name="portfolio_switch_and_review">%1$s cüzdanına geç ve incele</string>
     <string name="portfolio_switch_note">Bu varlık %1$s cüzdanında. Önce o cüzdana geçiyoruz.</string>
-    <string name="portfolio_switch_first">Önce o cüzdana geçiyoruz</string>
     <string name="portfolio_switch_failed">Cüzdan değiştirilemedi. Hiçbir değişiklik yapılmadı.</string>
     <string name="portfolio_route_runs_on_sora2">Polkaswap takasları SORA2 üzerinde gerçekleşir.</string>
     <string name="portfolio_route_none">Bu sürümde %1$s üzerinden bir rota yok.</string>
@@ -59,16 +58,12 @@
     <string name="portfolio_how_we_count">Bakiyenizi nasıl hesaplıyoruz</string>
     <string name="portfolio_how_we_count_body">Toplam, ana ağlarda fiyatı olan ve görünür durumdaki her varlığın tam bakiyesini içerir. Gizli, fiyatı olmayan ve test ağındaki bakiyeler dışarıda bırakılır ve açıkça belirtilir; sessizce atlanmaz.</string>
     <string name="portfolio_all_wallets_sum">Tüm cüzdanlar, her cüzdanın kendi gizli varlık ayarlarını dikkate alarak toplamlarını birleştirir.</string>
-    <string name="portfolio_excluded_hidden">Gizli: %1$d</string>
     <string name="portfolio_excluded_unpriced">Fiyatı yok: %1$d</string>
-    <string name="portfolio_excluded_testnet">Test ağı varlıkları: %1$d</string>
-    <string name="portfolio_excluded_caption">%1$s dahil edilmedi</string>
     <string name="portfolio_prices_as_of">%1$s itibarıyla fiyatlar</string>
     <string name="portfolio_counted">Hesaba katıldı</string>
     <string name="portfolio_hidden_by_you">Sizin gizledikleriniz</string>
     <string name="portfolio_without_price">Fiyat yok</string>
     <string name="portfolio_testnets">Test ağları (Taira)</string>
-    <string name="portfolio_never_counted">Hiçbir zaman hesaba katılmaz</string>
     <string name="portfolio_pool_stakes">Havuz payları</string>
     <string name="portfolio_not_included">Dahil edilmedi</string>
     <string name="portfolio_manage_hidden">Gizli varlıkları yönet</string>
@@ -80,7 +75,6 @@
     <string name="portfolio_state_offline">ÇEVRİMDIŞI</string>
     <string name="portfolio_state_reading">OKUNUYOR</string>
     <string name="portfolio_reading_balances">Bakiyeler okunuyor…</string>
-    <string name="portfolio_excluded_unread">Henüz okunmamış cüzdanlar: %1$d</string>
     <string name="portfolio_age_seconds">%1$d sn</string>
     <string name="portfolio_age_minutes">%1$d dk</string>
     <string name="portfolio_age_hours">%1$d sa</string>
@@ -124,14 +118,10 @@
     <string name="portfolio_amount_too_high">Aktarılabilir bakiyeden fazla.</string>
     <string name="portfolio_arrives_on">%2$s üzerinde %1$s olarak ulaşır</string>
     <string name="portfolio_network">Ağ</string>
-    <string name="portfolio_route">Rota</string>
-    <string name="portfolio_route_same_network">Aynı ağda, cüzdanlarınız arasında</string>
     <string name="portfolio_fee_in_send">Onaylamadan önce Gönder ekranında gösterilir</string>
-    <string name="portfolio_move_note">Gönder ekranı ücreti ve son tutarı gösterir. Orada onaylamadan hiçbir fon taşınmaz.</string>
     <string name="portfolio_choose_holding">Bir varlık bakiyesi seçin</string>
     <string name="portfolio_you_pay">Ödeyeceğiniz</string>
     <string name="portfolio_you_get">Alacağınız</string>
-    <string name="portfolio_swap_note">Polkaswap imzalamadan önce fiyatı, ücreti ve fiyat etkisini gösterir. Burada yalnızca işlem çifti seçilir.</string>
     <string name="portfolio_send_from">Hangi cüzdandan gönderilsin?</string>
     <string name="portfolio_receive_to">Hangi cüzdana alınsın?</string>
     <string name="portfolio_sample_handoff_off">Örnek portföy: adresler kurgusaldır, bu nedenle Gönder ekranı açılmaz.</string>

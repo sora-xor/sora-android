@@ -160,7 +160,6 @@
     <string name="wallet_market_activity">Actieve markten: %1$d · Handelaren: %2$d</string>
     <string name="wallet_send_network_notice">Gebruik een ontvangersadres van %1$s.</string>
     <string name="wallet_assets_unavailable">Activa niet beschikbaar</string>
-    <string name="wallet_assets_unavailable_details">De activa konden niet worden geladen. Controleer uw verbinding en open Swap opnieuw.</string>
     <string name="asset_reorder">Volgorde van item wijzigen</string>
     <string name="asset_move_up">Omhoog verplaatsen</string>
     <string name="asset_move_down">Omlaag verplaatsen</string>

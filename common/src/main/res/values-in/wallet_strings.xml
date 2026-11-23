@@ -159,7 +159,6 @@
     <string name="wallet_market_activity">Pasar aktif: %1$d · Pedagang: %2$d</string>
     <string name="wallet_send_network_notice">Gunakan alamat penerima dari %1$s.</string>
     <string name="wallet_assets_unavailable">Aset tidak tersedia</string>
-    <string name="wallet_assets_unavailable_details">Aset tidak dapat dimuat. Periksa koneksi Anda, lalu buka kembali Swap.</string>
     <string name="asset_reorder">Ubah urutan item</string>
     <string name="asset_move_up">Pindahkan ke atas</string>
     <string name="asset_move_down">Pindahkan ke bawah</string>

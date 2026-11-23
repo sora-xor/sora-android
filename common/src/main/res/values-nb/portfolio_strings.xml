@@ -42,7 +42,6 @@
     <string name="portfolio_review_in_send">Se gjennom i Send</string>
     <string name="portfolio_switch_and_review">Bytt til %1$s og se gjennom</string>
     <string name="portfolio_switch_note">Disse midlene ligger i %1$s. Vi bytter først til den lommeboken.</string>
-    <string name="portfolio_switch_first">Vi bytter først til den lommeboken</string>
     <string name="portfolio_switch_failed">Kunne ikke bytte lommebok. Ingenting ble endret.</string>
     <string name="portfolio_route_runs_on_sora2">Polkaswap-bytter skjer på SORA2.</string>
     <string name="portfolio_route_none">Det finnes ingen rute fra %1$s i denne versjonen.</string>
@@ -59,16 +58,12 @@
     <string name="portfolio_how_we_count">Slik beregner vi saldoen din</string>
     <string name="portfolio_how_we_count_body">Totalen summerer hele saldoen til hver synlige eiendel med en pris på hovednettverk. Skjulte beholdninger, beholdninger uten pris og beholdninger på testnett utelates og oppgis, aldri uten forklaring.</string>
     <string name="portfolio_all_wallets_sum">Alle lommebøker summerer totalen til hver lommebok og tar hensyn til hvilke eiendeler som er skjult i hver av dem.</string>
-    <string name="portfolio_excluded_hidden">Skjult: %1$d</string>
     <string name="portfolio_excluded_unpriced">Uten pris: %1$d</string>
-    <string name="portfolio_excluded_testnet">Eiendeler på testnett: %1$d</string>
-    <string name="portfolio_excluded_caption">%1$s ikke inkludert</string>
     <string name="portfolio_prices_as_of">Priser per %1$s</string>
     <string name="portfolio_counted">Medregnet</string>
     <string name="portfolio_hidden_by_you">Skjult av deg</string>
     <string name="portfolio_without_price">Ingen pris</string>
     <string name="portfolio_testnets">Testnett (Taira)</string>
-    <string name="portfolio_never_counted">Aldri medregnet</string>
     <string name="portfolio_pool_stakes">Poolandeler</string>
     <string name="portfolio_not_included">Ikke inkludert</string>
     <string name="portfolio_manage_hidden">Administrer skjulte eiendeler</string>
@@ -80,7 +75,6 @@
     <string name="portfolio_state_offline">FRAKOBLET</string>
     <string name="portfolio_state_reading">LESER</string>
     <string name="portfolio_reading_balances">Leser saldoer…</string>
-    <string name="portfolio_excluded_unread">Lommebøker som ikke er lest ennå: %1$d</string>
     <string name="portfolio_age_seconds">%1$d s</string>
     <string name="portfolio_age_minutes">%1$d min</string>
     <string name="portfolio_age_hours">%1$d t</string>
@@ -124,14 +118,10 @@
     <string name="portfolio_amount_too_high">Mer enn den overførbare saldoen.</string>
     <string name="portfolio_arrives_on">Mottas som %1$s på %2$s</string>
     <string name="portfolio_network">Nettverk</string>
-    <string name="portfolio_route">Rute</string>
-    <string name="portfolio_route_same_network">Samme nettverk, mellom lommebøkene dine</string>
     <string name="portfolio_fee_in_send">Vises i Send før du bekrefter</string>
-    <string name="portfolio_move_note">Send viser gebyret og det endelige beløpet. Ingen midler flyttes før du bekrefter der.</string>
     <string name="portfolio_choose_holding">Velg en beholdning</string>
     <string name="portfolio_you_pay">Du betaler</string>
     <string name="portfolio_you_get">Du mottar</string>
-    <string name="portfolio_swap_note">Polkaswap viser pris, gebyr og prispåvirkning før du signerer. Dette velger bare paret.</string>
     <string name="portfolio_send_from">Send fra hvilken lommebok?</string>
     <string name="portfolio_receive_to">Motta til hvilken lommebok?</string>
     <string name="portfolio_sample_handoff_off">Eksempelportefølje: Adressene er oppdiktet, så dette åpner ikke Send.</string>

@@ -76,7 +76,6 @@
   <string name="common_close">Sulje</string>
   <string name="tx_details_view_on_explorer">Näytä explorerissa</string>
   <string name="common_confirm">Vahvista</string>
-  <string name="common_connected">Yhdistetty</string>
   <string name="common_connecting">Yhdistetään…</string>
   <string name="common_continue">Jatkaa</string>
   <string name="common_copied">Kopioitiin leikepöydälle</string>
@@ -214,10 +213,7 @@
   <string name="eth_tx_address">Ethereum account address</string>
   <string name="eth_tx_hash">Ethereum transaction hash</string>
   <string name="explore_create_pool">Create pool</string>
-  <string name="explore_demeter_subtitle">Stake your pool share and earn additional rewards</string>
   <string name="explore_demeter_title">Demeter Farming</string>
-  <string name="explore_provide_and_earn">Provide liquidity and earn rewards</string>
-  <string name="explore_swap_tokens_on_sora">Swap tokens on SORA network</string>
   <string name="export_account_details_backup_description">If you lose access to this device, your funds will be lost, unless you back up!</string>
   <string name="export_account_details_backup_options">Backup options</string>
   <string name="export_account_details_show_passphrase">Show Passphrase</string>
@@ -334,7 +330,6 @@
   <string name="pool_share_title_1">Sinun osuutesi poolista</string>
   <string name="pooled_assets">Pooled assets</string>
   <string name="profile_biometry_title">Biometrian vahvistus</string>
-  <string name="protect_loss_access_funds">Protect yourself from losing access to your funds</string>
   <string name="qr_code">QR-koodi</string>
   <string name="receive_tokens">Receive tokens</string>
   <string name="received_from_adar">Received from ADAR</string>
@@ -405,15 +400,10 @@
   <string name="select_pool_share">Select your pool share to stake</string>
   <string name="select_recipient">Valitse vastaanottaja</string>
   <string name="settings_accounts">Tilit</string>
-  <string name="settings_accounts_subtitle">Manage accounts, backup passphrase</string>
-  <string name="settings_app_subtitle">Language, Appearance</string>
   <string name="settings_crypto_accounts">Crypto Accounts</string>
   <string name="settings_header_app">Sovelluksen asetukset</string>
-  <string name="settings_information_subtitle">Disclaimer, FAQ, About app</string>
   <string name="settings_information_title">Information</string>
-  <string name="settings_invite_subtitle">Share invite link</string>
   <string name="settings_invite_title">Invite Friends &amp; Earn</string>
-  <string name="settings_login_subtitle">PIN and Biometric auth</string>
   <string name="settings_login_title">Login &amp; Security</string>
   <string name="settings_nodes">Nodes</string>
   <string name="show_more">Show more</string>
@@ -429,7 +419,6 @@
   <string name="transaction_date_1">Date and time</string>
   <string name="transaction_id">Tapahtuman tunnus</string>
   <string name="tutorial_many_world">Monet maailmat.\n Yksi talous.</string>
-  <string name="tutorial_many_world_desc">SORA pyrkii hajautetuksi moniulotteiseksi talousjärjestelmäksi, joka rahoittaa uusien ja jännittävien sovellusten luomisen SORA -parlamentin demokraattisessa valvonnassa.</string>
   <string name="tutorial_privacy_policy">Tietosuojakäytäntö</string>
   <string name="tutorial_terms_and_conditions_3">käyttöehdot</string>
   <string name="tutorial_terms_and_conditions_template_1">By continuing you are agreeing with the </string>

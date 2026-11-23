@@ -38,7 +38,6 @@
     <string name="portfolio_review_in_send">Semak pada skrin Hantar</string>
     <string name="portfolio_switch_and_review">Beralih ke %1$s dan semak</string>
     <string name="portfolio_switch_note">Aset ini berada di %1$s. Kami beralih ke dompet itu dahulu.</string>
-    <string name="portfolio_switch_first">Kami beralih ke dompet itu dahulu</string>
     <string name="portfolio_switch_failed">Tidak dapat bertukar dompet. Tiada apa-apa diubah.</string>
     <string name="portfolio_route_runs_on_sora2">Pertukaran Polkaswap berlaku pada SORA2.</string>
     <string name="portfolio_route_none">Tiada laluan daripada %1$s dalam versi ini.</string>
@@ -55,16 +54,12 @@
     <string name="portfolio_how_we_count">Cara kami mengira baki</string>
     <string name="portfolio_how_we_count_body">Jumlah merangkumi baki penuh setiap aset yang kelihatan dan mempunyai harga pada rangkaian utama. Pegangan tersembunyi, tanpa harga dan rangkaian ujian dikecualikan serta disenaraikan dengan jelas, bukan digugurkan tanpa penjelasan.</string>
     <string name="portfolio_all_wallets_sum">Semua dompet menambah jumlah setiap dompet mengikut tetapan aset tersembunyi masing-masing.</string>
-    <string name="portfolio_excluded_hidden">Tersembunyi: %1$d</string>
     <string name="portfolio_excluded_unpriced">Tanpa harga: %1$d</string>
-    <string name="portfolio_excluded_testnet">Aset rangkaian ujian: %1$d</string>
-    <string name="portfolio_excluded_caption">%1$s tidak disertakan</string>
     <string name="portfolio_prices_as_of">Harga setakat %1$s</string>
     <string name="portfolio_counted">Dikira</string>
     <string name="portfolio_hidden_by_you">Disembunyikan oleh anda</string>
     <string name="portfolio_without_price">Tiada harga</string>
     <string name="portfolio_testnets">Rangkaian ujian (Taira)</string>
-    <string name="portfolio_never_counted">Tidak pernah dikira</string>
     <string name="portfolio_pool_stakes">Pegangan dalam kumpulan kecairan</string>
     <string name="portfolio_not_included">Tidak disertakan</string>
     <string name="portfolio_manage_hidden">Urus aset tersembunyi</string>
@@ -76,7 +71,6 @@
     <string name="portfolio_state_offline">LUAR TALIAN</string>
     <string name="portfolio_state_reading">MEMBACA</string>
     <string name="portfolio_reading_balances">Membaca baki…</string>
-    <string name="portfolio_excluded_unread">Dompet belum dibaca: %1$d</string>
     <string name="portfolio_age_seconds">%1$d saat</string>
     <string name="portfolio_age_minutes">%1$d min</string>
     <string name="portfolio_age_hours">%1$d jam</string>
@@ -120,14 +114,10 @@
     <string name="portfolio_amount_too_high">Melebihi baki yang boleh dipindahkan.</string>
     <string name="portfolio_arrives_on">Diterima sebagai %1$s pada %2$s</string>
     <string name="portfolio_network">Rangkaian</string>
-    <string name="portfolio_route">Laluan</string>
-    <string name="portfolio_route_same_network">Rangkaian yang sama, antara dompet anda</string>
     <string name="portfolio_fee_in_send">Ditunjukkan pada skrin Hantar sebelum anda mengesahkan</string>
-    <string name="portfolio_move_note">Skrin Hantar menunjukkan yuran dan amaun akhir. Tiada dana dipindahkan sehingga anda mengesahkan di sana.</string>
     <string name="portfolio_choose_holding">Pilih pegangan</string>
     <string name="portfolio_you_pay">Anda bayar</string>
     <string name="portfolio_you_get">Anda terima</string>
-    <string name="portfolio_swap_note">Polkaswap menunjukkan harga, yuran dan kesan harga sebelum anda menandatangani. Di sini hanya pasangan dipilih.</string>
     <string name="portfolio_send_from">Hantar dari dompet mana?</string>
     <string name="portfolio_receive_to">Terima ke dompet mana?</string>
     <string name="portfolio_sample_handoff_off">Portfolio contoh: alamat adalah rekaan, jadi skrin Hantar tidak dibuka.</string>

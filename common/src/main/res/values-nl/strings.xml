@@ -76,7 +76,6 @@
   <string name="common_close">Sluit</string>
   <string name="tx_details_view_on_explorer">Bekijk in explorer</string>
   <string name="common_confirm">Bevestigen</string>
-  <string name="common_connected">Verbonden</string>
   <string name="common_connecting">Verbinding maken…</string>
   <string name="common_continue">Doorgaan</string>
   <string name="common_copied">Gekopieerd naar het klembord</string>
@@ -214,10 +213,7 @@
   <string name="eth_tx_address">Ethereum account address</string>
   <string name="eth_tx_hash">Ethereum transaction hash</string>
   <string name="explore_create_pool">Create pool</string>
-  <string name="explore_demeter_subtitle">Stake your pool share and earn additional rewards</string>
   <string name="explore_demeter_title">Demeter Farming</string>
-  <string name="explore_provide_and_earn">Provide liquidity and earn rewards</string>
-  <string name="explore_swap_tokens_on_sora">Swap tokens on SORA network</string>
   <string name="export_account_details_backup_description">Als u de toegang tot dit apparaat verliest, gaat uw geld verloren, tenzij u een back-up maakt!</string>
   <string name="export_account_details_backup_options">Back-up opties</string>
   <string name="export_account_details_show_passphrase">Toon passphrase</string>
@@ -336,7 +332,6 @@
   <string name="pool_share_title_1">Uw aandeel in de pool</string>
   <string name="pooled_assets">Pooled assets</string>
   <string name="profile_biometry_title">Biometrie auth</string>
-  <string name="protect_loss_access_funds">Protect yourself from losing access to your funds</string>
   <string name="qr_code">QR Code</string>
   <string name="receive_tokens">Ontvang Tokens</string>
   <string name="received_from_adar">Received from ADAR</string>
@@ -407,15 +402,10 @@
   <string name="select_pool_share">Select your pool share to stake</string>
   <string name="select_recipient">Selecteer ontvanger</string>
   <string name="settings_accounts">Accounts</string>
-  <string name="settings_accounts_subtitle">Manage accounts, backup passphrase</string>
-  <string name="settings_app_subtitle">Language, Appearance</string>
   <string name="settings_crypto_accounts">Cryptorekeningen</string>
   <string name="settings_header_app">App instellingen</string>
-  <string name="settings_information_subtitle">Disclaimer, FAQ, About app</string>
   <string name="settings_information_title">Information</string>
-  <string name="settings_invite_subtitle">Share invite link</string>
   <string name="settings_invite_title">Invite Friends &amp; Earn</string>
-  <string name="settings_login_subtitle">PIN and Biometric auth</string>
   <string name="settings_login_title">Login &amp; Security</string>
   <string name="settings_nodes">Nodes</string>
   <string name="show_more">Meer tonen</string>
@@ -431,7 +421,6 @@
   <string name="transaction_date_1">Date and time</string>
   <string name="transaction_id">Transactie hash</string>
   <string name="tutorial_many_world">Vele werelden.\n Eén economie.</string>
-  <string name="tutorial_many_world_desc">SORA werkt eraan om een gedecentraliseerd multiversum economisch systeem te worden dat de creatie van nieuwe en opwindende toepassingen financiert, onder democratisch toezicht van het SORA-parlement.</string>
   <string name="tutorial_privacy_policy">Privacybeleid</string>
   <string name="tutorial_terms_and_conditions_3">Algemene voorwaarden</string>
   <string name="tutorial_terms_and_conditions_template_1">By continuing you are agreeing with the </string>

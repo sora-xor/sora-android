@@ -74,7 +74,6 @@
   <string name="common_close">𓐍𓏏𓅓</string>
   <string name="tx_details_view_on_explorer">𓅓𓄿𓄿 𓅓 𓅓𓄿𓄿𓋴𓈙𓅱</string>
   <string name="common_confirm">𓋴𓅓𓈖</string>
-  <string name="common_connected">𓂧𓅓𓆓</string>
   <string name="common_connecting">𓎛𓂋𓂧𓅓𓆓…</string>
   <string name="common_continue">𓈙𓅓</string>
   <string name="common_copied">𓋴𓈙𓅓𓇋𓏏𓏏 𓂋 𓈙𓂝𓏏𓆓𓂋𓏏</string>
@@ -210,10 +209,7 @@
   <string name="eth_tx_address">Ethereum 𓎛𓋴𓃀 𓋴𓏏𓈖𓎛𓋴𓃀</string>
   <string name="eth_tx_hash">Ethereum 𓇋𓂋𓏏𓋴𓅱𓈖𓏏 𓐍𓏏𓅓</string>
   <string name="explore_create_pool">𓇋𓂋 𓈙</string>
-  <string name="explore_demeter_subtitle">𓍿𓋴𓐍𓏏 𓈖𓎡 𓈙 𓊪𓋴𓈙 𓎛𓈖𓂝 𓈙𓋴𓊪 𓎛𓂋𓇋 𓆑𓎡𓄿𓅱</string>
   <string name="explore_demeter_title">Demeter 𓋴𓎡𓄿𓐍𓏏</string>
-  <string name="explore_provide_and_earn">𓂋𓂧𓇋 𓐍𓏏𓅱𓈙𓅓𓅱 𓎛𓈖𓂝 𓈙𓋴𓊪 𓆑𓎡𓄿𓅱</string>
-  <string name="explore_swap_tokens_on_sora">𓋴𓅱𓈖𓏏 𓇋𓐍𓏏 𓅓 SORA 𓇋𓄿𓂧𓏏𓈖𓏏𓅱𓄿𓅱𓏏</string>
   <string name="export_account_details_backup_description">𓇋𓂋 𓈖𓏏𓎡 𓐍𓄿𓂝 𓅱𓄿𓏏 𓂋 𓊪𓈖 𓐍𓏏𓈖𓇋𓂋𓏏, 𓈖𓎡 𓐍𓏏𓅱 𓂋 𓐍𓄿𓂝, 𓈖𓇋𓂋 𓈖𓏏𓎡 𓂋𓎛𓄿 𓎛𓂋!</string>
   <string name="export_account_details_backup_options">𓋴𓈙𓋴𓈖𓈖𓅱 𓋴𓏏𓊪𓅱</string>
   <string name="export_account_details_show_passphrase">𓋴𓐍𓂝 𓅓𓂧𓅱𓋴𓐍𓄿</string>
@@ -327,7 +323,6 @@
   <string name="pool_share_title_1">𓈖𓎡 𓈙 𓊪𓋴𓈙</string>
   <string name="pooled_assets">𓅓𓈙 𓇋𓐍𓏏</string>
   <string name="profile_biometry_title">𓐍𓄿𓇋𓈖𓄡𓏏 𓋴𓅓𓈖𓂋𓈖</string>
-  <string name="protect_loss_access_funds">𓋴𓄿𓅱 𓆓𓋴𓎡 𓅓 𓐍𓄿𓂝 𓅱𓄿𓏏 𓂋 𓈖𓎡 𓐍𓏏𓅱</string>
   <string name="qr_code">QR 𓐍𓏏𓅓</string>
   <string name="receive_tokens">𓈙𓋴𓊪 𓇋𓐍𓏏</string>
   <string name="received_from_adar">𓈙𓋴𓊪 𓅓 ADAR</string>
@@ -398,15 +393,10 @@
   <string name="select_pool_share">𓋴𓏏𓊪 𓈖𓎡 𓈙 𓊪𓋴𓈙 𓂋 𓍿𓋴𓐍𓏏</string>
   <string name="select_recipient">𓋴𓏏𓊪 𓈙𓋴𓊪𓅱 𓋴𓏏𓈖𓎛𓋴𓃀</string>
   <string name="settings_accounts">𓎛𓋴𓃀𓅱</string>
-  <string name="settings_accounts_subtitle">𓋴𓈙𓅓 𓎛𓋴𓃀𓅱, 𓋴𓈙𓋴𓈖𓈖𓅱 𓅓𓂧𓅱𓋴𓐍𓄿</string>
-  <string name="settings_app_subtitle">𓂋𓄿, 𓈎𓂧</string>
   <string name="settings_crypto_accounts">𓋴𓈙𓏏𓄿 𓎛𓋴𓃀𓅱</string>
   <string name="settings_header_app">𓋴𓈙𓂝𓈖𓐍 𓋴𓏏𓊪𓅱</string>
-  <string name="settings_information_subtitle">𓅓𓂧𓅱𓈖𓐍𓋴𓆑, 𓊪𓏏𓂋𓅱𓎛𓈖𓂝𓅱𓈙𓃀𓅱, 𓂋 𓋴𓈙𓂝𓈖𓐍</string>
   <string name="settings_information_title">𓂋𓐍𓏏</string>
-  <string name="settings_invite_subtitle">𓊪𓋴𓈙 𓇋𓄿𓋴 𓅱𓄿𓏏</string>
   <string name="settings_invite_title">𓇋𓄿𓋴 𓐍𓈖𓅓𓅱 𓎛𓈖𓂝 𓈙𓋴𓊪</string>
-  <string name="settings_login_subtitle">PIN 𓎛𓈖𓂝 𓐍𓄿𓇋𓈖𓄡𓏏 𓋴𓅓𓈖𓂋𓈖</string>
   <string name="settings_login_title">𓂝𓈎𓂋𓈖 𓎛𓈖𓂝 𓋴𓄿𓅱</string>
   <string name="settings_nodes">𓋴𓃀𓄿𓅱𓈖𓇋𓄿𓂧𓏏</string>
   <string name="show_more">𓋴𓐍𓂝 𓂝𓈙𓄿</string>
@@ -421,7 +411,6 @@
   <string name="transaction_date_1">𓉔𓂋𓅱 𓎛𓈖𓂝 𓏏𓂋</string>
   <string name="transaction_id">𓇋𓂋𓏏𓂋𓂋𓅱𓏏𓇌 𓐍𓏏𓅓</string>
   <string name="tutorial_many_world">𓏏𓄿𓅱𓂝𓈙𓄿𓅱.\n𓎛𓋴𓃀𓐍𓏏𓅱𓂝.</string>
-  <string name="tutorial_many_world_desc">𓋴𓄿𓅱, 𓉔𓄿𓃀, 𓈙𓋴𓊪, 𓎛𓈖𓂝 𓋴𓅱𓈖𓏏 𓈖𓎡 SORA 𓇋𓐍𓏏. 𓋴𓏏𓊪 𓅓𓇋 𓈖𓏏𓎡 𓅓𓂋𓂋 𓂋 𓇋𓂋 𓂋𓊪𓅱 𓈖𓎛𓅓 𓈖𓎡 𓊪𓂋𓎛𓆓.</string>
   <string name="tutorial_privacy_policy">𓋴𓈙𓏏𓄿 𓉔𓊪</string>
   <string name="tutorial_terms_and_conditions_3">𓅓𓂧𓅱 𓎛𓈖𓂝 𓅱𓆓𓅱</string>
   <string name="tutorial_terms_and_conditions_template_1">𓇋𓈖 𓈙𓅓 𓈖𓏏𓎡 𓂋𓂧𓇋𓇋𓃀 𓎛𓈖𓂝</string>
@@ -596,7 +585,6 @@
     <string name="wallet_market_activity">%1$d 𓂝𓈖𓐍 · %2$d 𓇋𓂋𓇋𓅱𓋴𓅱𓈖𓏏</string>
     <string name="wallet_send_network_notice">𓇋𓂋𓅓 𓈙𓋴𓊪𓅱 𓋴𓏏𓈖𓎛𓋴𓃀 𓅓 %1$s.</string>
   <string name="wallet_assets_unavailable">𓇋𓐍𓏏 𓈖𓅱𓈖</string>
-  <string name="wallet_assets_unavailable_details">𓇋𓐍𓏏 𓂋𓐍 𓈖 𓇋𓈖𓇋. 𓋴𓅓𓈖 𓈖𓎡 𓂧𓅓𓆓𓏏, 𓅓𓐍𓏏 𓅱𓎛𓅓𓅱𓈖 𓋴𓅱𓈖𓏏.</string>
   <!-- ak1-signing-compat: signing is decided by the stored key; repair in place; truthful backup and upgrade text -->
   <!-- ak2-readonly-ux: read-only accounts are labelled, explained and repairable; removal shows the matching backup first -->
   <!-- at1-submit-status: truthful transaction status on every screen (audit A5) -->

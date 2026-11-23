@@ -50,7 +50,6 @@
     <string name="portfolio_review_in_send">Проверить на экране отправки</string>
     <string name="portfolio_switch_and_review">Переключиться на %1$s и проверить</string>
     <string name="portfolio_switch_note">Эти средства находятся в %1$s. Сначала мы переключимся на этот кошелёк.</string>
-    <string name="portfolio_switch_first">Сначала переключимся на этот кошелёк</string>
     <string name="portfolio_switch_failed">Не удалось сменить кошелёк. Ничего не изменилось.</string>
     <string name="portfolio_route_runs_on_sora2">Обмены Polkaswap выполняются в сети SORA2.</string>
     <string name="portfolio_route_none">В этой версии нет маршрута из %1$s.</string>
@@ -67,16 +66,12 @@
     <string name="portfolio_how_we_count">Как мы рассчитываем ваш баланс</string>
     <string name="portfolio_how_we_count_body">В итог входит полный баланс каждого видимого актива с известной ценой в основных сетях. Скрытые позиции, позиции без цены и позиции в тестовых сетях исключаются и перечисляются, а не исчезают без объяснения.</string>
     <string name="portfolio_all_wallets_sum">Раздел «Все кошельки» складывает итоги каждого кошелька с учётом его собственных скрытых активов.</string>
-    <string name="portfolio_excluded_hidden">Скрыто: %1$d</string>
     <string name="portfolio_excluded_unpriced">Без цены: %1$d</string>
-    <string name="portfolio_excluded_testnet">Активы тестовых сетей: %1$d</string>
-    <string name="portfolio_excluded_caption">%1$s не учтено</string>
     <string name="portfolio_prices_as_of">Цены на %1$s</string>
     <string name="portfolio_counted">Учтено</string>
     <string name="portfolio_hidden_by_you">Скрыто вами</string>
     <string name="portfolio_without_price">Нет цены</string>
     <string name="portfolio_testnets">Тестовые сети (Taira)</string>
-    <string name="portfolio_never_counted">Никогда не учитываются</string>
     <string name="portfolio_pool_stakes">Доли в пулах</string>
     <string name="portfolio_not_included">Не учтено</string>
     <string name="portfolio_manage_hidden">Управление скрытыми активами</string>
@@ -88,7 +83,6 @@
     <string name="portfolio_state_offline">НЕТ СЕТИ</string>
     <string name="portfolio_state_reading">ЧТЕНИЕ</string>
     <string name="portfolio_reading_balances">Читаем балансы…</string>
-    <string name="portfolio_excluded_unread">Ещё не прочитанные кошельки: %1$d</string>
     <string name="portfolio_age_seconds">%1$d с</string>
     <string name="portfolio_age_minutes">%1$d мин</string>
     <string name="portfolio_age_hours">%1$d ч</string>
@@ -132,14 +126,10 @@
     <string name="portfolio_amount_too_high">Превышает доступный для перевода баланс.</string>
     <string name="portfolio_arrives_on">Поступит как %1$s в сети %2$s</string>
     <string name="portfolio_network">Сеть</string>
-    <string name="portfolio_route">Маршрут</string>
-    <string name="portfolio_route_same_network">Одна сеть, между вашими кошельками</string>
     <string name="portfolio_fee_in_send">Показывается на экране отправки до подтверждения</string>
-    <string name="portfolio_move_note">На экране отправки показаны комиссия и окончательная сумма. Средства не перемещаются до вашего подтверждения там.</string>
     <string name="portfolio_choose_holding">Выбрать позицию</string>
     <string name="portfolio_you_pay">Вы платите</string>
     <string name="portfolio_you_get">Вы получаете</string>
-    <string name="portfolio_swap_note">Polkaswap показывает цену, комиссию и влияние на цену до подписания. Здесь выбирается только пара.</string>
     <string name="portfolio_send_from">С какого кошелька отправить?</string>
     <string name="portfolio_receive_to">На какой кошелёк получить?</string>
     <string name="portfolio_sample_handoff_off">Пример портфеля: адреса вымышлены, поэтому экран отправки не открывается.</string>

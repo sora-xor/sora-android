@@ -46,7 +46,6 @@
     <string name="portfolio_review_in_send">Провери на екрану Слање</string>
     <string name="portfolio_switch_and_review">Пређи на %1$s и провери</string>
     <string name="portfolio_switch_note">Ово средство је у %1$s. Прво прелазимо на тај новчаник.</string>
-    <string name="portfolio_switch_first">Прво прелазимо на тај новчаник</string>
     <string name="portfolio_switch_failed">Промена новчаника није успела. Ништа није промењено.</string>
     <string name="portfolio_route_runs_on_sora2">Polkaswap замене се извршавају на SORA2.</string>
     <string name="portfolio_route_none">У овој верзији не постоји путања из %1$s.</string>
@@ -63,16 +62,12 @@
     <string name="portfolio_how_we_count">Како рачунамо ваше стање</string>
     <string name="portfolio_how_we_count_body">Збир обухвата целокупно стање сваког видљивог средства које има цену на главним мрежама. Скривене позиције, оне без цене и оне на тестним мрежама изостављају се и јасно наводе, никада без објашњења.</string>
     <string name="portfolio_all_wallets_sum">Сви новчаници сабирају збир сваког новчаника уз примену његових подешавања скривених средстава.</string>
-    <string name="portfolio_excluded_hidden">Скривено: %1$d</string>
     <string name="portfolio_excluded_unpriced">Без цене: %1$d</string>
-    <string name="portfolio_excluded_testnet">Средства тестне мреже: %1$d</string>
-    <string name="portfolio_excluded_caption">%1$s није укључено</string>
     <string name="portfolio_prices_as_of">Цене од %1$s</string>
     <string name="portfolio_counted">Урачунато</string>
     <string name="portfolio_hidden_by_you">Ви сте сакрили</string>
     <string name="portfolio_without_price">Нема цене</string>
     <string name="portfolio_testnets">Тестне мреже (Taira)</string>
-    <string name="portfolio_never_counted">Никада се не урачунава</string>
     <string name="portfolio_pool_stakes">Удели у фондовима ликвидности</string>
     <string name="portfolio_not_included">Није укључено</string>
     <string name="portfolio_manage_hidden">Управљај скривеним средствима</string>
@@ -84,7 +79,6 @@
     <string name="portfolio_state_offline">ВАН МРЕЖЕ</string>
     <string name="portfolio_state_reading">ЧИТАЊЕ</string>
     <string name="portfolio_reading_balances">Читање стања…</string>
-    <string name="portfolio_excluded_unread">Још непрочитани новчаници: %1$d</string>
     <string name="portfolio_age_seconds">%1$d сек</string>
     <string name="portfolio_age_minutes">%1$d мин</string>
     <string name="portfolio_age_hours">%1$d ч</string>
@@ -128,14 +122,10 @@
     <string name="portfolio_amount_too_high">Више од стања доступног за пренос.</string>
     <string name="portfolio_arrives_on">Стиже као %1$s на %2$s</string>
     <string name="portfolio_network">Мрежа</string>
-    <string name="portfolio_route">Путања</string>
-    <string name="portfolio_route_same_network">Иста мрежа, између ваших новчаника</string>
     <string name="portfolio_fee_in_send">Приказује се на екрану Слање пре потврде</string>
-    <string name="portfolio_move_note">Екран Слање приказује накнаду и коначан износ. Средства се не померају док тамо не потврдите.</string>
     <string name="portfolio_choose_holding">Изабери позицију</string>
     <string name="portfolio_you_pay">Плаћате</string>
     <string name="portfolio_you_get">Добијате</string>
-    <string name="portfolio_swap_note">Polkaswap приказује цену, накнаду и утицај на цену пре потписивања. Овде се бира само пар.</string>
     <string name="portfolio_send_from">Послати из ког новчаника?</string>
     <string name="portfolio_receive_to">Примити у који новчаник?</string>
     <string name="portfolio_sample_handoff_off">Пример портфолија: адресе су измишљене, па се екран Слање не отвара.</string>

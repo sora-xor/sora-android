@@ -156,7 +156,6 @@
     <string name="wallet_market_activity">الأسواق النشطة: %1$d · المتداولون: %2$d</string>
     <string name="wallet_send_network_notice">استخدم عنوان مستلم من %1$s.</string>
     <string name="wallet_assets_unavailable">الأصول غير متاحة</string>
-    <string name="wallet_assets_unavailable_details">تعذر تحميل الأصول. تحقق من اتصالك ثم أعد فتح Swap.</string>
     <string name="asset_reorder">إعادة ترتيب العنصر</string>
     <string name="asset_move_up">نقل إلى أعلى</string>
     <string name="asset_move_down">نقل إلى أسفل</string>

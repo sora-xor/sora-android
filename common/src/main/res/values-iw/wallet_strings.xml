@@ -155,7 +155,6 @@
     <string name="wallet_market_activity">שווקים פעילים: %1$d · סוחרים: %2$d</string>
     <string name="wallet_send_network_notice">יש להשתמש בכתובת נמען מרשת %1$s.</string>
     <string name="wallet_assets_unavailable">הנכסים אינם זמינים</string>
-    <string name="wallet_assets_unavailable_details">לא ניתן לטעון את הנכסים. יש לבדוק את החיבור ולפתוח שוב את Swap.</string>
     <string name="asset_reorder">שינוי סדר הפריט</string>
     <string name="asset_move_up">הזזה למעלה</string>
     <string name="asset_move_down">הזזה למטה</string>

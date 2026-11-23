@@ -159,7 +159,6 @@
     <string name="wallet_market_activity">Активна тржишта: %1$d · Трговци: %2$d</string>
     <string name="wallet_send_network_notice">Употребите адресу примаоца са мреже %1$s.</string>
     <string name="wallet_assets_unavailable">Средства нису доступна</string>
-    <string name="wallet_assets_unavailable_details">Средства нису могла да се учитају. Проверите везу, па поново отворите Swap.</string>
     <string name="asset_reorder">Промени редослед ставке</string>
     <string name="asset_move_up">Помери нагоре</string>
     <string name="asset_move_down">Помери надоле</string>

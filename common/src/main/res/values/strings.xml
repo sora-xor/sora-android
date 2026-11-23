@@ -78,7 +78,6 @@
   <string name="common_close">Close</string>
   <string name="tx_details_view_on_explorer">View on explorer</string>
   <string name="common_confirm">Confirm</string>
-  <string name="common_connected">Connected</string>
   <string name="common_connecting">Connecting…</string>
   <string name="common_continue">Continue</string>
   <string name="common_copied">Copied to Clipboard</string>
@@ -216,10 +215,7 @@
   <string name="eth_tx_address">Ethereum account address</string>
   <string name="eth_tx_hash">Ethereum transaction hash</string>
   <string name="explore_create_pool">Create pool</string>
-  <string name="explore_demeter_subtitle">Stake your pool share and earn additional rewards</string>
   <string name="explore_demeter_title">Demeter Farming</string>
-  <string name="explore_provide_and_earn">Provide liquidity and earn rewards</string>
-  <string name="explore_swap_tokens_on_sora">Swap tokens on SORA network</string>
   <string name="export_account_details_backup_description">Keep a backup to recover your wallet if you lose this device.</string>
   <string name="export_account_details_backup_options">Backups</string>
   <string name="export_account_details_show_passphrase">Show recovery phrase</string>
@@ -336,7 +332,6 @@
   <string name="pool_share_title_1">Your pool share</string>
   <string name="pooled_assets">Pooled assets</string>
   <string name="profile_biometry_title">Biometric unlock</string>
-  <string name="protect_loss_access_funds">Keep a recovery copy</string>
   <string name="qr_code">QR code</string>
   <string name="receive_tokens">Receive</string>
   <string name="received_from_adar">Received from ADAR</string>
@@ -407,15 +402,10 @@
   <string name="select_pool_share">Select your pool share to stake</string>
   <string name="select_recipient">Select recipient address</string>
   <string name="settings_accounts">Accounts</string>
-  <string name="settings_accounts_subtitle">Manage accounts, backup passphrase</string>
-  <string name="settings_app_subtitle">Language, Appearance</string>
   <string name="settings_crypto_accounts">Accounts</string>
   <string name="settings_header_app">App settings</string>
-  <string name="settings_information_subtitle">Disclaimer, FAQ, About app</string>
   <string name="settings_information_title">About</string>
-  <string name="settings_invite_subtitle">Share invite link</string>
   <string name="settings_invite_title">Invite friends</string>
-  <string name="settings_login_subtitle">PIN and Biometric auth</string>
   <string name="settings_login_title">Login &amp; Security</string>
   <string name="settings_nodes">Nodes</string>
   <string name="show_more">Show more</string>
@@ -431,7 +421,6 @@
   <string name="transaction_date_1">Date and time</string>
   <string name="transaction_id">Extrinsic hash</string>
   <string name="tutorial_many_world">Your assets.\nYour wallet.</string>
-  <string name="tutorial_many_world_desc">Keep, send, receive, and swap your SORA assets. Choose how you want to create or restore your wallet.</string>
   <string name="tutorial_privacy_policy">Privacy Policy</string>
   <string name="tutorial_terms_and_conditions_3">Terms &amp; Conditions</string>
   <string name="tutorial_terms_and_conditions_template_1">By continuing you are agreeing with the </string>
@@ -614,7 +603,6 @@
     <string name="wallet_market_activity">Active markets: %1$d · Traders: %2$d</string>
     <string name="wallet_send_network_notice">Use a recipient address from %1$s.</string>
   <string name="wallet_assets_unavailable">Assets unavailable</string>
-  <string name="wallet_assets_unavailable_details">Assets could not be loaded. Check your connection, then reopen Swap.</string>
     <string name="nexus_production_address">Mainnet address</string>
     <string name="nexus_production_address_notice">Address only. Transfers start after launch.</string>
     <string name="nexus_send_not_available">Receive only for now.</string>
@@ -925,7 +913,6 @@
   <string name="portfolio_review_in_send">Review in Send</string>
   <string name="portfolio_switch_and_review">Switch to %1$s and review</string>
   <string name="portfolio_switch_note">This is in %1$s. We switch to it first.</string>
-  <string name="portfolio_switch_first">Switch wallet</string>
   <string name="portfolio_switch_failed">Could not switch wallets. Nothing was changed.</string>
   <string name="portfolio_route_runs_on_sora2">Polkaswap swaps run on SORA2.</string>
   <string name="portfolio_route_none">There is no route from %1$s in this version.</string>
@@ -942,16 +929,12 @@
   <string name="portfolio_how_we_count">How we count your balance</string>
   <string name="portfolio_how_we_count_body">The total adds the full balance of every visible asset that has a price, on mainnet networks. Hidden, unpriced and testnet holdings are left out and named, never dropped silently.</string>
   <string name="portfolio_all_wallets_sum">All wallets adds each wallet’s own total, with each wallet’s own hidden assets.</string>
-  <string name="portfolio_excluded_hidden">Hidden: %1$d</string>
   <string name="portfolio_excluded_unpriced">Without a price: %1$d</string>
-  <string name="portfolio_excluded_testnet">Testnet assets: %1$d</string>
-  <string name="portfolio_excluded_caption">%1$s not included</string>
   <string name="portfolio_prices_as_of">Prices as of %1$s</string>
   <string name="portfolio_counted">Counted</string>
   <string name="portfolio_hidden_by_you">Hidden by you</string>
   <string name="portfolio_without_price">Without a price</string>
   <string name="portfolio_testnets">Testnets (Taira)</string>
-  <string name="portfolio_never_counted">Never counted</string>
   <string name="portfolio_pool_stakes">Pool stakes</string>
   <string name="portfolio_not_included">Not included</string>
   <string name="portfolio_manage_hidden">Manage hidden assets</string>
@@ -962,7 +945,6 @@
   <string name="portfolio_state_partial">PARTIAL</string>
   <string name="portfolio_state_reading">READING</string>
   <string name="portfolio_reading_balances">Reading balances…</string>
-  <string name="portfolio_excluded_unread">Wallets not read yet: %1$d</string>
   <string name="portfolio_state_offline">OFFLINE</string>
   <string name="portfolio_age_seconds">%1$ds</string>
   <string name="portfolio_age_minutes">%1$dm</string>
@@ -1007,14 +989,10 @@
   <string name="portfolio_amount_too_high">More than the transferable balance.</string>
   <string name="portfolio_arrives_on">%1$s · %2$s</string>
   <string name="portfolio_network">Network</string>
-  <string name="portfolio_route">Route</string>
-  <string name="portfolio_route_same_network">Same network, between your wallets</string>
   <string name="portfolio_fee_in_send">At review</string>
-  <string name="portfolio_move_note">Send shows the fee and the final amount. Nothing moves until you confirm there.</string>
   <string name="portfolio_choose_holding">Choose a holding</string>
   <string name="portfolio_you_pay">You pay</string>
   <string name="portfolio_you_get">You get</string>
-  <string name="portfolio_swap_note">Polkaswap shows price, fee and impact before you sign. This only picks the pair.</string>
   <string name="portfolio_send_from">Send from</string>
   <string name="portfolio_receive_to">Receive in</string>
   <string name="portfolio_sample_handoff_off">Sample portfolio: addresses are invented, so this does not open Send.</string>

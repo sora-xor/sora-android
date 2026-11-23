@@ -155,7 +155,6 @@
     <string name="wallet_market_activity">Marchés actifs : %1$d · Traders : %2$d</string>
     <string name="wallet_send_network_notice">Utilisez une adresse de destinataire du réseau %1$s.</string>
     <string name="wallet_assets_unavailable">Actifs indisponibles</string>
-    <string name="wallet_assets_unavailable_details">Impossible de charger les actifs. Vérifiez votre connexion, puis rouvrez Swap.</string>
     <string name="asset_reorder">Réorganiser l’élément</string>
     <string name="asset_move_up">Déplacer vers le haut</string>
     <string name="asset_move_down">Déplacer vers le bas</string>

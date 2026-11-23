@@ -156,7 +156,6 @@
     <string name="wallet_market_activity">取引中の市場：%1$d · 取引者：%2$d</string>
     <string name="wallet_send_network_notice">%1$sの受取アドレスを使用してください。</string>
     <string name="wallet_assets_unavailable">資産を取得できません</string>
-    <string name="wallet_assets_unavailable_details">資産を読み込めませんでした。接続を確認し、Swapを開き直してください。</string>
     <string name="asset_reorder">項目を並べ替え</string>
     <string name="asset_move_up">上へ移動</string>
     <string name="asset_move_down">下へ移動</string>

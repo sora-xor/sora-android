@@ -76,7 +76,6 @@
   <string name="common_close">Закрыть</string>
   <string name="tx_details_view_on_explorer">Посмотреть в обозревателе</string>
   <string name="common_confirm">Подтвердить</string>
-  <string name="common_connected">Подключено</string>
   <string name="common_connecting">Подключение…</string>
   <string name="common_continue">Продолжить</string>
   <string name="common_copied">Скопировано в буфер обмена</string>
@@ -214,10 +213,7 @@
   <string name="eth_tx_address">Адрес аккаунта Ethereum</string>
   <string name="eth_tx_hash">Хеш транзакции Ethereum</string>
   <string name="explore_create_pool">Create pool</string>
-  <string name="explore_demeter_subtitle">Стейкайте свою долю в пуле и получайте дополнительные вознаграждения</string>
   <string name="explore_demeter_title">Demeter фарминг</string>
-  <string name="explore_provide_and_earn">Предоставляйте ликвидность и получайте вознаграждения</string>
-  <string name="explore_swap_tokens_on_sora">Меняйте токены в сети SORA</string>
   <string name="export_account_details_backup_description">При потере доступа к этому устройству, ваши средства будут потеряны, если вы не сделаете резервную копию!</string>
   <string name="export_account_details_backup_options">Параметры резервного копирования</string>
   <string name="export_account_details_show_passphrase">Показать парольную фразу</string>
@@ -338,7 +334,6 @@
   <string name="pool_share_title_1">Ваша доля в пуле</string>
   <string name="pooled_assets">Активы в пулах</string>
   <string name="profile_biometry_title">Вход по биометрии</string>
-  <string name="protect_loss_access_funds">Защитите себя от потери доступа к своим средствам</string>
   <string name="qr_code">QR код</string>
   <string name="receive_tokens">Получить токены</string>
   <string name="received_from_adar">Получено от ADAR</string>
@@ -411,15 +406,10 @@
   <string name="select_pool_share">Выберите долю пула для стейкинга</string>
   <string name="select_recipient">Выбор получателя</string>
   <string name="settings_accounts">Аккаунты</string>
-  <string name="settings_accounts_subtitle">Управление учетными записями, резервная копия парольной фразы</string>
-  <string name="settings_app_subtitle">Язык, внешний вид</string>
   <string name="settings_crypto_accounts">Крипто-аккаунты</string>
   <string name="settings_header_app">Настройки приложения</string>
-  <string name="settings_information_subtitle">Отказ от ответственности, FAQ, О приложении</string>
   <string name="settings_information_title">Информация</string>
-  <string name="settings_invite_subtitle">Поделитесь ссылкой-приглашением</string>
   <string name="settings_invite_title">Приглашайте друзей и зарабатывайте</string>
-  <string name="settings_login_subtitle">Пин-код и биометрическая аутентификация</string>
   <string name="settings_login_title">Вход и безопасность</string>
   <string name="settings_nodes">Ноды</string>
   <string name="show_more">Show more</string>
@@ -435,7 +425,6 @@
   <string name="transaction_date_1">Date and time</string>
   <string name="transaction_id">Хеш экстринсика</string>
   <string name="tutorial_many_world">Множество миров.\n Единая экономика.</string>
-  <string name="tutorial_many_world_desc">SORA работает над тем, чтобы стать децентрализованной мультивселенной экономической системой, финансируя создание новых интересных приложений под демократическим контролем парламента SORA.</string>
   <string name="tutorial_privacy_policy">Политикой конфиденциальности</string>
   <string name="tutorial_terms_and_conditions_3">Условиями использования</string>
   <string name="tutorial_terms_and_conditions_template_1">By continuing you are agreeing with the </string>

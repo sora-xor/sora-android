@@ -76,7 +76,6 @@
   <string name="common_close">Fermer</string>
   <string name="tx_details_view_on_explorer">Voir dans l\'explorateur</string>
   <string name="common_confirm">Confirmer</string>
-  <string name="common_connected">Connecté</string>
   <string name="common_connecting">Connexion en cours…</string>
   <string name="common_continue">Continuer</string>
   <string name="common_copied">Copié dans le presse-papier</string>
@@ -214,10 +213,7 @@
   <string name="eth_tx_address">Ethereum account address</string>
   <string name="eth_tx_hash">Ethereum transaction hash</string>
   <string name="explore_create_pool">Create pool</string>
-  <string name="explore_demeter_subtitle">Stake your pool share and earn additional rewards</string>
   <string name="explore_demeter_title">Demeter Farming</string>
-  <string name="explore_provide_and_earn">Fournir des liquidités et gagner des récompenses</string>
-  <string name="explore_swap_tokens_on_sora">Échanger des tokens sur le réseau SORA</string>
   <string name="export_account_details_backup_description">Si vous perdez l\'accès à cet appareil, vos fonds seront perdus, sauf si vous sauvegardez!</string>
   <string name="export_account_details_backup_options">Options de sauvegarde</string>
   <string name="export_account_details_show_passphrase">Afficher la phrase secrète</string>
@@ -338,7 +334,6 @@
   <string name="pool_share_title_1">Votre part du pool</string>
   <string name="pooled_assets">Actifs en pool</string>
   <string name="profile_biometry_title">Authentification biométrique</string>
-  <string name="protect_loss_access_funds">Protect yourself from losing access to your funds</string>
   <string name="qr_code">QR Code</string>
   <string name="receive_tokens">Recevoir des jetons</string>
   <string name="received_from_adar">Received from ADAR</string>
@@ -410,15 +405,10 @@
   <string name="select_pool_share">Select your pool share to stake</string>
   <string name="select_recipient">Sélectionnez le destinataire</string>
   <string name="settings_accounts">Comptes</string>
-  <string name="settings_accounts_subtitle">Gérer les comptes, phrase de récupération</string>
-  <string name="settings_app_subtitle">Langue, Apparence</string>
   <string name="settings_crypto_accounts">Comptes crypto</string>
   <string name="settings_header_app">Paramètres de l\'application</string>
-  <string name="settings_information_subtitle">Clause de non-responsabilité, FAQ, À propos</string>
   <string name="settings_information_title">Informations</string>
-  <string name="settings_invite_subtitle">Partager un lien d\'invitation</string>
   <string name="settings_invite_title">Invitez des amis et Gagnez des jetons</string>
-  <string name="settings_login_subtitle">Code PIN et authentification biométrique</string>
   <string name="settings_login_title">Connexion et Sécurité</string>
   <string name="settings_nodes">Nœuds</string>
   <string name="show_more">Plus</string>
@@ -434,7 +424,6 @@
   <string name="transaction_date_1">Date et heure</string>
   <string name="transaction_id">Identifiant de la transaction</string>
   <string name="tutorial_many_world">Plusieurs Mondes.\nUne Économie.</string>
-  <string name="tutorial_many_world_desc">SORA s\'efforce de devenir un système économique multivers décentralisé, finançant la création d\'applications nouvelles et passionnantes, sous la supervision démocratique du Parlement de SORA.</string>
   <string name="tutorial_privacy_policy">Respect de la vie privée</string>
   <string name="tutorial_terms_and_conditions_3">Conditions générales</string>
   <string name="tutorial_terms_and_conditions_template_1">En continuant, vous acceptez </string>

@@ -38,7 +38,6 @@
     <string name="portfolio_review_in_send">Xem lại trên màn hình Gửi</string>
     <string name="portfolio_switch_and_review">Chuyển sang %1$s và xem lại</string>
     <string name="portfolio_switch_note">Tài sản này nằm trong %1$s. Chúng tôi sẽ chuyển sang ví đó trước.</string>
-    <string name="portfolio_switch_first">Chúng tôi sẽ chuyển sang ví đó trước</string>
     <string name="portfolio_switch_failed">Không thể chuyển ví. Không có thay đổi nào.</string>
     <string name="portfolio_route_runs_on_sora2">Giao dịch hoán đổi Polkaswap diễn ra trên SORA2.</string>
     <string name="portfolio_route_none">Phiên bản này không có tuyến từ %1$s.</string>
@@ -55,16 +54,12 @@
     <string name="portfolio_how_we_count">Cách tính số dư</string>
     <string name="portfolio_how_we_count_body">Tổng cộng toàn bộ số dư của từng tài sản đang hiển thị và có giá trên mạng chính. Các khoản nắm giữ bị ẩn, chưa có giá hoặc trên mạng thử nghiệm được loại khỏi tổng và nêu rõ, không âm thầm bỏ qua.</string>
     <string name="portfolio_all_wallets_sum">Tất cả ví cộng tổng của từng ví, theo thiết lập tài sản bị ẩn riêng của mỗi ví.</string>
-    <string name="portfolio_excluded_hidden">Bị ẩn: %1$d</string>
     <string name="portfolio_excluded_unpriced">Chưa có giá: %1$d</string>
-    <string name="portfolio_excluded_testnet">Tài sản mạng thử nghiệm: %1$d</string>
-    <string name="portfolio_excluded_caption">%1$s không được tính</string>
     <string name="portfolio_prices_as_of">Giá tính đến %1$s</string>
     <string name="portfolio_counted">Được tính</string>
     <string name="portfolio_hidden_by_you">Do bạn ẩn</string>
     <string name="portfolio_without_price">Chưa có giá</string>
     <string name="portfolio_testnets">Mạng thử nghiệm (Taira)</string>
-    <string name="portfolio_never_counted">Không bao giờ được tính</string>
     <string name="portfolio_pool_stakes">Phần góp trong nhóm thanh khoản</string>
     <string name="portfolio_not_included">Không được tính</string>
     <string name="portfolio_manage_hidden">Quản lý tài sản bị ẩn</string>
@@ -76,7 +71,6 @@
     <string name="portfolio_state_offline">NGOẠI TUYẾN</string>
     <string name="portfolio_state_reading">ĐANG ĐỌC</string>
     <string name="portfolio_reading_balances">Đang đọc số dư…</string>
-    <string name="portfolio_excluded_unread">Ví chưa đọc: %1$d</string>
     <string name="portfolio_age_seconds">%1$d giây</string>
     <string name="portfolio_age_minutes">%1$d phút</string>
     <string name="portfolio_age_hours">%1$d giờ</string>
@@ -120,14 +114,10 @@
     <string name="portfolio_amount_too_high">Vượt quá số dư có thể chuyển.</string>
     <string name="portfolio_arrives_on">Nhận dưới dạng %1$s trên %2$s</string>
     <string name="portfolio_network">Mạng</string>
-    <string name="portfolio_route">Tuyến</string>
-    <string name="portfolio_route_same_network">Cùng mạng, giữa các ví của bạn</string>
     <string name="portfolio_fee_in_send">Hiển thị trên màn hình Gửi trước khi xác nhận</string>
-    <string name="portfolio_move_note">Màn hình Gửi hiển thị phí và số lượng cuối cùng. Tiền chỉ được chuyển khi bạn xác nhận tại đó.</string>
     <string name="portfolio_choose_holding">Chọn khoản nắm giữ</string>
     <string name="portfolio_you_pay">Bạn trả</string>
     <string name="portfolio_you_get">Bạn nhận</string>
-    <string name="portfolio_swap_note">Polkaswap hiển thị giá, phí và tác động giá trước khi bạn ký. Ở đây chỉ chọn cặp giao dịch.</string>
     <string name="portfolio_send_from">Gửi từ ví nào?</string>
     <string name="portfolio_receive_to">Nhận vào ví nào?</string>
     <string name="portfolio_sample_handoff_off">Danh mục mẫu: địa chỉ là giả định nên không mở màn hình Gửi.</string>

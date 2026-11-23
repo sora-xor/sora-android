@@ -159,7 +159,6 @@
     <string name="wallet_market_activity">Etkin piyasalar: %1$d · Yatırımcıler: %2$d</string>
     <string name="wallet_send_network_notice">%1$s ağından bir alıcı adresi kullanın.</string>
     <string name="wallet_assets_unavailable">Varlıklar kullanılamıyor</string>
-    <string name="wallet_assets_unavailable_details">Varlıklar yüklenemedi. Bağlantınızı kontrol edip Swap’ı yeniden açın.</string>
     <string name="asset_reorder">Öğeyi yeniden sırala</string>
     <string name="asset_move_up">Yukarı taşı</string>
     <string name="asset_move_down">Aşağı taşı</string>

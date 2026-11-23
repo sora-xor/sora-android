@@ -38,7 +38,6 @@
     <string name="portfolio_review_in_send">在发送页面查看</string>
     <string name="portfolio_switch_and_review">切换到%1$s并查看</string>
     <string name="portfolio_switch_note">该资产位于%1$s。我们会先切换到该钱包。</string>
-    <string name="portfolio_switch_first">我们会先切换到该钱包</string>
     <string name="portfolio_switch_failed">无法切换钱包。未做任何更改。</string>
     <string name="portfolio_route_runs_on_sora2">Polkaswap兑换在SORA2上进行。</string>
     <string name="portfolio_route_none">此版本没有从%1$s出发的路径。</string>
@@ -55,16 +54,12 @@
     <string name="portfolio_how_we_count">余额如何计算</string>
     <string name="portfolio_how_we_count_body">总额累加主网上所有有价格且可见资产的完整余额。隐藏、无价格及测试网持仓不会计入，并会明确列出，不会悄悄省略。</string>
     <string name="portfolio_all_wallets_sum">“所有钱包”累加每个钱包的总额，并分别遵循各钱包的资产隐藏设置。</string>
-    <string name="portfolio_excluded_hidden">已隐藏：%1$d</string>
     <string name="portfolio_excluded_unpriced">无价格：%1$d</string>
-    <string name="portfolio_excluded_testnet">测试网资产：%1$d</string>
-    <string name="portfolio_excluded_caption">%1$s未计入</string>
     <string name="portfolio_prices_as_of">截至 %1$s 的价格</string>
     <string name="portfolio_counted">已计入</string>
     <string name="portfolio_hidden_by_you">您已隐藏</string>
     <string name="portfolio_without_price">无价格</string>
     <string name="portfolio_testnets">测试网（Taira）</string>
-    <string name="portfolio_never_counted">从不计入</string>
     <string name="portfolio_pool_stakes">资金池份额</string>
     <string name="portfolio_not_included">未计入</string>
     <string name="portfolio_manage_hidden">管理隐藏资产</string>
@@ -76,7 +71,6 @@
     <string name="portfolio_state_offline">离线</string>
     <string name="portfolio_state_reading">读取中</string>
     <string name="portfolio_reading_balances">正在读取余额…</string>
-    <string name="portfolio_excluded_unread">尚未读取的钱包：%1$d</string>
     <string name="portfolio_age_seconds">%1$d秒</string>
     <string name="portfolio_age_minutes">%1$d分钟</string>
     <string name="portfolio_age_hours">%1$d小时</string>
@@ -120,14 +114,10 @@
     <string name="portfolio_amount_too_high">超过可转出的余额。</string>
     <string name="portfolio_arrives_on">以%2$s上的%1$s到账</string>
     <string name="portfolio_network">网络</string>
-    <string name="portfolio_route">路径</string>
-    <string name="portfolio_route_same_network">同一网络中您的钱包之间</string>
     <string name="portfolio_fee_in_send">确认前在发送页面显示</string>
-    <string name="portfolio_move_note">发送页面会显示手续费和最终数量。在那里确认之前，不会划转任何资金。</string>
     <string name="portfolio_choose_holding">选择持仓</string>
     <string name="portfolio_you_pay">您支付</string>
     <string name="portfolio_you_get">您获得</string>
-    <string name="portfolio_swap_note">Polkaswap会在签名前显示价格、手续费和价格影响。此处仅选择交易对。</string>
     <string name="portfolio_send_from">从哪个钱包发送？</string>
     <string name="portfolio_receive_to">接收到哪个钱包？</string>
     <string name="portfolio_sample_handoff_off">示例资产组合：地址为虚构，因此不会打开发送页面。</string>

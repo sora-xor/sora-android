@@ -76,7 +76,6 @@
   <string name="common_close">Bağlayın</string>
   <string name="tx_details_view_on_explorer">Eksplorerdə bax</string>
   <string name="common_confirm">Təsdiqləyin</string>
-  <string name="common_connected">Əlaqədar</string>
   <string name="common_connecting">Qoşulur …</string>
   <string name="common_continue">Davam edin</string>
   <string name="common_copied">Panoya kopyalandı</string>
@@ -214,10 +213,7 @@
   <string name="eth_tx_address">Ethereum hesab ünvanı</string>
   <string name="eth_tx_hash">Ethereum əməliyyat hash</string>
   <string name="explore_create_pool">Hovuz yaradın</string>
-  <string name="explore_demeter_subtitle">Hovuz payınızı paylayın və əlavə mükafatlar qazanın</string>
   <string name="explore_demeter_title">Demeter Fermerçilik</string>
-  <string name="explore_provide_and_earn">Likvidliyi təmin edin və mükafatlar qazanın</string>
-  <string name="explore_swap_tokens_on_sora">SORA şəbəkəsində tokenləri dəyişdirin</string>
   <string name="export_account_details_backup_description">Bu cihaza girişi itirsəniz, ehtiyat nüsxəsini çıxarmasanız, vəsaitiniz itiriləcək!</string>
   <string name="export_account_details_backup_options">Yedəkləmə seçimləri</string>
   <string name="export_account_details_show_passphrase">Parol ifadəsini göstərin</string>
@@ -336,7 +332,6 @@
   <string name="pool_share_title_1">Hovuz payınız</string>
   <string name="pooled_assets">Pooled assets</string>
   <string name="profile_biometry_title">Biometriya müəllifi</string>
-  <string name="protect_loss_access_funds">Özünüzü pulunuza girişi itirməkdən qoruyun</string>
   <string name="qr_code">QR kodu</string>
   <string name="receive_tokens">Receive tokens</string>
   <string name="received_from_adar">ADAR-dan alınıb</string>
@@ -407,15 +402,10 @@
   <string name="select_pool_share">Bahis etmək üçün hovuz payınızı seçin</string>
   <string name="select_recipient">Alıcı seçin</string>
   <string name="settings_accounts">Hesablar</string>
-  <string name="settings_accounts_subtitle">Hesabları idarə edin, parolun ehtiyat nüsxəsini çıxarın</string>
-  <string name="settings_app_subtitle">Dil, Görünüş</string>
   <string name="settings_crypto_accounts">Crypto Accounts</string>
   <string name="settings_header_app">TƏTBİQ PARAMETLƏRİ</string>
-  <string name="settings_information_subtitle">İmtina, FAQ, Proqram haqqında</string>
   <string name="settings_information_title">Məlumat</string>
-  <string name="settings_invite_subtitle">Dəvət linkini paylaşın</string>
   <string name="settings_invite_title">Dostları dəvət et və qazan</string>
-  <string name="settings_login_subtitle">PİN və Biometrik doğrulama</string>
   <string name="settings_login_title">Giriş və Təhlükəsizlik</string>
   <string name="settings_nodes">Düyünlər</string>
   <string name="show_more">Show more</string>
@@ -431,7 +421,6 @@
   <string name="transaction_date_1">Date and time</string>
   <string name="transaction_id">Köçürmə əməliyyatının İD-si</string>
   <string name="tutorial_many_world">Bir çox Dünyalar.\n Bir İqtisadiyyat.</string>
-  <string name="tutorial_many_world_desc">SORA, SORA Parlamentinin demokratik nəzarəti altında, yeni və maraqlı tətbiqlərin yaradılmasını maliyyələşdirən, mərkəzləşdirilməmiş çox yönlü bir iqtisadi sistem olmaq üçün çalışır.</string>
   <string name="tutorial_privacy_policy">Gizlilik Siyasəti</string>
   <string name="tutorial_terms_and_conditions_3">Şərtlər və Qaydalar</string>
   <string name="tutorial_terms_and_conditions_template_1">By continuing you are agreeing with the </string>

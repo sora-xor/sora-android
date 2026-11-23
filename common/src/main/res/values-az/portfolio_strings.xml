@@ -42,7 +42,6 @@
     <string name="portfolio_review_in_send">Göndər ekranında yoxla</string>
     <string name="portfolio_switch_and_review">%1$s pulqabısına keç və yoxla</string>
     <string name="portfolio_switch_note">Bu aktiv %1$s pulqabısındadır. Əvvəlcə həmin pulqabıya keçirik.</string>
-    <string name="portfolio_switch_first">Əvvəlcə həmin pulqabıya keçirik</string>
     <string name="portfolio_switch_failed">Pulqabını dəyişmək alınmadı. Heç nə dəyişməyib.</string>
     <string name="portfolio_route_runs_on_sora2">Polkaswap mübadilələri SORA2-də həyata keçirilir.</string>
     <string name="portfolio_route_none">Bu versiyada %1$s-dən marşrut yoxdur.</string>
@@ -59,16 +58,12 @@
     <string name="portfolio_how_we_count">Balansınızı necə hesablayırıq</string>
     <string name="portfolio_how_we_count_body">Cəmə əsas şəbəkələrdə qiyməti olan və görünən hər aktivin tam balansı daxildir. Gizli, qiymətsiz və sınaq şəbəkəsindəki qalıqlar daxil edilmir və aydın göstərilir, xəbərsiz buraxılmır.</string>
     <string name="portfolio_all_wallets_sum">Bütün pulqabılar hər pulqabının gizli aktiv ayarlarını nəzərə alaraq onların ayrı-ayrı cəmlərini toplayır.</string>
-    <string name="portfolio_excluded_hidden">Gizli: %1$d</string>
     <string name="portfolio_excluded_unpriced">Qiyməti yoxdur: %1$d</string>
-    <string name="portfolio_excluded_testnet">Sınaq şəbəkəsi aktivləri: %1$d</string>
-    <string name="portfolio_excluded_caption">%1$s daxil edilməyib</string>
     <string name="portfolio_prices_as_of">Qiymətlər: %1$s</string>
     <string name="portfolio_counted">Hesablanıb</string>
     <string name="portfolio_hidden_by_you">Sizin gizlətdikləriniz</string>
     <string name="portfolio_without_price">Qiymət yoxdur</string>
     <string name="portfolio_testnets">Sınaq şəbəkələri (Taira)</string>
-    <string name="portfolio_never_counted">Heç vaxt hesablanmır</string>
     <string name="portfolio_pool_stakes">Likvidlik hovuzundakı paylar</string>
     <string name="portfolio_not_included">Daxil edilməyib</string>
     <string name="portfolio_manage_hidden">Gizli aktivləri idarə et</string>
@@ -80,7 +75,6 @@
     <string name="portfolio_state_offline">OFLAYN</string>
     <string name="portfolio_state_reading">OXUNUR</string>
     <string name="portfolio_reading_balances">Balanslar oxunur…</string>
-    <string name="portfolio_excluded_unread">Hələ oxunmamış pulqabılar: %1$d</string>
     <string name="portfolio_age_seconds">%1$d san</string>
     <string name="portfolio_age_minutes">%1$d dəq</string>
     <string name="portfolio_age_hours">%1$d saat</string>
@@ -124,14 +118,10 @@
     <string name="portfolio_amount_too_high">Köçürülə bilən balansdan çoxdur.</string>
     <string name="portfolio_arrives_on">%2$s şəbəkəsində %1$s kimi çatır</string>
     <string name="portfolio_network">Şəbəkə</string>
-    <string name="portfolio_route">Marşrut</string>
-    <string name="portfolio_route_same_network">Eyni şəbəkədə, pulqabılarınız arasında</string>
     <string name="portfolio_fee_in_send">Təsdiqdən əvvəl Göndər ekranında göstərilir</string>
-    <string name="portfolio_move_note">Göndər ekranında komissiya və yekun məbləğ göstərilir. Orada təsdiq etməyincə heç bir vəsait köçürülmür.</string>
     <string name="portfolio_choose_holding">Aktiv qalığı seçin</string>
     <string name="portfolio_you_pay">Ödəyirsiniz</string>
     <string name="portfolio_you_get">Alırsınız</string>
-    <string name="portfolio_swap_note">Polkaswap imzalamadan əvvəl qiyməti, komissiyanı və qiymətə təsiri göstərir. Burada yalnız cüt seçilir.</string>
     <string name="portfolio_send_from">Hansı pulqabıdan göndərilsin?</string>
     <string name="portfolio_receive_to">Hansı pulqabıya qəbul edilsin?</string>
     <string name="portfolio_sample_handoff_off">Nümunə portfel: ünvanlar uydurmadır, ona görə Göndər ekranı açılmır.</string>

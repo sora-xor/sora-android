@@ -156,7 +156,6 @@
     <string name="wallet_market_activity">Активные рынки: %1$d · Трейдеры: %2$d</string>
     <string name="wallet_send_network_notice">Используйте адрес получателя из сети %1$s.</string>
     <string name="wallet_assets_unavailable">Активы недоступны</string>
-    <string name="wallet_assets_unavailable_details">Не удалось загрузить активы. Проверьте подключение и снова откройте Swap.</string>
     <string name="asset_reorder">Изменить порядок элементов</string>
     <string name="asset_move_up">Переместить вверх</string>
     <string name="asset_move_down">Переместить вниз</string>

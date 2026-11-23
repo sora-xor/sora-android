@@ -161,7 +161,6 @@
     <string name="wallet_market_activity">Aktive markeder: %1$d · Tradere: %2$d</string>
     <string name="wallet_send_network_notice">Bruk en mottakeradresse fra %1$s.</string>
     <string name="wallet_assets_unavailable">Eiendeler utilgjengelige</string>
-    <string name="wallet_assets_unavailable_details">Eiendelene kunne ikke lastes inn. Kontroller tilkoblingen og åpne Swap på nytt.</string>
     <string name="asset_reorder">Endre rekkefølgen på elementet</string>
     <string name="asset_move_up">Flytt opp</string>
     <string name="asset_move_down">Flytt ned</string>

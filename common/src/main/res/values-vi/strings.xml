@@ -76,7 +76,6 @@
   <string name="common_close">Đóng</string>
   <string name="tx_details_view_on_explorer">Xem trong trình khám phá</string>
   <string name="common_confirm">Xác nhận</string>
-  <string name="common_connected">Đã kết nối</string>
   <string name="common_connecting">Đang kết nối…</string>
   <string name="common_continue">Tiếp tục</string>
   <string name="common_copied">Đã sao chép vào bảng tạm</string>
@@ -214,10 +213,7 @@
   <string name="eth_tx_address">Địa chỉ tài khoản Ethereum</string>
   <string name="eth_tx_hash">Mã giao dịch Ethereum</string>
   <string name="explore_create_pool">Tạo pool</string>
-  <string name="explore_demeter_subtitle">Stake phần pool của bạn và kiếm thêm phần thưởng</string>
   <string name="explore_demeter_title">Demeter Farming</string>
-  <string name="explore_provide_and_earn">Cung cấp thanh khoản và kiếm phần thưởng</string>
-  <string name="explore_swap_tokens_on_sora">Hoán đổi token trên mạng SORA</string>
   <string name="export_account_details_backup_description">Nếu bạn mất quyền truy cập vào thiết bị này, tiền của bạn sẽ bị mất, trừ khi bạn sao lưu!</string>
   <string name="export_account_details_backup_options">Các tùy chọn sao lưu</string>
   <string name="export_account_details_show_passphrase">Hiển thị cụm mật khẩu</string>
@@ -338,7 +334,6 @@
   <string name="pool_share_title_1">Những pool bạn tham gia</string>
   <string name="pooled_assets">Nội dung tổng hợp</string>
   <string name="profile_biometry_title">Xác thực sinh trắc học</string>
-  <string name="protect_loss_access_funds">Bảo vệ bạn khỏi mất quyền truy cập vào tiền của bạn</string>
   <string name="qr_code">Mã QR</string>
   <string name="receive_tokens">Nhận token</string>
   <string name="received_from_adar">Đã nhận từ ADAR</string>
@@ -408,15 +403,10 @@
   <string name="select_pool_share">Chọn pool của bạn để stake</string>
   <string name="select_recipient">Chọn người nhận</string>
   <string name="settings_accounts">Tài khoản</string>
-  <string name="settings_accounts_subtitle">Quản lý tài khoản, cụm mật khẩu sao lưu</string>
-  <string name="settings_app_subtitle">Ngôn ngữ, Hiển thị</string>
   <string name="settings_crypto_accounts">Tài khoản tiền điện tử</string>
   <string name="settings_header_app">Thiết lập ứng dụng</string>
-  <string name="settings_information_subtitle">Miễn trừ trách nhiệm, Câu hỏi thường gặp, Giới thiệu về ứng dụng</string>
   <string name="settings_information_title">Thông tin</string>
-  <string name="settings_invite_subtitle">Chia sẻ liên kết mời</string>
   <string name="settings_invite_title">Mời bạn bè và kiếm tiền</string>
-  <string name="settings_login_subtitle">Mã PIN và xác thực sinh trắc học</string>
   <string name="settings_login_title">Đăng nhập &amp; Bảo mật</string>
   <string name="settings_nodes">Node</string>
   <string name="show_more">Xem thêm</string>
@@ -432,7 +422,6 @@
   <string name="transaction_date_1">Ngày và giờ</string>
   <string name="transaction_id">Mã giao dịch</string>
   <string name="tutorial_many_world">Nhiều thế giới.\nMột nền kinh tế.</string>
-  <string name="tutorial_many_world_desc">SORA đang nỗ lực để trở thành một hệ thống kinh tế đa vũ trụ phi tập trung, cung cấp tài chính cho việc tạo ra các ứng dụng mới và thú vị, dưới sự giám sát dân chủ của Nghị viện SORA.</string>
   <string name="tutorial_privacy_policy">Chính sách bảo mật</string>
   <string name="tutorial_terms_and_conditions_3">Điều khoản &amp; Điều kiện</string>
   <string name="tutorial_terms_and_conditions_template_1">Bằng cách tiếp tục, bạn đồng ý với</string>

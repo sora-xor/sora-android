@@ -159,7 +159,6 @@
     <string name="wallet_market_activity">Aktiv bazarlar: %1$d · Treyderlər: %2$d</string>
     <string name="wallet_send_network_notice">%1$s şəbəkəsindən alıcı ünvanı istifadə edin.</string>
     <string name="wallet_assets_unavailable">Aktivlər əlçatan deyil</string>
-    <string name="wallet_assets_unavailable_details">Aktivlər yüklənmədi. Bağlantınızı yoxlayın və Swap-ı yenidən açın.</string>
     <string name="asset_reorder">Elementin sırasını dəyiş</string>
     <string name="asset_move_up">Yuxarı köçür</string>
     <string name="asset_move_down">Aşağı köçür</string>
