@@ -19,7 +19,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.absoluteOffset
+import androidx.compose.ui.layout.layout
+import kotlin.math.roundToInt
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -317,7 +319,7 @@ private fun Orbit(
         // The token's orb.
         Box(
             Modifier
-                .offset(cx - ORB_SIZE / 2, cy - ORB_SIZE / 2)
+                .absoluteOffset(cx - ORB_SIZE / 2, cy - ORB_SIZE / 2)
                 .size(ORB_SIZE)
                 .tiltLayer(tilt, OrbitDepth.ORB, OrbitDepth.ORB * OrbitDepth.Y_RATIO)
                 .semantics { hideFromAccessibility() }
@@ -366,9 +368,10 @@ private fun Orbit(
                 val amount = amounts.getValue(network)
                 val badge = 32.dp + 14.dp * (amount.toDouble() / largest).toFloat()
                 val label = networkName(network) + ", " + format.amount(amount, locations.token.symbol)
+                // Where the lines are drawn, in either reading direction: the canvas under them is not mirrored.
                 Column(
                     modifier = Modifier
-                        .offset(pos.first - SATELLITE_WIDTH / 2, pos.second - 26.dp)
+                        .absoluteOffset(pos.first - SATELLITE_WIDTH / 2, pos.second - 26.dp)
                         .width(SATELLITE_WIDTH)
                         .clip(RoundedCornerShape(12.dp))
                         .clickable(onClickLabel = label, role = Role.Button, onClick = { onSatellite(network) })
@@ -394,6 +397,20 @@ private fun Orbit(
                         color = n.textPrimary,
                         maxLines = 1,
                         modifier = Modifier
+                            // A side satellite stands near the screen's edge on a narrow phone: a long amount under
+                            // it moves in as far as it must to stay whole on the screen, however the phone is tilted.
+                            .layout { measurable, constraints ->
+                                val pill = measurable.measure(constraints)
+                                val edge = SATELLITE_EDGE.toPx()
+                                val left = (pos.first - SATELLITE_WIDTH / 2).toPx() + (SATELLITE_WIDTH.toPx() - pill.width) / 2
+                                val right = left + pill.width
+                                val shift = when {
+                                    left < edge -> edge - left
+                                    right > width.toPx() - edge -> width.toPx() - edge - right
+                                    else -> 0f
+                                }
+                                layout(pill.width, pill.height) { pill.place(shift.roundToInt(), 0) }
+                            }
                             .clip(RoundedCornerShape(9.dp))
                             .background(if (dark) Color.Black.copy(alpha = 0.35f) else Color.White.copy(alpha = 0.85f))
                             .padding(horizontal = 7.dp, vertical = 1.dp),
@@ -404,7 +421,7 @@ private fun Orbit(
         // The Polkaswap node.
         Column(
             Modifier
-                .offset(gateX - 56.dp, gateY - 26.dp)
+                .absoluteOffset(gateX - 56.dp, gateY - 26.dp)
                 .width(112.dp)
                 .tiltLayer(tilt, OrbitDepth.POLKASWAP, OrbitDepth.POLKASWAP * OrbitDepth.Y_RATIO)
                 .semantics { hideFromAccessibility() },
@@ -422,6 +439,9 @@ private val ORB_SIZE = 76.dp
 
 /** Wide enough for a whole amount under the satellite. */
 private val SATELLITE_WIDTH = 112.dp
+
+/** The least between a satellite's amount and the screen's edge: a margin, and as far as the tilt moves it. */
+private val SATELLITE_EDGE = 4.dp + OrbitDepth.SATELLITES.dp
 
 @Composable
 internal fun PolkaswapDisc(size: Dp, modifier: Modifier = Modifier) {
