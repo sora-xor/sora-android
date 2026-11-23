@@ -29,15 +29,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.RoundRect
@@ -52,6 +50,7 @@ import androidx.compose.ui.graphics.ShaderBrush
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.graphics.drawscope.CanvasDrawScope
+import androidx.compose.ui.graphics.drawscope.ContentDrawScope
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
@@ -61,6 +60,12 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.toPixelMap
+import androidx.compose.ui.node.CompositionLocalConsumerModifierNode
+import androidx.compose.ui.node.DrawModifierNode
+import androidx.compose.ui.node.ModifierNodeElement
+import androidx.compose.ui.node.currentValueOf
+import androidx.compose.ui.node.invalidateDraw
+import androidx.compose.ui.platform.InspectorInfo
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.Density
@@ -70,6 +75,10 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.isSpecified
+import androidx.compose.ui.util.packFloats
+import androidx.compose.ui.util.unpackFloat1
+import androidx.compose.ui.util.unpackFloat2
 import kotlin.math.abs
 import kotlin.math.ceil
 import kotlin.math.min
@@ -174,12 +183,15 @@ object Lit {
  * slower phones. The position is read only while drawing, so a moving light never recomposes anything.
  */
 object LitLightRig : SensorEventListener {
-    private val xState = mutableFloatStateOf(0f)
-    private val yState = mutableFloatStateOf(0f)
+    /** Both axes in one value: moving the light is one write, and a surface that draws under it reads once. */
+    private val light = mutableLongStateOf(packFloats(0f, 0f))
 
     /** Both axes run -1...1. */
-    val x: Float get() = xState.floatValue
-    val y: Float get() = yState.floatValue
+    val x: Float get() = unpackFloat1(light.longValue)
+    val y: Float get() = unpackFloat2(light.longValue)
+
+    /** Both axes at once, for a surface that needs both: x is [unpackFloat1], y is [unpackFloat2]. */
+    internal val packed: Long get() = light.longValue
 
     private var hosts = 0
     private var sensors: SensorManager? = null
@@ -191,8 +203,7 @@ object LitLightRig : SensorEventListener {
 
     /** Places the light. The rig calls this itself from the phone's tilt. */
     fun set(x: Float, y: Float) {
-        xState.floatValue = x
-        yState.floatValue = y
+        light.longValue = packFloats(x, y)
     }
 
     /** A screen that allows motion came to the front. Call on the main thread; pair with [leave]. */
@@ -247,6 +258,9 @@ object LitLightRig : SensorEventListener {
         restY = baseY + (gy - baseY) * 0.012f
         val targetX = ((gx - baseX) * 3.4f).coerceIn(-1f, 1f)
         val targetY = ((baseY - gy) * 3.4f).coerceIn(-1f, 1f)
+        val now = light.longValue
+        val x = unpackFloat1(now)
+        val y = unpackFloat2(now)
         val nextX = x + (targetX - x) * 0.22f
         val nextY = y + (targetY - y) * 0.22f
         // A phone lying still draws no frames.
@@ -262,11 +276,41 @@ object LitLightRig : SensorEventListener {
 /**
  * Depth: things nearer the eye move further when the phone tilts. [depth] is the travel at full tilt; left out, a
  * sheet travels 4 dp and a small thing 2 dp.
+ *
+ * The thing is moved where it is drawn, inside a layer of its own that never changes: a tilt redraws that layer and
+ * nothing else. (Moving the layer itself made Compose work out again where every node under it lies, for every
+ * surface, thirty times a second.) Touches land where the thing is laid out, at most [depth] from where it shows.
  */
-fun Modifier.litParallax(depth: Dp? = null): Modifier = graphicsLayer {
-    val travel = (depth ?: if (size.height < 80.dp.toPx()) 2.dp else 4.dp).toPx()
-    translationX = LitLightRig.x * travel
-    translationY = LitLightRig.y * travel
+fun Modifier.litParallax(depth: Dp? = null): Modifier =
+    graphicsLayer().then(LitParallaxElement(depth ?: Dp.Unspecified))
+
+/** How far a surface of this height travels at full tilt, in pixels. */
+private fun DrawScope.litTravel(depth: Dp): Float =
+    (if (depth.isSpecified) depth else if (size.height < 80.dp.toPx()) 2.dp else 4.dp).toPx()
+
+private data class LitParallaxElement(val depth: Dp) : ModifierNodeElement<LitParallaxNode>() {
+    override fun create() = LitParallaxNode(depth)
+
+    override fun update(node: LitParallaxNode) {
+        node.depth = depth
+        node.invalidateDraw()
+    }
+
+    override fun InspectorInfo.inspectableProperties() {
+        name = "litParallax"
+    }
+}
+
+private class LitParallaxNode(var depth: Dp) : Modifier.Node(), DrawModifierNode {
+    override fun ContentDrawScope.draw() {
+        val light = LitLightRig.packed
+        val travel = litTravel(depth)
+        val dx = unpackFloat1(light) * travel
+        val dy = unpackFloat2(light) * travel
+        drawContext.transform.translate(dx, dy)
+        drawContent()
+        drawContext.transform.translate(-dx, -dy)
+    }
 }
 
 /** The press every soft control shares: set down quickly, let up without a bounce. */
@@ -311,22 +355,30 @@ private fun DrawScope.drawStretched(stretch: LitBake.Stretch, left: Float, top: 
     val ih = image.height
     // A stretch whose corners are larger than half the target shrinks them to fit.
     val cornerDst = stretch.cornerDp * density * min(1f, min(width, height) / (2f * stretch.cornerDp * density))
-    val xs = intArrayOf(0, cornerSrc, iw - cornerSrc, iw)
-    val ys = intArrayOf(0, cornerSrc, ih - cornerSrc, ih)
-    val dx = floatArrayOf(left, left + cornerDst, left + width - cornerDst, left + width)
-    val dy = floatArrayOf(top, top + cornerDst, top + height - cornerDst, top + height)
+    // Drawn on every tilt for every surface: the nine pieces' edges are worked out without arrays.
+    val x1 = left.roundToInt()
+    val x2 = (left + cornerDst).roundToInt()
+    val x3 = (left + width - cornerDst).roundToInt()
+    val x4 = (left + width).roundToInt()
+    val y1 = top.roundToInt()
+    val y2 = (top + cornerDst).roundToInt()
+    val y3 = (top + height - cornerDst).roundToInt()
+    val y4 = (top + height).roundToInt()
     for (row in 0..2) {
+        val sy = if (row == 0) 0 else if (row == 1) cornerSrc else ih - cornerSrc
+        val sh = (if (row == 0) cornerSrc else if (row == 1) ih - cornerSrc else ih) - sy
+        val t = if (row == 0) y1 else if (row == 1) y2 else y3
+        val dh = (if (row == 0) y2 else if (row == 1) y3 else y4) - t
+        if (sh <= 0 || dh <= 0) continue
         for (column in 0..2) {
-            val sw = xs[column + 1] - xs[column]
-            val sh = ys[row + 1] - ys[row]
-            val l = dx[column].roundToInt()
-            val t = dy[row].roundToInt()
-            val dw = dx[column + 1].roundToInt() - l
-            val dh = dy[row + 1].roundToInt() - t
-            if (sw <= 0 || sh <= 0 || dw <= 0 || dh <= 0) continue
+            val sx = if (column == 0) 0 else if (column == 1) cornerSrc else iw - cornerSrc
+            val sw = (if (column == 0) cornerSrc else if (column == 1) iw - cornerSrc else iw) - sx
+            val l = if (column == 0) x1 else if (column == 1) x2 else x3
+            val dw = (if (column == 0) x2 else if (column == 1) x3 else x4) - l
+            if (sw <= 0 || dw <= 0) continue
             drawImage(
                 image,
-                srcOffset = IntOffset(xs[column], ys[row]),
+                srcOffset = IntOffset(sx, sy),
                 srcSize = IntSize(sw, sh),
                 dstOffset = IntOffset(l, t),
                 dstSize = IntSize(dw, dh),
@@ -343,18 +395,21 @@ private fun DrawScope.drawStretchedAcross(stretch: LitBake.Stretch, left: Float,
     val capSrc = (stretch.cornerDp * scale).roundToInt()
     val iw = image.width
     val capDst = (stretch.cornerDp * density).coerceAtMost(width / 2f)
-    val xs = intArrayOf(0, capSrc, iw - capSrc, iw)
-    val dx = floatArrayOf(left, left + capDst, left + width - capDst, left + width)
+    val x1 = left.roundToInt()
+    val x2 = (left + capDst).roundToInt()
+    val x3 = (left + width - capDst).roundToInt()
+    val x4 = (left + width).roundToInt()
     val t = top.roundToInt()
     val dh = (top + height).roundToInt() - t
     for (column in 0..2) {
-        val sw = xs[column + 1] - xs[column]
-        val l = dx[column].roundToInt()
-        val dw = dx[column + 1].roundToInt() - l
+        val sx = if (column == 0) 0 else if (column == 1) capSrc else iw - capSrc
+        val sw = (if (column == 0) capSrc else if (column == 1) iw - capSrc else iw) - sx
+        val l = if (column == 0) x1 else if (column == 1) x2 else x3
+        val dw = (if (column == 0) x2 else if (column == 1) x3 else x4) - l
         if (sw <= 0 || dw <= 0) continue
         drawImage(
             image,
-            srcOffset = IntOffset(xs[column], 0),
+            srcOffset = IntOffset(sx, 0),
             srcSize = IntSize(sw, image.height),
             dstOffset = IntOffset(l, t),
             dstSize = IntSize(dw, dh),
@@ -413,23 +468,174 @@ fun Modifier.litPlate(
     bounceStrength: Float = 1f,
     sheen: (() -> Float)? = null,
     backdrop: (DrawScope.() -> Unit)? = null,
-): Modifier = composed {
-    val palette = LocalLitPalette.current
-    val clip = remember { Path() }
-    litParallax().drawBehind {
-        drawPlate(radius.toPx(), elevation.toPx(), null, face, bounce, bounceStrength, sheen, backdrop, palette, clip)
+): Modifier = graphicsLayer().then(
+    LitPlateElement(
+        radius = radius,
+        shape = null,
+        elevation = elevation,
+        material = null,
+        face = face,
+        bounce = bounce,
+        bounceStrength = bounceStrength,
+        sheen = sheen,
+        backdrop = backdrop,
+        pressed = false,
+        travel = Dp.Unspecified,
+    ),
+)
+
+/** A sheet or pad in the outline of [shape]; small things stand lower. */
+fun Modifier.litPlate(shape: Shape, elevation: Dp? = null, face: Color? = null): Modifier = graphicsLayer().then(
+    LitPlateElement(
+        radius = Dp.Unspecified,
+        shape = shape,
+        elevation = elevation ?: Dp.Unspecified,
+        material = null,
+        face = face,
+        bounce = null,
+        bounceStrength = 1f,
+        sheen = null,
+        backdrop = null,
+        pressed = false,
+        travel = Dp.Unspecified,
+    ),
+)
+
+/**
+ * A sheet of glass or a pad behind what the modifier wraps, moved by the light with everything on it. One node
+ * draws it, in a layer of its own that never changes: a tilt redraws that layer, and what stands on a clipped sheet
+ * (a layer of its own, further in) is not drawn again. The outline comes from [radius], or from [shape] when that is
+ * unspecified; an unspecified [elevation] or [travel] goes by the surface's height.
+ */
+private data class LitPlateElement(
+    val radius: Dp,
+    val shape: Shape?,
+    val elevation: Dp,
+    val material: LitMaterial?,
+    val face: Color?,
+    val bounce: Color?,
+    val bounceStrength: Float,
+    val sheen: (() -> Float)?,
+    val backdrop: (DrawScope.() -> Unit)?,
+    val pressed: Boolean,
+    val travel: Dp,
+) : ModifierNodeElement<LitPlateNode>() {
+    override fun create() = LitPlateNode(this)
+
+    override fun update(node: LitPlateNode) {
+        node.spec = this
+        node.invalidateDraw()
+    }
+
+    override fun InspectorInfo.inspectableProperties() {
+        name = if (material == LitMaterial.PAD) "litPad" else "litPlate"
     }
 }
 
-/** A sheet or pad in the outline of [shape]; small things stand lower. */
-fun Modifier.litPlate(shape: Shape, elevation: Dp? = null, face: Color? = null): Modifier = composed {
-    val palette = LocalLitPalette.current
-    val clip = remember { Path() }
-    litParallax().drawBehind {
-        val outline = shape.createOutline(size, layoutDirection, this)
-        val radius = (outline as? Outline.Rounded)?.roundRect?.topLeftCornerRadius?.x ?: 0f
-        val stands = elevation ?: if (size.height < 80.dp.toPx()) 9.dp else 16.dp
-        drawPlate(radius, stands.toPx(), null, face, null, 1f, null, null, palette, clip)
+private class LitPlateNode(var spec: LitPlateElement) :
+    Modifier.Node(), DrawModifierNode, CompositionLocalConsumerModifierNode {
+    private val clip = Path()
+    private val bakes = PlateBakes()
+    private val well = WellBake()
+    private val corner = ShapeCorner()
+
+    override fun ContentDrawScope.draw() {
+        val spec = spec
+        // Read while drawing: a new palette (day, night, high contrast) reaches this node as a redraw.
+        val palette = currentValueOf(LocalLitPalette)
+        val light = LitLightRig.packed
+        val lx = unpackFloat1(light)
+        val ly = unpackFloat2(light)
+        val travel = litTravel(spec.travel)
+        val radius = if (spec.shape != null) corner.of(spec.shape, this) else spec.radius.toPx()
+        drawContext.transform.translate(lx * travel, ly * travel)
+        if (spec.pressed) {
+            drawWell(radius, 2.5.dp.toPx(), null, false, palette, well)
+        } else {
+            val stands = if (spec.elevation.isSpecified) spec.elevation else if (size.height < 80.dp.toPx()) 9.dp else 16.dp
+            drawPlate(
+                radius, stands.toPx(), spec.material, spec.face, spec.bounce, spec.bounceStrength, spec.sheen,
+                spec.backdrop, palette, clip, lx, ly, bakes,
+            )
+        }
+        drawContent()
+        drawContext.transform.translate(-lx * travel, -ly * travel)
+    }
+}
+
+/** The corner radius of a [Shape]'s outline at one size, worked out once rather than on every draw. */
+private class ShapeCorner {
+    private var shape: Shape? = null
+    private var size = Size.Unspecified
+    private var direction = LayoutDirection.Ltr
+    private var density = 0f
+    private var radius = 0f
+
+    fun of(shape: Shape, scope: DrawScope): Float {
+        if (shape !== this.shape || scope.size != size || scope.layoutDirection != direction || scope.density != density) {
+            this.shape = shape
+            size = scope.size
+            direction = scope.layoutDirection
+            density = scope.density
+            val outline = shape.createOutline(scope.size, scope.layoutDirection, scope)
+            radius = (outline as? Outline.Rounded)?.roundRect?.topLeftCornerRadius?.x ?: 0f
+        }
+        return radius
+    }
+}
+
+/**
+ * A surface's baked shadow and edge, kept by the node that draws them. They are the same from one draw to the next,
+ * so only a new size, scale or theme asks the bakery again (asking builds a text key each time).
+ */
+private class PlateBakes {
+    private var radius = Float.NaN
+    private var lift = Float.NaN
+    private var scale = 0f
+    private var dark = false
+    private var glass = false
+    var cast: LitBake.Stretch? = null
+        private set
+    var edge: LitBake.Stretch? = null
+        private set
+
+    fun update(radius: Float, lift: Float, scale: Float, dark: Boolean, glass: Boolean) {
+        if (cast != null && radius == this.radius && lift == this.lift && scale == this.scale && dark == this.dark && glass == this.glass) return
+        this.radius = radius
+        this.lift = lift
+        this.scale = scale
+        this.dark = dark
+        this.glass = glass
+        cast = if (glass) LitBake.glassShadow(radius, lift, scale, dark) else LitBake.padShadow(radius, lift, scale, dark)
+        edge = if (glass) LitBake.glassEdge(radius, scale, dark) else LitBake.padEdge(radius, scale, dark)
+    }
+}
+
+/** A well's baked image, kept the same way. */
+private class WellBake {
+    private var radius = Float.NaN
+    private var depth = Float.NaN
+    private var scale = 0f
+    private var floor = Color.Unspecified
+    private var outline: Color? = null
+    private var dark = false
+    private var image: LitBake.Stretch? = null
+
+    fun of(radius: Float, depth: Float, scale: Float, floor: Color, outline: Color?, dark: Boolean): LitBake.Stretch {
+        image?.let {
+            if (radius == this.radius && depth == this.depth && scale == this.scale && floor == this.floor &&
+                outline == this.outline && dark == this.dark
+            ) {
+                return it
+            }
+        }
+        this.radius = radius
+        this.depth = depth
+        this.scale = scale
+        this.floor = floor
+        this.outline = outline
+        this.dark = dark
+        return LitBake.well(radius, depth, scale, floor, outline, dark).also { image = it }
     }
 }
 
@@ -444,6 +650,9 @@ private fun DrawScope.drawPlate(
     backdrop: (DrawScope.() -> Unit)?,
     palette: LitPalette,
     clip: Path,
+    lx: Float,
+    ly: Float,
+    bakes: PlateBakes,
 ) {
     val px = density
     val w = size.width
@@ -454,11 +663,10 @@ private fun DrawScope.drawPlate(
     val liftDp = step(elevation / px)
     val glass = (material ?: if (liftDp >= 12f) LitMaterial.GLASS else LitMaterial.PAD) == LitMaterial.GLASS
     val dark = palette.dark
-    val lx = LitLightRig.x
-    val ly = LitLightRig.y
+    bakes.update(rDp, liftDp, px, dark, glass)
 
     // The shadow shifts against the light.
-    val cast = if (glass) LitBake.glassShadow(rDp, liftDp, px, dark) else LitBake.padShadow(rDp, liftDp, px, dark)
+    val cast = bakes.cast ?: return
     val reach = elevation * (if (glass) 0.26f else 0.18f)
     val m = cast.marginDp * px
     drawStretched(cast, -m - lx * reach, -m - ly * reach, w + 2f * m, h + 2f * m)
@@ -536,8 +744,7 @@ private fun DrawScope.drawPlate(
         }
     }
 
-    val edge = if (glass) LitBake.glassEdge(rDp, px, dark) else LitBake.padEdge(rDp, px, dark)
-    drawStretched(edge, 0f, 0f, w, h)
+    bakes.edge?.let { drawStretched(it, 0f, 0f, w, h) }
 
     if (plain) {
         // Glints run along the near edges as the light moves.
@@ -571,19 +778,21 @@ private fun DrawScope.drawPlate(
  * A soft pad in the outline of [shape] that is raised at rest and let into the surface while [pressed]: every soft
  * control's two states.
  */
-fun Modifier.litPad(shape: Shape, elevation: Dp = 10.dp, pressed: Boolean = false): Modifier = composed {
-    val palette = LocalLitPalette.current
-    val clip = remember { Path() }
-    litParallax(2.dp).drawBehind {
-        val outline = shape.createOutline(size, layoutDirection, this)
-        val radius = (outline as? Outline.Rounded)?.roundRect?.topLeftCornerRadius?.x ?: 0f
-        if (pressed) {
-            drawWell(radius, 2.5.dp.toPx(), null, false, palette)
-        } else {
-            drawPlate(radius, elevation.toPx(), LitMaterial.PAD, null, null, 1f, null, null, palette, clip)
-        }
-    }
-}
+fun Modifier.litPad(shape: Shape, elevation: Dp = 10.dp, pressed: Boolean = false): Modifier = graphicsLayer().then(
+    LitPlateElement(
+        radius = Dp.Unspecified,
+        shape = shape,
+        elevation = elevation,
+        material = LitMaterial.PAD,
+        face = null,
+        bounce = null,
+        bounceStrength = 1f,
+        sheen = null,
+        backdrop = null,
+        pressed = pressed,
+        travel = 2.dp,
+    ),
+)
 
 fun Modifier.litPad(radius: Dp, elevation: Dp = 10.dp, pressed: Boolean = false): Modifier =
     litPad(RoundedCornerShape(radius), elevation, pressed)
@@ -592,15 +801,38 @@ fun Modifier.litPad(radius: Dp, elevation: Dp = 10.dp, pressed: Boolean = false)
  * A pad let into the surface. [floor] tints it; by default it takes the palette's well colour. [ruled] adds a solid
  * boundary, for a well that takes input or counts something. Stretched from a baked corner, so any size costs nothing.
  */
-fun Modifier.litWell(radius: Dp, depth: Dp = 2.5.dp, floor: Color? = null, ruled: Boolean = false): Modifier = composed {
-    val palette = LocalLitPalette.current
-    drawBehind { drawWell(radius.toPx(), depth.toPx(), floor, ruled, palette) }
+fun Modifier.litWell(radius: Dp, depth: Dp = 2.5.dp, floor: Color? = null, ruled: Boolean = false): Modifier =
+    this.then(LitWellElement(radius, depth, floor, ruled))
+
+private data class LitWellElement(val radius: Dp, val depth: Dp, val floor: Color?, val ruled: Boolean) :
+    ModifierNodeElement<LitWellNode>() {
+    override fun create() = LitWellNode(this)
+
+    override fun update(node: LitWellNode) {
+        node.spec = this
+        node.invalidateDraw()
+    }
+
+    override fun InspectorInfo.inspectableProperties() {
+        name = "litWell"
+    }
 }
 
-private fun DrawScope.drawWell(radius: Float, depth: Float, floor: Color?, ruled: Boolean, palette: LitPalette) {
+private class LitWellNode(var spec: LitWellElement) :
+    Modifier.Node(), DrawModifierNode, CompositionLocalConsumerModifierNode {
+    private val bake = WellBake()
+
+    override fun ContentDrawScope.draw() {
+        val spec = spec
+        drawWell(spec.radius.toPx(), spec.depth.toPx(), spec.floor, spec.ruled, currentValueOf(LocalLitPalette), bake)
+        drawContent()
+    }
+}
+
+private fun DrawScope.drawWell(radius: Float, depth: Float, floor: Color?, ruled: Boolean, palette: LitPalette, bake: WellBake) {
     val px = density
     val r = step(min(radius, min(size.width, size.height) / 2f) / px)
-    val well = LitBake.well(r, depth / px, px, floor ?: palette.wellFloor, palette.outline.takeIf { ruled }, palette.dark)
+    val well = bake.of(r, depth / px, px, floor ?: palette.wellFloor, palette.outline.takeIf { ruled }, palette.dark)
     drawStretched(well, 0f, 0f, size.width, size.height)
 }
 
@@ -608,35 +840,80 @@ private fun DrawScope.drawWell(radius: Float, depth: Float, floor: Color?, ruled
  * A filled button's face in cut glass of [color], behind whatever this modifier wraps. Its shadow and the light it
  * throws lie round it, and the window's reflection slides over its table as the phone tilts.
  */
-fun Modifier.litCutGlass(color: Color, pressed: Boolean = false, radius: Dp = Lit.ControlRadius): Modifier = composed {
-    val palette = LocalLitPalette.current
-    val clip = remember { Path() }
-    drawBehind {
+fun Modifier.litCutGlass(color: Color, pressed: Boolean = false, radius: Dp = Lit.ControlRadius): Modifier =
+    this.then(LitCutGlassElement(color, pressed, radius))
+
+private data class LitCutGlassElement(val color: Color, val pressed: Boolean, val radius: Dp) :
+    ModifierNodeElement<LitCutGlassNode>() {
+    override fun create() = LitCutGlassNode(this)
+
+    override fun update(node: LitCutGlassNode) {
+        node.spec = this
+        node.invalidateDraw()
+    }
+
+    override fun InspectorInfo.inspectableProperties() {
+        name = "litCutGlass"
+    }
+}
+
+private class LitCutGlassNode(var spec: LitCutGlassElement) :
+    Modifier.Node(), DrawModifierNode, CompositionLocalConsumerModifierNode {
+    private val clip = Path()
+
+    // The slab last drawn: the same until the button's size, state or theme changes.
+    private var bar: LitBake.Stretch? = null
+    private var barHeight = Float.NaN
+    private var barRadius = Float.NaN
+    private var barScale = 0f
+    private var barColor = Color.Unspecified
+    private var barInlay = Color.Unspecified
+    private var barPressed = false
+    private var barDark = false
+
+    override fun ContentDrawScope.draw() {
+        val spec = spec
+        val palette = currentValueOf(LocalLitPalette)
         val scale = density
         val w = size.width
         val h = size.height
-        if (w <= 0f || h <= 0f) return@drawBehind
-        val r = min(radius.toPx(), h / 2f)
-        val heightDp = h / scale
-        val rDp = step(r / scale)
-        val bar = LitBake.cutGlassBar(heightDp, rDp, color, palette.inlay, pressed, scale, palette.dark)
-        if (!pressed) LitBake.warmPressedBar(heightDp, rDp, color, palette.inlay, scale, palette.dark)
-        val m = bar.marginDp * scale
-        drawStretchedAcross(bar, -m, -m, w + 2f * m, h + 2f * m)
-        clip.reset()
-        clip.addRoundRect(RoundRect(0f, 0f, w, h, CornerRadius(r, r)))
-        clipPath(clip) {
-            val slide = (LitLightRig.x * 0.55f - 0.22f) * w
-            drawRect(
-                Brush.linearGradient(
-                    0.42f to Color.White.copy(alpha = 0f),
-                    0.5f to Color.White.copy(alpha = 0.16f),
-                    0.58f to Color.White.copy(alpha = 0f),
-                    start = Offset(slide - w, h * 0.2f),
-                    end = Offset(slide + 2f * w, h * 0.8f),
-                ),
-            )
+        if (w > 0f && h > 0f) {
+            val r = min(spec.radius.toPx(), h / 2f)
+            val heightDp = h / scale
+            val rDp = step(r / scale)
+            var slab = bar
+            if (slab == null || heightDp != barHeight || rDp != barRadius || scale != barScale || spec.color != barColor ||
+                palette.inlay != barInlay || spec.pressed != barPressed || palette.dark != barDark
+            ) {
+                slab = LitBake.cutGlassBar(heightDp, rDp, spec.color, palette.inlay, spec.pressed, scale, palette.dark)
+                if (!spec.pressed) LitBake.warmPressedBar(heightDp, rDp, spec.color, palette.inlay, scale, palette.dark)
+                bar = slab
+                barHeight = heightDp
+                barRadius = rDp
+                barScale = scale
+                barColor = spec.color
+                barInlay = palette.inlay
+                barPressed = spec.pressed
+                barDark = palette.dark
+            }
+            val m = slab.marginDp * scale
+            drawStretchedAcross(slab, -m, -m, w + 2f * m, h + 2f * m)
+            clip.reset()
+            clip.addRoundRect(RoundRect(0f, 0f, w, h, CornerRadius(r, r)))
+            clipPath(clip) {
+                val slide = (LitLightRig.x * 0.55f - 0.22f) * w
+                drawRect(
+                    Brush.linearGradient(
+                        0.42f to Color.White.copy(alpha = 0f),
+                        0.5f to Color.White.copy(alpha = 0.16f),
+                        0.58f to Color.White.copy(alpha = 0f),
+                        start = Offset(slide - w, h * 0.2f),
+                        end = Offset(slide + 2f * w, h * 0.8f),
+                    ),
+                )
+            }
         }
+        drawContent()
     }
 }
 
@@ -748,17 +1025,49 @@ fun LitBead(filled: Boolean, diameter: Dp, motion: Boolean, modifier: Modifier =
  * A round thing as a printed mark: its contact shadow on the sheet below and a die-cut edge over it. The blank under
  * the picture is white, so a token whose icon has not loaded is a plain mark rather than a hole over its shadow.
  */
-fun Modifier.litCoin(): Modifier = composed {
-    val palette = LocalLitPalette.current
-    drawWithContent {
+fun Modifier.litCoin(): Modifier = this.then(LitCoinElement)
+
+private object LitCoinElement : ModifierNodeElement<LitCoinNode>() {
+    override fun create() = LitCoinNode()
+
+    override fun update(node: LitCoinNode) = Unit
+
+    override fun hashCode(): Int = 0x11C01
+
+    override fun equals(other: Any?): Boolean = other === this
+
+    override fun InspectorInfo.inspectableProperties() {
+        name = "litCoin"
+    }
+}
+
+private class LitCoinNode : Modifier.Node(), DrawModifierNode, CompositionLocalConsumerModifierNode {
+    // A list of tokens draws many coins of one size: each keeps what it drew last.
+    private var diameter = Float.NaN
+    private var scale = 0f
+    private var dark = false
+    private var shadow: LitBake.Piece? = null
+    private var rim: ImageBitmap? = null
+
+    override fun ContentDrawScope.draw() {
+        val palette = currentValueOf(LocalLitPalette)
         val scale = density
         val diameter = min(size.width, size.height)
-        val shadow = LitBake.coinShadow(diameter / scale, scale, palette.dark)
-        val side = diameter + 2f * shadow.marginDp * scale
-        drawPiece(shadow.image, center, side, side)
+        if (shadow == null || diameter != this@LitCoinNode.diameter || scale != this@LitCoinNode.scale || palette.dark != dark) {
+            this@LitCoinNode.diameter = diameter
+            this@LitCoinNode.scale = scale
+            dark = palette.dark
+            shadow = LitBake.coinShadow(diameter / scale, scale, palette.dark)
+            rim = LitBake.coin(diameter / scale, scale, palette.dark)
+        }
+        val cast = shadow
+        if (cast != null) {
+            val side = diameter + 2f * cast.marginDp * scale
+            drawPiece(cast.image, center, side, side)
+        }
         drawCircle(palette.padLit, radius = diameter / 2f, center = center)
         drawContent()
-        drawPiece(LitBake.coin(diameter / scale, scale, palette.dark), center, diameter, diameter)
+        rim?.let { drawPiece(it, center, diameter, diameter) }
     }
 }
 
@@ -805,54 +1114,90 @@ private class PagePrint(private val pattern: BitmapShader) {
  * top. The print lies a little deeper than the page's content and catches the light as the phone tilts; a soft pool
  * of light moves over the page with it.
  */
-fun Modifier.litPage(): Modifier = composed {
-    val palette = LocalLitPalette.current
-    val density = LocalDensity.current.density
-    val paper = remember(palette.page, density) {
-        val tileScale = min(density, 2f)
-        ShaderBrush(tile(LitBake.washi(palette.page, PAPER_FIBRES, PAPER_FLECKS, paperStrength(palette.dark), PAPER_SEED, tileScale), density / tileScale))
+fun Modifier.litPage(): Modifier = graphicsLayer().then(LitPageElement)
+
+private object LitPageElement : ModifierNodeElement<LitPageNode>() {
+    override fun create() = LitPageNode()
+
+    override fun update(node: LitPageNode) = Unit
+
+    override fun hashCode(): Int = 0x11DA6
+
+    override fun equals(other: Any?): Boolean = other === this
+
+    override fun InspectorInfo.inspectableProperties() {
+        name = "litPage"
     }
-    val print = remember(palette.dark, density) {
-        val tileScale = min(density, 2f)
-        PagePrint(tile(LitBake.shippo(tileScale, palette.dark), density / tileScale))
-    }
-    drawBehind {
+}
+
+/**
+ * The page draws in a layer of its own: the light moving over it redraws the page alone, not everything that lies
+ * straight on it.
+ */
+private class LitPageNode : Modifier.Node(), DrawModifierNode, CompositionLocalConsumerModifierNode {
+    private var paper: ShaderBrush? = null
+    private var print: PagePrint? = null
+    private var page = Color.Unspecified
+    private var dark = false
+    private var scale = 0f
+
+    override fun ContentDrawScope.draw() {
+        val palette = currentValueOf(LocalLitPalette)
+        val px = density
         val w = size.width
         val h = size.height
-        if (w <= 0f || h <= 0f) return@drawBehind
-        val dark = palette.dark
-        val lx = LitLightRig.x
-        val ly = LitLightRig.y
-        val tilt = min(1f, sqrt(lx * lx + ly * ly))
-        drawRect(paper)
-        // The print lies deeper than the content: it moves the other way.
+        if (w > 0f && h > 0f) {
+            if (paper == null || palette.page != page || palette.dark != dark || px != scale) {
+                page = palette.page
+                dark = palette.dark
+                scale = px
+                val tileScale = min(px, 2f)
+                paper = ShaderBrush(tile(LitBake.washi(palette.page, PAPER_FIBRES, PAPER_FLECKS, paperStrength(palette.dark), PAPER_SEED, tileScale), px / tileScale))
+                print = PagePrint(tile(LitBake.shippo(tileScale, palette.dark), px / tileScale))
+            }
+            drawPage(palette.dark, paper, print)
+        }
+        drawContent()
+    }
+}
+
+private fun DrawScope.drawPage(dark: Boolean, paper: ShaderBrush?, print: PagePrint?) {
+    val w = size.width
+    val h = size.height
+    val light = LitLightRig.packed
+    val lx = unpackFloat1(light)
+    val ly = unpackFloat2(light)
+    val tilt = min(1f, sqrt(lx * lx + ly * ly))
+    if (paper != null) drawRect(paper)
+    // The print lies deeper than the content: it moves the other way.
+    if (print != null) {
         val bleed = 12.dp.toPx()
         translate(-lx * 7.dp.toPx(), -ly * 7.dp.toPx()) {
             drawRect(print.brush(-bleed, h + bleed), topLeft = Offset(-bleed, -bleed), size = Size(w + 2f * bleed, h + 2f * bleed), alpha = 0.72f + 0.28f * tilt)
         }
-        // Light falls off from the top left.
-        val source = Offset(w * 0.1f, 0f)
-        scale(1f, h / w, pivot = source) {
-            // Drawn over the whole page: beyond the gradient's reach its last shade carries on.
-            drawRect(
-                Brush.radialGradient(
-                    0f to Color.White.copy(alpha = if (dark) 0.04f else 0.30f),
-                    0.55f to Color.White.copy(alpha = 0f),
-                    1f to (if (dark) Color.Black.copy(alpha = 0.20f) else Color(0x144D3D29)),
-                    center = source,
-                    radius = w * 1.1f,
-                ),
-                size = Size(w, w),
-            )
-        }
-        if (tilt > 0f) {
-            val pool = Offset(w * (0.28f + 0.46f * lx), h * (0.20f + 0.30f * ly))
-            drawCircle(
-                Brush.radialGradient(listOf(Color.White.copy(alpha = (if (dark) 0.05f else 0.34f) * tilt), Color.White.copy(alpha = 0f)), center = pool, radius = w * 0.75f),
-                w * 0.75f,
-                pool,
-            )
-        }
+    }
+    // Light falls off from the top left.
+    val source = Offset(w * 0.1f, 0f)
+    scale(1f, h / w, pivot = source) {
+        // Drawn over the whole page: beyond the gradient's reach its last shade carries on.
+        drawRect(
+            Brush.radialGradient(
+                0f to Color.White.copy(alpha = if (dark) 0.04f else 0.30f),
+                0.55f to Color.White.copy(alpha = 0f),
+                1f to (if (dark) Color.Black.copy(alpha = 0.20f) else Color(0x144D3D29)),
+                center = source,
+                radius = w * 1.1f,
+            ),
+            size = Size(w, w),
+        )
+    }
+    if (tilt > 0f) {
+        val pool = Offset(w * (0.28f + 0.46f * lx), h * (0.20f + 0.30f * ly))
+        drawCircle(
+            Brush.radialGradient(listOf(Color.White.copy(alpha = (if (dark) 0.05f else 0.34f) * tilt), Color.White.copy(alpha = 0f)), center = pool, radius = w * 0.75f),
+            w * 0.75f,
+            pool,
+        )
     }
 }
 
