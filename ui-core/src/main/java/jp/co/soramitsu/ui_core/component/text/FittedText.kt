@@ -5,12 +5,10 @@ import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.foundation.text.modifiers.TextAutoSizeLayoutScope
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextStyle
@@ -82,7 +80,7 @@ fun FittedText(
 /**
  * A short label, as on a segment or a tab: it keeps to one line by being set smaller, down to [steps] sizes. A label
  * too long even then goes back to its own size and wraps; it is never cut. The choice is made again whenever the
- * label's width changes.
+ * width the label is offered changes.
  */
 @Composable
 fun FittedLabel(
@@ -91,19 +89,22 @@ fun FittedLabel(
     modifier: Modifier = Modifier,
     steps: Int = 4,
 ) {
-    var wraps by remember(text, style) { mutableStateOf(false) }
-    var width by remember { mutableIntStateOf(-1) }
+    // The width at which one line did not hold the label even at its smallest, or none. The decision and the width it
+    // was made at come from the same layout, so it cannot be undone by a size report that arrives after it.
+    var wrapWidth by remember(text, style) { mutableStateOf<Int?>(null) }
+    val wraps = wrapWidth != null
     BasicText(
         text = text,
-        // A new width (a rotation, a resized window) may leave room for one line again.
-        modifier = modifier.onSizeChanged {
-            if (it.width != width) {
-                width = it.width
-                wraps = false
+        modifier = modifier,
+        style = style,
+        onTextLayout = { layout ->
+            val offered = layout.layoutInput.constraints.maxWidth
+            when {
+                wrapWidth == null -> if (layout.hasVisualOverflow) wrapWidth = offered
+                // A new width (a rotation, a resized window) may leave room for one line again: try it.
+                offered != wrapWidth -> wrapWidth = null
             }
         },
-        style = style,
-        onTextLayout = { if (!wraps && it.hasVisualOverflow) wraps = true },
         overflow = TextOverflow.Clip,
         softWrap = wraps,
         maxLines = if (wraps) Int.MAX_VALUE else 1,
