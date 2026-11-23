@@ -81,6 +81,11 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.TextMeasurer
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -507,22 +512,13 @@ private fun TotalBlock(model: PortfolioModel, format: PortfolioFormat) {
         if (totals.known) {
             val stale = model.freshness?.kind == FreshnessKind.OFFLINE
             val (symbol, whole, cents) = format.fiatParts(totals.fiat)
-            val measurer = rememberTextMeasurer()
+            val measurer = rememberTextMeasurer(cacheSize = TOTAL_GLYPHS)
             // The total at its full size where the card has room for it, and smaller, all of it together, where it
             // does not (a large balance on a 320 dp screen or under larger text): never cut, never on two lines.
             BoxWithConstraints {
                 val room = constraints.maxWidth
                 val scale = remember(symbol, whole, cents, room, measurer) {
-                    val natural = measurer.measure(
-                        text = buildAnnotatedString {
-                            withStyle(SpanStyle(fontSize = TOTAL_SIZE)) { append(symbol + whole) }
-                            withStyle(SpanStyle(fontSize = CENTS_SIZE)) { append(cents) }
-                        },
-                        style = TOTAL_STYLE,
-                        maxLines = 1,
-                        softWrap = false,
-                    ).size.width * TOTAL_FIT_SLACK
-                    if (room == Constraints.Infinity || natural <= room) 1f else room / natural
+                    fitTotal(measurer, symbol + whole, cents, room)
                 }
                 RollingTotal(
                     main = symbol + whole,
@@ -541,6 +537,28 @@ private fun TotalBlock(model: PortfolioModel, format: PortfolioFormat) {
             ChangeLine(totals.change, change, format)
         }
     }
+}
+
+/**
+ * How much of its full size the total takes to fit [room] pixels. The total is drawn a character at a time, each in a
+ * box of whole pixels, so it is measured that way; and as larger text scales large type less than small type, each
+ * candidate size is measured rather than worked out from the full one.
+ */
+private fun fitTotal(measurer: TextMeasurer, main: String, cents: String, room: Int): Float {
+    if (room == Constraints.Infinity) return 1f
+    fun width(scale: Float): Int {
+        fun glyphs(text: String, size: TextUnit) =
+            text.sumOf { measurer.measure(it.toString(), TOTAL_STYLE.copy(fontSize = size), maxLines = 1, softWrap = false).size.width }
+        return glyphs(main, TOTAL_SIZE * scale) + glyphs(cents, CENTS_SIZE * scale)
+    }
+    var scale = 1f
+    repeat(TOTAL_FIT_TRIES) {
+        val wide = width(scale)
+        if (wide <= room) return scale
+        // At least half a scaled pixel smaller each time, so it settles.
+        scale = minOf(scale * room / wide, scale - 0.5f / TOTAL_SIZE.value)
+    }
+    return scale
 }
 
 /**
@@ -573,6 +591,25 @@ private fun RollingTotal(
         )
         return
     }
+    // One character per box, in the order they are read: a figure reads left to right in every language, and a row
+    // in a right-to-left layout would otherwise show "$12.34" as "43.21$".
+    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+        RollingRow(text, mainLength, big, small, mainColor, centsColor, rollsUp, base)
+    }
+}
+
+@OptIn(ExperimentalAnimationApi::class)
+@Composable
+private fun RollingRow(
+    text: String,
+    mainLength: Int,
+    big: TextUnit,
+    small: TextUnit,
+    mainColor: Color,
+    centsColor: Color,
+    rollsUp: Boolean,
+    base: TextStyle,
+) {
     Row {
         text.forEachIndexed { index, char ->
             val inMain = index < mainLength
@@ -1126,5 +1163,8 @@ private val CENTS_SIZE = 28.sp
 /** The total's type: digits of one width, so a rolling digit moves nothing beside it. */
 private val TOTAL_STYLE = NeonType.displayHero.copy(lineHeight = 50.sp, fontFeatureSettings = "tnum")
 
-/** The total is drawn a character at a time; this covers what that adds to its width as one text. */
-private const val TOTAL_FIT_SLACK = 1.03f
+/** Sizes tried before the total settles (it nearly always fits at the first or second). */
+private const val TOTAL_FIT_TRIES = 8
+
+/** The characters a total is made of (digits, a currency sign, separators), each measured once per size. */
+private const val TOTAL_GLYPHS = 24
