@@ -69,7 +69,7 @@ class AssetCatalogAndBalancesContractTest {
         coEvery { dao.getAssetsActive(any(), any()) } answers { active }
         coEvery { dao.insertAssets(any()) } answers { inserted += firstArg<List<AssetLocal>>() }
         coEvery { dao.insertTokenListIgnore(any()) } just Runs
-        coEvery { calls.fetchXORBalances(any()) } returns xorBalance
+        coEvery { calls.fetchXORBalances(any(), any()) } returns xorBalance
         coEvery { calls.fetchBalances(any(), any()) } answers { secondArg<List<String>>().map { atomic("1.25", 6) } }
     }
     private fun TestScope.subject(): AssetsRepositoryImpl {
@@ -168,7 +168,7 @@ class AssetCatalogAndBalancesContractTest {
         subject().getAssetsWhitelist(owner)
         val rows = inserted.last(); equalDecimal("6", rows[0].free); equalDecimal("0", rows[1].free)
         assertFalse(rows[1].visibility); assertFalse(rows[1].displayAsset)
-        coVerify(exactly = 0) { calls.fetchXORBalances(any()); calls.fetchBalances(any(), any()) }
+        coVerify(exactly = 0) { calls.fetchXORBalances(any(), any()); calls.fetchBalances(any(), any()) }
     }
     @Test fun `failed balance fetch cannot replace a previous balance snapshot`() = runTest {
         active = listOf(asset(xor, 18), asset("alpha")); coEvery { calls.fetchBalances(any(), any()) } throws IllegalStateException("offline")
@@ -236,6 +236,163 @@ class AssetCatalogAndBalancesContractTest {
         assertEquals(AssetHolder.getIds().toSet(), defaults.map { it.tokenId }.toSet())
         assertTrue(defaults.all { it.accountAddress == owner && it.free == BigDecimal.ZERO })
         coVerify { dao.insertTokenListIgnore(match { it.map { token -> token.id }.toSet() == AssetHolder.getIds().toSet() }) }
+    }
+    @Test fun `a wallet with stored rows reads its balances while the token list walk is still running`() = runTest {
+        active = listOf(asset(xor, 18), asset("alpha")); val walk = CompletableDeferred<List<TokenInfoDto>>()
+        coEvery { calls.fetchAssetsList() } coAnswers { walk.await() }
+        val repo = subject(); runCurrent()
+        repo.updateWhitelistBalances(owner); repo.updateBalancesVisibleAssets(owner)
+        assertEquals(2, inserted.size); equalDecimal("1.25", inserted.last().single { it.tokenId == "alpha" }.free)
+        coVerify(exactly = 0) { dao.insertTokenListIgnore(any()) }
+        assertTrue(tokenWrites.isEmpty() && tokenUpdates.isEmpty())
+        walk.complete(emptyList()); runCurrent()
+    }
+    @Test fun `a token list walk that fails does not stop a wallet with stored rows from reading its balances`() = runTest {
+        active = listOf(asset(xor, 18), asset("alpha"))
+        coEvery { calls.fetchAssetsList() } throws IllegalStateException("no node")
+        val repo = subject(); runCurrent()
+        repo.updateWhitelistBalances(owner)
+        equalDecimal("10", inserted.single().single { it.tokenId == xor }.free)
+    }
+    @Test fun `a wallet without rows waits for the token list walk before its rows are made`() = runTest {
+        val walk = CompletableDeferred<List<TokenInfoDto>>()
+        coEvery { calls.fetchAssetsList() } coAnswers { walk.await() }
+        val repo = subject(); val refresh = launch { repo.updateBalancesVisibleAssets(owner) }; runCurrent()
+        assertTrue(inserted.isEmpty()); coVerify(exactly = 0) { dao.insertTokenListIgnore(any()); calls.fetchBalances(any(), any()) }
+        walk.complete(emptyList()); refresh.join()
+        assertEquals(AssetHolder.getIds().toSet(), inserted.first().map { it.tokenId }.toSet())
+    }
+    @Test fun `a wallet without rows fails its refresh when the token list walk failed, as before`() = runTest {
+        coEvery { calls.fetchAssetsList() } throws IllegalStateException("no node")
+        val repo = subject(); runCurrent()
+        assertTrue(runCatching { repo.updateBalancesVisibleAssets(owner) }.exceptionOrNull() is IllegalStateException)
+        assertTrue(inserted.isEmpty())
+    }
+    /** The phone lists alpha; the walk finds beta as well, and it is whitelisted. */
+    private fun walkAddsBeta(): CompletableDeferred<List<TokenInfoDto>> {
+        val walk = CompletableDeferred<List<TokenInfoDto>>()
+        coEvery { calls.fetchAssetsList() } coAnswers { walk.await() }
+        every { whitelist.whitelistIds } returns listOf(xor, "alpha", "beta")
+        coEvery { dao.getTokensWithFiatOfCurrency(any()) } returnsMany listOf(
+            listOf(TokenWithFiatLocal(token("alpha"), null)),
+            listOf(TokenWithFiatLocal(token("alpha"), null), TokenWithFiatLocal(token("beta"), null)),
+        )
+        return walk
+    }
+    private val alphaAndBeta = listOf(TokenInfoDto("alpha", "ALPHA", "ALPHA", 6, true), TokenInfoDto("beta", "BETA", "BETA", 6, true))
+    @Test fun `a wallet read during the token list walk is read once more when the walk lists a new token`() = runTest {
+        active = listOf(asset(xor, 18), asset("alpha")); val walk = walkAddsBeta()
+        val repo = subject(); runCurrent()
+        repo.updateWhitelistBalances(owner)
+        coVerify(exactly = 1) { calls.fetchBalances(owner, listOf("alpha")) }
+        // The caller waits for the walk, which has not finished: nothing is read meanwhile.
+        val after = launch { repo.updateWhitelistBalancesAfterTokenListWalk(owner) }; runCurrent()
+        assertEquals(1, inserted.size)
+        // The walk has written beta: the wallet's list now has a row to make for it.
+        active = listOf(asset(xor, 18), asset("alpha"), asset("beta", exists = false))
+        coEvery { calls.fetchBalances(owner, listOf("alpha", "beta")) } returns listOf(atomic("1.25", 6), atomic("4", 6))
+        walk.complete(alphaAndBeta); after.join()
+        coVerify(exactly = 1) { calls.fetchBalances(owner, listOf("alpha", "beta")) }
+        equalDecimal("4", inserted.last().single { it.tokenId == "beta" }.free)
+        // Once: asking again reads nothing more.
+        repo.updateWhitelistBalancesAfterTokenListWalk(owner)
+        assertEquals(2, inserted.size)
+    }
+    @Test fun `a wallet read during the walk is read once more when the walk blacklists a token it holds`() = runTest {
+        // "scam" is on the chain, was never whitelisted and stays that way; the walk's blacklist names it.
+        active = listOf(asset(xor, 18), asset("alpha")); val walk = CompletableDeferred<List<TokenInfoDto>>()
+        coEvery { calls.fetchAssetsList() } coAnswers { walk.await() }
+        var notListed = emptySet<String>()
+        every { whitelist.blacklistIds } answers { notListed }
+        coEvery { whitelist.updateWhitelistStorage() } answers { notListed = setOf("scam") }
+        catalog = listOf(TokenWithFiatLocal(token("alpha"), null), TokenWithFiatLocal(token("scam").copy(whitelistName = ""), null))
+        coEvery { dao.getAssetWithToken(owner, "scam", "USD") } returns asset("scam", exists = false)
+        val repo = subject(); runCurrent()
+        repo.updateWhitelistBalances(owner)
+        coVerify(exactly = 0) { calls.fetchBalances(owner, listOf("alpha", "scam")) }
+        walk.complete(listOf(TokenInfoDto("alpha", "ALPHA", "ALPHA", 6, true), TokenInfoDto("scam", "SCAM", "SCAM", 6, true)))
+        repo.updateWhitelistBalancesAfterTokenListWalk(owner)
+        coVerify(exactly = 1) { calls.fetchBalances(owner, listOf("alpha", "scam")) }
+    }
+    @Test fun `a wallet read during the walk is read once more when a token only moved from one list to the other`() = runTest {
+        // "moved" was blacklisted and is whitelisted now, with the same precision: the tokens a
+        // read asks for are the same before and after, but not in between.
+        active = listOf(asset(xor, 18), asset("alpha")); val walk = CompletableDeferred<List<TokenInfoDto>>()
+        coEvery { calls.fetchAssetsList() } coAnswers { walk.await() }
+        var notListed = setOf("moved")
+        every { whitelist.blacklistIds } answers { notListed }
+        coEvery { whitelist.updateWhitelistStorage() } answers { notListed = emptySet() }
+        coEvery { dao.getTokensWithFiatOfCurrency(any()) } returnsMany listOf(
+            listOf(TokenWithFiatLocal(token("alpha"), null), TokenWithFiatLocal(token("moved").copy(whitelistName = ""), null)),
+            listOf(TokenWithFiatLocal(token("alpha"), null), TokenWithFiatLocal(token("moved"), null)),
+        )
+        coEvery { dao.getAssetWithToken(owner, "moved", "USD") } returns asset("moved", exists = false)
+        val repo = subject(); runCurrent()
+        repo.updateWhitelistBalances(owner)
+        assertEquals(1, inserted.size)
+        walk.complete(listOf(TokenInfoDto("alpha", "ALPHA", "ALPHA", 6, true), TokenInfoDto("moved", "MOVED", "MOVED", 6, true)))
+        repo.updateWhitelistBalancesAfterTokenListWalk(owner)
+        assertEquals(2, inserted.size)
+    }
+    @Test fun `a read owed after the walk stays owed when it fails, until a full read is written`() = runTest {
+        active = listOf(asset(xor, 18), asset("alpha")); val walk = walkAddsBeta()
+        val repo = subject(); runCurrent()
+        repo.updateWhitelistBalances(owner)
+        active = listOf(asset(xor, 18), asset("alpha"), asset("beta", exists = false))
+        walk.complete(alphaAndBeta); runCurrent()
+        coEvery { calls.fetchBalances(owner, listOf("alpha", "beta")) } throws IllegalStateException("SORA2_STORAGE_ANSWER_INCOMPLETE")
+        assertTrue(runCatching { repo.updateWhitelistBalancesAfterTokenListWalk(owner) }.exceptionOrNull() is IllegalStateException)
+        assertEquals(1, inserted.size)
+        coEvery { calls.fetchBalances(owner, listOf("alpha", "beta")) } returns listOf(atomic("1.25", 6), atomic("4", 6))
+        repo.updateWhitelistBalancesAfterTokenListWalk(owner)
+        assertEquals(2, inserted.size)
+        equalDecimal("4", inserted.last().single { it.tokenId == "beta" }.free)
+        repo.updateWhitelistBalancesAfterTokenListWalk(owner)
+        assertEquals(2, inserted.size)
+    }
+    @Test fun `a full read written after the walk settles what a read during the walk owed`() = runTest {
+        active = listOf(asset(xor, 18), asset("alpha")); val walk = walkAddsBeta()
+        val repo = subject(); runCurrent()
+        repo.updateWhitelistBalances(owner)
+        active = listOf(asset(xor, 18), asset("alpha"), asset("beta", exists = false))
+        walk.complete(alphaAndBeta); runCurrent()
+        // A balance event's full read comes first: it reads the list as the walk left it.
+        repo.updateWhitelistBalances(owner)
+        assertEquals(2, inserted.size)
+        repo.updateWhitelistBalancesAfterTokenListWalk(owner)
+        assertEquals(2, inserted.size)
+    }
+    @Test fun `a wallet read during the token list walk is not read again when the walk changes nothing`() = runTest {
+        active = listOf(asset(xor, 18), asset("alpha")); val walk = CompletableDeferred<List<TokenInfoDto>>()
+        coEvery { calls.fetchAssetsList() } coAnswers { walk.await() }
+        catalog = listOf(TokenWithFiatLocal(token("alpha"), null))
+        val repo = subject(); runCurrent()
+        repo.updateWhitelistBalances(owner)
+        walk.complete(listOf(TokenInfoDto("alpha", "ALPHA", "ALPHA", 6, true)))
+        repo.updateWhitelistBalancesAfterTokenListWalk(owner)
+        assertEquals(1, inserted.size)
+    }
+    @Test fun `a wallet read after the token list walk is not read again`() = runTest {
+        active = listOf(asset(xor, 18), asset("alpha")); val walk = walkAddsBeta()
+        val repo = subject(); runCurrent()
+        walk.complete(alphaAndBeta); runCurrent()
+        repo.updateWhitelistBalances(owner)
+        repo.updateWhitelistBalancesAfterTokenListWalk(owner)
+        assertEquals(1, inserted.size)
+    }
+    @Test fun `waiting for a token list walk that failed fails, and reads nothing`() = runTest {
+        active = listOf(asset(xor, 18), asset("alpha"))
+        coEvery { calls.fetchAssetsList() } throws IllegalStateException("no node")
+        val repo = subject(); runCurrent()
+        repo.updateWhitelistBalances(owner)
+        assertTrue(runCatching { repo.updateWhitelistBalancesAfterTokenListWalk(owner) }.exceptionOrNull() is IllegalStateException)
+        assertEquals(1, inserted.size)
+    }
+    @Test fun `balances that are shown are read with every part required, the transfer check as before`() = runTest {
+        active = listOf(asset(xor, 18), asset("alpha")); val repo = subject(); runCurrent()
+        repo.updateWhitelistBalances(owner); repo.getXORBalance(owner, 18)
+        coVerify(exactly = 2) { calls.fetchXORBalances(owner, true) }
+        coVerify(exactly = 0) { calls.fetchXORBalances(owner, false) }
     }
     @Test fun `XOR balance result keeps transfer locks distinct from staking totals`() = runTest {
         val result = subject().getXORBalance(owner, 18)

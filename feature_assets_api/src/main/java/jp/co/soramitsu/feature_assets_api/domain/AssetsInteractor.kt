@@ -100,6 +100,12 @@ interface AssetsInteractor {
 
     suspend fun updateWhitelistBalances()
 
+    /**
+     * Waits for the token list walk and reads [address]'s balances once more when the walk
+     * changed the list after [updateWhitelistBalances] read them.
+     */
+    suspend fun updateWhitelistBalancesAfterTokenListWalk(address: String)
+
     suspend fun updateBalanceVisibleAssets()
 
     suspend fun fetchBalance(

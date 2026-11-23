@@ -23,6 +23,7 @@ import androidx.room.withTransaction
 import java.io.IOException
 import java.math.BigDecimal
 import java.math.BigInteger
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import jp.co.soramitsu.androidfoundation.coroutine.CoroutineManager
@@ -86,6 +87,13 @@ class AssetsRepositoryImpl @Inject constructor(
 
     private val tokensDeferred = CompletableDeferred<List<Token>>()
     private val assetsMutex = Mutex()
+
+    /** Wallets whose balances were read before the token list walk of this run had finished. */
+    private val readBeforeWalk = ConcurrentHashMap.newKeySet<String>()
+
+    /** The walk changed which balances a wallet has; set before [tokensDeferred] completes. */
+    @Volatile
+    private var listChangedByWalk = false
 
     init {
         coroutineManager.applicationScope.launch {
@@ -185,7 +193,7 @@ class AssetsRepositoryImpl @Inject constructor(
     }
 
     override suspend fun getXORBalance(address: String, precision: Int): XorAssetBalance {
-        return substrateCalls.fetchXORBalances(address).let {
+        return substrateCalls.fetchXORBalances(address, forDisplay = true).let {
             BalanceWrapper.mapXorBalance(it, precision)
         }
     }
@@ -386,6 +394,7 @@ class AssetsRepositoryImpl @Inject constructor(
 
     private suspend fun updateTokens() {
         val tokens: List<TokenInfoDto> = substrateCalls.fetchAssetsList()
+        val notListedBefore = whitelistTokensManager.blacklistIds.toSet()
         whitelistTokensManager.updateWhitelistStorage()
         val whiteList = whitelistTokensManager.whitelistIds
         val selectedCurrency = soraConfigManager.getSelectedCurrency()
@@ -421,11 +430,37 @@ class AssetsRepositoryImpl @Inject constructor(
             }
         )
         val allTokens = db.assetDao().getTokensWithFiatOfCurrency(selectedCurrency.code)
+        // A wallet with stored rows may have read its balances while this walk was running, with
+        // the token list as it was. A full refresh reads the whitelisted tokens (a list name in
+        // their row, as the queries ask) and the blacklisted ones, each with its precision. The
+        // walk changes the blacklist first and the rows after: when any of the three is different
+        // at its end, such a wallet is read once more
+        // ([updateWhitelistBalancesAfterTokenListWalk]), also when a token only moved from one
+        // list to the other and was on neither for a moment in between.
+        val notListedAfter = whitelistTokensManager.blacklistIds.toSet()
+        fun listed(rows: List<jp.co.soramitsu.core_db.model.TokenWithFiatLocal>) =
+            rows.filter { it.token.whitelistName.isNotEmpty() }.mapTo(HashSet()) { it.token.id }
+        fun precisions(rows: List<jp.co.soramitsu.core_db.model.TokenWithFiatLocal>, notListed: Set<String>) =
+            rows.filter { it.token.whitelistName.isNotEmpty() || it.token.id in notListed }
+                .associate { it.token.id to it.token.precision }
+        listChangedByWalk = listed(curTokens) != listed(allTokens) || notListedBefore != notListedAfter ||
+            precisions(curTokens, notListedBefore) != precisions(allTokens, notListedAfter)
         tokensDeferred.complete(
             allTokens.map { tokenLocal ->
                 assetLocalToAssetMapper.map(tokenLocal)
             }
         )
+    }
+
+    override suspend fun updateWhitelistBalancesAfterTokenListWalk(address: String) {
+        tokensDeferred.await()
+        if (!listChangedByWalk) {
+            readBeforeWalk -= address
+        } else if (address in readBeforeWalk) {
+            // Its mark is taken off by the full read itself, once that read has been written:
+            // a read that fails here is still owed.
+            updateWhitelistBalances(address)
+        }
     }
 
     override suspend fun transfer(
@@ -462,9 +497,8 @@ class AssetsRepositoryImpl @Inject constructor(
     override suspend fun updateBalancesVisibleAssets(address: String) {
         if (assetsMutex.isLocked) return
         assetsMutex.withLock {
-            tokensDeferred.await()
             val selectedCurrency = soraConfigManager.getSelectedCurrency()
-            checkDefaultNeed(address, selectedCurrency.code)
+            prepareRows(address, selectedCurrency.code)
             val assets = db.assetDao().getAssetsActive(address, selectedCurrency.code)
             insertAssetsInternal(address, assets + notListedAssets(address, selectedCurrency.code), true)
         }
@@ -473,13 +507,15 @@ class AssetsRepositoryImpl @Inject constructor(
     override suspend fun updateWhitelistBalances(address: String) {
         assetsMutex.withLock {
             withContext(coroutineManager.io) {
-                tokensDeferred.await()
                 val selectedCurrency = soraConfigManager.getSelectedCurrency()
-                checkDefaultNeed(address, selectedCurrency.code)
+                prepareRows(address, selectedCurrency.code)
+                // A full read that begins after the walk reads the list as the walk left it.
+                val afterWalk = tokensDeferred.isCompleted
                 val assetsLocal =
                     db.assetDao().getAssetsWhitelist(address, selectedCurrency.code)
                 val assetsLocalSorted = assetsLocal.sortedBy { it.token.symbol }
                 insertAssetsInternal(address, assetsLocalSorted + notListedAssets(address, selectedCurrency.code), true)
+                if (afterWalk) readBeforeWalk -= address
             }
         }
     }
@@ -540,7 +576,7 @@ class AssetsRepositoryImpl @Inject constructor(
         assetIdList: List<String>
     ): Pair<List<BigInteger>, XorBalanceDto> = coroutineScope {
         // XOR and the other tokens are separate reads: both are asked for at once.
-        val xorRead = async { substrateCalls.fetchXORBalances(address) }
+        val xorRead = async { substrateCalls.fetchXORBalances(address, forDisplay = true) }
         val xorIndex = assetIdList.indexOf(SubstrateOptionsProvider.feeAssetId)
 
         val nonXorIds = assetIdList.filter { it != SubstrateOptionsProvider.feeAssetId }
@@ -560,13 +596,26 @@ class AssetsRepositoryImpl @Inject constructor(
         return substrateCalls.fetchBalances(address, ids)
     }
 
-    private suspend fun checkDefaultNeed(address: String, code: String) {
-        if (db.assetDao().getAssetsWhitelist(address, code)
-                .all { it.assetLocal == null }
-        ) {
-            checkDefaultAssetData(address)
+    /**
+     * A wallet whose rows are stored reads its balances at once, with the token list as stored.
+     * The token list walk at startup (every asset on the chain, then the whitelist download)
+     * takes seconds on a good connection; when it changes the list, the wallet read meanwhile is
+     * read once more ([updateWhitelistBalancesAfterTokenListWalk]). A walk that fails no longer
+     * stops the stored tokens from being read. Only a wallet without rows (a first launch, a
+     * wallet just imported) waits for the walk: its rows are made from that list.
+     */
+    private suspend fun prepareRows(address: String, code: String) {
+        if (hasNoRows(address, code)) {
+            tokensDeferred.await()
+            if (hasNoRows(address, code)) checkDefaultAssetData(address)
+        } else if (!tokensDeferred.isCompleted) {
+            // Remembered for [updateWhitelistBalancesAfterTokenListWalk].
+            readBeforeWalk += address
         }
     }
+
+    private suspend fun hasNoRows(address: String, code: String): Boolean =
+        db.assetDao().getAssetsWhitelist(address, code).all { it.assetLocal == null }
 
     private suspend fun checkDefaultAssetData(address: String) {
         val ids = AssetHolder.getIds()

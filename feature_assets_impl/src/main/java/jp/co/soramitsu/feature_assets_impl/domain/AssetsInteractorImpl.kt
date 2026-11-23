@@ -288,6 +288,10 @@ class AssetsInteractorImpl constructor(
         }
     }
 
+    override suspend fun updateWhitelistBalancesAfterTokenListWalk(address: String) {
+        assetsRepository.updateWhitelistBalancesAfterTokenListWalk(address)
+    }
+
     override suspend fun updateWhitelistBalances() {
         val soraAccount = userRepository.getCurSoraAccount()
         assetsRepository.updateWhitelistBalances(soraAccount.substrateAddress)
