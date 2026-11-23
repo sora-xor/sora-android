@@ -500,18 +500,33 @@ private fun TotalBlock(model: PortfolioModel, format: PortfolioFormat) {
         if (totals.known) {
             val stale = model.freshness?.kind == FreshnessKind.OFFLINE
             val (symbol, whole, cents) = format.fiatParts(totals.fiat)
-            val compact = whole.length > 10
-            val big = if (compact) 32.sp else TOTAL_SIZE
-            val small = if (compact) 22.sp else 28.sp
-            RollingTotal(
-                main = symbol + whole,
-                cents = cents,
-                big = big,
-                small = small,
-                mainColor = if (stale) n.textSecondary else n.textPrimary,
-                centsColor = n.textSecondary,
-                rollsUp = (totals.change) >= 0,
-            )
+            val measurer = rememberTextMeasurer()
+            // The total at its full size where the card has room for it, and smaller, all of it together, where it
+            // does not (a large balance on a 320 dp screen or under larger text): never cut, never on two lines.
+            BoxWithConstraints {
+                val room = constraints.maxWidth
+                val scale = remember(symbol, whole, cents, room, measurer) {
+                    val natural = measurer.measure(
+                        text = buildAnnotatedString {
+                            withStyle(SpanStyle(fontSize = TOTAL_SIZE)) { append(symbol + whole) }
+                            withStyle(SpanStyle(fontSize = CENTS_SIZE)) { append(cents) }
+                        },
+                        style = TOTAL_STYLE,
+                        maxLines = 1,
+                        softWrap = false,
+                    ).size.width * TOTAL_FIT_SLACK
+                    if (room == Constraints.Infinity || natural <= room) 1f else room / natural
+                }
+                RollingTotal(
+                    main = symbol + whole,
+                    cents = cents,
+                    big = TOTAL_SIZE * scale,
+                    small = CENTS_SIZE * scale,
+                    mainColor = if (stale) n.textSecondary else n.textPrimary,
+                    centsColor = n.textSecondary,
+                    rollsUp = (totals.change) >= 0,
+                )
+            }
         } else {
             NoTotalDash()
         }
@@ -537,7 +552,7 @@ private fun RollingTotal(
     rollsUp: Boolean,
 ) {
     val fx = LocalFx.current
-    val base = NeonType.displayHero.copy(lineHeight = 50.sp, fontFeatureSettings = "tnum")
+    val base = TOTAL_STYLE
     val text = main + cents
     val mainLength = main.length
     if (fx.reduceMotion) {
@@ -1093,5 +1108,14 @@ internal fun HoldingRow(
     }
 }
 
-/** The size of the hero's total. */
+/** The size of the hero's total, where the card has room for it. */
 private val TOTAL_SIZE = 42.sp
+
+/** The size of its cents. */
+private val CENTS_SIZE = 28.sp
+
+/** The total's type: digits of one width, so a rolling digit moves nothing beside it. */
+private val TOTAL_STYLE = NeonType.displayHero.copy(lineHeight = 50.sp, fontFeatureSettings = "tnum")
+
+/** The total is drawn a character at a time; this covers what that adds to its width as one text. */
+private const val TOTAL_FIT_SLACK = 1.03f
