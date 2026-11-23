@@ -28,17 +28,21 @@ object LitLayout {
 
 /**
  * The screen's column: what this modifier wraps is at most [max] wide and stands in the middle of the width it was
- * given. Given no more than [max] (every phone held upright) it changes nothing.
+ * offered, whether or not its parent asked it to fill that width (a `Box` does not). Offered no more than [max]
+ * (every phone held upright) it changes nothing.
  */
 fun Modifier.litContentWidth(max: Dp = LitLayout.ContentMaxWidth): Modifier = layout { measurable, constraints ->
     val cap = max.roundToPx()
-    if (!constraints.hasBoundedWidth || constraints.maxWidth <= cap) {
+    if (!constraints.hasBoundedWidth) {
+        // Nothing to stand in the middle of: only the widest applies.
+        val placeable = measurable.measure(constraints.copy(minWidth = min(constraints.minWidth, cap), maxWidth = cap))
+        layout(placeable.width, placeable.height) { placeable.place(0, 0) }
+    } else if (constraints.maxWidth <= cap) {
         val placeable = measurable.measure(constraints)
         layout(placeable.width, placeable.height) { placeable.place(0, 0) }
     } else {
+        val offered = constraints.maxWidth
         val placeable = measurable.measure(constraints.copy(minWidth = min(constraints.minWidth, cap), maxWidth = cap))
-        // Asked to fill the width, it fills it and its content stands in the middle.
-        val width = maxOf(placeable.width, constraints.minWidth)
-        layout(width, placeable.height) { placeable.place((width - placeable.width) / 2, 0) }
+        layout(offered, placeable.height) { placeable.place((offered - placeable.width) / 2, 0) }
     }
 }
