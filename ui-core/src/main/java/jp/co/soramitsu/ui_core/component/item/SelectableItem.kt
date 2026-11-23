@@ -62,10 +62,12 @@ fun SelectableItem(
         }
 
         if (leftIcon != null) {
+            // Drawn into a bitmap once for this icon, not on every recomposition of the row.
+            val icon = remember(leftIcon) { leftIcon.toBitmap().asImageBitmap() }
             Image(
                 modifier = Modifier
                     .padding(start = Dimens.x2).size(40.dp),
-                bitmap = leftIcon.toBitmap().asImageBitmap(),
+                bitmap = icon,
                 contentDescription = null
             )
         }
