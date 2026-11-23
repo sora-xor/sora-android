@@ -126,14 +126,15 @@ class LitLayoutFitTest {
     @Test fun aLabelIsSetSmallerBeforeItIsCutAndOnlyThenEndsInAnEllipsis() {
         val label = "Review request"
         var width by mutableStateOf<Dp?>(null)
-        var ownSize = 0.sp
         var ownWidth = 0f
+        var leastWidth = 0f
         compose.setContent {
             SoraAppTheme {
-                ownSize = MaterialTheme.customTypography.buttonM.fontSize
-                // The label's width in the button's own type, measured apart from the button.
+                // The label's width in the button's own type, and at 11 sp, measured apart from the button.
                 val measurer = androidx.compose.ui.text.rememberTextMeasurer()
-                ownWidth = measurer.measure(label, MaterialTheme.customTypography.buttonM).let { it.getLineRight(0) - it.getLineLeft(0) }
+                val type = MaterialTheme.customTypography.buttonM
+                ownWidth = measurer.measure(label, type).let { it.getLineRight(0) - it.getLineLeft(0) }
+                leastWidth = measurer.measure(label, type.copy(fontSize = 11.sp)).let { it.getLineRight(0) - it.getLineLeft(0) }
                 FilledButton(
                     modifier = (width?.let { Modifier.width(it) } ?: Modifier).testTag("button"),
                     size = Size.Large,
@@ -172,7 +173,7 @@ class LitLayoutFitTest {
         assertFalse("the label is cut although a smaller size fits", smaller.hasVisualOverflow)
         assertFalse(smaller.isLineEllipsized(0))
         assertTrue("the label was not set smaller", inked(smaller) < full - 1f)
-        assertTrue("the label went under 11 sp", inked(smaller) >= full * 11f / ownSize.value - 2f)
+        assertTrue("the label went under 11 sp", inked(smaller) >= leastWidth - 1f)
 
         // Far too narrow for any size it may take: cut at the end with an ellipsis, never mid-letter.
         compose.runOnIdle { width = sides + labelWidth * 0.5f }
