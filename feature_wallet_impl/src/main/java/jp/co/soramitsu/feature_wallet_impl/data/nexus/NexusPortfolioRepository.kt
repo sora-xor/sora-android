@@ -2,6 +2,7 @@ package jp.co.soramitsu.feature_wallet_impl.data.nexus
 
 import java.math.BigDecimal
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicLong
 import jp.co.soramitsu.common.nexus.NexusAssetBalance
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
@@ -27,13 +28,20 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.channelFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.mapLatest
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.transformLatest
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 data class NexusPortfolioBalance(
     val walletId: String,
@@ -81,6 +89,13 @@ class NexusPortfolioRepository @Inject constructor(
     private val featureManager: ProductionFeatureManager,
 ) {
     private val requests = MutableStateFlow(PortfolioRequest())
+
+    /**
+     * How many capability reads (the PI indexer's switches) have finished, whatever their
+     * outcome. One read serves every wallet's rows that asked for one while it was running.
+     */
+    private val capabilityReads = AtomicLong()
+    private val capabilityRead = Mutex()
 
     fun refresh() {
         requests.update { PortfolioRequest(refreshGeneration = it.refreshGeneration + 1) }
@@ -140,29 +155,17 @@ class NexusPortfolioRepository @Inject constructor(
         var readScope: PortfolioInputs? = null
         var readCache = ConcurrentHashMap<NetworkAccountLocal, CachedRead>()
         var pageCountBaseline = emptyMap<Pair<String, WalletNetworkId>, Int>()
-        var refreshedGeneration: Long? = null
         // The rows this subscription emitted last. Only their history is ever reused, and only
         // for the same wallet, network, address and asset.
         var shown = emptyList<NexusPortfolioBalance>()
-        emitAll(
+        // Null marks new inputs (accounts, capabilities, the journal, a refresh): the rows read
+        // from the inputs before are still on screen, and are no longer the ones to act on.
+        val rows: Flow<RowsRead?> =
             combine(
                 database.walletIdentityDao().observeEnabledNetworkAccounts(),
                 featureManager.observeState(),
                 database.walletIdentityDao().observePendingTransactions(walletId),
-                requests.mapLatest { request ->
-                    if (refreshedGeneration != request.refreshGeneration) {
-                        // Foreground/manual refresh updates both capabilities and read data.
-                        try {
-                            featureManager.getState()
-                        } catch (error: CancellationException) {
-                            throw error
-                        } catch (_: Exception) {
-                            // Preserve the last complete read capability snapshot while offline.
-                        }
-                        refreshedGeneration = request.refreshGeneration
-                    }
-                    request
-                },
+                requests,
             ) { accounts, featureState, pending, request ->
                 val pendingRecoveryRequired =
                     NexusPendingJournalPresentationContract.requiresRecovery(
@@ -184,7 +187,8 @@ class NexusPortfolioRepository @Inject constructor(
                     historyPageCounts = request.historyPageCounts,
                     refreshGeneration = request.refreshGeneration,
                 )
-            }.transformLatest<PortfolioInputs, List<NexusPortfolioBalance>> { inputs ->
+            }.transformLatest<PortfolioInputs, RowsRead?> { inputs ->
+                emit(null)
                 check(
                     inputs.accounts.map { it.walletId to it.networkId }.distinct().size ==
                         inputs.accounts.size
@@ -213,17 +217,122 @@ class NexusPortfolioRepository @Inject constructor(
                 // now holds it, so it never drops out of Recent activity or closes its page.
                 if (reads.any { it.row.historyLoading } && reads.none { it.resolvedPending }) {
                     val rows = reads.map { it.row }
-                    emit(rows)
+                    emit(RowsRead(inputs.refreshGeneration, rows))
                     shown = rows
                 }
                 val rows = coroutineScope {
                     reads.map { read -> async { readHistory(read, scopedCache) } }.awaitAll()
                 }
-                emit(rows)
+                emit(RowsRead(inputs.refreshGeneration, rows))
                 shown = rows
+            }
+        // A balance never waits for the PI indexer: the rows are read at once, with the
+        // capability set this phone last saw, and the indexer is asked beside them, once at the
+        // start and once for every refresh. Its answer reaches the rows through
+        // [ProductionFeatureManager.observeState]. Only Send waits, as it did when the rows
+        // themselves waited: rows read for a refresh are first offered Send once the capability
+        // read that refresh asked for (or joined) has finished or failed, and only where the
+        // capability set as it is at that moment still allows it. Until then Send stays where
+        // the rows on screen already offer it, and is offered nowhere new.
+        emitAll(
+            channelFlow {
+                val order = Mutex()
+                // Counts what the rows flow hands over, before [order] is taken: a Send decision
+                // that was suspended while newer rows, or the mark of new inputs, were waiting
+                // publishes nothing.
+                val arrivals = AtomicLong()
+                var read: RowsRead? = null
+                var sent: List<NexusPortfolioBalance>? = null
+                // The newest refresh whose own request for a capability read has returned (it
+                // may have been answered by a read that was already running), never one that
+                // finished before this subscription asked.
+                val answered = AtomicLong(NO_CAPABILITY_READ)
+                launch {
+                    requests.map { it.refreshGeneration }.distinctUntilChanged().collectLatest { generation ->
+                        readCapabilities()
+                        answered.set(generation)
+                        // The rows already on screen get their Send; nothing is read again for it.
+                        order.withLock {
+                            val at = arrivals.get()
+                            val latest = read
+                            if (latest == null || latest.generation > generation) return@withLock
+                            val shown = latest.rows.withSendAsAllowedNow()
+                            if (shown != sent && arrivals.get() == at) {
+                                send(shown)
+                                sent = shown
+                            }
+                        }
+                    }
+                }
+                rows.collect { latest ->
+                    arrivals.incrementAndGet()
+                    order.withLock {
+                        // Rows read from inputs that have changed since are never given Send
+                        // afterwards: the journal or the accounts that allowed it are not the
+                        // current ones.
+                        read = latest
+                        if (latest == null) return@withLock
+                        val shown = if (latest.generation <= answered.get()) {
+                            latest.rows.withSendAsAllowedNow()
+                        } else {
+                            val offered = sent.orEmpty().filter { it.sendAvailable }
+                                .mapTo(HashSet()) { it.networkId to it.address }
+                            if (offered.isEmpty()) {
+                                latest.rows.map { it.withoutSend() }
+                            } else {
+                                latest.rows.withSendAsAllowedNow().map { row ->
+                                    if (row.networkId to row.address in offered) row else row.withoutSend()
+                                }
+                            }
+                        }
+                        send(shown)
+                        sent = shown
+                    }
+                }
             }
         )
     }
+
+    /**
+     * Asks the PI indexer for the capability switches, once for everyone who asks while the
+     * request is running. A failed read keeps the last complete capability set (see
+     * [ProductionFeatureManager.getState]) and counts as finished: Send is then decided from that
+     * set, as it always was while the indexer is away.
+     */
+    private suspend fun readCapabilities() {
+        val before = capabilityReads.get()
+        capabilityRead.withLock {
+            // A read that finished while this call waited answers it too.
+            if (capabilityReads.get() != before) return
+            try {
+                featureManager.getState()
+            } catch (error: CancellationException) {
+                throw error
+            } catch (_: Exception) {
+                // Preserve the last complete read capability snapshot while offline.
+            }
+            capabilityReads.incrementAndGet()
+        }
+    }
+
+    /**
+     * Send stays only on a row whose network the capability set, as it is now, still shows and
+     * allows to send. A row read before the indexer turned its network off is replaced a moment
+     * later; until then it must not offer Send.
+     */
+    private suspend fun List<NexusPortfolioBalance>.withSendAsAllowedNow(): List<NexusPortfolioBalance> {
+        if (none { it.sendAvailable }) return this
+        val state = featureManager.observeState().first()
+        return map { row ->
+            val allowed = state.nexusAvailable &&
+                (row.networkId != WalletNetworkId.TAIRA || state.tairaVisible) &&
+                state.sendsEnabledFor(row.networkId)
+            if (allowed) row else row.withoutSend()
+        }
+    }
+
+    /** The row as it is shown until the capability switches have been read for it: no Send yet. */
+    private fun NexusPortfolioBalance.withoutSend() = if (sendAvailable) copy(sendAvailable = false) else this
 
     /**
      * A network's row as soon as its balance is read: Send is decided exactly as before, from the
@@ -495,6 +604,9 @@ class NexusPortfolioRepository @Inject constructor(
         val refreshGeneration: Long,
     )
 
+    /** One wallet's rows and the refresh they were read for. */
+    private class RowsRead(val generation: Long, val rows: List<NexusPortfolioBalance>)
+
     private data class PortfolioRequest(
         val refreshGeneration: Long = 0,
         val historyPageCounts: Map<Pair<String, WalletNetworkId>, Int> = emptyMap(),
@@ -534,5 +646,7 @@ class NexusPortfolioRepository @Inject constructor(
         /** Taira history requests one page of Recent activity may take; matches iOS. */
         const val MAX_HISTORY_REQUESTS_PER_PAGE = 12
         val PUBLIC_KEY = Regex("^[0-9a-fA-F]{64}$")
+        /** Below every refresh generation: no capability read has returned yet. */
+        const val NO_CAPABILITY_READ = Long.MIN_VALUE
     }
 }

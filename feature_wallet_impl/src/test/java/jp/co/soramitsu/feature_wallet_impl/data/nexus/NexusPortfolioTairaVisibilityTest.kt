@@ -26,6 +26,7 @@ import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runCurrent
@@ -73,6 +74,283 @@ class NexusPortfolioTairaVisibilityTest {
         runCurrent()
         assertTrue(results.all { it.isEmpty() })
         coVerify(exactly = 0) { torii.getXorBalance(any(), any()) }
+    }
+
+    @Test
+    fun `a Taira balance shows while the capability request has not answered`() = runTest {
+        fixture()
+        every { sendQualification.capabilitiesFor(any()) } returns QUALIFIED
+        // The PI indexer never answers (it has failed closed since 2026-10-31).
+        coEvery { featureManager.getState() } coAnswers { awaitCancellation() }
+        val emitted = mutableListOf<List<NexusPortfolioBalance>>()
+        backgroundScope.launch { repository.observeWallet("wallet", history = false).collect { emitted += it } }
+        runCurrent()
+        val row = emitted.single().single()
+        assertEquals("1", row.xorQuantity)
+        assertEquals(taira.address, row.address)
+        // Send is the one thing that waits for the capability switches, as it did before.
+        assertFalse(row.sendAvailable)
+        coVerify(exactly = 1) { torii.getXorBalance(any(), any()) }
+    }
+
+    @Test
+    fun `Send appears when the capability request answers, without another balance read`() = runTest {
+        fixture()
+        every { sendQualification.capabilitiesFor(any()) } returns QUALIFIED
+        val answer = CompletableDeferred<ProductionFeatureState>()
+        coEvery { featureManager.getState() } coAnswers { answer.await() }
+        val emitted = mutableListOf<List<NexusPortfolioBalance>>()
+        backgroundScope.launch { repository.observeWallet("wallet", history = false).collect { emitted += it } }
+        runCurrent()
+        assertFalse(emitted.single().single().sendAvailable)
+        answer.complete(features.value)
+        runCurrent()
+        assertEquals(2, emitted.size)
+        assertEquals(emitted[0].single().copy(sendAvailable = true), emitted[1].single())
+        coVerify(exactly = 1) { torii.getXorBalance(any(), any()) }
+    }
+
+    @Test
+    fun `a capability request that fails lets Send through from the last capability set`() = runTest {
+        fixture()
+        every { sendQualification.capabilitiesFor(any()) } returns QUALIFIED
+        val answer = CompletableDeferred<ProductionFeatureState>()
+        coEvery { featureManager.getState() } coAnswers { answer.await() }
+        var rows = emptyList<NexusPortfolioBalance>()
+        backgroundScope.launch { repository.observeCurrentWallet().collect { rows = it } }
+        runCurrent()
+        assertEquals("1", rows.single().xorQuantity)
+        assertFalse(rows.single().sendAvailable)
+        answer.completeExceptionally(IllegalStateException("PI_INDEXER_NOT_READY"))
+        runCurrent()
+        assertTrue(rows.single().sendAvailable)
+    }
+
+    @Test
+    fun `a capability answer that turns the network off never offers Send on rows shown before it`() = runTest {
+        fixture()
+        every { sendQualification.capabilitiesFor(any()) } returns QUALIFIED
+        val answer = CompletableDeferred<ProductionFeatureState>()
+        coEvery { featureManager.getState() } coAnswers {
+            answer.await().also { features.value = it }
+        }
+        val emitted = mutableListOf<List<NexusPortfolioBalance>>()
+        backgroundScope.launch { repository.observeWallet("wallet", history = false).collect { emitted += it } }
+        runCurrent()
+        assertEquals("1", emitted.single().single().xorQuantity)
+        answer.complete(features.value.copy(nexusAvailable = false, tairaVisible = false))
+        runCurrent()
+        assertTrue(emitted.last().isEmpty())
+        // The row read before the answer would have offered Send under the old capability set.
+        assertTrue(emitted.flatten().none { it.sendAvailable })
+    }
+
+    @Test
+    fun `Send is not given to rows whose journal has changed while the capability request was pending`() = runTest {
+        fixture()
+        every { sendQualification.capabilitiesFor(any()) } returns QUALIFIED
+        val answer = CompletableDeferred<ProductionFeatureState>()
+        coEvery { featureManager.getState() } coAnswers { answer.await() }
+        val journal = MutableStateFlow(emptyList<jp.co.soramitsu.core_db.model.PendingNetworkTransactionLocal>())
+        every { dao.observePendingTransactions("wallet") } returns journal
+        val emitted = mutableListOf<List<NexusPortfolioBalance>>()
+        backgroundScope.launch { repository.observeWallet("wallet", history = false).collect { emitted += it } }
+        runCurrent()
+        assertFalse(emitted.single().single().sendAvailable)
+        // The journal now needs recovery, and the balance read that follows does not answer.
+        val replacement = CompletableDeferred<NexusAssetBalance>()
+        coEvery { torii.getXorBalance(NexusNetworks.taira, taira.address) } coAnswers { replacement.await() }
+        journal.value = listOf(pendingSend().copy(chainId = null))
+        runCurrent()
+        answer.complete(features.value)
+        runCurrent()
+        // The row on screen was read before the journal changed: the capability answer must not
+        // turn its Send on.
+        assertTrue(emitted.flatten().none { it.sendAvailable })
+        replacement.complete(NexusAssetBalance(asset = TairaTestnetContract.XOR_ASSET_DEFINITION_ID, quantity = "1"))
+        runCurrent()
+        assertEquals("NEXUS_PENDING_RECOVERY_REQUIRED", emitted.last().single().errorCode)
+        assertTrue(emitted.flatten().none { it.sendAvailable })
+    }
+
+    @Test
+    fun `a capability request the indexer rejects keeps Send as the last capability set decides`() = runTest {
+        fixture()
+        every { sendQualification.capabilitiesFor(any()) } returns QUALIFIED
+        // The read answers "everything off" for itself; the saved capability set is unchanged.
+        coEvery { featureManager.getState() } returns
+            ProductionFeatureState(false, false, false, false, false, false, false)
+        var rows = emptyList<NexusPortfolioBalance>()
+        backgroundScope.launch { repository.observeCurrentWallet().collect { rows = it } }
+        runCurrent()
+        assertEquals("1", rows.single().xorQuantity)
+        assertTrue(rows.single().sendAvailable)
+    }
+
+    @Test
+    fun `one capability request serves every wallet's rows that asks while it runs`() = runTest {
+        fixture()
+        every { sendQualification.capabilitiesFor(any()) } returns QUALIFIED
+        var answer = CompletableDeferred<ProductionFeatureState>()
+        coEvery { featureManager.getState() } coAnswers { answer.await() }
+        val first = mutableListOf<List<NexusPortfolioBalance>>()
+        val second = mutableListOf<List<NexusPortfolioBalance>>()
+        backgroundScope.launch { repository.observeCurrentWallet().collect { } }
+        backgroundScope.launch { repository.observeWallet("wallet", history = false).collect { first += it } }
+        backgroundScope.launch { repository.observeWallet("wallet", history = false).collect { second += it } }
+        runCurrent()
+        coVerify(exactly = 1) { featureManager.getState() }
+        assertFalse(first.last().single().sendAvailable)
+        answer.complete(features.value)
+        runCurrent()
+        assertTrue(first.last().single().sendAvailable)
+        assertTrue(second.last().single().sendAvailable)
+        coVerify(exactly = 1) { featureManager.getState() }
+        // Each refresh asks once more, for all of them together.
+        answer = CompletableDeferred()
+        repository.refresh()
+        runCurrent()
+        coVerify(exactly = 2) { featureManager.getState() }
+        answer.complete(features.value)
+        runCurrent()
+        // More history is no refresh: the capabilities are not asked for again.
+        repository.loadMoreHistory("wallet", WalletNetworkId.TAIRA)
+        runCurrent()
+        coVerify(exactly = 2) { featureManager.getState() }
+    }
+
+    @Test
+    fun `a subscription that starts after a capability read asks again and waits for its own answer`() = runTest {
+        fixture()
+        every { sendQualification.capabilitiesFor(any()) } returns QUALIFIED
+        backgroundScope.launch { repository.observeWallet("wallet", history = false).collect { } }
+        runCurrent()
+        coVerify(exactly = 1) { featureManager.getState() }
+        val answer = CompletableDeferred<ProductionFeatureState>()
+        coEvery { featureManager.getState() } coAnswers { answer.await() }
+        val late = mutableListOf<List<NexusPortfolioBalance>>()
+        backgroundScope.launch { repository.observeWallet("wallet", history = false).collect { late += it } }
+        runCurrent()
+        coVerify(exactly = 2) { featureManager.getState() }
+        assertFalse(late.single().single().sendAvailable)
+        answer.complete(features.value)
+        runCurrent()
+        assertEquals(2, late.size)
+        assertTrue(late.last().single().sendAvailable)
+    }
+
+    @Test
+    fun `a refresh keeps Send on screen while the capabilities are asked for again`() = runTest {
+        fixture()
+        every { sendQualification.capabilitiesFor(any()) } returns QUALIFIED
+        var pending: CompletableDeferred<ProductionFeatureState>? = null
+        coEvery { featureManager.getState() } coAnswers { pending?.await() ?: features.value }
+        val emitted = mutableListOf<List<NexusPortfolioBalance>>()
+        backgroundScope.launch { repository.observeWallet("wallet", history = false).collect { emitted += it } }
+        runCurrent()
+        assertTrue(emitted.last().single().sendAvailable)
+        pending = CompletableDeferred()
+        repository.refresh()
+        runCurrent()
+        assertTrue(emitted.all { rows -> rows.single().sendAvailable })
+        coVerify(exactly = 2) { torii.getXorBalance(any(), any()) }
+        pending?.complete(features.value)
+        runCurrent()
+        assertTrue(emitted.last().single().sendAvailable)
+    }
+
+    @Test
+    fun `a refresh offers Send nowhere new before its own capability request answers`() = runTest {
+        fixture()
+        var pending: CompletableDeferred<ProductionFeatureState>? = null
+        coEvery { featureManager.getState() } coAnswers { pending?.await() ?: features.value }
+        val emitted = mutableListOf<List<NexusPortfolioBalance>>()
+        backgroundScope.launch { repository.observeWallet("wallet", history = false).collect { emitted += it } }
+        runCurrent()
+        // The first capability request has answered; this wallet does not qualify to send yet.
+        assertFalse(emitted.last().single().sendAvailable)
+        every { sendQualification.capabilitiesFor(any()) } returns QUALIFIED
+        pending = CompletableDeferred()
+        repository.refresh()
+        runCurrent()
+        // Read again at once, and it qualifies now: Send still waits for this refresh's answer.
+        coVerify(exactly = 2) { torii.getXorBalance(any(), any()) }
+        assertTrue(emitted.none { rows -> rows.single().sendAvailable })
+        pending?.complete(features.value)
+        runCurrent()
+        assertTrue(emitted.last().single().sendAvailable)
+        coVerify(exactly = 2) { torii.getXorBalance(any(), any()) }
+    }
+
+    @Test
+    fun `a refresh takes Send off at once where the capability set no longer allows it`() = runTest {
+        fixture()
+        every { sendQualification.capabilitiesFor(any()) } returns QUALIFIED
+        var pending: CompletableDeferred<ProductionFeatureState>? = null
+        coEvery { featureManager.getState() } coAnswers { pending?.await() ?: features.value }
+        var rows = emptyList<NexusPortfolioBalance>()
+        backgroundScope.launch { repository.observeWallet("wallet", history = false).collect { rows = it } }
+        runCurrent()
+        assertTrue(rows.single().sendAvailable)
+        every { sendQualification.capabilitiesFor(any()) } returns NexusSendCapabilities.unavailable()
+        pending = CompletableDeferred()
+        repository.refresh()
+        runCurrent()
+        assertFalse(rows.single().sendAvailable)
+    }
+
+    @Test
+    fun `a Send decision held while new inputs wait gives the rows before them nothing`() = runTest {
+        fixture()
+        every { sendQualification.capabilitiesFor(any()) } returns QUALIFIED
+        val journal = MutableStateFlow(emptyList<jp.co.soramitsu.core_db.model.PendingNetworkTransactionLocal>())
+        every { dao.observePendingTransactions("wallet") } returns journal
+        val answer = CompletableDeferred<ProductionFeatureState>()
+        coEvery { featureManager.getState() } coAnswers { answer.await() }
+        // Reading the capability set as it is now can be held, as on a busy phone.
+        var held: CompletableDeferred<Unit>? = null
+        val deciding = CompletableDeferred<Unit>()
+        every { featureManager.observeState() } answers {
+            kotlinx.coroutines.flow.flow {
+                held?.let { deciding.complete(Unit); it.await() }
+                emitAll(features)
+            }
+        }
+        val emitted = mutableListOf<List<NexusPortfolioBalance>>()
+        backgroundScope.launch { repository.observeWallet("wallet", history = false).collect { emitted += it } }
+        runCurrent()
+        assertFalse(emitted.last().single().sendAvailable)
+        val gate = CompletableDeferred<Unit>()
+        held = gate
+        answer.complete(features.value)
+        runCurrent()
+        assertTrue(deciding.isCompleted)
+        // The journal changes while Send is being decided for the rows read before it.
+        held = null
+        journal.value = listOf(pendingSend().copy(chainId = null))
+        runCurrent()
+        gate.complete(Unit)
+        runCurrent()
+        assertTrue(emitted.none { rows -> rows.any { it.sendAvailable } })
+        assertEquals("NEXUS_PENDING_RECOVERY_REQUIRED", emitted.last().single().errorCode)
+    }
+
+    @Test
+    fun `a subscription cancelled during the capability request leaves it to the next one`() = runTest {
+        fixture()
+        every { sendQualification.capabilitiesFor(any()) } returns QUALIFIED
+        var calls = 0
+        coEvery { featureManager.getState() } coAnswers { if (calls++ == 0) awaitCancellation() else features.value }
+        val first = launch { repository.observeWallet("wallet", history = false).collect { } }
+        runCurrent()
+        var rows = emptyList<NexusPortfolioBalance>()
+        backgroundScope.launch { repository.observeWallet("wallet", history = false).collect { rows = it } }
+        runCurrent()
+        assertFalse(rows.single().sendAvailable)
+        first.cancel()
+        runCurrent()
+        assertTrue(rows.single().sendAvailable)
+        assertEquals(2, calls)
     }
 
     @Test
