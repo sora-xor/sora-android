@@ -19,6 +19,8 @@ limitations under the License.
 
 package jp.co.soramitsu.common_wallet.presentation.compose.receive
 
+import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.layout.widthIn
 import android.graphics.Bitmap
 import android.graphics.drawable.Drawable
 import androidx.compose.foundation.Image
@@ -152,7 +154,10 @@ fun ReceiveTokenByQrScreen(
         verticalArrangement = Arrangement.spacedBy(Dimens.x2)
     ) {
         LoadableContentCard(
+            // The code is as wide as a phone's column and no larger: on a tablet a square the width of the
+            // column would push the address and Share off the screen.
             modifier = Modifier
+                .widthIn(max = QR_MAX_SIDE)
                 .fillMaxWidth()
                 .aspectRatio(1f),
             innerPadding = PaddingValues(
@@ -222,6 +227,9 @@ fun ReceiveTokenByQrScreen(
         }
     }
 }
+
+/** The widest the QR code's card gets: a little more than its width on the largest phones. */
+private val QR_MAX_SIDE = 400.dp
 
 @Preview
 @Composable

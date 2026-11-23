@@ -1,17 +1,17 @@
 package jp.co.soramitsu.ui_core.component.toolbar
 
+import androidx.compose.ui.text.AnnotatedString
+import jp.co.soramitsu.ui_core.component.text.FittedText
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import jp.co.soramitsu.ui_core.R
@@ -25,17 +25,17 @@ internal fun RowScope.ToolbarCenterAlignedTop(
     onMenuItemClicked: ((Action) -> Unit)? = null,
     onMenuItemClickedTestTag: String? = null,
 ) {
-    Text(
+    // As in the small toolbar: set smaller before it is cut short.
+    FittedText(
         modifier = Modifier
             .wrapContentHeight()
             .weight(1f)
             .padding(start = state.navIcon?.let { Dimens.x2 } ?: 0.dp),
-        text = state.title(),
-        style = MaterialTheme.customTypography.headline2,
-        color = MaterialTheme.customColors.fgPrimary,
-        textAlign = TextAlign.Center,
-        maxLines = 1,
-        overflow = TextOverflow.Ellipsis,
+        text = AnnotatedString(state.title()),
+        style = MaterialTheme.customTypography.headline2.copy(
+            color = MaterialTheme.customColors.fgPrimary,
+            textAlign = TextAlign.Center,
+        ),
     )
 
     ToolbarActions(

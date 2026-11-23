@@ -28,7 +28,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
@@ -327,7 +327,7 @@ private fun SupplyLiquidity(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(40.dp)
+                    .heightIn(min = 40.dp)
                     .clickable { },
                 verticalAlignment = Alignment.CenterVertically,
             ) {
@@ -354,7 +354,7 @@ private fun SupplyLiquidity(
                 }
                 Column(
                     modifier = Modifier
-                        .height(40.dp)
+                        .heightIn(min = 40.dp)
                         .weight(1f)
                         .padding(start = Dimens.x1, end = Dimens.x1),
                     verticalArrangement = Arrangement.SpaceBetween,

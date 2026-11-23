@@ -1,5 +1,7 @@
 package jp.co.soramitsu.ui_core.component.toolbar
 
+import androidx.compose.ui.text.AnnotatedString
+import jp.co.soramitsu.ui_core.component.text.FittedText
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -8,14 +10,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import jp.co.soramitsu.ui_core.R
 import jp.co.soramitsu.ui_core.resources.Dimens
@@ -38,16 +38,17 @@ internal fun ToolbarSmallTop(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(
+        // A title a little too long for the bar (a small phone, larger text, Japanese) is set smaller before it is
+        // cut short.
+        FittedText(
             modifier = Modifier
                 .wrapContentHeight()
                 .weight(1f),
-            text = state.title(),
-            style = MaterialTheme.customTypography.headline2,
-            color = MaterialTheme.customColors.fgPrimary,
-            textAlign = TextAlign.Start,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
+            text = AnnotatedString(state.title()),
+            style = MaterialTheme.customTypography.headline2.copy(
+                color = MaterialTheme.customColors.fgPrimary,
+                textAlign = TextAlign.Start,
+            ),
         )
 
         ToolbarActions(

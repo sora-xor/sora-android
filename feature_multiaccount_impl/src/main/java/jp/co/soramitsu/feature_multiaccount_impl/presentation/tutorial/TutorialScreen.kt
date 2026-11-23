@@ -83,7 +83,9 @@ fun TutorialScreen(
     onFoundWallets: () -> Unit = {},
 ) {
     Box(
-        modifier = Modifier.fillMaxHeight(),
+        // The mark stands half above the card. That half is part of this screen's height, so on a screen the card
+        // fills (a small phone, larger text) the mark is scrolled into view with it instead of being cut off.
+        modifier = Modifier.fillMaxHeight().padding(top = TUTORIAL_MARK_SIZE / 2),
         contentAlignment = Alignment.TopCenter
     ) {
         ContentCard(
@@ -207,7 +209,7 @@ fun TutorialScreen(
         NeumorphicSurface(
             shape = CircleShape,
             interactionSource = remember { MutableInteractionSource() },
-            modifier = Modifier.size(112.dp).offset(y = (-56).dp)
+            modifier = Modifier.size(TUTORIAL_MARK_SIZE).offset(y = -TUTORIAL_MARK_SIZE / 2)
                 .border(2.dp, MaterialTheme.neon.brandRed, CircleShape),
         ) {
             Image(modifier = Modifier.size(80.dp),
@@ -216,6 +218,9 @@ fun TutorialScreen(
         }
     }
 }
+
+/** The SORA mark on the card's top edge. */
+private val TUTORIAL_MARK_SIZE = 112.dp
 
 @Composable
 private fun TutorialButtons(
