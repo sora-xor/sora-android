@@ -429,10 +429,13 @@ class OnboardingActivity : SoraBaseActivity<OnboardingViewModel>() {
                             )
                         },
                         buttons = {
+                            // On a short window (a phone on its side, a split screen) the sources scroll rather than
+                            // the last of them being cut off.
                             Column(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .wrapContentHeight()
+                                    .verticalScroll(rememberScrollState())
                                     .padding(Dimens.x1),
                                 verticalArrangement = Arrangement.spacedBy(Dimens.x1),
                                 horizontalAlignment = Alignment.CenterHorizontally,

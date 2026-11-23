@@ -605,6 +605,9 @@ private fun StepGlyph(state: SafeStepState) {
     }
 }
 
+/** Below this height left for a sheet, its title, body and actions scroll together. */
+private val SHORT_SHEET_WINDOW = 440.dp
+
 /**
  * Opaque Safe Mode sheet (design spec 7.10): top radius 28, grabber, `headline2` title and a
  * close button, scrolling body and actions pinned at the bottom. Review and export sheets are
@@ -655,6 +658,10 @@ fun SafeSheet(
             contentAlignment = Alignment.BottomCenter,
         ) {
             val shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)
+            // On a short window (a phone on its side, a split screen, the keyboard up) the title and the actions
+            // would leave the body no room, and a choice in it (Restore's backup confirmation) could not be reached:
+            // there the whole sheet scrolls as one, with the actions after the body.
+            val short = maxHeight < SHORT_SHEET_WINDOW
             Column(
                 modifier = Modifier
                     .widthIn(max = LitLayout.ContentMaxWidth)
@@ -669,6 +676,7 @@ fun SafeSheet(
                         indication = null,
                         onClick = {},
                     )
+                    .then(if (short) Modifier.verticalScroll(rememberScrollState()) else Modifier)
                     .navigationBarsPadding()
                     .testTag(SafeModeTags.SHEET),
             ) {
@@ -705,8 +713,7 @@ fun SafeSheet(
                 }
                 Column(
                     modifier = Modifier
-                        .weight(1f, fill = false)
-                        .verticalScroll(rememberScrollState())
+                        .then(if (short) Modifier else Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()))
                         .padding(horizontal = 24.dp, vertical = 16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                     content = content,
