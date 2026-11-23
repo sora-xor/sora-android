@@ -88,6 +88,9 @@ class AccountListViewModel @Inject constructor(
                     )
                 }
 
+                // The rebuilt rows are all unselected, so selection mode ends with them; keeping it
+                // would leave a "0 selected" title and a Backup action with nothing to back up.
+                toolbarActionModeEnabled = false
                 _accountListScreenState.value =
                     AccountListScreenState(toolbarActionModeEnabled, accountList)
                 setToolbarState(toolbarActionModeEnabled, 0)

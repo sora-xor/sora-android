@@ -52,6 +52,7 @@ import org.mockito.BDDMockito.anyString
 import org.mockito.BDDMockito.given
 import org.mockito.Mock
 import org.mockito.Mockito.lenient
+import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
 import org.mockito.junit.MockitoJUnitRunner
 
@@ -153,6 +154,34 @@ class AccountListViewModelTest {
         assertTrue(
             requireNotNull(viewModel.accountListScreenState.value).accountList.none { it.readOnly }
         )
+    }
+
+    @Test
+    fun `a list refresh during selection ends selection mode instead of showing 0 selected`() = runTest {
+        val readOnly = MutableStateFlow(emptySet<String>())
+        given(multiAccInteractor.flowUnavailableWalletIds()).willReturn(readOnly)
+        val viewModel = AccountListViewModel(
+            multiAccInteractor,
+            avatarGenerator,
+            mainRouter,
+            clipboardManager,
+        )
+        advanceUntilIdle()
+        viewModel.onAccountSelected("address")
+        assertEquals(1, viewModel.toolbarState.getOrAwaitValue().basic.titleQuantity)
+
+        readOnly.value = setOf("curAddress")
+        advanceUntilIdle()
+
+        val state = requireNotNull(viewModel.accountListScreenState.value)
+        assertFalse(state.isActionMode)
+        assertTrue(state.accountList.none { it.isSelectedAction })
+        val toolbar = viewModel.toolbarState.getOrAwaitValue()
+        assertEquals(R.string.settings_accounts, toolbar.basic.title)
+        assertNull(toolbar.basic.titleQuantity)
+        assertNull(toolbar.basic.actionLabel)
+        viewModel.onAction()
+        verify(mainRouter, never()).showExportJSONProtection(org.mockito.kotlin.any())
     }
 
     @Test
