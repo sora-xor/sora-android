@@ -27,10 +27,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -179,22 +175,21 @@ class CardsHubFragment : SoraBaseFragment<CardsHubViewModel>() {
  * history stay visible; Send and Swap are off with their reason on their own screens.
  */
 @Composable
-internal fun ReadOnlyHomeBanner() {
+internal fun ReadOnlyHomeBanner(learnMore: Boolean, onLearnMore: (Boolean) -> Unit) {
     if (!rememberReadOnlyBrowsing()) return
     val context = LocalContext.current
-    var learnMore by remember { mutableStateOf(false) }
     ReadOnlyBanner(
         modifier = Modifier.padding(bottom = 16.dp),
         onTryAgain = { WalletUpgradeRetry.launch(context) },
-        onLearnMore = { learnMore = true },
+        onLearnMore = { onLearnMore(true) },
     )
     if (learnMore) {
         ReadOnlyLearnMoreSheet(
             onTryAgain = {
-                learnMore = false
+                onLearnMore(false)
                 WalletUpgradeRetry.launch(context)
             },
-            onClose = { learnMore = false },
+            onClose = { onLearnMore(false) },
         )
     }
 }

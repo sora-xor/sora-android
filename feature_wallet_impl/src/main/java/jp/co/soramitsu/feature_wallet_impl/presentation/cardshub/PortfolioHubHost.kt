@@ -129,6 +129,8 @@ internal fun PortfolioHomeHost(
     val sheetActions = remember(portfolio) { SheetActions(portfolio) }
     val accountReadOnly = LocalSelectedAccountReadOnly.current
     val claimPending by hub.claimPending.collectAsStateWithLifecycle()
+    // The read-only "Learn more" sheet is the banner's, not the home's: it covers the hero all the same.
+    var learnMore by remember { mutableStateOf(false) }
     PortfolioHubScreen(
         scrollState = scrollState,
         model = model,
@@ -137,9 +139,9 @@ internal fun PortfolioHomeHost(
         pinned = pinned,
         homeActions = homeActions,
         sheetActions = sheetActions,
-        coveredByHost = inFront && networkPick != null,
+        coveredByHost = inFront && (networkPick != null || learnMore),
         notices = {
-            ReadOnlyHomeBanner()
+            ReadOnlyHomeBanner(learnMore = learnMore, onLearnMore = { learnMore = it })
             if (accountReadOnly) {
                 AccountReadOnlyNotice(
                     modifier = Modifier.padding(bottom = 16.dp),
