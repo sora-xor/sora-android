@@ -44,6 +44,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -99,6 +100,7 @@ import jp.co.soramitsu.common.presentation.compose.neon.neonBorder
 import jp.co.soramitsu.common.presentation.compose.theme.neon.LocalFx
 import jp.co.soramitsu.common.presentation.compose.theme.neon.neon
 import jp.co.soramitsu.common.presentation.compose.theme.tokens.NeonType
+import jp.co.soramitsu.ui_core.lit.LitLayout
 import jp.co.soramitsu.ui_core.component.button.properties.Size as ButtonSize
 import jp.co.soramitsu.ui_core.lit.litCoin
 import jp.co.soramitsu.ui_core.theme.customTypography
@@ -179,7 +181,7 @@ fun SafeModeScreen(
             ) {
                 Column(
                     modifier = Modifier
-                        .widthIn(max = 560.dp)
+                        .widthIn(max = LitLayout.ContentMaxWidth)
                         .fillMaxWidth()
                         .heightIn(min = minHeight)
                         .padding(horizontal = 16.dp, vertical = 24.dp),
@@ -647,13 +649,15 @@ fun SafeSheet(
                     indication = null,
                     enabled = dismissEnabled,
                     onClick = onClose,
-                ),
+                )
+                // The sheet stands on the keyboard when one is up, measured against what is left above it.
+                .imePadding(),
             contentAlignment = Alignment.BottomCenter,
         ) {
             val shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)
             Column(
                 modifier = Modifier
-                    .widthIn(max = 640.dp)
+                    .widthIn(max = LitLayout.ContentMaxWidth)
                     .fillMaxWidth()
                     .heightIn(max = maxHeight * 0.92f)
                     .clip(shape)

@@ -19,6 +19,7 @@ import jp.co.soramitsu.common.irohaconnect.IrohaConnectSigningKind
 import jp.co.soramitsu.common.presentation.compose.neon.FilledButton
 import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.component.button.properties.Size
+import jp.co.soramitsu.ui_core.lit.litContentWidth
 import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
 
@@ -34,7 +35,7 @@ fun IrohaConnectScreen(
 ) {
     Column(
         Modifier.fillMaxSize().background(MaterialTheme.customColors.bgPage)
-            .statusBarsPadding().navigationBarsPadding()
+            .windowInsetsPadding(WindowInsets.safeDrawing).litContentWidth()
             .verticalScroll(rememberScrollState()).padding(24.dp)
             .testTag("iroha_connect_root"),
         verticalArrangement = Arrangement.spacedBy(20.dp),

@@ -27,9 +27,9 @@ import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Scaffold
@@ -55,6 +55,7 @@ import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.util.ext.attrColor
 import jp.co.soramitsu.common.util.ext.setNavigationBarColorCompat
 import jp.co.soramitsu.common.util.ext.setStatusBarColorCompat
+import jp.co.soramitsu.ui_core.lit.litContentWidth
 import jp.co.soramitsu.ui_core.theme.customColors
 
 abstract class SoraBaseActivity<T : BaseViewModel> : AppCompatActivity() {
@@ -112,10 +113,11 @@ abstract class SoraBaseActivity<T : BaseViewModel> : AppCompatActivity() {
                 Box(modifier = Modifier.fillMaxSize()) {
                     NeonBackground()
                     Scaffold(
+                        // Clear of the bars, the keyboard and the camera cutout on every side (a phone on its
+                        // side has them at the sides), then one column of readable width in the middle.
                         modifier = Modifier
-                            .navigationBarsPadding()
-                            .statusBarsPadding()
-                            .imePadding(),
+                            .windowInsetsPadding(WindowInsets.safeDrawing)
+                            .litContentWidth(),
                         scaffoldState = scaffoldState,
                         backgroundColor = MaterialTheme.customColors.bgPage.copy(alpha = 0f),
                         topBar = {

@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -91,6 +92,7 @@ import jp.co.soramitsu.ui_core.component.button.properties.Size as ButtonSize
 import jp.co.soramitsu.common.presentation.compose.TokenBadge
 import jp.co.soramitsu.ui_core.lit.LitEngravedLine
 import jp.co.soramitsu.ui_core.lit.Lit
+import jp.co.soramitsu.ui_core.lit.LitLayout
 import jp.co.soramitsu.ui_core.lit.LitDot
 import jp.co.soramitsu.ui_core.lit.LocalLitPalette
 import jp.co.soramitsu.ui_core.lit.litCoin
@@ -479,7 +481,10 @@ internal fun PortfolioSheetScaffold(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = null,
                     onClick = onDismiss,
-                ),
+                )
+                // The sheet stands on the keyboard when one is up, and is measured against what is left above
+                // it: an amount being typed and the action under it are never behind the keys.
+                .imePadding(),
             contentAlignment = Alignment.BottomCenter,
         ) {
             val maxSheetHeight = maxHeight * 0.88f
@@ -487,7 +492,7 @@ internal fun PortfolioSheetScaffold(
             AnimatedVisibility(visible = shown, enter = slideInVertically { it / 3 } + fadeIn()) {
                 Column(
                     modifier = Modifier
-                        .widthIn(max = 640.dp)
+                        .widthIn(max = LitLayout.ContentMaxWidth)
                         .fillMaxWidth()
                         .heightIn(max = maxSheetHeight)
                         .clip(shape)

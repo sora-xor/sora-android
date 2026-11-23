@@ -71,6 +71,7 @@ import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.util.AppStoreListing
 import jp.co.soramitsu.common.util.BuildUtils
 import jp.co.soramitsu.common.util.DebounceClickHandler
+import jp.co.soramitsu.ui_core.lit.litContentWidth
 import jp.co.soramitsu.ui_core.theme.customColors
 import kotlinx.coroutines.launch
 
@@ -233,7 +234,10 @@ abstract class SoraBaseFragment<T : BaseViewModel> : Fragment() {
 
                     Box(Modifier.fillMaxSize()) {
                         NeonBackground()
+                        // The page fills the window; the screen itself is one column of readable width in the
+                        // middle of it (ui-core's LitLayout), toolbar and all.
                         Scaffold(
+                            modifier = Modifier.litContentWidth(),
                             scaffoldState = scaffoldState,
                             backgroundColor = Color.Transparent,
                             topBar = {
