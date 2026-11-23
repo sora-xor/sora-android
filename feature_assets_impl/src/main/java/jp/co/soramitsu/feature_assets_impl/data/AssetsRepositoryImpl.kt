@@ -192,8 +192,8 @@ class AssetsRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun getXORBalance(address: String, precision: Int): XorAssetBalance {
-        return substrateCalls.fetchXORBalances(address, forDisplay = true).let {
+    override suspend fun getXORBalance(address: String, precision: Int, forDisplay: Boolean): XorAssetBalance {
+        return substrateCalls.fetchXORBalances(address, forDisplay = forDisplay).let {
             BalanceWrapper.mapXorBalance(it, precision)
         }
     }

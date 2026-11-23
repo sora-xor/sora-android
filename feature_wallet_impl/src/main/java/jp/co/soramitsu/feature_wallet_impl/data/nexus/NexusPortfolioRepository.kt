@@ -3,6 +3,7 @@ package jp.co.soramitsu.feature_wallet_impl.data.nexus
 import java.math.BigDecimal
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicLong
+import java.util.concurrent.atomic.AtomicReference
 import jp.co.soramitsu.common.nexus.NexusAssetBalance
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
@@ -155,9 +156,10 @@ class NexusPortfolioRepository @Inject constructor(
         var readScope: PortfolioInputs? = null
         var readCache = ConcurrentHashMap<NetworkAccountLocal, CachedRead>()
         var pageCountBaseline = emptyMap<Pair<String, WalletNetworkId>, Int>()
-        // The rows this subscription emitted last. Only their history is ever reused, and only
-        // for the same wallet, network, address and asset.
-        var shown = emptyList<NexusPortfolioBalance>()
+        // The rows this subscription published last (as read, before Send is decided). Only their
+        // history is ever reused, and only for the same wallet, network, address and asset. Rows
+        // that were read but never published (their inputs changed first) are not the baseline.
+        val published = AtomicReference(emptyList<NexusPortfolioBalance>())
         // Counts the inputs as they change (accounts, capabilities, the journal, a refresh, more
         // history), before anything is read from them: rows carry the count they were read
         // from, and rows from inputs that are no longer the current ones are not published.
@@ -205,7 +207,7 @@ class NexusPortfolioRepository @Inject constructor(
                 }
                 val scopedCache = readCache
                 val scopedBaseline = pageCountBaseline
-                val shownBefore = shown
+                val shownBefore = published.get()
                 val reads = coroutineScope {
                     inputs.accounts.map { account ->
                         async {
@@ -220,15 +222,12 @@ class NexusPortfolioRepository @Inject constructor(
                 // the journal (and Send stays as available) do the rows wait for the history that
                 // now holds it, so it never drops out of Recent activity or closes its page.
                 if (reads.any { it.row.historyLoading } && reads.none { it.resolvedPending }) {
-                    val rows = reads.map { it.row }
-                    emit(RowsRead(inputs.refreshGeneration, stamp, rows))
-                    shown = rows
+                    emit(RowsRead(inputs.refreshGeneration, stamp, reads.map { it.row }))
                 }
                 val rows = coroutineScope {
                     reads.map { read -> async { readHistory(read, scopedCache) } }.awaitAll()
                 }
                 emit(RowsRead(inputs.refreshGeneration, stamp, rows))
-                shown = rows
             }
         // A balance never waits for the PI indexer: the rows are read at once, with the
         // capability set this phone last saw, and the indexer is asked beside them, once at the
@@ -252,6 +251,13 @@ class NexusPortfolioRepository @Inject constructor(
                 // capability read has returned.
                 fun answeredFor(rows: RowsRead) = rows.generation == requests.value.refreshGeneration &&
                     rows.generation <= answered.get()
+                // Send only where the rows sent last already offer it, for the same network and
+                // address: nothing new. Decided without suspending.
+                fun onlyOffered(rows: List<NexusPortfolioBalance>): List<NexusPortfolioBalance> {
+                    val offered = sent.orEmpty().filter { it.sendAvailable }
+                        .mapTo(HashSet()) { it.networkId to it.address }
+                    return rows.map { row -> if (row.networkId to row.address in offered) row else row.withoutSend() }
+                }
                 launch {
                     requests.map { it.refreshGeneration }.distinctUntilChanged().collectLatest { generation ->
                         readCapabilities()
@@ -266,6 +272,7 @@ class NexusPortfolioRepository @Inject constructor(
                             if (shown != sent && latest.stamp == inputsStamp.get() && answeredFor(latest)) {
                                 send(shown)
                                 sent = shown
+                                published.set(latest.rows)
                             }
                         }
                     }
@@ -277,18 +284,12 @@ class NexusPortfolioRepository @Inject constructor(
                         // current ones.
                         read = latest
                         if (latest == null) return@withLock
-                        val shown = if (answeredFor(latest)) {
+                        val decided = if (answeredFor(latest)) {
                             latest.rows.withSendAsAllowedNow()
+                        } else if (sent.orEmpty().none { it.sendAvailable }) {
+                            latest.rows.map { it.withoutSend() }
                         } else {
-                            val offered = sent.orEmpty().filter { it.sendAvailable }
-                                .mapTo(HashSet()) { it.networkId to it.address }
-                            if (offered.isEmpty()) {
-                                latest.rows.map { it.withoutSend() }
-                            } else {
-                                latest.rows.withSendAsAllowedNow().map { row ->
-                                    if (row.networkId to row.address in offered) row else row.withoutSend()
-                                }
-                            }
+                            onlyOffered(latest.rows.withSendAsAllowedNow())
                         }
                         // The same here: rows whose inputs changed before they could be shown
                         // are not shown at all, as when their read was cancelled in time.
@@ -296,8 +297,12 @@ class NexusPortfolioRepository @Inject constructor(
                             read = null
                             return@withLock
                         }
+                        // A refresh that began while Send was decided: these rows are not its
+                        // rows, so they offer nothing new.
+                        val shown = if (answeredFor(latest)) decided else onlyOffered(decided)
                         send(shown)
                         sent = shown
+                        published.set(latest.rows)
                     }
                 }
             }

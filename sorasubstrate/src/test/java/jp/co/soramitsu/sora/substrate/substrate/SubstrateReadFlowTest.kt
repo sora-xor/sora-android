@@ -3,6 +3,7 @@ package jp.co.soramitsu.sora.substrate.substrate
 import com.google.gson.Gson
 import io.mockk.*
 import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
+import jp.co.soramitsu.sora.substrate.runtime.mapCodeToken
 import jp.co.soramitsu.sora.substrate.testing.TestRuntimeSnapshots
 import jp.co.soramitsu.xcrypto.util.fromHex
 import jp.co.soramitsu.xsubstrate.runtime.metadata.*
@@ -172,11 +173,15 @@ class SubstrateReadFlowTest {
         val read = async { subject.fetchBalances(owner, ids, block) }
         runCurrent()
         assertEquals(listOf(100, 100, 5), requests.map { (it.params[0] as List<*>).size })
-        // Answered last page first, each key with its own position as the balance.
-        val position = requests.flatMap { it.params[0] as List<*> }.withIndex().associate { (index, key) -> key to index }
+        // Answered last page first, each key with the position of its asset id in the list
+        // asked for as the balance (worked out from the ids, not from the order of the requests).
+        val tokens = snapshot.metadata.module("Tokens").storage("Accounts")
+        val position = ids.withIndex().associate { (index, id) ->
+            tokens.storageKey(snapshot, publicKey.fromHex(), id.mapCodeToken()) to index
+        }
         held.reversed().forEach { (request, listener) ->
             val keys = request.params[0] as List<*>
-            listener.onNext(RpcResponse("2.0", listOf(mapOf("block" to block, "changes" to keys.map { listOf(it, tokenBalance(BigInteger.valueOf(position.getValue(it).toLong()))) })), request.id, null))
+            listener.onNext(RpcResponse("2.0", listOf(mapOf("block" to block, "changes" to keys.map { listOf(it, tokenBalance(BigInteger.valueOf(position.getValue(it as String).toLong()))) })), request.id, null))
         }
         assertEquals(List(205) { BigInteger.valueOf(it.toLong()) }, read.await())
         assertTrue(requests.all { it.params[1] == block })

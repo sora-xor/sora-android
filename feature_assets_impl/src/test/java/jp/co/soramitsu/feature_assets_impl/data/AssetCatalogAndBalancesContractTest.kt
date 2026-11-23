@@ -316,25 +316,34 @@ class AssetCatalogAndBalancesContractTest {
     }
     @Test fun `a wallet read during the walk is read once more when a token only moved from one list to the other`() = runTest {
         // "moved" was blacklisted and is whitelisted now, with the same precision: the tokens a
-        // read asks for are the same before and after, but not in between.
+        // read asks for are the same before and after the walk, but not in between, after the
+        // blacklist dropped it and before Room lists it.
         active = listOf(asset(xor, 18), asset("alpha")); val walk = CompletableDeferred<List<TokenInfoDto>>()
         coEvery { calls.fetchAssetsList() } coAnswers { walk.await() }
         var notListed = setOf("moved")
+        var listed = listOf(xor, "alpha")
         every { whitelist.blacklistIds } answers { notListed }
-        coEvery { whitelist.updateWhitelistStorage() } answers { notListed = emptySet() }
-        coEvery { dao.getTokensWithFiatOfCurrency(any()) } returnsMany listOf(
-            listOf(TokenWithFiatLocal(token("alpha"), null), TokenWithFiatLocal(token("moved").copy(whitelistName = ""), null)),
-            listOf(TokenWithFiatLocal(token("alpha"), null), TokenWithFiatLocal(token("moved"), null)),
-        )
-        coEvery { dao.getAssetWithToken(owner, "moved", "USD") } returns asset("moved", exists = false)
+        every { whitelist.whitelistIds } answers { listed }
+        coEvery { whitelist.updateWhitelistStorage() } answers { notListed = emptySet(); listed = listOf(xor, "alpha", "moved") }
+        catalog = listOf(TokenWithFiatLocal(token("alpha"), null), TokenWithFiatLocal(token("moved").copy(whitelistName = ""), null))
+        val room = CompletableDeferred<Unit>()
+        coEvery { dao.updateTokenList(any()) } coAnswers {
+            room.await()
+            catalog = firstArg<List<TokenLocal>>().map { TokenWithFiatLocal(it, null) }
+        }
         val repo = subject(); runCurrent()
+        walk.complete(listOf(TokenInfoDto("alpha", "ALPHA", "ALPHA", 6, true), TokenInfoDto("moved", "MOVED", "MOVED", 6, true)))
+        runCurrent()
+        // In between: the blacklist no longer names it and Room does not list it yet.
         repo.updateWhitelistBalances(owner)
+        coVerify(exactly = 1) { calls.fetchBalances(owner, listOf("alpha")) }
         assertEquals(1, inserted.size)
-        // The walk has listed it: the wallet's whitelist now has a row to make for it, and the chain holds 7.
+        // Room lists it: the wallet's whitelist now has a row to make for it, and the chain holds 7.
         active = listOf(asset(xor, 18), asset("alpha"), asset("moved", exists = false))
         coEvery { calls.fetchBalances(owner, listOf("alpha", "moved")) } returns listOf(atomic("1.25", 6), atomic("7", 6))
-        walk.complete(listOf(TokenInfoDto("alpha", "ALPHA", "ALPHA", 6, true), TokenInfoDto("moved", "MOVED", "MOVED", 6, true)))
+        room.complete(Unit)
         repo.updateWhitelistBalancesAfterTokenListWalk(owner)
+        assertEquals(AssetHolder.DEFAULT_WHITE_LIST_NAME, catalog.single { it.token.id == "moved" }.token.whitelistName)
         assertEquals(2, inserted.size)
         equalDecimal("7", inserted.last().single { it.tokenId == "moved" }.free)
     }

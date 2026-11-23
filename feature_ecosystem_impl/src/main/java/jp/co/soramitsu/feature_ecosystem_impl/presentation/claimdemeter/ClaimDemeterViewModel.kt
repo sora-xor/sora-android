@@ -141,7 +141,8 @@ class ClaimDemeterViewModel @AssistedInject constructor(
         run {
             val feeToken = walletInteractor.getFeeToken()
             networkFee = demeterFarmingInteractor.calcClaimDemeterRewards(ids)
-            val xorBalance = assetsInteractor.getXorBalance(feeToken.precision).transferable
+            // Only what can be spent is used here (the fee check), not the parts a shown balance needs.
+            val xorBalance = assetsInteractor.getXorBalance(feeToken.precision, forDisplay = false).transferable
 
             demeterFarmingInteractor.getFarmedPool(ids)?.let { farmPool ->
                 _state.value = _state.value.copy(

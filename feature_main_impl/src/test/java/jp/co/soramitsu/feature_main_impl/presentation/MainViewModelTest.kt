@@ -94,6 +94,9 @@ class MainViewModelTest {
         whenever(assetsInteractor.flowCurSoraAccount()).thenReturn(flowOf(TestAccounts.soraAccount))
         whenever(coroutineManager.io).thenReturn(this.coroutineContext[CoroutineDispatcher]!!)
         whenever(assetsInteractor.getTokensList()).thenReturn(emptyList())
+        whenever(assetsInteractor.updateWhitelistBalances(TestAccounts.soraAccount.substrateAddress)).thenReturn(true)
+        whenever(assetsInteractor.updateWhitelistBalancesAfterTokenListWalk(TestAccounts.soraAccount.substrateAddress))
+            .thenReturn(true)
         whenever(blockExplorerManager.getTokensLiquidity(emptyList())).thenReturn(emptyList())
         whenever(poolUpdateSubscription.updateBasicPools()).thenReturn(Unit)
 

@@ -90,10 +90,13 @@ class MainViewModel @Inject constructor(
                         // (every asset on the chain, the whitelist), as they always had it: the
                         // second read waits for the walk, and reads the balances once more when
                         // the walk changed the list. Both read the wallet this collector was
-                        // started for, and nothing once it is no longer the selected one.
+                        // started for; once it is no longer the selected one, nothing more is
+                        // done here (the next account's collector does it, after its own walk).
                         val address = account.substrateAddress
-                        readBalances { assetsInteractor.updateWhitelistBalances(address) }
-                        readBalances { assetsInteractor.updateWhitelistBalancesAfterTokenListWalk(address) }
+                        if (!readBalances { assetsInteractor.updateWhitelistBalances(address) }) return@collectLatest
+                        if (!readBalances { assetsInteractor.updateWhitelistBalancesAfterTokenListWalk(address) }) {
+                            return@collectLatest
+                        }
                         poolsUpdateSubscription.updateBasicPools()
                         assetsInteractor.getTokensList().map { it.id }.also { tokens ->
                             blockExplorerManager.getTokensLiquidity(tokens)
@@ -131,10 +134,9 @@ class MainViewModel @Inject constructor(
      * connection banner shows from the first failure. When every try fails the last error is
      * thrown; switching accounts ends the tries for the account that was left.
      */
-    private suspend fun readBalances(read: suspend () -> Unit) {
+    private suspend fun <T> readBalances(read: suspend () -> T): T {
         var failure = try {
-            read()
-            return
+            return read()
         } catch (error: kotlinx.coroutines.CancellationException) {
             throw error
         } catch (error: Exception) {
@@ -145,8 +147,8 @@ class MainViewModel @Inject constructor(
             jp.co.soramitsu.common.logger.WalletDiagnostics.recordException(failure)
             delay(wait)
             try {
-                read()
-                return
+                // The chain answered: the banner this read raised goes again.
+                return read().also { _badConnectionVisibilityLiveData.postValue(false) }
             } catch (error: kotlinx.coroutines.CancellationException) {
                 throw error
             } catch (error: Exception) {

@@ -108,9 +108,9 @@ class AssetsInteractorImpl constructor(
         return assetsRepository.getAssetsWhitelist(address)
     }
 
-    override suspend fun getXorBalance(precision: Int): XorAssetBalance {
+    override suspend fun getXorBalance(precision: Int, forDisplay: Boolean): XorAssetBalance {
         return userRepository.getCurSoraAccount()
-            .let { account -> assetsRepository.getXORBalance(account.substrateAddress, precision) }
+            .let { account -> assetsRepository.getXORBalance(account.substrateAddress, precision, forDisplay) }
     }
 
     override fun flowCurSoraAccount(): Flow<SoraAccount> =
@@ -288,18 +288,25 @@ class AssetsInteractorImpl constructor(
         }
     }
 
-    override suspend fun updateWhitelistBalancesAfterTokenListWalk(address: String) {
-        if (userRepository.getCurSoraAccount().substrateAddress != address) return
+    override suspend fun updateWhitelistBalancesAfterTokenListWalk(address: String): Boolean {
+        if (!isSelected(address)) return false
         assetsRepository.updateWhitelistBalancesAfterTokenListWalk(address)
+        // The walk can take a while: a wallet left meanwhile ends what was to follow.
+        return isSelected(address)
     }
 
     override suspend fun updateWhitelistBalances() =
         updateWhitelistBalances(userRepository.getCurSoraAccount())
 
-    override suspend fun updateWhitelistBalances(address: String) {
+    override suspend fun updateWhitelistBalances(address: String): Boolean {
         val selected = userRepository.getCurSoraAccount()
-        if (selected.substrateAddress == address) updateWhitelistBalances(selected)
+        if (selected.substrateAddress != address) return false
+        updateWhitelistBalances(selected)
+        return true
     }
+
+    private suspend fun isSelected(address: String) =
+        userRepository.getCurSoraAccount().substrateAddress == address
 
     private suspend fun updateWhitelistBalances(soraAccount: SoraAccount) {
         assetsRepository.updateWhitelistBalances(soraAccount.substrateAddress)

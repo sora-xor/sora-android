@@ -54,7 +54,8 @@ interface AssetsRepository {
 
     suspend fun getToken(tokenId: String): Token?
 
-    suspend fun getXORBalance(address: String, precision: Int): XorAssetBalance
+    /** See [jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor.getXorBalance] for [forDisplay]. */
+    suspend fun getXORBalance(address: String, precision: Int, forDisplay: Boolean = true): XorAssetBalance
 
     suspend fun hideAssets(assetIds: List<String>, soraAccount: SoraAccount)
 

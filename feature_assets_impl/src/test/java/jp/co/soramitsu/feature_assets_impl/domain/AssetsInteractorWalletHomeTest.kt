@@ -43,6 +43,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
@@ -199,10 +200,20 @@ class AssetsInteractorWalletHomeTest {
         coEvery { assetsRepository.updateWhitelistBalances(address) } returns Unit
         coEvery { assetsRepository.updateWhitelistBalancesAfterTokenListWalk(address) } returns Unit
 
-        interactor.updateWhitelistBalances(address)
-        interactor.updateWhitelistBalancesAfterTokenListWalk(address)
+        assertTrue(interactor.updateWhitelistBalances(address))
+        assertTrue(interactor.updateWhitelistBalancesAfterTokenListWalk(address))
 
         coVerify(exactly = 1) { assetsRepository.updateWhitelistBalances(address) }
+        coVerify(exactly = 1) { assetsRepository.updateWhitelistBalancesAfterTokenListWalk(address) }
+    }
+
+    @Test
+    fun `a wallet left while the read after the token list walk waited ends what was to follow`() = runTest {
+        val now = SoraAccount("cnVkoGs3rEMqLqY27c2nfVXJRGdzNJk2ns78DcqtppaSRe8qm", "Now")
+        coEvery { userRepository.getCurSoraAccount() } returnsMany listOf(SoraAccount(address, "Then"), now)
+        coEvery { assetsRepository.updateWhitelistBalancesAfterTokenListWalk(address) } returns Unit
+
+        assertFalse(interactor.updateWhitelistBalancesAfterTokenListWalk(address))
         coVerify(exactly = 1) { assetsRepository.updateWhitelistBalancesAfterTokenListWalk(address) }
     }
 
@@ -211,8 +222,8 @@ class AssetsInteractorWalletHomeTest {
         val left = "cnVkoGs3rEMqLqY27c2nfVXJRGdzNJk2ns78DcqtppaSRe8qm"
 
         // A retry or the read after the token list walk, made for the wallet selected before.
-        interactor.updateWhitelistBalances(left)
-        interactor.updateWhitelistBalancesAfterTokenListWalk(left)
+        assertFalse(interactor.updateWhitelistBalances(left))
+        assertFalse(interactor.updateWhitelistBalancesAfterTokenListWalk(left))
 
         coVerify(exactly = 0) { assetsRepository.updateWhitelistBalances(any()) }
         coVerify(exactly = 0) { assetsRepository.updateWhitelistBalancesAfterTokenListWalk(any()) }

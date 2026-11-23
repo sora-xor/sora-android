@@ -79,7 +79,7 @@ class ClaimDemeterViewModelTest {
             if (feeNeedsAppUpdate) throw appUpdateRequired()
             fee
         }
-        coEvery { assetsInteractor.getXorBalance(any()) } returns mockk<XorAssetBalance>().also {
+        coEvery { assetsInteractor.getXorBalance(any(), false) } returns mockk<XorAssetBalance>().also {
             every { it.transferable } returns BigDecimal.TEN
         }
         coEvery { demeter.getFarmedPool(ids) } returns DemeterFarmingPool(

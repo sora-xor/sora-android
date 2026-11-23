@@ -409,6 +409,47 @@ class NexusPortfolioTairaVisibilityTest {
     }
 
     @Test
+    fun `a refresh that begins while Send is being decided gives those rows no new Send`() = runTest {
+        fixture()
+        every { sendQualification.capabilitiesFor(any()) } returns QUALIFIED
+        // The first capability request answers at once; the refresh's never does.
+        var calls = 0
+        coEvery { featureManager.getState() } coAnswers { if (calls++ == 0) features.value else awaitCancellation() }
+        var balanceGate: CompletableDeferred<Unit>? = CompletableDeferred()
+        coEvery { torii.getXorBalance(NexusNetworks.taira, taira.address) } coAnswers {
+            balanceGate?.await()
+            NexusAssetBalance(asset = TairaTestnetContract.XOR_ASSET_DEFINITION_ID, quantity = "1")
+        }
+        var held: CompletableDeferred<Unit>? = null
+        val deciding = CompletableDeferred<Unit>()
+        every { featureManager.observeState() } answers {
+            kotlinx.coroutines.flow.flow {
+                held?.let { deciding.complete(Unit); it.await() }
+                emitAll(features)
+            }
+        }
+        val emitted = mutableListOf<List<NexusPortfolioBalance>>()
+        backgroundScope.launch { repository.observeWallet("wallet", history = false).collect { emitted += it } }
+        runCurrent()
+        assertTrue(emitted.isEmpty())
+        // The rows arrive after the first capability answer, and Send is being decided for them.
+        val gate = CompletableDeferred<Unit>()
+        held = gate
+        val first = checkNotNull(balanceGate)
+        balanceGate = null
+        first.complete(Unit)
+        runCurrent()
+        assertTrue(deciding.isCompleted)
+        held = null
+        // The decision's feature read returns, and a refresh begins before its inputs are taken in.
+        gate.complete(Unit)
+        repository.refresh()
+        runCurrent()
+        assertTrue(emitted.isNotEmpty())
+        assertTrue(emitted.none { rows -> rows.any { it.sendAvailable } })
+    }
+
+    @Test
     fun `a subscription cancelled during the capability request leaves it to the next one`() = runTest {
         fixture()
         every { sendQualification.capabilitiesFor(any()) } returns QUALIFIED
