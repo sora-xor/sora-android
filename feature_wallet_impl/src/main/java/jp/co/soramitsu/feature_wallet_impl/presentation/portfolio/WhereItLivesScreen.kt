@@ -19,9 +19,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.absoluteOffset
-import androidx.compose.ui.layout.layout
-import kotlin.math.roundToInt
+import androidx.compose.foundation.layout.offset
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -283,153 +285,158 @@ private fun Orbit(
     val muted = n.textTertiary.copy(alpha = 0.7f)
     val accent = n.polkaswapText
     val edge = Color.White.copy(alpha = if (dark) 0.2f else 0.9f)
-    BoxWithConstraints(
-        Modifier
-            .fillMaxWidth()
-            .height(ORBIT_HEIGHT)
-    ) {
-        val width = maxWidth
-        val cx = width / 2
-        val cy = ORBIT_HEIGHT * 0.54f
-        // Narrow enough that the side satellites' amounts stay on screen.
-        val rx = min(150.dp, (width - 96.dp) / 2)
-        val ry = 48.dp
-        val gateX = width - 62.dp
-        val gateY = 48.dp
-        val positions = networks.mapIndexed { index, network ->
-            val angle = (angles.getOrNull(index) ?: 0.0) * PI / 180
-            network to Pair(cx + rx * cos(angle).toFloat(), cy + ry * sin(angle).toFloat())
-        }
-        // The ring in perspective.
-        Canvas(
+    val measurer = rememberTextMeasurer()
+    val density = LocalDensity.current
+    // The orbit is a picture drawn on a canvas that is not mirrored: it is laid out left to right in every language,
+    // so the satellites and the gate stand where their lines are drawn.
+    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+        BoxWithConstraints(
             Modifier
-                .fillMaxSize()
-                .tiltLayer(tilt, OrbitDepth.RING, OrbitDepth.RING * OrbitDepth.Y_RATIO)
-                .semantics { hideFromAccessibility() }
+                .fillMaxWidth()
+                .height(ORBIT_HEIGHT)
         ) {
-            val center = Offset(cx.toPx(), cy.toPx())
-            val radius = rx.toPx()
-            drawOval(
-                color = ringColor,
-                topLeft = Offset(center.x - radius, center.y - ry.toPx()),
-                size = Size(radius * 2, ry.toPx() * 2),
-                style = Stroke(1.dp.toPx()),
-            )
-        }
-        // The token's orb.
-        Box(
-            Modifier
-                .absoluteOffset(cx - ORB_SIZE / 2, cy - ORB_SIZE / 2)
-                .size(ORB_SIZE)
-                .tiltLayer(tilt, OrbitDepth.ORB, OrbitDepth.ORB * OrbitDepth.Y_RATIO)
-                .semantics { hideFromAccessibility() }
-        ) {
-            TokenOrb(locations.token, ORB_SIZE)
-        }
-        // Links and satellites.
-        Box(
-            Modifier
-                .fillMaxSize()
-                .tiltLayer(tilt, OrbitDepth.SATELLITES, OrbitDepth.SATELLITES * OrbitDepth.Y_RATIO)
-        ) {
+            val width = maxWidth
+            val cx = width / 2
+            val cy = ORBIT_HEIGHT * 0.54f
+            // Narrow enough that the side satellites' amounts stay on screen.
+            val rx = min(150.dp, (width - 96.dp) / 2)
+            val ry = 48.dp
+            val gateX = width - 62.dp
+            val gateY = 48.dp
+            val positions = networks.mapIndexed { index, network ->
+                val angle = (angles.getOrNull(index) ?: 0.0) * PI / 180
+                network to Pair(cx + rx * cos(angle).toFloat(), cy + ry * sin(angle).toFloat())
+            }
+            // The ring in perspective.
             Canvas(
                 Modifier
                     .fillMaxSize()
+                    .tiltLayer(tilt, OrbitDepth.RING, OrbitDepth.RING * OrbitDepth.Y_RATIO)
                     .semantics { hideFromAccessibility() }
             ) {
                 val center = Offset(cx.toPx(), cy.toPx())
-                val gate = Offset(gateX.toPx(), gateY.toPx())
-                positions.forEach { (network, pos) ->
-                    val p = Offset(pos.first.toPx(), pos.second.toPx())
-                    // Up to the orb's edge, so the line never crosses the token's icon.
-                    val toOrb = center - p
-                    val orbEdge = center - toOrb / toOrb.getDistance() * (ORB_SIZE / 2).toPx()
-                    drawLine(lineColor, p, orbEdge, strokeWidth = 1.dp.toPx(), cap = StrokeCap.Round)
-                    val control = Offset((p.x + gate.x) / 2, minOf(p.y, gate.y) - 38.dp.toPx())
-                    val path = Path().apply {
-                        moveTo(p.x, p.y)
-                        quadraticTo(control.x, control.y, gate.x, gate.y)
-                    }
-                    val ready = network in swapReady
-                    drawPath(
-                        path = path,
-                        color = if (ready) routeColor else muted,
-                        style = Stroke(
-                            width = if (ready) 2.dp.toPx() else 1.5.dp.toPx(),
-                            cap = StrokeCap.Round,
-                            pathEffect = if (ready) null else PathEffect.dashPathEffect(floatArrayOf(2.dp.toPx(), 6.dp.toPx())),
-                        ),
-                    )
-                }
+                val radius = rx.toPx()
+                drawOval(
+                    color = ringColor,
+                    topLeft = Offset(center.x - radius, center.y - ry.toPx()),
+                    size = Size(radius * 2, ry.toPx() * 2),
+                    style = Stroke(1.dp.toPx()),
+                )
             }
-            val largest = amounts.values.maxOf { it.toDouble() }.takeIf { it > 0.0 } ?: 1.0
-            positions.forEach { (network, pos) ->
-                // Satellites are sized by amount: 32 dp for the smallest, 46 dp for the largest.
-                val amount = amounts.getValue(network)
-                val badge = 32.dp + 14.dp * (amount.toDouble() / largest).toFloat()
-                val label = networkName(network) + ", " + format.amount(amount, locations.token.symbol)
-                // Where the lines are drawn, in either reading direction: the canvas under them is not mirrored.
-                Column(
-                    modifier = Modifier
-                        .absoluteOffset(pos.first - SATELLITE_WIDTH / 2, pos.second - 26.dp)
-                        .width(SATELLITE_WIDTH)
-                        .clip(RoundedCornerShape(12.dp))
-                        .clickable(onClickLabel = label, role = Role.Button, onClick = { onSatellite(network) })
-                        .semantics {
-                            contentDescription = label
-                            selected = network == selectedNetwork
-                        },
-                    horizontalAlignment = Alignment.CenterHorizontally,
+            // The token's orb.
+            Box(
+                Modifier
+                    .offset(cx - ORB_SIZE / 2, cy - ORB_SIZE / 2)
+                    .size(ORB_SIZE)
+                    .tiltLayer(tilt, OrbitDepth.ORB, OrbitDepth.ORB * OrbitDepth.Y_RATIO)
+                    .semantics { hideFromAccessibility() }
+            ) {
+                TokenOrb(locations.token, ORB_SIZE)
+            }
+            // Links and satellites.
+            Box(
+                Modifier
+                    .fillMaxSize()
+                    .tiltLayer(tilt, OrbitDepth.SATELLITES, OrbitDepth.SATELLITES * OrbitDepth.Y_RATIO)
+            ) {
+                Canvas(
+                    Modifier
+                        .fillMaxSize()
+                        .semantics { hideFromAccessibility() }
                 ) {
-                    Box(Modifier.size(52.dp), contentAlignment = Alignment.Center) {
-                        Box(
-                            Modifier
-                                .clip(CircleShape)
-                                .border(2.dp, if (network in swapReady) routeColor else edge, CircleShape)
-                        ) {
-                            NetworkBadge(network, badge)
+                    val center = Offset(cx.toPx(), cy.toPx())
+                    val gate = Offset(gateX.toPx(), gateY.toPx())
+                    positions.forEach { (network, pos) ->
+                        val p = Offset(pos.first.toPx(), pos.second.toPx())
+                        // Up to the orb's edge, so the line never crosses the token's icon.
+                        val toOrb = center - p
+                        val orbEdge = center - toOrb / toOrb.getDistance() * (ORB_SIZE / 2).toPx()
+                        drawLine(lineColor, p, orbEdge, strokeWidth = 1.dp.toPx(), cap = StrokeCap.Round)
+                        val control = Offset((p.x + gate.x) / 2, minOf(p.y, gate.y) - 38.dp.toPx())
+                        val path = Path().apply {
+                            moveTo(p.x, p.y)
+                            quadraticTo(control.x, control.y, gate.x, gate.y)
                         }
+                        val ready = network in swapReady
+                        drawPath(
+                            path = path,
+                            color = if (ready) routeColor else muted,
+                            style = Stroke(
+                                width = if (ready) 2.dp.toPx() else 1.5.dp.toPx(),
+                                cap = StrokeCap.Round,
+                                pathEffect = if (ready) null else PathEffect.dashPathEffect(floatArrayOf(2.dp.toPx(), 6.dp.toPx())),
+                            ),
+                        )
                     }
-                    Spacer(Modifier.height(2.dp))
-                    Text(
-                        format.amount(amount),
-                        style = NeonType.amountS,
-                        color = n.textPrimary,
-                        maxLines = 1,
+                }
+                val largest = amounts.values.maxOf { it.toDouble() }.takeIf { it > 0.0 } ?: 1.0
+                positions.forEach { (network, pos) ->
+                    // Satellites are sized by amount: 32 dp for the smallest, 46 dp for the largest.
+                    val amount = amounts.getValue(network)
+                    val badge = 32.dp + 14.dp * (amount.toDouble() / largest).toFloat()
+                    val label = networkName(network) + ", " + format.amount(amount, locations.token.symbol)
+                    // A side satellite stands near the screen's edge on a narrow phone: where its amount would
+                    // not be whole on the screen however the phone is tilted, the satellite moves in as far as it
+                    // must and its badge stays on the ring, so the amount stands a little off its badge's middle.
+                    val pillWidth = with(density) {
+                        val pill = measurer.measure(format.amount(amount), NeonType.amountS, maxLines = 1, softWrap = false)
+                        pill.size.width.toDp()
+                    } + SATELLITE_PILL_PADDING * 2
+                    val pillLeft = pos.first - pillWidth / 2
+                    val pillRight = pos.first + pillWidth / 2
+                    val inward = when {
+                        pillLeft < SATELLITE_EDGE -> SATELLITE_EDGE - pillLeft
+                        pillRight > width - SATELLITE_EDGE -> width - SATELLITE_EDGE - pillRight
+                        else -> 0.dp
+                    }.coerceIn(-SATELLITE_SHIFT_MAX, SATELLITE_SHIFT_MAX)
+                    Column(
                         modifier = Modifier
-                            // A side satellite stands near the screen's edge on a narrow phone: a long amount under
-                            // it moves in as far as it must to stay whole on the screen, however the phone is tilted.
-                            .layout { measurable, constraints ->
-                                val pill = measurable.measure(constraints)
-                                val edge = SATELLITE_EDGE.toPx()
-                                val left = (pos.first - SATELLITE_WIDTH / 2).toPx() + (SATELLITE_WIDTH.toPx() - pill.width) / 2
-                                val right = left + pill.width
-                                val shift = when {
-                                    left < edge -> edge - left
-                                    right > width.toPx() - edge -> width.toPx() - edge - right
-                                    else -> 0f
-                                }
-                                layout(pill.width, pill.height) { pill.place(shift.roundToInt(), 0) }
+                            .offset(pos.first + inward - SATELLITE_WIDTH / 2, pos.second - 26.dp)
+                            .width(SATELLITE_WIDTH)
+                            .clip(RoundedCornerShape(12.dp))
+                            .clickable(onClickLabel = label, role = Role.Button, onClick = { onSatellite(network) })
+                            .semantics {
+                                contentDescription = label
+                                selected = network == selectedNetwork
+                            },
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        Box(Modifier.offset(x = -inward).size(52.dp), contentAlignment = Alignment.Center) {
+                            Box(
+                                Modifier
+                                    .clip(CircleShape)
+                                    .border(2.dp, if (network in swapReady) routeColor else edge, CircleShape)
+                            ) {
+                                NetworkBadge(network, badge)
                             }
-                            .clip(RoundedCornerShape(9.dp))
-                            .background(if (dark) Color.Black.copy(alpha = 0.35f) else Color.White.copy(alpha = 0.85f))
-                            .padding(horizontal = 7.dp, vertical = 1.dp),
-                    )
+                        }
+                        Spacer(Modifier.height(2.dp))
+                        Text(
+                            format.amount(amount),
+                            style = NeonType.amountS,
+                            color = n.textPrimary,
+                            maxLines = 1,
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(9.dp))
+                                .background(if (dark) Color.Black.copy(alpha = 0.35f) else Color.White.copy(alpha = 0.85f))
+                                .padding(horizontal = SATELLITE_PILL_PADDING, vertical = 1.dp),
+                        )
+                    }
                 }
             }
-        }
-        // The Polkaswap node.
-        Column(
-            Modifier
-                .absoluteOffset(gateX - 56.dp, gateY - 26.dp)
-                .width(112.dp)
-                .tiltLayer(tilt, OrbitDepth.POLKASWAP, OrbitDepth.POLKASWAP * OrbitDepth.Y_RATIO)
-                .semantics { hideFromAccessibility() },
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            PolkaswapDisc(52.dp)
-            Spacer(Modifier.height(4.dp))
-            Overline("Polkaswap")
+            // The Polkaswap node.
+            Column(
+                Modifier
+                    .offset(gateX - 56.dp, gateY - 26.dp)
+                    .width(112.dp)
+                    .tiltLayer(tilt, OrbitDepth.POLKASWAP, OrbitDepth.POLKASWAP * OrbitDepth.Y_RATIO)
+                    .semantics { hideFromAccessibility() },
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                PolkaswapDisc(52.dp)
+                Spacer(Modifier.height(4.dp))
+                Overline("Polkaswap")
+            }
         }
     }
 }
@@ -442,6 +449,12 @@ private val SATELLITE_WIDTH = 112.dp
 
 /** The least between a satellite's amount and the screen's edge: a margin, and as far as the tilt moves it. */
 private val SATELLITE_EDGE = 4.dp + OrbitDepth.SATELLITES.dp
+
+/** Inside the amount's pill, at each side. */
+private val SATELLITE_PILL_PADDING = 7.dp
+
+/** The furthest a satellite moves in: its badge, moved back onto the ring, stays inside the satellite. */
+private val SATELLITE_SHIFT_MAX = (SATELLITE_WIDTH - 52.dp) / 2
 
 @Composable
 internal fun PolkaswapDisc(size: Dp, modifier: Modifier = Modifier) {
