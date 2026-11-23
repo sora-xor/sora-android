@@ -231,6 +231,7 @@ internal fun PortfolioSky(
     onSliceTap: (String) -> Unit,
     modifier: Modifier = Modifier,
     heroVisible: Boolean = true,
+    covered: Boolean = false,
     reading: Boolean = false,
     scrollDp: () -> Float = { 0f },
     pullDp: () -> Float = { 0f },
@@ -254,7 +255,7 @@ internal fun PortfolioSky(
     }
     val intro = rememberRingIntro(fan.map { it.key }, animate = !fx.reduceMotion)
     val comet = rememberComet(
-        running = litHero.isAvailable && heroVisible && fx.litMotion && !LitHeroPerformance.isSlow,
+        running = litHero.isAvailable && heroVisible && !covered && fx.litMotion && !LitHeroPerformance.isSlow,
         reading = reading,
     )
     val bloom = rememberBloom(reading, enabled = litHero.isAvailable && !fx.reduceMotion)
@@ -442,12 +443,11 @@ private fun rememberComet(running: Boolean, reading: Boolean): CometState {
     val readingNow by rememberUpdatedState(reading)
     LaunchedEffect(running) {
         var last = 0L
-        var skip = false
+        var stepped = 0L
         var started = 0L
         var late = 0
         while (running || state.power > 0.002f) {
             withFrameNanos { now ->
-                val dt = if (last == 0L) 0f else ((now - last) / 1_000_000_000f).coerceAtMost(0.1f)
                 if (started == 0L) started = now
                 // Whatever else the first moments on screen are busy with is not the GPU's fault.
                 if (running && last != 0L && now - started > COMET_SETTLE_NANOS) {
@@ -455,12 +455,16 @@ private fun rememberComet(running: Boolean, reading: Boolean): CometState {
                     if (late >= COMET_LATE_FRAMES) LitHeroPerformance.markSlow()
                 }
                 last = now
-                // Thirty frames a second are plenty for the comet alone.
-                skip = !skip
-                if (!skip) {
+                // Thirty steps a second are plenty for the comet alone, whatever the screen's own rate: the scene
+                // is traced again only on a step, so a 120 Hz screen costs no more than a 60 Hz one.
+                if (stepped == 0L) {
+                    stepped = now
+                } else if (now - stepped >= COMET_STEP_NANOS) {
+                    val dt = ((now - stepped) / 1_000_000_000f).coerceAtMost(0.1f)
+                    stepped = now
                     val lap = if (readingNow) COMET_LAP_READING else COMET_LAP
-                    state.power += ((if (running) 1f else 0f) - state.power) * min(2f * dt * 3.5f, 1f)
-                    state.angle = (state.angle + 2f * dt * 2f * PI.toFloat() / lap) % (2f * PI.toFloat())
+                    state.power += ((if (running) 1f else 0f) - state.power) * min(dt * 3.5f, 1f)
+                    state.angle = (state.angle + dt * 2f * PI.toFloat() / lap) % (2f * PI.toFloat())
                 }
             }
         }
@@ -472,6 +476,9 @@ private fun rememberComet(running: Boolean, reading: Boolean): CometState {
 private const val COMET_LAP = 9f
 private const val COMET_LAP_READING = 2.6f
 private const val COMET_SETTLE_NANOS = 1_500_000_000L
+
+/** Just under a thirtieth of a second: every second frame at 60 Hz, every third at 90, every fourth at 120. */
+private const val COMET_STEP_NANOS = 32_000_000L
 
 /** Under twenty frames a second for this many frames more than not: this phone's GPU cannot carry the comet. */
 private const val COMET_LATE_NANOS = 50_000_000L

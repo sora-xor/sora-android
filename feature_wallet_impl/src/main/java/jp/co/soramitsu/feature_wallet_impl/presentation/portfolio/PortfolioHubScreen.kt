@@ -101,9 +101,12 @@ internal fun PortfolioHubScreen(
     val format = rememberPortfolioFormat(model)
     val skyHeight = with(LocalDensity.current) { SkyGeometry.HEIGHT.toPx() }
     val heroVisible by remember(scrollState) { derivedStateOf { scrollState.value < skyHeight } }
+    // A sheet over the home dims it: the planet stays where it is, but its comet and its tilt rest until the sheet
+    // has gone, instead of running under the scrim.
+    val covered = sheet != null
     val tilt = rememberTiltParallax(
         enabled = !LocalFx.current.reduceMotion && !LitHeroPerformance.isSlow,
-        heroVisible = heroVisible,
+        heroVisible = heroVisible && !covered,
         pinned = pinned?.toDeflection(),
     )
     val title = stringResource(R.string.portfolio_title)
@@ -121,13 +124,20 @@ internal fun PortfolioHubScreen(
         if (model == null) {
             LoadingHero(tilt)
         } else {
-            PortfolioHero(model, format, tilt, homeActions, heroVisible = heroVisible, scrollDp = scrollDp, pullDp = pullDp)
+            PortfolioHero(
+                model, format, tilt, homeActions,
+                heroVisible = heroVisible, covered = covered, scrollDp = scrollDp, pullDp = pullDp,
+            )
         }
         Spacer(Modifier.height(16.dp))
         Column(Modifier.padding(horizontal = 16.dp)) { notices() }
         if (model != null) {
+            // The model also carries the clock the ages are counted by, and it ticks every five seconds. The list
+            // shows no time: while nothing but the clock has changed it keeps the model it had, so a tick
+            // recomposes the freshness chip and not every row of the list.
+            val listModel = remember(model.copy(nowMillis = 0L)) { model }
             // The home always lists tokens: no Tokens / Networks / Wallets switch.
-            PortfolioList(model, format, homeActions, Modifier.padding(horizontal = 16.dp))
+            PortfolioList(listModel, format, homeActions, Modifier.padding(horizontal = 16.dp))
             Spacer(Modifier.height(16.dp))
         }
         secondaryCards()

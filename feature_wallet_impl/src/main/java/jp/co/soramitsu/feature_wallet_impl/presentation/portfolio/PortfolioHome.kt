@@ -244,6 +244,7 @@ internal fun PortfolioHero(
     actions: PortfolioHomeActions,
     modifier: Modifier = Modifier,
     heroVisible: Boolean = true,
+    covered: Boolean = false,
     scrollDp: () -> Float = { 0f },
     pullDp: () -> Float = { 0f },
 ) {
@@ -258,6 +259,7 @@ internal fun PortfolioHero(
             tilt = tilt,
             onSliceTap = actions::onLegend,
             heroVisible = heroVisible,
+            covered = covered,
             reading = model.isReading,
             scrollDp = scrollDp,
             pullDp = pullDp,
