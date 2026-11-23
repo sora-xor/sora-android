@@ -43,6 +43,9 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
+/** The waits before each new try of a first balance read that failed. */
+internal val BALANCE_RETRY_WAITS_MILLIS = listOf(2_000L, 5_000L, 15_000L, 45_000L)
+
 @HiltViewModel
 class MainViewModel @Inject constructor(
     private val assetsInteractor: AssetsInteractor,
@@ -80,13 +83,19 @@ class MainViewModel @Inject constructor(
         viewModelScope.launch(coroutineManager.io) {
             assetsInteractor.flowCurSoraAccount()
                 .catch { onBackgroundError(it) }
-                .collectLatest {
+                .collectLatest { account ->
                     try {
-                        assetsInteractor.updateWhitelistBalances()
-                        poolsUpdateSubscription.updateBasicPools()
-                        assetsInteractor.getTokensList().map { it.id }.also { tokens ->
-                            blockExplorerManager.getTokensLiquidity(tokens)
+                        // The balances are read at once, with the token list as stored. The
+                        // pools and the liquidity need the list as this launch's walk leaves it
+                        // (every asset on the chain, the whitelist), as they always had it; when
+                        // the walk changed the list, the balances are read once more.
+                        readBalances { assetsInteractor.updateWhitelistBalances() }
+                        val tokens = assetsInteractor.getTokensList().map { it.id }
+                        readBalances {
+                            assetsInteractor.updateWhitelistBalancesAfterTokenListWalk(account.substrateAddress)
                         }
+                        poolsUpdateSubscription.updateBasicPools()
+                        blockExplorerManager.getTokensLiquidity(tokens)
                     } catch (error: kotlinx.coroutines.CancellationException) {
                         throw error
                     } catch (error: Exception) {
@@ -111,6 +120,38 @@ class MainViewModel @Inject constructor(
                 }
             }
         }
+    }
+
+    /**
+     * Until the wallet's balances have been read once, the home shows what an earlier launch
+     * stored. A first read that fails is therefore tried again a few times, a little later each
+     * time; until 2026-11-22 only the next balance change or account change made up for it. The
+     * connection banner shows from the first failure. When every try fails the last error is
+     * thrown; switching accounts ends the tries for the account that was left.
+     */
+    private suspend fun readBalances(read: suspend () -> Unit) {
+        var failure = try {
+            read()
+            return
+        } catch (error: kotlinx.coroutines.CancellationException) {
+            throw error
+        } catch (error: Exception) {
+            error
+        }
+        _badConnectionVisibilityLiveData.postValue(true)
+        for (wait in BALANCE_RETRY_WAITS_MILLIS) {
+            jp.co.soramitsu.common.logger.WalletDiagnostics.recordException(failure)
+            delay(wait)
+            try {
+                read()
+                return
+            } catch (error: kotlinx.coroutines.CancellationException) {
+                throw error
+            } catch (error: Exception) {
+                failure = error
+            }
+        }
+        throw failure
     }
 
     fun showPinFragment() {
