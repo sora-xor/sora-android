@@ -63,10 +63,11 @@ fun Modifier.litContentWidth(max: Dp = LitLayout.ContentMaxWidth): Modifier = la
  * A name and its figures on one line, as a list row has them: [leading] (a picture) at the start, the figures at
  * their own width at the end and the name in what is left between them, with [below] (a second line that may wrap)
  * under the name. Where the name would not be whole beside the figures (a 320 dp screen, larger text, a long amount
- * or a long name), the figures stand on a line of their own under it, at the end: a name is never cut short to make
- * room for figures, and the figures are never cut at all.
+ * or a long name), the figures stand on a line of their own under it, at the end, and may take the whole line: a name
+ * is never cut short to make room for figures.
  *
- * [nameFits] says whether the name is whole at a width in pixels; by default, whether it fits on one line.
+ * [nameFits] says whether the name is whole at a width in pixels; by default, whether it fits on one line. Each slot
+ * holds one element.
  */
 @Composable
 fun NameAndFigures(
@@ -98,44 +99,38 @@ private class NameAndFiguresPolicy(
     private fun fits(width: Int, name: IntrinsicMeasurable): Boolean =
         nameFits?.invoke(width, name) ?: (name.maxIntrinsicWidth(Constraints.Infinity) <= width)
 
-    /** The room the name has beside the figures, or null where the figures go under it. */
-    private fun Density.besideWidth(width: Int, slots: List<List<IntrinsicMeasurable>>): Int? {
-        val name = slots[1].firstOrNull() ?: return width
-        val figures = slots[3].firstOrNull() ?: return width
-        val leading = slots[0].firstOrNull()?.let { it.maxIntrinsicWidth(Constraints.Infinity) + leadingGap.roundToPx() } ?: 0
-        val room = width - leading - figuresGap.roundToPx() - figures.maxIntrinsicWidth(Constraints.Infinity)
-        return room.takeIf { it > 0 && fits(it, name) }
+    /** The name's room beside figures [figuresWidth] wide, or null where it is not whole there. */
+    private fun Density.besideRoom(width: Int, leadingSpace: Int, figuresWidth: Int?, name: IntrinsicMeasurable?): Int? {
+        val room = width - leadingSpace - (figuresWidth?.let { it + figuresGap.roundToPx() } ?: 0)
+        return when {
+            figuresWidth == null || name == null -> room.coerceAtLeast(0)
+            room > 0 && fits(room, name) -> room
+            else -> null
+        }
     }
 
     override fun MeasureScope.measure(measurables: List<List<Measurable>>, constraints: Constraints): MeasureResult {
-        val leading = measurables[0].firstOrNull()?.measure(Constraints())
+        val bounded = constraints.hasBoundedWidth
+        val width = constraints.maxWidth
+        val leading = measurables[0].firstOrNull()?.measure(Constraints(maxWidth = if (bounded) width else Constraints.Infinity))
         val leadingSpace = leading?.let { it.width + leadingGap.roundToPx() } ?: 0
         val name = measurables[1].firstOrNull()
         val below = measurables[2].firstOrNull()
-        val figures = measurables[3].firstOrNull()
-        if (!constraints.hasBoundedWidth) {
+        // The figures are measured once, offered the whole line: that is their width beside the name, and the room
+        // they have on a line of their own.
+        val figures = measurables[3].firstOrNull()?.measure(Constraints(maxWidth = if (bounded) width else Constraints.Infinity))
+        if (!bounded) {
             // Nothing to fit into: everything at its own width, on one line.
             val n = name?.measure(Constraints())
             val b = below?.measure(Constraints())
-            val f = figures?.measure(Constraints())
             val nameWidth = maxOf(n?.width ?: 0, b?.width ?: 0)
-            return place(constraints, leading, leadingSpace, n, b, f, nameWidth, beside = true)
+            return place(constraints, leading, leadingSpace, n, b, figures, nameWidth, beside = true)
         }
-        val width = constraints.maxWidth
-        val room = besideWidth(width, measurables)
-        return if (room != null) {
-            val f = figures?.measure(Constraints(maxWidth = width))
-            val nameWidth = (width - leadingSpace - (f?.let { it.width + figuresGap.roundToPx() } ?: 0)).coerceAtLeast(0)
-            val n = name?.measure(Constraints.fixedWidth(nameWidth))
-            val b = below?.measure(Constraints.fixedWidth(nameWidth))
-            place(constraints, leading, leadingSpace, n, b, f, nameWidth, beside = true)
-        } else {
-            val nameWidth = (width - leadingSpace).coerceAtLeast(0)
-            val n = name?.measure(Constraints.fixedWidth(nameWidth))
-            val b = below?.measure(Constraints.fixedWidth(nameWidth))
-            val f = figures?.measure(Constraints(maxWidth = nameWidth))
-            place(constraints, leading, leadingSpace, n, b, f, nameWidth, beside = false)
-        }
+        val room = besideRoom(width, leadingSpace, figures?.width, name)
+        val nameWidth = room ?: (width - leadingSpace).coerceAtLeast(0)
+        val n = name?.measure(Constraints.fixedWidth(nameWidth))
+        val b = below?.measure(Constraints.fixedWidth(nameWidth))
+        return place(constraints, leading, leadingSpace, n, b, figures, nameWidth, beside = room != null)
     }
 
     private fun MeasureScope.place(
@@ -151,26 +146,30 @@ private class NameAndFiguresPolicy(
         val belowSpace = below?.takeIf { it.height > 0 }?.let { it.height + belowGap.roundToPx() } ?: 0
         val block = (name?.height ?: 0) + belowSpace
         val figuresSpace = figures?.let { if (beside) it.width + figuresGap.roundToPx() else 0 } ?: 0
-        val text = if (beside) maxOf(block, figures?.height ?: 0) else block + (figures?.let { it.height + lineGap.roundToPx() } ?: 0)
+        // The first line: the picture and the name (with what is under it), centred on each other. Beside, the
+        // figures are on it too; under, they have a line of their own after it.
+        val first = maxOf(block, leading?.height ?: 0, if (beside) figures?.height ?: 0 else 0)
+        val content = if (beside || figures == null) first else first + lineGap.roundToPx() + figures.height
         val width = (leadingSpace + nameWidth + figuresSpace).coerceIn(constraints.minWidth, constraints.maxWidth)
-        val height = maxOf(text, leading?.height ?: 0).coerceIn(constraints.minHeight, constraints.maxHeight)
+        val height = content.coerceIn(constraints.minHeight, constraints.maxHeight)
         return layout(width, height) {
-            val top = (height - text) / 2
-            // The picture stands by the name, as the row's first line; beside, the row is one line.
-            leading?.placeRelative(0, if (beside) (height - leading.height) / 2 else top + (block - leading.height) / 2)
-            val blockTop = if (beside) (height - block) / 2 else top
+            val top = (height - content) / 2
+            leading?.placeRelative(0, top + (first - leading.height) / 2)
+            val blockTop = top + (first - block) / 2
             name?.placeRelative(leadingSpace, blockTop)
             below?.placeRelative(leadingSpace, blockTop + (name?.height ?: 0) + belowGap.roundToPx())
             figures?.placeRelative(
                 width - figures.width,
-                if (beside) (height - figures.height) / 2 else top + block + lineGap.roundToPx(),
+                if (beside) top + (first - figures.height) / 2 else top + first + lineGap.roundToPx(),
             )
         }
     }
 
     override fun IntrinsicMeasureScope.minIntrinsicWidth(measurables: List<List<IntrinsicMeasurable>>, height: Int): Int {
-        val leading = measurables[0].sumOf { it.minIntrinsicWidth(height) + leadingGap.roundToPx() }
-        val text = (measurables[1] + measurables[2] + measurables[3]).maxOfOrNull { it.minIntrinsicWidth(height) } ?: 0
+        val leading = measurables[0].sumOf { it.maxIntrinsicWidth(height) + leadingGap.roundToPx() }
+        // Figures are never broken: their least is their whole width.
+        val text = ((measurables[1] + measurables[2]).map { it.minIntrinsicWidth(height) } +
+            measurables[3].map { it.maxIntrinsicWidth(height) }).maxOrNull() ?: 0
         return leading + text
     }
 
@@ -191,22 +190,25 @@ private class NameAndFiguresPolicy(
         val leading = measurables[0].firstOrNull()
         val leadingWidth = leading?.maxIntrinsicWidth(Constraints.Infinity) ?: 0
         val leadingSpace = leading?.let { leadingWidth + leadingGap.roundToPx() } ?: 0
+        val name = measurables[1].firstOrNull()
         val figures = measurables[3].firstOrNull()
-        val room = if (width == Constraints.Infinity) width else besideWidth(width, measurables)
+        val figuresWidth = figures?.maxIntrinsicWidth(Constraints.Infinity)
+        val room = if (width == Constraints.Infinity) width else besideRoom(width, leadingSpace, figuresWidth, name)
         val nameWidth = room ?: (width - leadingSpace).coerceAtLeast(0)
-        val name = measurables[1].sumOf { it.maxIntrinsicHeight(nameWidth) }
+        val nameHeight = name?.maxIntrinsicHeight(nameWidth) ?: 0
         val below = measurables[2].sumOf { it.maxIntrinsicHeight(nameWidth).let { h -> if (h > 0) h + belowGap.roundToPx() else 0 } }
-        val figuresHeight = figures?.maxIntrinsicHeight(if (room != null) Constraints.Infinity else nameWidth) ?: 0
-        val text = if (room != null) maxOf(name + below, figuresHeight)
-        else name + below + (figures?.let { figuresHeight + lineGap.roundToPx() } ?: 0)
-        return maxOf(text, leading?.maxIntrinsicHeight(leadingWidth) ?: 0)
+        val figuresHeight = figures?.maxIntrinsicHeight(if (width == Constraints.Infinity) width else minOf(width, figuresWidth ?: width)) ?: 0
+        val first = maxOf(nameHeight + below, leading?.maxIntrinsicHeight(leadingWidth) ?: 0)
+        return if (room != null) maxOf(first, figuresHeight)
+        else first + (figures?.let { figuresHeight + lineGap.roundToPx() } ?: 0)
     }
 }
 
 /**
  * A picker and the field it goes with, on one line (a token and its amount): the picker at its own width, the field
  * in the rest. Where that would leave the field less than [fieldMin] (a 320 dp screen, larger text, a long symbol),
- * the field takes a line of its own under the picker, as wide as the line, instead of showing a few digits.
+ * the field takes a line of its own under the picker, as wide as the line, instead of showing a few digits. With no
+ * field (nothing chosen yet), the picker takes the whole line.
  */
 @Composable
 fun PickerAndField(
@@ -220,20 +222,25 @@ fun PickerAndField(
     Layout(contents = listOf(picker, field), modifier = modifier) { slots, constraints ->
         val picker = slots[0].firstOrNull()
         val field = slots[1].firstOrNull()
-        val gapPx = gap.roundToPx()
-        val width = if (constraints.hasBoundedWidth) constraints.maxWidth else Constraints.Infinity
+        val bounded = constraints.hasBoundedWidth
+        val width = constraints.maxWidth
+        if (field == null) {
+            val p = picker?.measure(if (bounded) Constraints(minWidth = width, maxWidth = width) else Constraints())
+            val w = if (bounded) width else maxOf(p?.width ?: 0, constraints.minWidth)
+            val h = (p?.height ?: 0).coerceIn(constraints.minHeight, constraints.maxHeight)
+            return@Layout layout(w, h) { p?.placeRelative(0, (h - p.height) / 2) }
+        }
+        val gapPx = if (picker != null) gap.roundToPx() else 0
         val pickerWidth = picker?.maxIntrinsicWidth(Constraints.Infinity) ?: 0
-        val room = if (width == Constraints.Infinity) Constraints.Infinity else width - pickerWidth - gapPx
-        if (field == null || room >= fieldMin.roundToPx()) {
-            val p = picker?.measure(Constraints(maxWidth = minOf(pickerWidth, width)))
-            val f = field?.let {
-                it.measure(if (room == Constraints.Infinity) Constraints() else Constraints.fixedWidth(room.coerceAtLeast(0)))
-            }
-            val w = if (width == Constraints.Infinity) (p?.width ?: 0) + gapPx + (f?.width ?: 0) else width
-            val h = maxOf(p?.height ?: 0, f?.height ?: 0).coerceIn(constraints.minHeight, constraints.maxHeight)
+        val room = if (bounded) width - pickerWidth - gapPx else Constraints.Infinity
+        if (room >= fieldMin.roundToPx()) {
+            val p = picker?.measure(Constraints(maxWidth = if (bounded) minOf(pickerWidth, width) else Constraints.Infinity))
+            val f = field.measure(if (bounded) Constraints.fixedWidth(room) else Constraints())
+            val w = if (bounded) width else maxOf((p?.width ?: 0) + gapPx + f.width, constraints.minWidth)
+            val h = maxOf(p?.height ?: 0, f.height).coerceIn(constraints.minHeight, constraints.maxHeight)
             layout(w, h) {
                 p?.placeRelative(0, (h - p.height) / 2)
-                f?.placeRelative(w - f.width, (h - f.height) / 2)
+                f.placeRelative(w - f.width, (h - f.height) / 2)
             }
         } else {
             val p = picker?.measure(Constraints(maxWidth = width))

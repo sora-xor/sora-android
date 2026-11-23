@@ -359,6 +359,61 @@ class LitLayoutFitTest {
         assertEquals(260f, (field.right - field.left).value, 0.6f)
         assertTrue(field.top >= bounds("picker").bottom)
     }
+
+    @Test fun figuresOnALineOfTheirOwnMayTakeTheWholeLine() {
+        compose.setContent {
+            SoraAppTheme {
+                Box(Modifier.width(240.dp)) {
+                    NameAndFigures(
+                        modifier = Modifier.fillMaxWidth().testTag("row"),
+                        leading = { Box(Modifier.size(40.dp)) },
+                        name = { androidx.compose.material.Text("XSTUSD", style = ROW_TYPE, maxLines = 1, modifier = Modifier.testTag("name")) },
+                        // A figure 210 dp wide: more than the name's column (240 - 52 dp), less than the row.
+                        figures = { Box(Modifier.size(210.dp, 20.dp).testTag("figures")) },
+                    )
+                }
+            }
+        }
+
+        // Whole, under the name, out to the row's end.
+        val figures = bounds("figures")
+        assertEquals(210f, (figures.right - figures.left).value, 0.6f)
+        assertTrue(figures.top >= bounds("name").bottom)
+        assertEquals(bounds("row").right.value, bounds("figures").right.value, 0.6f)
+    }
+
+    @Test fun withNothingChosenThePickerTakesTheWholeLine() {
+        compose.setContent {
+            SoraAppTheme {
+                Box(Modifier.width(320.dp)) {
+                    PickerAndField(
+                        fieldMin = 140.dp,
+                        modifier = Modifier.fillMaxWidth(),
+                        picker = { Box(Modifier.height(48.dp).testTag("picker")) },
+                        field = {},
+                    )
+                }
+            }
+        }
+
+        val picker = bounds("picker")
+        assertEquals(320f, (picker.right - picker.left).value, 0.6f)
+    }
+
+    @Test fun aSegmentLabelTooLongForOneLineWrapsAtItsFirstLayout() {
+        val label = "Automatic theme from the system"
+        compose.setContent {
+            SoraAppTheme {
+                Box(Modifier.width(72.dp)) {
+                    jp.co.soramitsu.ui_core.component.text.FittedLabel(label, ROW_TYPE, Modifier.fillMaxWidth())
+                }
+            }
+        }
+
+        val layout = compose.onNodeWithText(label, useUnmergedTree = true).textLayout()
+        assertFalse("the label was cut", layout.hasVisualOverflow)
+        assertTrue("the label did not wrap", layout.lineCount > 1)
+    }
 }
 
 private val ROW_TYPE = androidx.compose.ui.text.TextStyle(fontSize = 16.sp, lineHeight = 20.sp)
