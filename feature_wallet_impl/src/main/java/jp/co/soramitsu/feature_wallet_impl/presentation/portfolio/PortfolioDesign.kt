@@ -1,5 +1,9 @@
 package jp.co.soramitsu.feature_wallet_impl.presentation.portfolio
 
+import jp.co.soramitsu.ui_core.component.text.FittedText
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
@@ -548,7 +552,14 @@ internal fun PortfolioSheetScaffold(
     }
 }
 
-/** A selectable row inside a sheet (radio semantics by default), in the app's accent when selected. */
+/**
+ * A selectable row inside a sheet (radio semantics by default), in the app's accent when selected.
+ *
+ * A figure is never broken across lines and a name is never squeezed to a few letters: the figures stand beside
+ * the name where both fit, and on a line of their own under it where they do not (a 320 dp screen, larger text, a
+ * long amount).
+ */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 internal fun SheetRow(
     selected: Boolean,
@@ -563,7 +574,7 @@ internal fun SheetRow(
 ) {
     val n = MaterialTheme.neon
     val shape = RoundedCornerShape(14.dp)
-    Row(
+    FlowRow(
         modifier = modifier
             .fillMaxWidth()
             .heightIn(min = 68.dp)
@@ -573,30 +584,36 @@ internal fun SheetRow(
             .clickable(role = role, onClick = onClick)
             .semantics { if (role == Role.RadioButton) this.selected = selected }
             .padding(horizontal = 14.dp, vertical = 10.dp),
-        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.End,
+        verticalArrangement = Arrangement.Center,
+        itemVerticalAlignment = Alignment.CenterVertically,
     ) {
-        leading()
-        Spacer(Modifier.width(12.dp))
-        Column(Modifier.weight(1f)) {
-            Text(title, style = MaterialTheme.customTypography.headline3, color = n.textPrimary, maxLines = 2, overflow = TextOverflow.Ellipsis)
-            subtitle?.takeIf { it.isNotBlank() }?.let {
-                Spacer(Modifier.height(2.dp))
-                Text(it, style = MaterialTheme.customTypography.textS, color = n.textSecondary, maxLines = 2)
+        Row(Modifier.weight(1f).widthIn(min = SHEET_ROW_NAME_MIN), verticalAlignment = Alignment.CenterVertically) {
+            leading()
+            Spacer(Modifier.width(12.dp))
+            Column(Modifier.weight(1f)) {
+                Text(title, style = MaterialTheme.customTypography.headline3, color = n.textPrimary, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                subtitle?.takeIf { it.isNotBlank() }?.let {
+                    Spacer(Modifier.height(2.dp))
+                    Text(it, style = MaterialTheme.customTypography.textS, color = n.textSecondary, maxLines = 2)
+                }
             }
         }
         if (trailingTop != null || trailingBottom != null) {
-            Spacer(Modifier.width(8.dp))
-            Column(Modifier.weight(.85f), horizontalAlignment = Alignment.End) {
+            Column(Modifier.padding(start = 8.dp), horizontalAlignment = Alignment.End) {
                 trailingTop?.let {
-                    Text(it, style = NeonType.amountM, color = n.textPrimary, textAlign = TextAlign.End)
+                    FittedText(AnnotatedString(it), NeonType.amountM.copy(color = n.textPrimary, textAlign = TextAlign.End))
                 }
                 trailingBottom?.let {
-                    Text(it, style = NeonType.amountS, color = n.textSecondary, textAlign = TextAlign.End)
+                    FittedText(AnnotatedString(it), NeonType.amountS.copy(color = n.textSecondary, textAlign = TextAlign.End))
                 }
             }
         }
     }
 }
+
+/** The least a sheet row's picture and name get before its figures move to a line of their own. */
+private val SHEET_ROW_NAME_MIN = 150.dp
 
 /** A labelled value row (key on the left, value on the right). */
 @Composable

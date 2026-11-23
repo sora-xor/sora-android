@@ -110,6 +110,7 @@ import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.isTestnet
 import jp.co.soramitsu.feature_wallet_impl.presentation.cardshub.NetworkTagChip
 import jp.co.soramitsu.feature_wallet_impl.presentation.portfolio.motion.TiltState
 import jp.co.soramitsu.ui_core.component.button.properties.Size as ButtonSize
+import jp.co.soramitsu.ui_core.component.text.FittedText
 import jp.co.soramitsu.ui_core.lit.Lit
 import jp.co.soramitsu.ui_core.lit.LitDot
 import jp.co.soramitsu.ui_core.lit.litPad
@@ -580,7 +581,9 @@ private fun ChangeLine(change: Double, fraction: Double, format: PortfolioFormat
     val n = MaterialTheme.neon
     val up = change >= 0
     val color = if (up) n.textPrimary else n.redText
-    Text(
+    // The whole line or none of it: on a narrow screen or under larger text it is set smaller rather than losing
+    // its percentage and its "24h".
+    FittedText(
         text = buildAnnotatedString {
             withStyle(SpanStyle(color = color)) {
                 append(if (up) "▲ " else "▼ ")
@@ -593,7 +596,6 @@ private fun ChangeLine(change: Double, fraction: Double, format: PortfolioFormat
             }
         },
         style = NeonType.amountM,
-        maxLines = 1,
         modifier = Modifier
             .padding(top = 6.dp)
             .litWell(radius = 12.dp, depth = 1.8.dp)
@@ -750,30 +752,40 @@ private fun LegendChip(
 @Composable
 private fun QuickActions(actions: PortfolioHomeActions, largeText: Boolean) {
     val red = MaterialTheme.neon.redText
-    val items: @Composable () -> Unit = {
-        QuickAction(stringResource(R.string.common_send), order = 0, onClick = actions::onSend) {
+    val items: @Composable (Modifier) -> Unit = { each ->
+        QuickAction(stringResource(R.string.common_send), order = 0, modifier = each, onClick = actions::onSend) {
             PortfolioGlyph(Glyph.SEND, red, Modifier.size(24.dp))
         }
-        QuickAction(stringResource(R.string.common_receive), order = 1, onClick = actions::onReceive) {
+        QuickAction(stringResource(R.string.common_receive), order = 1, modifier = each, onClick = actions::onReceive) {
             PortfolioGlyph(Glyph.RECEIVE, red, Modifier.size(24.dp))
         }
-        QuickAction(stringResource(R.string.portfolio_move), order = 2, onClick = actions::onMove) {
+        QuickAction(stringResource(R.string.portfolio_move), order = 2, modifier = each, onClick = actions::onMove) {
             PortfolioGlyph(Glyph.MOVE, red, Modifier.size(24.dp))
         }
-        QuickAction(stringResource(R.string.portfolio_swap), order = 3, onClick = actions::onSwap) {
+        QuickAction(stringResource(R.string.portfolio_swap), order = 3, modifier = each, onClick = actions::onSwap) {
             PolkaswapFlower(Modifier.size(24.dp), tint = red)
         }
     }
     if (largeText) {
-        FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) { items() }
+        FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) { items(Modifier) }
     } else {
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) { items() }
+        // Each action may take a quarter of the row and no more. With room they stand as they always did, spread
+        // from edge to edge; on a 320 dp screen the four share the row instead of the last one being squeezed.
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            items(Modifier.weight(1f, fill = false))
+        }
     }
 }
 
 /** Pressing lets the pad into the sheet and moves its glyph down with it. The pad rises into place in turn. */
 @Composable
-private fun QuickAction(label: String, order: Int, onClick: () -> Unit, icon: @Composable () -> Unit) {
+private fun QuickAction(
+    label: String,
+    order: Int,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit,
+    icon: @Composable () -> Unit,
+) {
     val n = MaterialTheme.neon
     val fx = LocalFx.current
     val interaction = remember { MutableInteractionSource() }
@@ -783,7 +795,7 @@ private fun QuickAction(label: String, order: Int, onClick: () -> Unit, icon: @C
         if (pressed) haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
     }
     Column(
-        modifier = Modifier
+        modifier = modifier
             .widthIn(min = 72.dp)
             .clickable(interactionSource = interaction, indication = null, role = Role.Button, onClick = onClick)
             .padding(vertical = 4.dp),
@@ -799,7 +811,13 @@ private fun QuickAction(label: String, order: Int, onClick: () -> Unit, icon: @C
             Box(Modifier.graphicsLayer { translationY = if (pressed) 0.75.dp.toPx() else 0f }) { icon() }
         }
         Spacer(Modifier.height(9.dp))
-        Text(label, style = MaterialTheme.customTypography.textSBold, color = n.textPrimary, maxLines = 1)
+        Text(
+            label,
+            style = MaterialTheme.customTypography.textSBold,
+            color = n.textPrimary,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
     }
 }
 

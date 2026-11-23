@@ -7,6 +7,8 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -14,6 +16,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -431,6 +434,7 @@ private fun MoveSheet(model: PortfolioModel, holdingKey: String?, format: Portfo
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun AmountField(
     value: String,
@@ -442,7 +446,9 @@ private fun AmountField(
     val n = MaterialTheme.neon
     val symbol = token.symbol
     val shape = RoundedCornerShape(16.dp)
-    Row(
+    // The amount keeps room for a real number (at least 112 dp). Where the token and Max do not leave that beside
+    // them (a 320 dp screen, a long symbol, larger text) they stand on a line of their own under the amount.
+    FlowRow(
         Modifier
             .fillMaxWidth()
             .heightIn(min = 60.dp)
@@ -450,10 +456,12 @@ private fun AmountField(
             .litWell(radius = 12.dp, depth = 2.6.dp)
             .clip(shape)
             .then(if (error != null) Modifier.border(1.5.dp, n.error, shape) else Modifier)
-            .padding(start = 16.dp, end = 10.dp),
-        verticalAlignment = Alignment.CenterVertically,
+            .padding(start = 16.dp, end = 10.dp, top = 4.dp, bottom = 4.dp),
+        horizontalArrangement = Arrangement.End,
+        verticalArrangement = Arrangement.Center,
+        itemVerticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(Modifier.weight(1f)) {
+        Box(Modifier.weight(1f).widthIn(min = 112.dp)) {
             if (value.isEmpty()) {
                 Text("0", style = MaterialTheme.customTypography.headline1, color = n.textTertiary)
             }
@@ -469,11 +477,13 @@ private fun AmountField(
                     .semantics { contentDescription = symbol },
             )
         }
-        TokenOrb(token, 24.dp)
-        Spacer(Modifier.width(6.dp))
-        Text(symbol, style = MaterialTheme.customTypography.headline3, color = n.textPrimary)
-        Spacer(Modifier.width(8.dp))
-        NeonButton(size = ButtonSize.ExtraSmall, variant = NeonVariant.Secondary, text = stringResource(R.string.portfolio_max), onClick = onMax)
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            TokenOrb(token, 24.dp)
+            Spacer(Modifier.width(6.dp))
+            Text(symbol, style = MaterialTheme.customTypography.headline3, color = n.textPrimary)
+            Spacer(Modifier.width(8.dp))
+            NeonButton(size = ButtonSize.ExtraSmall, variant = NeonVariant.Secondary, text = stringResource(R.string.portfolio_max), onClick = onMax)
+        }
     }
     if (error != null) {
         Text(stringResource(error), style = MaterialTheme.customTypography.textS, color = n.error)
