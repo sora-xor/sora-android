@@ -7,7 +7,7 @@
     <string name="swap_market_empty">Bu cüt üçün bazar yoxdur</string>
     <string name="swap_about_market">%1$s haqqında</string>
     <string name="swap_show_terms">Şərtləri oxuyun</string>
-    <string name="swap_hide_terms">Şərtləri gizlət</string>
+    <string name="swap_hide_terms">Şərtləri gizlədin</string>
     <string name="swap_terms_summary">Mübadilədən əvvəl şərtləri yoxlayın.</string>
     <string name="asset_picker_empty">Əlçatan token yoxdur</string>
     <string name="liquidity_base_token">Əsas token</string>

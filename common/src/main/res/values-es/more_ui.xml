@@ -8,6 +8,6 @@
         <item quantity="other">%1$d seleccionadas</item>
     </plurals>
     <string name="contacts_lookup_unavailable">Búsqueda de dirección no disponible</string>
-    <string name="portfolio_positive_amount">Introduzca una cantidad mayor que cero.</string>
+    <string name="portfolio_positive_amount">Introduce una cantidad mayor que cero.</string>
     <string name="portfolio_continue_wallet">Continuar con %1$s</string>
 </resources>

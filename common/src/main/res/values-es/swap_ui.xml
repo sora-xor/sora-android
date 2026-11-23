@@ -3,12 +3,12 @@
     <string name="swap_receive_label">Recibir</string>
     <string name="asset_balance_value">Saldo %1$s</string>
     <string name="asset_catalog_retry">Reintentar</string>
-    <string name="swap_market_missing_pair">Elija dos tokens para ver los mercados.</string>
+    <string name="swap_market_missing_pair">Elige dos tokens para ver los mercados.</string>
     <string name="swap_market_empty">No hay mercados para este par</string>
     <string name="swap_about_market">Acerca de %1$s</string>
     <string name="swap_show_terms">Leer los términos</string>
     <string name="swap_hide_terms">Ocultar términos</string>
-    <string name="swap_terms_summary">Revise los términos antes de intercambiar.</string>
+    <string name="swap_terms_summary">Revisa los términos antes de intercambiar.</string>
     <string name="asset_picker_empty">No hay tokens disponibles</string>
     <string name="liquidity_base_token">Token base</string>
     <string name="liquidity_pair_token">Token emparejado</string>

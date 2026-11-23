@@ -1,5 +1,5 @@
 <resources>
     <string name="portfolio_exclusions">未计入的资产</string>
     <string name="portfolio_row_expanded">已展开</string>
-    <string name="portfolio_row_collapsed">已收起</string>
+    <string name="portfolio_row_collapsed">已折叠</string>
 </resources>

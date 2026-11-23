@@ -1,5 +1,5 @@
 <resources>
-    <string name="contacts_none">Keine letzten Empfänger</string>
+    <string name="contacts_none">Keine kürzlich verwendeten Empfänger</string>
     <string name="pin_delete_last_digit">Letzte Ziffer löschen</string>
     <string name="common_egyptian">Mittelägyptisch (Hieroglyphen)</string>
     <plurals name="backup_selected_count">

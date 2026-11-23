@@ -1,6 +1,6 @@
 <resources>
-    <string name="swap_pay_label">תשלום</string>
-    <string name="swap_receive_label">קבלה</string>
+    <string name="swap_pay_label">לתשלום</string>
+    <string name="swap_receive_label">לקבלה</string>
     <string name="asset_balance_value">יתרה %1$s</string>
     <string name="asset_catalog_retry">נסה שוב</string>
     <string name="swap_market_missing_pair">יש לבחור שני טוקנים כדי לראות שווקים.</string>
