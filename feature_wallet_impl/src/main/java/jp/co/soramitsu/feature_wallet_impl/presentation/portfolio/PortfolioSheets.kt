@@ -1,5 +1,6 @@
 package jp.co.soramitsu.feature_wallet_impl.presentation.portfolio
 
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -480,7 +481,15 @@ private fun AmountField(
         Row(verticalAlignment = Alignment.CenterVertically) {
             TokenOrb(token, 24.dp)
             Spacer(Modifier.width(6.dp))
-            Text(symbol, style = MaterialTheme.customTypography.headline3, color = n.textPrimary)
+            // Max is measured before the ticker: a very long one is cut short rather than pushing Max out.
+            Text(
+                symbol,
+                style = MaterialTheme.customTypography.headline3,
+                color = n.textPrimary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f, fill = false),
+            )
             Spacer(Modifier.width(8.dp))
             NeonButton(size = ButtonSize.ExtraSmall, variant = NeonVariant.Secondary, text = stringResource(R.string.portfolio_max), onClick = onMax)
         }
