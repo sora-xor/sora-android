@@ -16,14 +16,12 @@ import androidx.compose.material.Icon
 import androidx.compose.material.LocalRippleConfiguration
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.RippleConfiguration
-import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -35,7 +33,6 @@ import jp.co.soramitsu.ui_core.component.button.properties.buttonSize
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.lit.Lit
 import jp.co.soramitsu.ui_core.theme.customColors
-import jp.co.soramitsu.ui_core.theme.customTypography
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
@@ -78,16 +75,15 @@ fun TonalButton(
             }
 
             text?.let {
-                Text(
-                    modifier = Modifier.padding(
-                        start = leftIcon?.let { 0.dp } ?: Dimens.x3,
-                        end = rightIcon?.let { 0.dp } ?: Dimens.x3,
-                        top = Dimens.x1,
-                        bottom = Dimens.x1
-                    ),
-                    textAlign = TextAlign.Center,
+                ButtonLabel(
                     text = text,
-                    style = MaterialTheme.customTypography.buttonM,
+                    modifier = Modifier
+                        .weight(1f, fill = false)
+                        .padding(vertical = Dimens.x1)
+                        .buttonLabelEnds(
+                            start = leftIcon?.let { 0.dp } ?: Dimens.x3,
+                            end = rightIcon?.let { 0.dp } ?: Dimens.x3,
+                        ),
                     maxLines = maxLines,
                 )
             }

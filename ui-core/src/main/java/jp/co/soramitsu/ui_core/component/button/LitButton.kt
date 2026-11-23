@@ -18,7 +18,6 @@ import androidx.compose.material.Icon
 import androidx.compose.material.LocalContentAlpha
 import androidx.compose.material.LocalContentColor
 import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
 import androidx.compose.material.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -30,7 +29,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import jp.co.soramitsu.ui_core.lit.Lit
@@ -39,7 +37,6 @@ import jp.co.soramitsu.ui_core.lit.litPad
 import jp.co.soramitsu.ui_core.lit.litPress
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
-import jp.co.soramitsu.ui_core.theme.customTypography
 
 /** What a button's face is made of: [glass] is a slab of cut glass of that colour, null a soft raised pad. */
 internal class LitButtonFace(val glass: Color?, val content: Color, val disabledFill: Color, val disabledContent: Color)
@@ -103,16 +100,16 @@ internal fun LitButton(
                     )
                 }
                 text?.let {
-                    Text(
-                        modifier = Modifier.padding(
-                            start = leftIcon?.let { 0.dp } ?: Dimens.x3,
-                            end = rightIcon?.let { 0.dp } ?: Dimens.x3,
-                            top = Dimens.x1,
-                            bottom = Dimens.x1,
-                        ),
-                        textAlign = TextAlign.Center,
+                    ButtonLabel(
                         text = text,
-                        style = MaterialTheme.customTypography.buttonM,
+                        // The label takes what the icons leave, so a long one is set smaller rather than cut.
+                        modifier = Modifier
+                            .weight(1f, fill = false)
+                            .padding(vertical = Dimens.x1)
+                            .buttonLabelEnds(
+                                start = leftIcon?.let { 0.dp } ?: Dimens.x3,
+                                end = rightIcon?.let { 0.dp } ?: Dimens.x3,
+                            ),
                         maxLines = maxLines,
                     )
                 }

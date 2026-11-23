@@ -63,7 +63,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import jp.co.soramitsu.ui_core.lit.Lit
 import jp.co.soramitsu.ui_core.lit.litCutGlass
@@ -74,6 +73,8 @@ import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.presentation.compose.theme.neon.LocalFx
 import jp.co.soramitsu.common.presentation.compose.theme.neon.NeonTokens
 import jp.co.soramitsu.common.presentation.compose.theme.neon.neon
+import jp.co.soramitsu.ui_core.component.button.ButtonLabel
+import jp.co.soramitsu.ui_core.component.button.buttonLabelEnds
 import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customTypography
@@ -209,21 +210,19 @@ fun NeonButton(
                 )
             }
             text?.let {
-                Box(contentAlignment = Alignment.Center) {
-                    Text(
+                // The label takes what the icons leave, so a long one is set smaller rather than cut.
+                Box(Modifier.weight(1f, fill = false), contentAlignment = Alignment.Center) {
+                    ButtonLabel(
+                        text = text,
                         modifier = Modifier
-                            .padding(
+                            .padding(vertical = Dimens.x1)
+                            .buttonLabelEnds(
                                 start = leftIcon?.let { 0.dp } ?: Dimens.x3,
                                 end = rightIcon?.let { 0.dp } ?: Dimens.x3,
-                                top = Dimens.x1,
-                                bottom = Dimens.x1,
                             )
                             .alpha(if (loading) 0f else 1f),
-                        textAlign = TextAlign.Center,
-                        text = text,
-                        style = MaterialTheme.customTypography.buttonM,
-                        color = style.label,
                         maxLines = maxLines,
+                        color = style.label,
                     )
                     if (loading) SignalLoader(color = style.label)
                 }
