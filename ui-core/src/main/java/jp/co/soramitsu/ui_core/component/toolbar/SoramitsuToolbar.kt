@@ -34,6 +34,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
@@ -48,6 +49,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import jp.co.soramitsu.ui_core.component.text.FittedText
 import jp.co.soramitsu.ui_core.R
 import jp.co.soramitsu.ui_core.extensions.testTagAsId
 import jp.co.soramitsu.ui_core.resources.Dimens
@@ -361,12 +363,14 @@ private fun BasicBar(
                         visualTransformation = VisualTransformation.None,
                         interactionSource = interactionSource,
                         placeholder = {
-                            Text(
-                                text = state.basic.searchPlaceholder?.toTitle() ?: stringResource(R.string.toolbar_search_open),
+                            // A long hint ("Search by Asset ID, Name or Ticker Symbol") between the back and clear
+                            // buttons of a 360 dp phone is set a little smaller, then ends in an ellipsis, rather than
+                            // being cut through a word.
+                            FittedText(
+                                text = AnnotatedString(state.basic.searchPlaceholder?.toTitle() ?: stringResource(R.string.toolbar_search_open)),
                                 modifier = Modifier.wrapContentHeight(),
-                                style = MaterialTheme.customTypography.paragraphS,
-                                color = MaterialTheme.customColors.fgTertiary,
-                                maxLines = 1,
+                                style = MaterialTheme.customTypography.paragraphS.copy(color = MaterialTheme.customColors.fgTertiary),
+                                steps = 2,
                             )
                         },
                     )
