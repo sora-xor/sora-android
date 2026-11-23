@@ -19,6 +19,7 @@ limitations under the License.
 
 package jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.backup
 
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -60,8 +61,10 @@ class BackupFragment : SoraBaseFragment<BackupViewModel>() {
             route = theOnlyRoute,
         ) {
             viewModel.backupScreenState.observeAsState().value?.let {
+                // The phrase is taller than a small screen (24 words, larger text): it scrolls, so the last
+                // words can always be read.
                 Box(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier.fillMaxSize().verticalScroll(scrollState),
                     contentAlignment = Alignment.TopCenter,
                 ) {
                     BackupScreen(

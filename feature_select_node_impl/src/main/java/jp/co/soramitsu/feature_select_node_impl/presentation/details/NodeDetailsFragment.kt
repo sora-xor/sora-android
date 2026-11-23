@@ -70,7 +70,7 @@ internal class NodeDetailsFragment : SoraBaseFragment<NodeDetailsViewModel>() {
         composable(
             route = theOnlyRoute,
         ) {
-            NodeDetailsScreen(viewModel)
+            NodeDetailsScreen(viewModel, scrollState)
         }
     }
 }
