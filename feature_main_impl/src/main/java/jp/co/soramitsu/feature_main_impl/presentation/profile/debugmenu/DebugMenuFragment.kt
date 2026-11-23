@@ -25,7 +25,7 @@ import android.view.View
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.ScrollState
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.domain.BottomBarController
@@ -66,7 +66,7 @@ class DebugMenuFragment : SoraBaseFragment<DebugMenuViewModel>() {
         navController: NavHostController
     ) {
         composable(route = theOnlyRoute) {
-            val metrics = LocalContext.current.resources.displayMetrics
+            val metrics = LocalResources.current.displayMetrics
             DebugMenuScreen(
                 state = viewModel.state,
                 display = stringResource(R.string.debug_display_size, metrics.widthPixels, metrics.heightPixels, metrics.density),
