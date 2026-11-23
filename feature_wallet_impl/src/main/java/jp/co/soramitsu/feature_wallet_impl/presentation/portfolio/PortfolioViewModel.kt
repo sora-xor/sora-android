@@ -377,7 +377,9 @@ class PortfolioViewModel @Inject constructor(
         val snap = snapshot.value ?: return
         val scope = PortfolioCalculator.effectiveScope(scopeRequest.value?.orElse(null), snap.wallets.size)
         val wanted = if (scope == PortfolioScope.ALL || _sheet.value == PortfolioSheet.Wallets) {
-            snap.wallets.map { it.id }
+            // The selected wallet first: only a few wallets are read at once.
+            val selectedId = snap.selectedWallet?.id
+            snap.wallets.map { it.id }.sortedBy { it != selectedId }
         } else {
             listOfNotNull(snap.selectedWallet?.id)
         }

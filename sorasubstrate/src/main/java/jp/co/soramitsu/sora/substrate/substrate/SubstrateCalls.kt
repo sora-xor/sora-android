@@ -73,6 +73,8 @@ import jp.co.soramitsu.xsubstrate.wsrpc.request.runtime.storage.SubscribeStorage
 import jp.co.soramitsu.xsubstrate.wsrpc.request.runtime.storage.SubscribeStorageResult
 import jp.co.soramitsu.xsubstrate.wsrpc.request.runtime.storage.storageChange
 import jp.co.soramitsu.xsubstrate.wsrpc.subscriptionFlow
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.firstOrNull
@@ -144,15 +146,29 @@ class SubstrateCalls @Inject constructor(
 
     suspend fun fetchXORBalances(
         accountId: String,
-    ): XorBalanceDto {
+    ): XorBalanceDto = coroutineScope {
         val storage = runtimeManager.getRuntimeSnapshot().metadata.module(Pallete.SYSTEM.palletName)
             .storage(Storage.ACCOUNT.storageName)
         val storageKey =
             storage.storageKey(runtimeManager.getRuntimeSnapshot(), accountId.toAccountId())
-        val hexString = socketService.executeAsyncMapped(
-            request = GetStorageRequest(listOf(storageKey)),
-            mapper = pojo<String>(),
-        )
+        // The staking ledger, the active era and the referral bond do not depend on the account
+        // record, so they are asked for together with it instead of one after another: two round
+        // trips to the node (the ledger needs its controller first) instead of up to five. They
+        // count only when the account exists; then any of them failing fails the read, as it did
+        // when they were read in turn.
+        val stakingRead = async { runCatching { fetchStakingLedgerXORBalance(accountId) } }
+        val eraRead = async { runCatching { fetchActiveEra() } }
+        val bondRead = async { runCatching { observeReferrerBalance(accountId).firstOrNull() } }
+        val sideReads = listOf(stakingRead, eraRead, bondRead)
+        val hexString = try {
+            socketService.executeAsyncMapped(
+                request = GetStorageRequest(listOf(storageKey)),
+                mapper = pojo<String>(),
+            )
+        } catch (error: Throwable) {
+            sideReads.forEach { it.cancel() }
+            throw error
+        }
 
         hexString.result?.let {
             val account = decodeXorAccountData(
@@ -161,11 +177,11 @@ class SubstrateCalls @Inject constructor(
                 storageHex = it,
             )
 
-            val stakingLedgerXorBalance = fetchStakingLedgerXORBalance(accountId)
-            val activeEra = fetchActiveEra()
+            val stakingLedgerXorBalance = stakingRead.await().getOrThrow()
+            val activeEra = eraRead.await().getOrThrow()
             var redeemable = BigInteger.ZERO
             var unbonding = BigInteger.ZERO
-            val bonded = observeReferrerBalance(accountId).firstOrNull() ?: BigInteger.ZERO
+            val bonded = bondRead.await().getOrThrow() ?: BigInteger.ZERO
 
             stakingLedgerXorBalance?.let { stakingXorBalance ->
                 redeemable = stakingXorBalance[StakingLedger.unlocking].filter {
@@ -178,7 +194,7 @@ class SubstrateCalls @Inject constructor(
                 stakingXorBalance[StakingLedger.active]
             }
 
-            return XorBalanceDto(
+            return@coroutineScope XorBalanceDto(
                 account.free,
                 account.reserved,
                 account.miscFrozen,
@@ -189,7 +205,9 @@ class SubstrateCalls @Inject constructor(
             )
         }
 
-        return XorBalanceDto(
+        // No account: nothing staked or bonded either; the side reads are not needed.
+        sideReads.forEach { it.cancel() }
+        XorBalanceDto(
             BigInteger.ZERO,
             BigInteger.ZERO,
             BigInteger.ZERO,

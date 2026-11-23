@@ -622,6 +622,33 @@ class LivePortfolioSourceTest {
     }
 
     @Test
+    fun `a wallet's XOR and its other tokens are read at the same time`() = runTest {
+        setUp()
+        every { assetsRepository.subscribeAssetsOfWhitelist("cnSavings") } returns MutableStateFlow(emptyList())
+        tokens.value = listOf(xorToken, valToken)
+        val xorAsked = CompletableDeferred<Unit>()
+        val tokensAsked = CompletableDeferred<Unit>()
+        // Each read answers only once the other has been asked for: one after the other never finishes.
+        coEvery { assetsRepository.getXORBalance("cnSavings", any()) } coAnswers {
+            xorAsked.complete(Unit)
+            tokensAsked.await()
+            xorBalance("4")
+        }
+        coEvery { assetsRepository.fetchBalance("cnSavings", listOf(valToken.id)) } coAnswers {
+            tokensAsked.complete(Unit)
+            xorAsked.await()
+            listOf(BigInteger("2000000000000000000"))
+        }
+        val source = newSource()
+        source.observe().first { it.wallets.isNotEmpty() }
+        now = 43_000L
+        source.refresh(listOf("cnSavings"))
+        val snapshot = source.observe().first { it.sync["cnSavings"]?.refreshedAtMillis == 43_000L }
+        assertEquals(0, BigDecimal("4").compareTo(snapshot.holding("cnSavings", WalletNetworkId.SORA2, xorToken.id)!!.total))
+        assertEquals(0, BigDecimal("2").compareTo(snapshot.holding("cnSavings", WalletNetworkId.SORA2, valToken.id)!!.total))
+    }
+
+    @Test
     fun `the same token has one price in every wallet`() = runTest {
         setUp()
         tokens.value = listOf(xorToken.copy(fiatPrice = 9.0), valToken, daiToken)
@@ -707,6 +734,8 @@ class LivePortfolioSourceTest {
         setUp()
         coEvery { assetsRepository.subscribeTokensList() } returns tokens
         coEvery { assetsRepository.fetchBalance("cnSavings", any()) } coAnswers { awaitCancellation() }
+        // XOR answers; the token read beside it never does, so the read as a whole waits until the deadline.
+        coEvery { assetsRepository.getXORBalance("cnSavings", any()) } returns xorBalance("1")
         val source = newSource()
         now = 5_000L
         source.refresh(listOf("cnSavings"))

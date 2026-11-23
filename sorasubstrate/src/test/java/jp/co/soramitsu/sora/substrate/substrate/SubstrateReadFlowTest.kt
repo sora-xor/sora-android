@@ -126,7 +126,11 @@ class SubstrateReadFlowTest {
         val balance = subject.fetchXORBalances(owner)
         assertEquals(BigInteger.ZERO, balance.free); assertEquals(BigInteger.ZERO, balance.reserved)
         assertEquals(BigInteger.ZERO, balance.bonded); assertEquals(BigInteger.ZERO, balance.redeemable); assertEquals(BigInteger.ZERO, balance.unbonding)
-        assertEquals(1, requests.size)
+        // The staking, era and referral reads go out with the account read; with no account their
+        // answers (here: none at all, which would fail them) are not used.
+        val snapshot = TestRuntimeSnapshots.mainnet133
+        val accountKey = snapshot.metadata.module("System").storage("Account").storageKey(snapshot, publicKey.fromHex())
+        assertTrue(requests.any { it.method == "state_getStorage" && it.params.firstOrNull() == accountKey })
     }
     @Test fun `XOR balances include referral bond and runtime frozen floor`() = runTest {
         val snapshot = TestRuntimeSnapshots.mainnet133

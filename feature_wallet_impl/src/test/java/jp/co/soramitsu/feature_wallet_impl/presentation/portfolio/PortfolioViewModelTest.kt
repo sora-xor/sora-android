@@ -501,6 +501,19 @@ class PortfolioViewModelTest {
         assertEquals(count, fake.refreshes.size)
     }
 
+    @Test fun `the selected wallet is read first even when it is listed last`() = runTest {
+        val fake = FakeSource(
+            false,
+            PortfolioFixtures.snapshot(listOf(mainXor, savingsXor), wallets = listOf(MAIN, SAVINGS), selected = SAVINGS),
+        )
+        val vm = viewModel(fake)
+        vm.setVisible(true)
+        runCurrent()
+        assertEquals(listOf(SAVINGS, MAIN), fake.refreshes.first())
+        vm.setVisible(false)
+        runCurrent()
+    }
+
     @Test fun `quick send and receive ask for a wallet in all wallets scope`() = runTest {
         val fake = source()
         val vm = viewModel(fake)

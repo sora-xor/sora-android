@@ -55,6 +55,8 @@ import jp.co.soramitsu.sora.substrate.substrate.faucetTransfer
 import jp.co.soramitsu.sora.substrate.substrate.transfer
 import jp.co.soramitsu.xsubstrate.encrypt.keypair.substrate.Sr25519Keypair
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.emitAll
@@ -536,17 +538,19 @@ class AssetsRepositoryImpl @Inject constructor(
     private suspend fun fetchBalances(
         address: String,
         assetIdList: List<String>
-    ): Pair<List<BigInteger>, XorBalanceDto> {
-        val xorBalance = substrateCalls.fetchXORBalances(address)
-        val transferable = BalanceWrapper.calcTransferable(dto = xorBalance)
+    ): Pair<List<BigInteger>, XorBalanceDto> = coroutineScope {
+        // XOR and the other tokens are separate reads: both are asked for at once.
+        val xorRead = async { substrateCalls.fetchXORBalances(address) }
         val xorIndex = assetIdList.indexOf(SubstrateOptionsProvider.feeAssetId)
 
         val nonXorIds = assetIdList.filter { it != SubstrateOptionsProvider.feeAssetId }
         val balances = substrateCalls.fetchBalances(address, nonXorIds)
+        val xorBalance = xorRead.await()
+        val transferable = BalanceWrapper.calcTransferable(dto = xorBalance)
         check(balances.size == nonXorIds.size) { "SORA2_ASSET_BALANCE_COUNT_MISMATCH" }
         val orderedBalances = balances.toMutableList()
         if (xorIndex >= 0) orderedBalances.add(xorIndex, transferable)
-        return orderedBalances to xorBalance
+        orderedBalances to xorBalance
     }
 
     override suspend fun fetchBalance(

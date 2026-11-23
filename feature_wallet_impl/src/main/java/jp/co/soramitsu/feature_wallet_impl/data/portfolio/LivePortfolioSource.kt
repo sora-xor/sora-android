@@ -28,6 +28,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -620,18 +621,20 @@ class LivePortfolioSource @Inject constructor(
         lastReadsState.update { it + (id to now) }
     }
 
-    private suspend fun readBalances(id: String): Map<String, ReadBalance> {
+    private suspend fun readBalances(id: String): Map<String, ReadBalance> = coroutineScope {
         // The app's token list as stored; only a first launch has to wait for it to be fetched.
         val tokens = assetsRepository.subscribeTokensList().first().ifEmpty { assetsRepository.tokensList() }
         val others = tokens.filter { it.id != AssetHolder.XOR_ASSET_ID }
+        val xor = tokens.firstOrNull { it.id == AssetHolder.XOR_ASSET_ID }
+        // XOR and the other tokens are separate reads: both are asked for at once.
+        val xorRead = async { assetsRepository.getXORBalance(id, xor?.precision ?: OptionsProvider.defaultScale) }
         val raw = if (others.isEmpty()) emptyList() else assetsRepository.fetchBalance(id, others.map { it.id })
         check(raw.size == others.size) { "PORTFOLIO_BALANCE_READ_MISMATCH" }
         val balances = others.zip(raw).mapNotNull { (token, value) ->
             val amount = mapBalance(value, token.precision)
             if (amount.signum() > 0) token.id to ReadBalance(portfolioToken(token), amount, amount) else null
         }.toMap(linkedMapOf())
-        val xor = tokens.firstOrNull { it.id == AssetHolder.XOR_ASSET_ID }
-        val balance = assetsRepository.getXORBalance(id, xor?.precision ?: OptionsProvider.defaultScale)
+        val balance = xorRead.await()
         if (balance.totalBalance.signum() > 0) {
             balances[AssetHolder.XOR_ASSET_ID] = ReadBalance(
                 xor?.let(::portfolioToken) ?: FALLBACK_XOR,
@@ -639,7 +642,7 @@ class LivePortfolioSource @Inject constructor(
                 balance.transferable,
             )
         }
-        return balances
+        balances
     }
 
     /**
