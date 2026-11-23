@@ -1,6 +1,12 @@
 <resources>
+    <string name="contacts_none">Son alıcı yoxdur</string>
+    <string name="pin_delete_last_digit">Son rəqəmi sil</string>
+    <string name="common_egyptian">Orta Misir dili (heroqliflər)</string>
     <plurals name="backup_selected_count">
         <item quantity="one">%1$d seçilib</item>
         <item quantity="other">%1$d seçilib</item>
     </plurals>
+    <string name="contacts_lookup_unavailable">Ünvan axtarışı əlçatan deyil</string>
+    <string name="portfolio_positive_amount">Sıfırdan böyük məbləğ daxil edin.</string>
+    <string name="portfolio_continue_wallet">%1$s ilə davam edin</string>
 </resources>

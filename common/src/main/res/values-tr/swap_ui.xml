@@ -1,0 +1,15 @@
+<resources>
+    <string name="swap_pay_label">Ödenecek</string>
+    <string name="swap_receive_label">Alınacak</string>
+    <string name="asset_balance_value">Bakiye %1$s</string>
+    <string name="asset_catalog_retry">Yeniden dene</string>
+    <string name="swap_market_missing_pair">Piyasaları görmek için iki token seçin.</string>
+    <string name="swap_market_empty">Bu çift için piyasa yok</string>
+    <string name="swap_about_market">%1$s hakkında</string>
+    <string name="swap_show_terms">Koşulları oku</string>
+    <string name="swap_hide_terms">Koşulları gizle</string>
+    <string name="swap_terms_summary">Takastan önce koşulları inceleyin.</string>
+    <string name="asset_picker_empty">Kullanılabilir token yok</string>
+    <string name="liquidity_base_token">Temel token</string>
+    <string name="liquidity_pair_token">Eşleşen token</string>
+</resources>

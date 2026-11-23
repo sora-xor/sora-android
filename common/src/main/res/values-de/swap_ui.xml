@@ -1,0 +1,15 @@
+<resources>
+    <string name="swap_pay_label">Zahlen</string>
+    <string name="swap_receive_label">Empfangen</string>
+    <string name="asset_balance_value">Saldo %1$s</string>
+    <string name="asset_catalog_retry">Erneut versuchen</string>
+    <string name="swap_market_missing_pair">Zwei Token wählen, um Märkte zu sehen.</string>
+    <string name="swap_market_empty">Keine Märkte für dieses Paar</string>
+    <string name="swap_about_market">Über %1$s</string>
+    <string name="swap_show_terms">Bedingungen lesen</string>
+    <string name="swap_hide_terms">Bedingungen ausblenden</string>
+    <string name="swap_terms_summary">Vor dem Tausch die Bedingungen prüfen.</string>
+    <string name="asset_picker_empty">Keine Token verfügbar</string>
+    <string name="liquidity_base_token">Basis-Token</string>
+    <string name="liquidity_pair_token">Paar-Token</string>
+</resources>

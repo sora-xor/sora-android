@@ -1,4 +1,7 @@
 <resources>
+    <string name="contacts_none">لا يوجد مستلمون حديثون</string>
+    <string name="pin_delete_last_digit">حذف آخر رقم</string>
+    <string name="common_egyptian">المصرية الوسطى (الهيروغليفية)</string>
     <plurals name="backup_selected_count">
         <item quantity="zero">المحدد: %1$d</item>
         <item quantity="one">المحدد: %1$d</item>
@@ -7,4 +10,7 @@
         <item quantity="many">المحدد: %1$d</item>
         <item quantity="other">المحدد: %1$d</item>
     </plurals>
+    <string name="contacts_lookup_unavailable">البحث عن العنوان غير متاح</string>
+    <string name="portfolio_positive_amount">أدخل مبلغًا أكبر من صفر.</string>
+    <string name="portfolio_continue_wallet">المتابعة باستخدام %1$s</string>
 </resources>

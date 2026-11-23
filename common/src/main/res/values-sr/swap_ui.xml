@@ -1,0 +1,15 @@
+<resources>
+    <string name="swap_pay_label">Плаћате</string>
+    <string name="swap_receive_label">Добијате</string>
+    <string name="asset_balance_value">Салдо %1$s</string>
+    <string name="asset_catalog_retry">Покушај поново</string>
+    <string name="swap_market_missing_pair">Изаберите два токена да бисте видели тржишта.</string>
+    <string name="swap_market_empty">Нема тржишта за овај пар</string>
+    <string name="swap_about_market">О тржишту %1$s</string>
+    <string name="swap_show_terms">Прочитај услове</string>
+    <string name="swap_hide_terms">Сакриј услове</string>
+    <string name="swap_terms_summary">Прегледајте услове пре замене.</string>
+    <string name="asset_picker_empty">Нема доступних токена</string>
+    <string name="liquidity_base_token">Основни токен</string>
+    <string name="liquidity_pair_token">Упарени токен</string>
+</resources>

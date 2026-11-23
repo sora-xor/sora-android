@@ -1,0 +1,5 @@
+<resources>
+    <string name="portfolio_exclusions">Actifs non inclus</string>
+    <string name="portfolio_row_expanded">Développé</string>
+    <string name="portfolio_row_collapsed">Réduit</string>
+</resources>

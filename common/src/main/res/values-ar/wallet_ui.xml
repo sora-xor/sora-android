@@ -1,0 +1,5 @@
+<resources>
+    <string name="portfolio_exclusions">أصول غير مشمولة</string>
+    <string name="portfolio_row_expanded">موسّع</string>
+    <string name="portfolio_row_collapsed">مطويّ</string>
+</resources>

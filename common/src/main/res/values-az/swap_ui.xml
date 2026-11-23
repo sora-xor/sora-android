@@ -1,0 +1,15 @@
+<resources>
+    <string name="swap_pay_label">Ödəyirsiniz</string>
+    <string name="swap_receive_label">Alırsınız</string>
+    <string name="asset_balance_value">Balans %1$s</string>
+    <string name="asset_catalog_retry">Yenidən cəhd edin</string>
+    <string name="swap_market_missing_pair">Bazarları görmək üçün iki token seçin.</string>
+    <string name="swap_market_empty">Bu cüt üçün bazar yoxdur</string>
+    <string name="swap_about_market">%1$s haqqında</string>
+    <string name="swap_show_terms">Şərtləri oxuyun</string>
+    <string name="swap_hide_terms">Şərtləri gizlət</string>
+    <string name="swap_terms_summary">Mübadilədən əvvəl şərtləri yoxlayın.</string>
+    <string name="asset_picker_empty">Əlçatan token yoxdur</string>
+    <string name="liquidity_base_token">Əsas token</string>
+    <string name="liquidity_pair_token">Cüt token</string>
+</resources>

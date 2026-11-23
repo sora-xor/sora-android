@@ -1,6 +1,12 @@
 <resources>
+    <string name="contacts_none">Ei viimeaikaisia vastaanottajia</string>
+    <string name="pin_delete_last_digit">Poista viimeinen numero</string>
+    <string name="common_egyptian">Keskiegypti (hieroglyfit)</string>
     <plurals name="backup_selected_count">
         <item quantity="one">%1$d valittu</item>
         <item quantity="other">%1$d valittu</item>
     </plurals>
+    <string name="contacts_lookup_unavailable">Osoitehaku ei käytettävissä</string>
+    <string name="portfolio_positive_amount">Syötä nollaa suurempi määrä.</string>
+    <string name="portfolio_continue_wallet">Jatka lompakolla %1$s</string>
 </resources>

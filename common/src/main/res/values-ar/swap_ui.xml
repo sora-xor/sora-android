@@ -1,0 +1,15 @@
+<resources>
+    <string name="swap_pay_label">تدفع</string>
+    <string name="swap_receive_label">تستلم</string>
+    <string name="asset_balance_value">الرصيد %1$s</string>
+    <string name="asset_catalog_retry">إعادة المحاولة</string>
+    <string name="swap_market_missing_pair">اختر رمزين لعرض الأسواق.</string>
+    <string name="swap_market_empty">لا توجد أسواق لهذا الزوج</string>
+    <string name="swap_about_market">حول %1$s</string>
+    <string name="swap_show_terms">قراءة الشروط</string>
+    <string name="swap_hide_terms">إخفاء الشروط</string>
+    <string name="swap_terms_summary">راجع الشروط قبل المبادلة.</string>
+    <string name="asset_picker_empty">لا توجد رموز متاحة</string>
+    <string name="liquidity_base_token">الرمز الأساسي</string>
+    <string name="liquidity_pair_token">الرمز المقترن</string>
+</resources>

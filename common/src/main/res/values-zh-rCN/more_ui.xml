@@ -1,5 +1,11 @@
 <resources>
+    <string name="contacts_none">没有最近的接收人</string>
+    <string name="pin_delete_last_digit">删除最后一位数字</string>
+    <string name="common_egyptian">中古埃及语（象形文字）</string>
     <plurals name="backup_selected_count">
         <item quantity="other">已选择%1$d项</item>
     </plurals>
+    <string name="contacts_lookup_unavailable">无法查询地址</string>
+    <string name="portfolio_positive_amount">请输入大于零的金额。</string>
+    <string name="portfolio_continue_wallet">使用%1$s继续</string>
 </resources>

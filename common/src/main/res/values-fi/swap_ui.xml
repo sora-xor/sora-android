@@ -1,0 +1,15 @@
+<resources>
+    <string name="swap_pay_label">Maksat</string>
+    <string name="swap_receive_label">Saat</string>
+    <string name="asset_balance_value">Saldo %1$s</string>
+    <string name="asset_catalog_retry">Yritä uudelleen</string>
+    <string name="swap_market_missing_pair">Valitse kaksi tokenia nähdäksesi markkinat.</string>
+    <string name="swap_market_empty">Tälle parille ei ole markkinoita</string>
+    <string name="swap_about_market">Tietoja: %1$s</string>
+    <string name="swap_show_terms">Lue ehdot</string>
+    <string name="swap_hide_terms">Piilota ehdot</string>
+    <string name="swap_terms_summary">Tarkista ehdot ennen vaihtoa.</string>
+    <string name="asset_picker_empty">Ei tokeneita saatavilla</string>
+    <string name="liquidity_base_token">Perustokeni</string>
+    <string name="liquidity_pair_token">Paritokeni</string>
+</resources>

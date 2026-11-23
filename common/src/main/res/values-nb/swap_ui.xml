@@ -1,0 +1,15 @@
+<resources>
+    <string name="swap_pay_label">Betal</string>
+    <string name="swap_receive_label">Motta</string>
+    <string name="asset_balance_value">Balanse %1$s</string>
+    <string name="asset_catalog_retry">Prøv igjen</string>
+    <string name="swap_market_missing_pair">Velg to tokener for å se markeder.</string>
+    <string name="swap_market_empty">Ingen markeder for dette paret</string>
+    <string name="swap_about_market">Om %1$s</string>
+    <string name="swap_show_terms">Les vilkårene</string>
+    <string name="swap_hide_terms">Skjul vilkårene</string>
+    <string name="swap_terms_summary">Les vilkårene før du bytter.</string>
+    <string name="asset_picker_empty">Ingen tokener tilgjengelig</string>
+    <string name="liquidity_base_token">Basistoken</string>
+    <string name="liquidity_pair_token">Partoken</string>
+</resources>

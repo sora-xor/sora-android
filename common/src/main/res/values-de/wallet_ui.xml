@@ -1,0 +1,5 @@
+<resources>
+    <string name="portfolio_exclusions">Nicht enthaltene Vermögenswerte</string>
+    <string name="portfolio_row_expanded">Ausgeklappt</string>
+    <string name="portfolio_row_collapsed">Eingeklappt</string>
+</resources>

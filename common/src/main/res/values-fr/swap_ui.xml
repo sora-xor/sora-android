@@ -1,0 +1,15 @@
+<resources>
+    <string name="swap_pay_label">Payer</string>
+    <string name="swap_receive_label">Recevoir</string>
+    <string name="asset_balance_value">Solde %1$s</string>
+    <string name="asset_catalog_retry">Réessayer</string>
+    <string name="swap_market_missing_pair">Choisissez deux jetons pour voir les marchés.</string>
+    <string name="swap_market_empty">Aucun marché pour cette paire</string>
+    <string name="swap_about_market">À propos de %1$s</string>
+    <string name="swap_show_terms">Lire les conditions</string>
+    <string name="swap_hide_terms">Masquer les conditions</string>
+    <string name="swap_terms_summary">Lisez les conditions avant d\'échanger.</string>
+    <string name="asset_picker_empty">Aucun jeton disponible</string>
+    <string name="liquidity_base_token">Jeton de base</string>
+    <string name="liquidity_pair_token">Jeton apparié</string>
+</resources>

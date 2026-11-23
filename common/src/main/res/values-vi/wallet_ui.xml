@@ -1,0 +1,5 @@
+<resources>
+    <string name="portfolio_exclusions">Tài sản không được tính</string>
+    <string name="portfolio_row_expanded">Đã mở rộng</string>
+    <string name="portfolio_row_collapsed">Đã thu gọn</string>
+</resources>

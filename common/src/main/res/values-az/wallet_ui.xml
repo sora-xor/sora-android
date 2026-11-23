@@ -1,0 +1,5 @@
+<resources>
+    <string name="portfolio_exclusions">Daxil edilməyən aktivlər</string>
+    <string name="portfolio_row_expanded">Genişləndirilib</string>
+    <string name="portfolio_row_collapsed">Yığılıb</string>
+</resources>

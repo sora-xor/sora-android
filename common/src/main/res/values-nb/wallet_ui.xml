@@ -1,0 +1,5 @@
+<resources>
+    <string name="portfolio_exclusions">Eiendeler ikke inkludert</string>
+    <string name="portfolio_row_expanded">Utvidet</string>
+    <string name="portfolio_row_collapsed">Skjult</string>
+</resources>

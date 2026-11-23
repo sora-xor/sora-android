@@ -1,0 +1,5 @@
+<resources>
+    <string name="portfolio_exclusions">נכסים שלא נכללו</string>
+    <string name="portfolio_row_expanded">מורחב</string>
+    <string name="portfolio_row_collapsed">מכווץ</string>
+</resources>

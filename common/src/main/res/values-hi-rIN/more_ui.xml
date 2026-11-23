@@ -1,6 +1,12 @@
 <resources>
+    <string name="contacts_none">हाल का कोई प्राप्तकर्ता नहीं</string>
+    <string name="pin_delete_last_digit">आख़िरी अंक हटाएँ</string>
+    <string name="common_egyptian">मध्य मिस्री (चित्रलिपि)</string>
     <plurals name="backup_selected_count">
         <item quantity="one">%1$d चयनित</item>
         <item quantity="other">%1$d चयनित</item>
     </plurals>
+    <string name="contacts_lookup_unavailable">पता खोज उपलब्ध नहीं</string>
+    <string name="portfolio_positive_amount">शून्य से अधिक राशि दर्ज करें।</string>
+    <string name="portfolio_continue_wallet">%1$s के साथ जारी रखें</string>
 </resources>

@@ -1,6 +1,12 @@
 <resources>
+    <string name="contacts_none">Son alıcı yok</string>
+    <string name="pin_delete_last_digit">Son rakamı sil</string>
+    <string name="common_egyptian">Orta Mısırca (hiyeroglifler)</string>
     <plurals name="backup_selected_count">
         <item quantity="one">%1$d seçili</item>
         <item quantity="other">%1$d seçili</item>
     </plurals>
+    <string name="contacts_lookup_unavailable">Adres sorgulanamıyor</string>
+    <string name="portfolio_positive_amount">Sıfırdan büyük bir miktar girin.</string>
+    <string name="portfolio_continue_wallet">%1$s ile devam et</string>
 </resources>

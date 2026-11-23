@@ -1,7 +1,13 @@
 <resources>
+    <string name="contacts_none">אין נמענים אחרונים</string>
+    <string name="pin_delete_last_digit">מחיקת הספרה האחרונה</string>
+    <string name="common_egyptian">מצרית תיכונה (הירוגליפים)</string>
     <plurals name="backup_selected_count">
         <item quantity="one">%1$d נבחר</item>
         <item quantity="two">%1$d נבחרו</item>
         <item quantity="other">%1$d נבחרו</item>
     </plurals>
+    <string name="contacts_lookup_unavailable">חיפוש כתובת לא זמין</string>
+    <string name="portfolio_positive_amount">יש להזין סכום גדול מאפס.</string>
+    <string name="portfolio_continue_wallet">המשך עם %1$s</string>
 </resources>

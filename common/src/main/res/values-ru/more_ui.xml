@@ -1,8 +1,14 @@
 <resources>
+    <string name="contacts_none">Нет недавних получателей</string>
+    <string name="pin_delete_last_digit">Удалить последнюю цифру</string>
+    <string name="common_egyptian">Среднеегипетский (иероглифы)</string>
     <plurals name="backup_selected_count">
         <item quantity="one">Выбран %1$d</item>
         <item quantity="few">Выбрано %1$d</item>
         <item quantity="many">Выбрано %1$d</item>
         <item quantity="other">Выбрано %1$d</item>
     </plurals>
+    <string name="contacts_lookup_unavailable">Поиск адреса недоступен</string>
+    <string name="portfolio_positive_amount">Введите сумму больше нуля.</string>
+    <string name="portfolio_continue_wallet">Продолжить с %1$s</string>
 </resources>
