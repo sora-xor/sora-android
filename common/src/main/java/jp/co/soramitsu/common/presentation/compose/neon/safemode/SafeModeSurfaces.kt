@@ -19,6 +19,10 @@ limitations under the License.
 
 package jp.co.soramitsu.common.presentation.compose.neon.safemode
 
+import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.runtime.remember
+import androidx.compose.foundation.layout.BoxWithConstraints
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
@@ -415,15 +419,26 @@ private fun PhraseGridLtr(
     modifier: Modifier,
 ) {
     val n = MaterialTheme.neon
-    val rows = (words.size + 1) / 2
-    Box(modifier = modifier.fillMaxWidth()) {
+    // A recovery word is never broken across two lines. Two columns need room for the widest word of this phrase
+    // beside its number; where a narrow screen or larger text does not leave it, the words stand in one column,
+    // still numbered from the top. (Measured, not drawn: nothing of the phrase shows before it is revealed.)
+    val measurer = rememberTextMeasurer(cacheSize = 0)
+    val density = LocalDensity.current
+    val cellWidth = remember(words, density) {
+        val widest = words.maxOfOrNull { measurer.measure(it, NeonType.phraseWord, softWrap = false, maxLines = 1).size.width } ?: 0
+        val number = measurer.measure("00", PhraseNumberStyle, softWrap = false, maxLines = 1).size.width
+        with(density) { (widest + number).toDp() } + PHRASE_CELL_PADDING * 2 + PHRASE_NUMBER_GAP + 1.dp
+    }
+    BoxWithConstraints(modifier = modifier.fillMaxWidth()) {
+        val columns = if ((maxWidth - PHRASE_COLUMN_GAP) / 2 >= cellWidth) 2 else 1
+        val rows = (words.size + columns - 1) / columns
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .testTag(SafeModeTags.PHRASE_GRID),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(PHRASE_COLUMN_GAP),
         ) {
-            repeat(2) { column ->
+            repeat(columns) { column ->
                 Column(
                     modifier = Modifier.weight(1f),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -477,6 +492,11 @@ private fun PhraseGridLtr(
     }
 }
 
+private val PhraseNumberStyle = NeonType.mono.copy(fontSize = NeonType.mono.fontSize * (12f / 13f))
+private val PHRASE_CELL_PADDING = 12.dp
+private val PHRASE_NUMBER_GAP = 10.dp
+private val PHRASE_COLUMN_GAP = 8.dp
+
 @Composable
 private fun PhraseCell(number: Int, word: String?) {
     val n = MaterialTheme.neon
@@ -488,15 +508,15 @@ private fun PhraseCell(number: Int, word: String?) {
             .clip(shape)
             .background(n.glassSolid)
             .border(1.dp, n.hairline, shape)
-            .padding(horizontal = 12.dp),
+            .padding(horizontal = PHRASE_CELL_PADDING),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
             text = number.toString().padStart(2, '0'),
-            style = NeonType.mono.copy(fontSize = NeonType.mono.fontSize * (12f / 13f)),
+            style = PhraseNumberStyle,
             color = n.textTertiary,
         )
-        Spacer(Modifier.width(10.dp))
+        Spacer(Modifier.width(PHRASE_NUMBER_GAP))
         if (word != null) {
             Text(text = word, style = NeonType.phraseWord, color = n.textPrimary)
         } else {
