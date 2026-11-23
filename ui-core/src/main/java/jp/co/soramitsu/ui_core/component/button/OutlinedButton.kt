@@ -80,11 +80,11 @@ fun OutlinedButton(
                 ButtonLabel(
                     text = text,
                     modifier = Modifier
-                        .weight(1f, fill = false)
                         .padding(vertical = Dimens.x1)
                         .buttonLabelEnds(
                             start = leftIcon?.let { 0.dp } ?: Dimens.x3,
                             end = rightIcon?.let { 0.dp } ?: Dimens.x3,
+                            reserve = rightIcon?.let { TrailingIconReserve } ?: 0.dp,
                         ),
                     maxLines = maxLines,
                 )

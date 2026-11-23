@@ -13,6 +13,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.offset
 import kotlin.math.roundToInt
 import jp.co.soramitsu.ui_core.component.text.fitDown
@@ -48,16 +49,22 @@ fun ButtonLabel(
 
 /**
  * The space at the two ends of a button's label: [start] and [end] where there is room, and down to half of each
- * where the label would otherwise not fit. Put it straight on the [ButtonLabel].
+ * where the label would otherwise not fit. [reserve] is width the label leaves free for what follows it in the
+ * button (a trailing icon is measured after the label and would otherwise get what the label left: nothing). Put it
+ * straight on the [ButtonLabel].
  */
-fun Modifier.buttonLabelEnds(start: Dp, end: Dp): Modifier = layout { measurable, constraints ->
+fun Modifier.buttonLabelEnds(start: Dp, end: Dp, reserve: Dp = 0.dp): Modifier = layout { measurable, constraints ->
     val startPx = start.roundToPx()
     val full = startPx + end.roundToPx()
     val least = full / 2
-    val placeable = measurable.measure(constraints.offset(horizontal = -least).copy(minWidth = 0))
-    val room = if (constraints.hasBoundedWidth) constraints.maxWidth - placeable.width else full
+    val kept = reserve.roundToPx()
+    val placeable = measurable.measure(constraints.offset(horizontal = -least - kept).copy(minWidth = 0))
+    val room = if (constraints.hasBoundedWidth) constraints.maxWidth - kept - placeable.width else full
     val ends = room.coerceIn(least, full)
     val width = (placeable.width + ends).coerceIn(constraints.minWidth, constraints.maxWidth)
     val left = if (full == 0) 0 else ((width - placeable.width) * (startPx.toFloat() / full)).roundToInt()
     layout(width, placeable.height) { placeable.placeRelative(left, 0) }
 }
+
+/** What a trailing icon takes in a button with a label: the icon and the space at its sides. */
+val TrailingIconReserve: Dp = 48.dp

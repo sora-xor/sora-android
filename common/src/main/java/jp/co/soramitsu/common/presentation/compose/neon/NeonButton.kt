@@ -74,6 +74,7 @@ import jp.co.soramitsu.common.presentation.compose.theme.neon.LocalFx
 import jp.co.soramitsu.common.presentation.compose.theme.neon.NeonTokens
 import jp.co.soramitsu.common.presentation.compose.theme.neon.neon
 import jp.co.soramitsu.ui_core.component.button.ButtonLabel
+import jp.co.soramitsu.ui_core.component.button.TrailingIconReserve
 import jp.co.soramitsu.ui_core.component.button.buttonLabelEnds
 import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.resources.Dimens
@@ -210,8 +211,7 @@ fun NeonButton(
                 )
             }
             text?.let {
-                // The label takes what the icons leave, so a long one is set smaller rather than cut.
-                Box(Modifier.weight(1f, fill = false), contentAlignment = Alignment.Center) {
+                Box(contentAlignment = Alignment.Center) {
                     ButtonLabel(
                         text = text,
                         modifier = Modifier
@@ -219,6 +219,7 @@ fun NeonButton(
                             .buttonLabelEnds(
                                 start = leftIcon?.let { 0.dp } ?: Dimens.x3,
                                 end = rightIcon?.let { 0.dp } ?: Dimens.x3,
+                                reserve = rightIcon?.let { TrailingIconReserve } ?: 0.dp,
                             )
                             .alpha(if (loading) 0f else 1f),
                         maxLines = maxLines,
