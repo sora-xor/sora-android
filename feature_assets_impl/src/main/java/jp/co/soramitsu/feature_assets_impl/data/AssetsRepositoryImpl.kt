@@ -431,17 +431,19 @@ class AssetsRepositoryImpl @Inject constructor(
         )
         val allTokens = db.assetDao().getTokensWithFiatOfCurrency(selectedCurrency.code)
         // A wallet with stored rows may have read its balances while this walk was running, with
-        // the token list as it was. A full refresh reads the whitelisted tokens (a list name in
-        // their row, as the queries ask) and the blacklisted ones, each with its precision. The
+        // the token list as it was. A full refresh reads the whitelisted tokens (the list's name
+        // in their row, the test the queries make) and the blacklisted ones, each with its precision. The
         // walk changes the blacklist first and the rows after: when any of the three is different
         // at its end, such a wallet is read once more
         // ([updateWhitelistBalancesAfterTokenListWalk]), also when a token only moved from one
         // list to the other and was on neither for a moment in between.
         val notListedAfter = whitelistTokensManager.blacklistIds.toSet()
+        fun isListed(row: jp.co.soramitsu.core_db.model.TokenWithFiatLocal) =
+            row.token.whitelistName == AssetHolder.DEFAULT_WHITE_LIST_NAME
         fun listed(rows: List<jp.co.soramitsu.core_db.model.TokenWithFiatLocal>) =
-            rows.filter { it.token.whitelistName.isNotEmpty() }.mapTo(HashSet()) { it.token.id }
+            rows.filter(::isListed).mapTo(HashSet()) { it.token.id }
         fun precisions(rows: List<jp.co.soramitsu.core_db.model.TokenWithFiatLocal>, notListed: Set<String>) =
-            rows.filter { it.token.whitelistName.isNotEmpty() || it.token.id in notListed }
+            rows.filter { isListed(it) || it.token.id in notListed }
                 .associate { it.token.id to it.token.precision }
         listChangedByWalk = listed(curTokens) != listed(allTokens) || notListedBefore != notListedAfter ||
             precisions(curTokens, notListedBefore) != precisions(allTokens, notListedAfter)
@@ -458,8 +460,8 @@ class AssetsRepositoryImpl @Inject constructor(
             readBeforeWalk -= address
         } else if (address in readBeforeWalk) {
             // Its mark is taken off by the full read itself, once that read has been written:
-            // a read that fails here is still owed.
-            updateWhitelistBalances(address)
+            // a read that fails here is still owed. Two callers asking together read once.
+            readAllBalances(address, onlyWhenOwed = true)
         }
     }
 
@@ -504,8 +506,11 @@ class AssetsRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun updateWhitelistBalances(address: String) {
+    override suspend fun updateWhitelistBalances(address: String) = readAllBalances(address, onlyWhenOwed = false)
+
+    private suspend fun readAllBalances(address: String, onlyWhenOwed: Boolean) {
         assetsMutex.withLock {
+            if (onlyWhenOwed && address !in readBeforeWalk) return
             withContext(coroutineManager.io) {
                 val selectedCurrency = soraConfigManager.getSelectedCurrency()
                 prepareRows(address, selectedCurrency.code)

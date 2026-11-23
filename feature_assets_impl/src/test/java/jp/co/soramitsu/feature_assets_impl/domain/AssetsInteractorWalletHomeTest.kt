@@ -193,4 +193,28 @@ class AssetsInteractorWalletHomeTest {
         coVerify(exactly = 1) { assetsRepository.updateWhitelistBalances(address) }
         coVerify(exactly = 0) { assetsRepository.addFakeBalance(any(), any(), any()) }
     }
+
+    @Test
+    fun `a balance read asked for a wallet is made while that wallet is still the selected one`() = runTest {
+        coEvery { assetsRepository.updateWhitelistBalances(address) } returns Unit
+        coEvery { assetsRepository.updateWhitelistBalancesAfterTokenListWalk(address) } returns Unit
+
+        interactor.updateWhitelistBalances(address)
+        interactor.updateWhitelistBalancesAfterTokenListWalk(address)
+
+        coVerify(exactly = 1) { assetsRepository.updateWhitelistBalances(address) }
+        coVerify(exactly = 1) { assetsRepository.updateWhitelistBalancesAfterTokenListWalk(address) }
+    }
+
+    @Test
+    fun `a balance read asked for a wallet that was left reads nothing, not even the wallet selected now`() = runTest {
+        val left = "cnVkoGs3rEMqLqY27c2nfVXJRGdzNJk2ns78DcqtppaSRe8qm"
+
+        // A retry or the read after the token list walk, made for the wallet selected before.
+        interactor.updateWhitelistBalances(left)
+        interactor.updateWhitelistBalancesAfterTokenListWalk(left)
+
+        coVerify(exactly = 0) { assetsRepository.updateWhitelistBalances(any()) }
+        coVerify(exactly = 0) { assetsRepository.updateWhitelistBalancesAfterTokenListWalk(any()) }
+    }
 }

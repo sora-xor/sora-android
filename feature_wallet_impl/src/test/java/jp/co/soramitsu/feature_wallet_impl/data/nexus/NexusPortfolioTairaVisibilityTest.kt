@@ -336,6 +336,79 @@ class NexusPortfolioTairaVisibilityTest {
     }
 
     @Test
+    fun `rows whose inputs change while their Send is being decided are not shown`() = runTest {
+        fixture()
+        every { sendQualification.capabilitiesFor(any()) } returns QUALIFIED
+        val journal = MutableStateFlow(emptyList<jp.co.soramitsu.core_db.model.PendingNetworkTransactionLocal>())
+        every { dao.observePendingTransactions("wallet") } returns journal
+        // The capability request answers at once; the balance read is held, so the rows come after it.
+        var balanceGate = CompletableDeferred<Unit>()
+        coEvery { torii.getXorBalance(NexusNetworks.taira, taira.address) } coAnswers {
+            balanceGate.await()
+            NexusAssetBalance(asset = TairaTestnetContract.XOR_ASSET_DEFINITION_ID, quantity = "1")
+        }
+        var held: CompletableDeferred<Unit>? = null
+        val deciding = CompletableDeferred<Unit>()
+        every { featureManager.observeState() } answers {
+            kotlinx.coroutines.flow.flow {
+                held?.let { deciding.complete(Unit); it.await() }
+                emitAll(features)
+            }
+        }
+        val emitted = mutableListOf<List<NexusPortfolioBalance>>()
+        backgroundScope.launch { repository.observeWallet("wallet", history = false).collect { emitted += it } }
+        runCurrent()
+        assertTrue(emitted.isEmpty())
+        // The rows arrive, and Send is being decided for them when the journal changes.
+        val gate = CompletableDeferred<Unit>()
+        held = gate
+        val first = balanceGate
+        balanceGate = CompletableDeferred()
+        first.complete(Unit)
+        runCurrent()
+        assertTrue(deciding.isCompleted)
+        held = null
+        journal.value = listOf(pendingSend().copy(chainId = null))
+        runCurrent()
+        gate.complete(Unit)
+        runCurrent()
+        // Read from the journal before: never shown, with or without Send.
+        assertTrue(emitted.isEmpty())
+        balanceGate.complete(Unit)
+        runCurrent()
+        assertTrue(emitted.none { rows -> rows.any { it.sendAvailable } })
+        assertEquals("NEXUS_PENDING_RECOVERY_REQUIRED", emitted.last().single().errorCode)
+    }
+
+    @Test
+    fun `a refresh's capability answer gives no Send to the rows read before that refresh`() = runTest {
+        fixture()
+        every { sendQualification.capabilitiesFor(any()) } returns QUALIFIED
+        var calls = 0
+        coEvery { featureManager.getState() } coAnswers { if (calls++ == 0) awaitCancellation() else features.value }
+        var balanceGate: CompletableDeferred<Unit>? = null
+        coEvery { torii.getXorBalance(NexusNetworks.taira, taira.address) } coAnswers {
+            balanceGate?.await()
+            NexusAssetBalance(asset = TairaTestnetContract.XOR_ASSET_DEFINITION_ID, quantity = "1")
+        }
+        val emitted = mutableListOf<List<NexusPortfolioBalance>>()
+        backgroundScope.launch { repository.observeWallet("wallet", history = false).collect { emitted += it } }
+        runCurrent()
+        // The first capability request has not answered: the balance shows, Send does not.
+        assertEquals(1, emitted.size)
+        assertFalse(emitted.single().single().sendAvailable)
+        // A refresh: its capability request answers at once, its balance read is held.
+        balanceGate = CompletableDeferred()
+        repository.refresh()
+        runCurrent()
+        assertEquals(2, calls)
+        assertTrue(emitted.none { rows -> rows.single().sendAvailable })
+        balanceGate?.complete(Unit)
+        runCurrent()
+        assertTrue(emitted.last().single().sendAvailable)
+    }
+
+    @Test
     fun `a subscription cancelled during the capability request leaves it to the next one`() = runTest {
         fixture()
         every { sendQualification.capabilitiesFor(any()) } returns QUALIFIED

@@ -26,7 +26,7 @@ class MainRefreshFailureTest {
     @Test fun `wallet refresh failure leaves PIN and local navigation available`() = runTest {
         val assets = mockk<AssetsInteractor>()
         every { assets.flowCurSoraAccount() } returns flowOf(TestAccounts.soraAccount)
-        coEvery { assets.updateWhitelistBalances() } throws IllegalStateException("PI_INDEXER_GRAPHQL_ERROR")
+        coEvery { assets.updateWhitelistBalances(any()) } throws IllegalStateException("PI_INDEXER_GRAPHQL_ERROR")
         val node = mockk<NodeManager>()
         every { node.connectionState } returns emptyFlow()
         val global = mockk<GlobalSubscriptionManager>()
@@ -49,14 +49,14 @@ class MainRefreshFailureTest {
             coVerify(exactly = 1) { pin.isPincodeUpdateNeeded() }
             coVerify(exactly = 0) { pools.updateBasicPools() }
             // The read was tried again a few times, and then left to the next balance event.
-            coVerify(exactly = 1 + BALANCE_RETRY_WAITS_MILLIS.size) { assets.updateWhitelistBalances() }
+            coVerify(exactly = 1 + BALANCE_RETRY_WAITS_MILLIS.size) { assets.updateWhitelistBalances(TestAccounts.soraAccount.substrateAddress) }
         } finally { unmockkObject(WalletDiagnostics, RepeatStrategyBuilder) }
     }
     @Test fun `a first balance read that fails is tried again until the chain answers`() = runTest {
         val assets = mockk<AssetsInteractor>()
         every { assets.flowCurSoraAccount() } returns flowOf(TestAccounts.soraAccount)
         var reads = 0
-        coEvery { assets.updateWhitelistBalances() } coAnswers { if (reads++ < 2) throw IllegalStateException("SORA2_STORAGE_ANSWER_INCOMPLETE") }
+        coEvery { assets.updateWhitelistBalances(any()) } coAnswers { if (reads++ < 2) throw IllegalStateException("SORA2_STORAGE_ANSWER_INCOMPLETE") }
         coEvery { assets.getTokensList() } returns emptyList()
         coEvery { assets.updateWhitelistBalancesAfterTokenListWalk(any()) } just Runs
         val node = mockk<NodeManager>()
@@ -79,12 +79,13 @@ class MainRefreshFailureTest {
             assertTrue(reads == 2)
             advanceUntilIdle()
             // The third read answered: nothing is read after it, and what follows the balances
-            // (the token list, the pools) runs as after a first read that succeeds.
+            // (the read after the token list walk, the pools, the token list for the liquidity)
+            // runs as after a first read that succeeds.
             assertTrue(reads == 3)
             coVerifyOrder {
-                assets.getTokensList()
                 assets.updateWhitelistBalancesAfterTokenListWalk(TestAccounts.soraAccount.substrateAddress)
                 pools.updateBasicPools()
+                assets.getTokensList()
             }
         } finally { unmockkObject(WalletDiagnostics, RepeatStrategyBuilder) }
     }

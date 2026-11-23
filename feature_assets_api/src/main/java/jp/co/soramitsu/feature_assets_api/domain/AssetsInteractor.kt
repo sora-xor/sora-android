@@ -101,8 +101,15 @@ interface AssetsInteractor {
     suspend fun updateWhitelistBalances()
 
     /**
+     * [updateWhitelistBalances] for [address], as long as it is still the selected wallet. A
+     * wallet that was left or removed meanwhile is not read, nor are its rows made again.
+     */
+    suspend fun updateWhitelistBalances(address: String)
+
+    /**
      * Waits for the token list walk and reads [address]'s balances once more when the walk
-     * changed the list after [updateWhitelistBalances] read them.
+     * changed the list after [updateWhitelistBalances] read them, as long as it is still the
+     * selected wallet.
      */
     suspend fun updateWhitelistBalancesAfterTokenListWalk(address: String)
 

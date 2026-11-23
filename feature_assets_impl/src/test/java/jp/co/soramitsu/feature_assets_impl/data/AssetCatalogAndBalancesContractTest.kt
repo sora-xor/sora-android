@@ -48,7 +48,7 @@ class AssetCatalogAndBalancesContractTest {
     private var active = emptyList<AssetTokenWithFiatLocal>()
     private var catalog = emptyList<TokenWithFiatLocal>()
     private var currency = SoraCurrency("USD", "US Dollar", "$")
-    private fun token(id: String, precision: Int = 6, symbol: String = id.uppercase()) = TokenLocal(id, symbol, symbol, precision, true, "SORA", true)
+    private fun token(id: String, precision: Int = 6, symbol: String = id.uppercase()) = TokenLocal(id, symbol, symbol, precision, true, AssetHolder.DEFAULT_WHITE_LIST_NAME, true)
     private fun asset(id: String, precision: Int = 6, exists: Boolean = true, position: Int = 7, amount: String = "9", reserved: String = "0") = AssetTokenWithFiatLocal(token(id, precision), null,
         if (exists) AssetLocal(id, owner, true, position, BigDecimal(amount), BigDecimal(reserved), BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, true) else null)
     private fun atomic(value: String, precision: Int = 18) = BigDecimal(value).movePointRight(precision).toBigIntegerExact()
@@ -330,9 +330,40 @@ class AssetCatalogAndBalancesContractTest {
         val repo = subject(); runCurrent()
         repo.updateWhitelistBalances(owner)
         assertEquals(1, inserted.size)
+        // The walk has listed it: the wallet's whitelist now has a row to make for it, and the chain holds 7.
+        active = listOf(asset(xor, 18), asset("alpha"), asset("moved", exists = false))
+        coEvery { calls.fetchBalances(owner, listOf("alpha", "moved")) } returns listOf(atomic("1.25", 6), atomic("7", 6))
         walk.complete(listOf(TokenInfoDto("alpha", "ALPHA", "ALPHA", 6, true), TokenInfoDto("moved", "MOVED", "MOVED", 6, true)))
         repo.updateWhitelistBalancesAfterTokenListWalk(owner)
         assertEquals(2, inserted.size)
+        equalDecimal("7", inserted.last().single { it.tokenId == "moved" }.free)
+    }
+    @Test fun `a wallet read during the walk is read once more when a token kept under another list's name joins the whitelist`() = runTest {
+        // The whitelist is the rows that carry its own name, the test the Room queries make.
+        active = listOf(asset(xor, 18), asset("alpha")); val walk = CompletableDeferred<List<TokenInfoDto>>()
+        coEvery { calls.fetchAssetsList() } coAnswers { walk.await() }
+        coEvery { dao.getTokensWithFiatOfCurrency(any()) } returnsMany listOf(
+            listOf(TokenWithFiatLocal(token("alpha"), null), TokenWithFiatLocal(token("old").copy(whitelistName = "another_list"), null)),
+            listOf(TokenWithFiatLocal(token("alpha"), null), TokenWithFiatLocal(token("old"), null)),
+        )
+        val repo = subject(); runCurrent()
+        repo.updateWhitelistBalances(owner)
+        walk.complete(listOf(TokenInfoDto("alpha", "ALPHA", "ALPHA", 6, true), TokenInfoDto("old", "OLD", "OLD", 6, true)))
+        repo.updateWhitelistBalancesAfterTokenListWalk(owner)
+        assertEquals(2, inserted.size)
+    }
+    @Test fun `two callers asking for the read owed after the walk read once`() = runTest {
+        active = listOf(asset(xor, 18), asset("alpha")); val walk = walkAddsBeta()
+        val repo = subject(); runCurrent()
+        repo.updateWhitelistBalances(owner)
+        active = listOf(asset(xor, 18), asset("alpha"), asset("beta", exists = false))
+        coEvery { calls.fetchBalances(owner, listOf("alpha", "beta")) } returns listOf(atomic("1.25", 6), atomic("4", 6))
+        val first = launch { repo.updateWhitelistBalancesAfterTokenListWalk(owner) }
+        val second = launch { repo.updateWhitelistBalancesAfterTokenListWalk(owner) }
+        runCurrent()
+        walk.complete(alphaAndBeta); first.join(); second.join()
+        assertEquals(2, inserted.size)
+        coVerify(exactly = 1) { calls.fetchBalances(owner, listOf("alpha", "beta")) }
     }
     @Test fun `a read owed after the walk stays owed when it fails, until a full read is written`() = runTest {
         active = listOf(asset(xor, 18), asset("alpha")); val walk = walkAddsBeta()

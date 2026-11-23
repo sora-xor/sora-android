@@ -120,7 +120,7 @@ class MainViewModelTest {
         )
         advanceTimeBy(42000)
         verify(globalSubscriptionManager).start()
-        verify(assetsInteractor).updateWhitelistBalances()
+        verify(assetsInteractor).updateWhitelistBalances(TestAccounts.soraAccount.substrateAddress)
         verify(blockExplorerManager, times(3)).updateFiat()
         assertFalse(mainViewModel.badConnectionVisibilityLiveData.getOrAwaitValue())
     }

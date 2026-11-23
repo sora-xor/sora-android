@@ -87,15 +87,17 @@ class MainViewModel @Inject constructor(
                     try {
                         // The balances are read at once, with the token list as stored. The
                         // pools and the liquidity need the list as this launch's walk leaves it
-                        // (every asset on the chain, the whitelist), as they always had it; when
-                        // the walk changed the list, the balances are read once more.
-                        readBalances { assetsInteractor.updateWhitelistBalances() }
-                        val tokens = assetsInteractor.getTokensList().map { it.id }
-                        readBalances {
-                            assetsInteractor.updateWhitelistBalancesAfterTokenListWalk(account.substrateAddress)
-                        }
+                        // (every asset on the chain, the whitelist), as they always had it: the
+                        // second read waits for the walk, and reads the balances once more when
+                        // the walk changed the list. Both read the wallet this collector was
+                        // started for, and nothing once it is no longer the selected one.
+                        val address = account.substrateAddress
+                        readBalances { assetsInteractor.updateWhitelistBalances(address) }
+                        readBalances { assetsInteractor.updateWhitelistBalancesAfterTokenListWalk(address) }
                         poolsUpdateSubscription.updateBasicPools()
-                        blockExplorerManager.getTokensLiquidity(tokens)
+                        assetsInteractor.getTokensList().map { it.id }.also { tokens ->
+                            blockExplorerManager.getTokensLiquidity(tokens)
+                        }
                     } catch (error: kotlinx.coroutines.CancellationException) {
                         throw error
                     } catch (error: Exception) {
