@@ -34,7 +34,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
@@ -144,11 +143,12 @@ fun ReceiveTokenByQrScreen(
 ) {
     // Keep both actions in the same scroll flow as the QR and address. A bottom-aligned
     // overlay can cover Share when the phone is short or accessibility text is larger.
+    // The wallet's main screen already keeps its content clear of the navigation bar (and of a
+    // side one); padding for it again here only left a second bar's height of blank space.
     Column(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(scrollState)
-            .navigationBarsPadding()
             .padding(Dimens.x4),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(Dimens.x2)
