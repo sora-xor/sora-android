@@ -66,6 +66,7 @@ import jp.co.soramitsu.ui_core.lit.litPad
 import jp.co.soramitsu.common.presentation.compose.theme.neon.LocalFx
 import jp.co.soramitsu.common.presentation.compose.theme.neon.neon
 import jp.co.soramitsu.ui_core.lit.Lit
+import jp.co.soramitsu.ui_core.lit.PickerAndField
 import jp.co.soramitsu.ui_core.lit.litWell
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
@@ -102,10 +103,11 @@ fun AssetAmountInput(
             Text(label, style = MaterialTheme.customTypography.textXSBold, color = MaterialTheme.customColors.fgSecondary)
         }
         val selectable = tokenSelectable && state?.readOnly != true
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        // The token at its own width and the amount in the rest. Where that leaves the amount too few digits (a
+        // 320 dp screen, larger text, a long symbol), the amount takes a line of its own under the token.
+        PickerAndField(fieldMin = AMOUNT_MIN_WIDTH, picker = {
             Row(
                 modifier = Modifier
-                    .weight(1f)
                     .heightIn(min = 48.dp)
                     .testTagAsId("SelectToken" + state?.token?.symbol.orEmpty())
                     .then(if (selectable) Modifier.clickable(role = Role.Button, onClick = onSelectToken) else Modifier),
@@ -139,9 +141,10 @@ fun AssetAmountInput(
                     )
                 }
             }
+        }) {
             if (state != null) {
                 BasicNumberInput(
-                    modifier = Modifier.weight(1f).testTagAsId("InputAmountField" + state.token.symbol),
+                    modifier = Modifier.fillMaxWidth().testTagAsId("InputAmountField" + state.token.symbol),
                     onFocusChanged = {
                         focusedInput.value = it
                         onFocusChange(it)
@@ -195,6 +198,9 @@ fun AssetAmountInput(
         }
     }
 }
+
+/** The least an amount being typed gets beside its token: about ten digits at the usual text size. */
+private val AMOUNT_MIN_WIDTH = 140.dp
 
 val previewAssetAmountInputState = AssetAmountInputState(
     token = previewToken,
