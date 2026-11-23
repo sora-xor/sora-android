@@ -27,6 +27,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -176,7 +177,11 @@ class CardsHubFragment : SoraBaseFragment<CardsHubViewModel>() {
  */
 @Composable
 internal fun ReadOnlyHomeBanner(learnMore: Boolean, onLearnMore: (Boolean) -> Unit) {
-    if (!rememberReadOnlyBrowsing()) return
+    val browsing = rememberReadOnlyBrowsing()
+    // The sheet goes with the banner: once the wallet is no longer read-only it is closed, and the hero under it
+    // moves again, instead of the sheet coming back by itself next time.
+    LaunchedEffect(browsing, learnMore) { if (!browsing && learnMore) onLearnMore(false) }
+    if (!browsing) return
     val context = LocalContext.current
     ReadOnlyBanner(
         modifier = Modifier.padding(bottom = 16.dp),
