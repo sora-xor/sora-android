@@ -254,12 +254,41 @@ class SoraConfigManager @Inject constructor(
             ?.currencies ?: listOf(DEFAULT_SORA_CURRENCY)
 
     private val selectedCurrencyFactory = CachingFactory<EmptyArgs, SoraCurrency> {
-        val selectedCurrency = getCurrencies().find {
-            it.code == soraPreferences.getString(SELECTED_CURRENCY).ifEmpty { "USD" }
+        val code = soraPreferences.getString(SELECTED_CURRENCY).ifEmpty { DEFAULT_SORA_CURRENCY.code }
+        // Every balance row, token list and price the app shows is looked up under this
+        // currency, so it is answered from the phone when the phone can: the chosen currency
+        // as the configuration saved at an earlier launch lists it, or the default currency,
+        // which needs no list. Only a phone with another currency chosen that its saved
+        // configuration does not list (or that has none saved) waits for the configuration to
+        // be fetched (two requests), as every launch did before.
+        savedCurrencies()?.find { it.code == code }?.let { return@CachingFactory it }
+        if (code == DEFAULT_SORA_CURRENCY.code) {
+            return@CachingFactory DEFAULT_SORA_CURRENCY
         }
-        return@CachingFactory selectedCurrency ?: DEFAULT_SORA_CURRENCY
+        return@CachingFactory getCurrencies().find { it.code == code } ?: DEFAULT_SORA_CURRENCY
     }
 
+    /** The currencies of the configuration saved at an earlier launch; null when there is none. */
+    private suspend fun savedCurrencies(): List<SoraCurrency>? = try {
+        val saved = soraPreferences.getString("mobileConfig")
+        if (saved.isEmpty()) {
+            null
+        } else {
+            json.decodeFromString(
+                deserializer = MobileDto.serializer(),
+                string = requireUnambiguousSoraConfigPayload(saved, MAX_CONFIG_RESPONSE_BYTES),
+            ).currencies.map { SoraCurrency(code = it.code, name = it.name, sign = it.sign) }
+        }
+    } catch (error: CancellationException) {
+        throw error
+    } catch (_: Exception) {
+        null
+    }
+
+    /**
+     * The currency the app's prices are shown in. Answered without the network on every launch
+     * after the first; the same value for as long as the app runs.
+     */
     suspend fun getSelectedCurrency() =
         selectedCurrencyFactory.value(EmptyArgs)
 }

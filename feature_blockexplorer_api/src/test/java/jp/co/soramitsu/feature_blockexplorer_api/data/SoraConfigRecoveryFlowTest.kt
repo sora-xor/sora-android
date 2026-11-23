@@ -84,6 +84,40 @@ class SoraConfigRecoveryFlowTest {
         assertEquals("USD", manager.getSelectedCurrency().code)
         coVerify(exactly = 0) { preferences.putString("selected_currency", any()) }
     }
+    @Test fun `the selected currency is answered from the saved configuration without the network`() = runTest {
+        val manager = subject()
+        coEvery { http.getUtf8(any(), any()) } coAnswers { kotlinx.coroutines.awaitCancellation() }
+        coEvery { preferences.getString("mobileConfig") } returns mobile
+        assertEquals("JPY", manager.getSelectedCurrency().code)
+        coVerify(exactly = 0) { http.getUtf8(any(), any()) }
+    }
+    @Test fun `the default currency needs neither a saved configuration nor the network`() = runTest {
+        val manager = subject(); coEvery { preferences.getString("selected_currency") } returns ""
+        coEvery { http.getUtf8(any(), any()) } coAnswers { kotlinx.coroutines.awaitCancellation() }
+        val currency = manager.getSelectedCurrency()
+        assertEquals("USD", currency.code); assertEquals("$", currency.sign)
+        coVerify(exactly = 0) { http.getUtf8(any(), any()) }
+    }
+    @Test fun `a currency the saved configuration does not list waits for the configuration, as before`() = runTest {
+        // The saved list is older than the choice: it must not turn the chosen currency into the default.
+        val manager = subject()
+        coEvery { preferences.getString("mobileConfig") } returns mobile.replace("\"JPY\"", "\"EUR\"")
+        assertEquals("JPY", manager.getSelectedCurrency().code)
+        coVerify(exactly = 1) { http.getUtf8(OptionsProvider.configMobile, any()) }
+    }
+    @Test fun `a currency no configuration lists is the default once the configuration has answered`() = runTest {
+        val manager = subject(); coEvery { preferences.getString("selected_currency") } returns "UNKNOWN"
+        coEvery { preferences.getString("mobileConfig") } returns mobile
+        assertEquals("USD", manager.getSelectedCurrency().code)
+        coVerify(exactly = 1) { http.getUtf8(OptionsProvider.configMobile, any()) }
+    }
+    @Test fun `a saved configuration that does not decode is not used for the currency`() = runTest {
+        val manager = subject()
+        coEvery { preferences.getString("mobileConfig") } returns "{malformed"
+        // Not the default: the configuration is fetched, as before, and lists the currency.
+        assertEquals("JPY", manager.getSelectedCurrency().code)
+        coVerify(exactly = 1) { http.getUtf8(OptionsProvider.configMobile, any()) }
+    }
     @Test fun `utf8 admission counts CJK and rejects either orphan surrogate`() {
         assertEquals("界", requireSoraConfigPayloadWithinLimit("界", 3))
         for (value in listOf("\uDC00", "\uD800x")) {
