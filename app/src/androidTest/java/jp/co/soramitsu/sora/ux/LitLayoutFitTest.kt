@@ -127,9 +127,13 @@ class LitLayoutFitTest {
         val label = "Review request"
         var width by mutableStateOf<Dp?>(null)
         var ownSize = 0.sp
+        var ownWidth = 0f
         compose.setContent {
             SoraAppTheme {
                 ownSize = MaterialTheme.customTypography.buttonM.fontSize
+                // The label's width in the button's own type, measured apart from the button.
+                val measurer = androidx.compose.ui.text.rememberTextMeasurer()
+                ownWidth = measurer.measure(label, MaterialTheme.customTypography.buttonM).let { it.getLineRight(0) - it.getLineLeft(0) }
                 FilledButton(
                     modifier = (width?.let { Modifier.width(it) } ?: Modifier).testTag("button"),
                     size = Size.Large,
@@ -140,13 +144,16 @@ class LitLayoutFitTest {
             }
         }
         val text = { compose.onNodeWithText(label, useUnmergedTree = true).textLayout() }
-        val sizeOf = { layout: TextLayoutResult -> layout.layoutInput.style.fontSize }
+        // How wide the label is set. The semantics' layout result is the label's real layout, but it reports the
+        // style it was given, not the size it was fitted to: the line's width is what shows the size.
+        val inked = { layout: TextLayoutResult -> layout.getLineRight(0) - layout.getLineLeft(0) }
 
         // With room it is set in the button's own type, exactly, on one line.
         val natural = text()
         assertFalse(natural.hasVisualOverflow)
         assertEquals(1, natural.lineCount)
-        assertEquals("a label with room is not at the button's own size", ownSize, sizeOf(natural))
+        val full = inked(natural)
+        assertEquals("a label with room is not at the button's own size", ownWidth, full, 1f)
         val button = bounds("button")
         val buttonWidth = button.right - button.left
         val labelWidth = with(compose.density) { natural.size.width.toDp() }
@@ -157,15 +164,15 @@ class LitLayoutFitTest {
         compose.runOnIdle { width = sides + labelWidth + 4.dp }
         val spaced = text()
         assertFalse(spaced.hasVisualOverflow)
-        assertEquals("the label shrank although its spacing could give way", ownSize, sizeOf(spaced))
+        assertEquals("the label shrank although its spacing could give way", full, inked(spaced), 1f)
 
         // Too narrow even so: the whole label, smaller, but never under 11 sp.
         compose.runOnIdle { width = sides + labelWidth * 0.85f }
         val smaller = text()
         assertFalse("the label is cut although a smaller size fits", smaller.hasVisualOverflow)
         assertFalse(smaller.isLineEllipsized(0))
-        assertTrue("the label was not set smaller", sizeOf(smaller).value < ownSize.value)
-        assertTrue(sizeOf(smaller).value >= 11f)
+        assertTrue("the label was not set smaller", inked(smaller) < full - 1f)
+        assertTrue("the label went under 11 sp", inked(smaller) >= full * 11f / ownSize.value - 2f)
 
         // Far too narrow for any size it may take: cut at the end with an ellipsis, never mid-letter.
         compose.runOnIdle { width = sides + labelWidth * 0.5f }
@@ -173,7 +180,7 @@ class LitLayoutFitTest {
 
         // Room again: back to its own size.
         compose.runOnIdle { width = null }
-        assertEquals(ownSize, sizeOf(text()))
+        assertEquals(full, inked(text()), 1f)
     }
 
     @Test fun aButtonInARowThatScrollsSidewaysKeepsItsLabel() {
@@ -219,7 +226,9 @@ class LitLayoutFitTest {
         val smaller = text()
         assertFalse(smaller.hasVisualOverflow)
         assertFalse(smaller.isLineEllipsized(0))
-        assertTrue(smaller.layoutInput.style.fontSize.value < natural.layoutInput.style.fontSize.value)
+        // The line's width shows the size it was set in (the semantics' result reports the style it was given).
+        val inked = { layout: TextLayoutResult -> layout.getLineRight(0) - layout.getLineLeft(0) }
+        assertTrue("the label was not set smaller", inked(smaller) < inked(natural) - 1f)
     }
 
     @Test fun theLightMovesWhatIsDrawnAndNotWhereItIsLaidOutOrTouched() {
@@ -281,6 +290,7 @@ class LitLayoutFitTest {
         var row = bounds("row")
         var figures = bounds("figures")
         var nameBounds = bounds("name")
+        val figuresWidth = figures.right - figures.left
         assertEquals(row.right.value, figures.right.value, 0.6f)
         assertTrue("the figures are not beside the name", figures.top < nameBounds.bottom)
         assertEquals(52f, (nameBounds.left - row.left).value, 0.6f)
@@ -296,7 +306,8 @@ class LitLayoutFitTest {
         assertFalse("the name was cut", compose.onNodeWithTag("name").textLayout().hasVisualOverflow)
         assertTrue("the figures are not under the name", figures.top >= nameBounds.bottom)
         assertEquals(row.right.value, figures.right.value, 0.6f)
-        assertFalse(compose.onNodeWithTag("figures").textLayout().hasVisualOverflow)
+        // Whole: as wide as beside the name.
+        assertEquals(figuresWidth.value, (figures.right - figures.left).value, 0.6f)
 
         // Room again: back beside it.
         compose.runOnIdle { width = 480.dp }
