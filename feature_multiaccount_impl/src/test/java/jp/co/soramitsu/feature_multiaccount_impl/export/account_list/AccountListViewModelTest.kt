@@ -269,8 +269,9 @@ class AccountListViewModelTest {
         }
 
         val s = accountListViewModel.toolbarState.getOrAwaitValue()
-        assertEquals(R.string.backup_selected_count, s.basic.title)
+        assertEquals(R.plurals.backup_selected_count, s.basic.title)
         assertEquals(listOf(1), s.basic.titleArgs?.toList())
+        assertEquals(1, s.basic.titleQuantity)
         assertEquals(R.string.common_backup, s.basic.actionLabel)
     }
 
@@ -278,6 +279,10 @@ class AccountListViewModelTest {
     fun onToolbarAction() {
         accountListViewModel.onAccountSelected(soraAccounts.first().substrateAddress)
         accountListViewModel.onAccountSelected(soraAccounts.last().substrateAddress)
+        val s = accountListViewModel.toolbarState.getOrAwaitValue()
+        assertEquals(R.plurals.backup_selected_count, s.basic.title)
+        assertEquals(listOf(soraAccounts.size), s.basic.titleArgs?.toList())
+        assertEquals(soraAccounts.size, s.basic.titleQuantity)
         accountListViewModel.onAction()
 
         verify(mainRouter).showExportJSONProtection(soraAccounts.map { it.substrateAddress })
@@ -302,5 +307,8 @@ class AccountListViewModelTest {
 
         val s = accountListViewModel.toolbarState.getOrAwaitValue()
         assertEquals(R.string.settings_accounts, s.basic.title)
+        // The plain title must not keep the plural quantity, or the toolbar would read a string id as plurals.
+        assertNull(s.basic.titleArgs)
+        assertNull(s.basic.titleQuantity)
     }
 }

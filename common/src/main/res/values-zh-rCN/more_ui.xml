@@ -1,0 +1,5 @@
+<resources>
+    <plurals name="backup_selected_count">
+        <item quantity="other">已选择%1$d项</item>
+    </plurals>
+</resources>

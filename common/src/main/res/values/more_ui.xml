@@ -18,7 +18,10 @@
     <string name="debug_reset_runtime" translatable="false">Reset runtime</string>
     <string name="contacts_none">No recent recipients</string>
     <string name="pin_delete_last_digit">Delete last digit</string>
-    <string name="backup_selected_count">%1$d selected</string>
+    <plurals name="backup_selected_count">
+        <item quantity="one">%1$d selected</item>
+        <item quantity="other">%1$d selected</item>
+    </plurals>
     <string name="contacts_lookup_unavailable">Address lookup unavailable</string>
     <string name="portfolio_positive_amount">Enter an amount above zero.</string>
     <string name="portfolio_continue_wallet">Continue with %1$s</string>

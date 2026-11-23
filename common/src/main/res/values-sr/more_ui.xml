@@ -1,0 +1,7 @@
+<resources>
+    <plurals name="backup_selected_count">
+        <item quantity="one">%1$d изабран</item>
+        <item quantity="few">%1$d изабрана</item>
+        <item quantity="other">%1$d изабрано</item>
+    </plurals>
+</resources>

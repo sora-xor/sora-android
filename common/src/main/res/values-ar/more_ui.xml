@@ -1,0 +1,10 @@
+<resources>
+    <plurals name="backup_selected_count">
+        <item quantity="zero">المحدد: %1$d</item>
+        <item quantity="one">المحدد: %1$d</item>
+        <item quantity="two">المحدد: %1$d</item>
+        <item quantity="few">المحدد: %1$d</item>
+        <item quantity="many">المحدد: %1$d</item>
+        <item quantity="other">المحدد: %1$d</item>
+    </plurals>
+</resources>

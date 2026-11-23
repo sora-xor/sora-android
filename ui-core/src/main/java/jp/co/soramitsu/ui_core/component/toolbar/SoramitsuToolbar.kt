@@ -44,6 +44,7 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.VisualTransformation
@@ -70,13 +71,18 @@ internal fun Any.toImage(): Painter {
 
 @Composable
 internal fun BasicToolbarState.title(): String {
-    return if (titleArgs == null) {
-        title.toTitle()
-    } else {
-        stringResource(id = title as Int, *titleArgs)
+    val quantity = titleQuantity
+    return when {
+        quantity != null -> pluralStringResource(id = title as Int, count = quantity, *(titleArgs ?: arrayOf<Any>(quantity)))
+        titleArgs == null -> title.toTitle()
+        else -> stringResource(id = title as Int, *titleArgs)
     }
 }
 
+/**
+ * [title] is a String, a string resource id, or a plurals resource id when [titleQuantity] is set;
+ * [titleArgs] are its format arguments (for plurals they default to the quantity).
+ */
 data class BasicToolbarState(
     val title: Any,
     val titleArgs: Array<Any>? = null,
@@ -88,6 +94,7 @@ data class BasicToolbarState(
     val searchValue: String? = null,
     val searchPlaceholder: Any? = null,
     val searchEnabled: Boolean = false,
+    val titleQuantity: Int? = null,
 )
 
 data class SoramitsuToolbarState(

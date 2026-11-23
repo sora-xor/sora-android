@@ -1,0 +1,7 @@
+<resources>
+    <plurals name="backup_selected_count">
+        <item quantity="one">%1$d נבחר</item>
+        <item quantity="two">%1$d נבחרו</item>
+        <item quantity="other">%1$d נבחרו</item>
+    </plurals>
+</resources>
