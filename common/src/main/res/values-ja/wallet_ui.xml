@@ -2,6 +2,4 @@
     <string name="portfolio_exclusions">集計対象外の資産</string>
     <string name="portfolio_row_expanded">展開中</string>
     <string name="portfolio_row_collapsed">折りたたみ中</string>
-    <string name="settings_debug">デバッグメニュー</string>
-    <string name="wallet_value_unknown">—</string>
 </resources>

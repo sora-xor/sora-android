@@ -1,21 +1,4 @@
 <resources>
-    <string name="debug_app_id">アプリID</string>
-    <string name="debug_version">バージョン</string>
-    <string name="debug_version_code">バージョンコード</string>
-    <string name="debug_manufacturer">メーカー</string>
-    <string name="debug_model">機種</string>
-    <string name="debug_os">Android</string>
-    <string name="debug_api">APIレベル</string>
-    <string name="debug_arch">アーキテクチャ</string>
-    <string name="debug_java">Java仕様</string>
-    <string name="debug_vm">仮想マシン</string>
-    <string name="debug_build">ビルドタイプ</string>
-    <string name="debug_flavor">ビルドの種類</string>
-    <string name="debug_display">画面</string>
-    <string name="debug_display_size">%1$d × %2$d px · %3$.2f倍</string>
-    <string name="debug_google_account">Googleアカウントを変更</string>
-    <string name="debug_google_changed">Googleアカウントを変更しました</string>
-    <string name="debug_reset_runtime">ランタイムをリセット</string>
     <string name="contacts_none">最近の送信先はありません</string>
     <string name="pin_delete_last_digit">最後の数字を削除</string>
     <string name="common_egyptian">中エジプト語（ヒエログリフ）</string>
