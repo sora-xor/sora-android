@@ -52,6 +52,11 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -605,8 +610,11 @@ private fun StepGlyph(state: SafeStepState) {
     }
 }
 
-/** Below this height left for a sheet, its title, body and actions scroll together. */
-private val SHORT_SHEET_WINDOW = 440.dp
+/** The least of a sheet's body that is shown between its title and its actions before the whole sheet scrolls. */
+private val SHEET_BODY_LEAST = 160.dp
+
+/** The grabber above the title (8 + 4 dp) and the body's own padding (16 dp above and below). */
+private val SHEET_CHROME = 44.dp
 
 /**
  * Opaque Safe Mode sheet (design spec 7.10): top radius 28, grabber, `headline2` title and a
@@ -658,10 +666,18 @@ fun SafeSheet(
             contentAlignment = Alignment.BottomCenter,
         ) {
             val shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)
-            // On a short window (a phone on its side, a split screen, the keyboard up) the title and the actions
-            // would leave the body no room, and a choice in it (Restore's backup confirmation) could not be reached:
-            // there the whole sheet scrolls as one, with the actions after the body.
-            val short = maxHeight < SHORT_SHEET_WINDOW
+            // On a short window (a phone on its side, a split screen, the keyboard up, very large text) the title and
+            // the actions could leave the body no room, and a choice in it (Restore's backup confirmation) could not
+            // be reached: there the whole sheet scrolls as one, with the actions after the body. What they leave is
+            // measured: the title and the actions keep their heights whichever way the sheet is laid out.
+            val density = LocalDensity.current
+            var titleHeight by remember { mutableIntStateOf(0) }
+            var actionsHeight by remember { mutableIntStateOf(0) }
+            val navigationBar = WindowInsets.navigationBars.getBottom(density)
+            val short = with(density) {
+                (maxHeight * 0.92f).roundToPx() - navigationBar - titleHeight - actionsHeight <
+                    (SHEET_BODY_LEAST + SHEET_CHROME).roundToPx()
+            }
             Column(
                 modifier = Modifier
                     .widthIn(max = LitLayout.ContentMaxWidth)
@@ -691,6 +707,7 @@ fun SafeSheet(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .onSizeChanged { titleHeight = it.height }
                         .padding(start = 24.dp, end = 8.dp, top = 12.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
@@ -721,6 +738,7 @@ fun SafeSheet(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .onSizeChanged { actionsHeight = it.height }
                         .padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                     content = footer,
