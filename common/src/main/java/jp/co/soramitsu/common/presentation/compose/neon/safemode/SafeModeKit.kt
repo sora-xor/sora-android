@@ -54,6 +54,7 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.ime
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.ui.layout.onSizeChanged
@@ -673,7 +674,10 @@ fun SafeSheet(
             val density = LocalDensity.current
             var titleHeight by remember { mutableIntStateOf(0) }
             var actionsHeight by remember { mutableIntStateOf(0) }
-            val navigationBar = WindowInsets.navigationBars.getBottom(density)
+            // What the sheet's own navigation bar padding adds: with the keyboard up, the keyboard's padding above has
+            // already taken the bar's part.
+            val navigationBar =
+                (WindowInsets.navigationBars.getBottom(density) - WindowInsets.ime.getBottom(density)).coerceAtLeast(0)
             val short = with(density) {
                 (maxHeight * 0.92f).roundToPx() - navigationBar - titleHeight - actionsHeight <
                     (SHEET_BODY_LEAST + SHEET_CHROME).roundToPx()

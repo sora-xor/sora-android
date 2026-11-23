@@ -554,10 +554,12 @@ private fun fitTotal(measurer: TextMeasurer, main: String, cents: String, room: 
     var scale = 1f
     repeat(TOTAL_FIT_TRIES) {
         val wide = width(scale)
-        if (wide <= room) return scale
-        // At least half a scaled pixel smaller each time, so it settles.
-        scale = minOf(scale * room / wide, scale - 0.5f / TOTAL_SIZE.value)
+        if (wide <= room || scale <= TOTAL_LEAST_SCALE) return scale
+        // At least half a scaled pixel smaller each time, so it settles; never below the least the total is set at.
+        scale = minOf(scale * room / wide, scale - 0.5f / TOTAL_SIZE.value).coerceAtLeast(TOTAL_LEAST_SCALE)
     }
+    // Still too wide after every try (a window far narrower than a phone): the smallest size reached, narrower than
+    // any that was measured.
     return scale
 }
 
@@ -1165,6 +1167,9 @@ private val TOTAL_STYLE = NeonType.displayHero.copy(lineHeight = 50.sp, fontFeat
 
 /** Sizes tried before the total settles (it nearly always fits at the first or second). */
 private const val TOTAL_FIT_TRIES = 8
+
+/** The smallest the total is set, as a share of its full size: about the size of the text under it. */
+private const val TOTAL_LEAST_SCALE = 0.4f
 
 /** The characters a total is made of (digits, a currency sign, separators), each measured once per size. */
 private const val TOTAL_GLYPHS = 24

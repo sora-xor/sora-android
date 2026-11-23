@@ -167,10 +167,11 @@ private class NameAndFiguresPolicy(
 
     override fun IntrinsicMeasureScope.minIntrinsicWidth(measurables: List<List<IntrinsicMeasurable>>, height: Int): Int {
         val leading = measurables[0].sumOf { it.maxIntrinsicWidth(height) + leadingGap.roundToPx() }
-        // Figures are never broken: their least is their whole width.
-        val text = ((measurables[1] + measurables[2]).map { it.minIntrinsicWidth(height) } +
-            measurables[3].map { it.maxIntrinsicWidth(height) }).maxOrNull() ?: 0
-        return leading + text
+        val name = (measurables[1] + measurables[2]).maxOfOrNull { it.minIntrinsicWidth(height) } ?: 0
+        // Figures are never broken, so their least is their whole width; on a line of their own they may take the
+        // picture's width too.
+        val figures = measurables[3].maxOfOrNull { it.maxIntrinsicWidth(height) } ?: 0
+        return maxOf(leading + name, figures)
     }
 
     override fun IntrinsicMeasureScope.maxIntrinsicWidth(measurables: List<List<IntrinsicMeasurable>>, height: Int): Int {
