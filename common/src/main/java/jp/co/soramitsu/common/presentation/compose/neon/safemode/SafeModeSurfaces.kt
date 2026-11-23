@@ -420,14 +420,20 @@ private fun PhraseGridLtr(
 ) {
     val n = MaterialTheme.neon
     // A recovery word is never broken across two lines. Two columns need room for the widest word of this phrase
-    // beside its number; where a narrow screen or larger text does not leave it, the words stand in one column,
-    // still numbered from the top. (Measured, not drawn: nothing of the phrase shows before it is revealed.)
+    // beside its number; where a narrow screen or larger text does not leave it, the revealed words stand in one
+    // column, still numbered from the top. While the phrase is hidden its placeholders always stand in two
+    // columns: the hidden view is the same for every phrase, nothing of the phrase is measured before it is
+    // revealed, and Tap to reveal stays in the middle of a grid that fits the screen.
     val measurer = rememberTextMeasurer(cacheSize = 0)
     val density = LocalDensity.current
-    val cellWidth = remember(words, density) {
-        val widest = words.maxOfOrNull { measurer.measure(it, NeonType.phraseWord, softWrap = false, maxLines = 1).size.width } ?: 0
-        val number = measurer.measure("00", PhraseNumberStyle, softWrap = false, maxLines = 1).size.width
-        with(density) { (widest + number).toDp() } + PHRASE_CELL_PADDING * 2 + PHRASE_NUMBER_GAP + 1.dp
+    val cellWidth = remember(words, density, revealed) {
+        if (!revealed) {
+            0.dp
+        } else {
+            val widest = words.maxOfOrNull { measurer.measure(it, NeonType.phraseWord, softWrap = false, maxLines = 1).size.width } ?: 0
+            val number = measurer.measure("00", PhraseNumberStyle, softWrap = false, maxLines = 1).size.width
+            with(density) { (widest + number).toDp() } + PHRASE_CELL_PADDING * 2 + PHRASE_NUMBER_GAP + 1.dp
+        }
     }
     BoxWithConstraints(modifier = modifier.fillMaxWidth()) {
         val columns = if ((maxWidth - PHRASE_COLUMN_GAP) / 2 >= cellWidth) 2 else 1
