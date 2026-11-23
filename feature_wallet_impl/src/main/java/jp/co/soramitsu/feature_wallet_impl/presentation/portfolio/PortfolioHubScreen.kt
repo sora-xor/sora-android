@@ -97,13 +97,15 @@ internal fun PortfolioHubScreen(
     sheetActions: PortfolioSheetActions,
     notices: @Composable ColumnScope.() -> Unit,
     secondaryCards: @Composable () -> Unit,
+    coveredByHost: Boolean = false,
 ) {
     val format = rememberPortfolioFormat(model)
     val skyHeight = with(LocalDensity.current) { SkyGeometry.HEIGHT.toPx() }
     val heroVisible by remember(scrollState) { derivedStateOf { scrollState.value < skyHeight } }
-    // A sheet over the home dims it: the planet stays where it is, but its comet and its tilt rest until the sheet
-    // has gone, instead of running under the scrim.
-    val covered = sheet != null
+    // A sheet over the home dims or hides it (one of this screen's own, or one its host opens, such as the network
+    // picker): the planet stays where it is, but its comet and its tilt rest until the sheet has gone, instead of
+    // running underneath.
+    val covered = sheet != null || coveredByHost
     val tilt = rememberTiltParallax(
         enabled = !LocalFx.current.reduceMotion && !LitHeroPerformance.isSlow,
         heroVisible = heroVisible && !covered,

@@ -444,6 +444,7 @@ private fun rememberComet(running: Boolean, reading: Boolean): CometState {
     LaunchedEffect(running) {
         var last = 0L
         var stepped = 0L
+        var due = 0L
         var started = 0L
         var late = 0
         while (running || state.power > 0.002f) {
@@ -456,12 +457,16 @@ private fun rememberComet(running: Boolean, reading: Boolean): CometState {
                 }
                 last = now
                 // Thirty steps a second are plenty for the comet alone, whatever the screen's own rate: the scene
-                // is traced again only on a step, so a 120 Hz screen costs no more than a 60 Hz one.
+                // is traced again only on a step, so a 120 Hz screen costs no more than a 60 Hz one. The next step
+                // is due a thirtieth of a second after the last one was due, not after it was taken, so a screen
+                // whose frames do not divide into thirtieths (48 Hz) still gets thirty on average.
                 if (stepped == 0L) {
                     stepped = now
-                } else if (now - stepped >= COMET_STEP_NANOS) {
+                    due = now + COMET_STEP_NANOS
+                } else if (now >= due - COMET_SLACK_NANOS) {
                     val dt = ((now - stepped) / 1_000_000_000f).coerceAtMost(0.1f)
                     stepped = now
+                    due = if (now - due > COMET_STEP_NANOS) now + COMET_STEP_NANOS else due + COMET_STEP_NANOS
                     val lap = if (readingNow) COMET_LAP_READING else COMET_LAP
                     state.power += ((if (running) 1f else 0f) - state.power) * min(dt * 3.5f, 1f)
                     state.angle = (state.angle + dt * 2f * PI.toFloat() / lap) % (2f * PI.toFloat())
@@ -477,8 +482,11 @@ private const val COMET_LAP = 9f
 private const val COMET_LAP_READING = 2.6f
 private const val COMET_SETTLE_NANOS = 1_500_000_000L
 
-/** Just under a thirtieth of a second: every second frame at 60 Hz, every third at 90, every fourth at 120. */
-private const val COMET_STEP_NANOS = 32_000_000L
+/** A thirtieth of a second: every second frame at 60 Hz, every third at 90, every fourth at 120. */
+private const val COMET_STEP_NANOS = 33_333_333L
+
+/** A frame this close before a step is due takes it: frame times are not exact. */
+private const val COMET_SLACK_NANOS = 1_500_000L
 
 /** Under twenty frames a second for this many frames more than not: this phone's GPU cannot carry the comet. */
 private const val COMET_LATE_NANOS = 50_000_000L

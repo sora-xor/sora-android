@@ -137,6 +137,7 @@ internal fun PortfolioHomeHost(
         pinned = pinned,
         homeActions = homeActions,
         sheetActions = sheetActions,
+        coveredByHost = inFront && networkPick != null,
         notices = {
             ReadOnlyHomeBanner()
             if (accountReadOnly) {
