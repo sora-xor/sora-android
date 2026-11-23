@@ -84,20 +84,18 @@ internal object LitBake {
 
     /**
      * The materials are also baked ahead on a background thread. Asking for one that is being baked waits for it;
-     * asking for any other does not: each image has a lock of its own while it bakes, so a screen's first frame
-     * never queues behind the page or a pressed button being baked for later.
+     * asking for any other does not: each image has a lock of its own, so a screen's first frame never queues
+     * behind the page or a pressed button being baked for later. A lock is kept for as long as the app runs (one
+     * small object per image ever asked for), so the same image is never baked twice at once.
      */
-    private val baking = ConcurrentHashMap<String, Any>()
+    private val bakeLocks = ConcurrentHashMap<String, Any>()
 
     @Suppress("UNCHECKED_CAST")
     private inline fun <T : Any> cached(key: String, make: () -> T): T {
         cache.get(key)?.let { return it as T }
-        val lock = baking.getOrPut(key) { Any() }
-        try {
-            return synchronized(lock) { cache.get(key) ?: make().also { cache.put(key, it) } } as T
-        } finally {
-            baking.remove(key, lock)
-        }
+        return synchronized(bakeLocks.getOrPut(key) { Any() }) {
+            cache.get(key) ?: make().also { cache.put(key, it) }
+        } as T
     }
 
     private fun sat(v: Float) = v.coerceIn(0f, 1f)

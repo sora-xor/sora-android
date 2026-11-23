@@ -569,14 +569,19 @@ private class ShapeCorner {
     private var size = Size.Unspecified
     private var direction = LayoutDirection.Ltr
     private var density = 0f
+    private var fontScale = 0f
     private var radius = 0f
 
+    /** For the corner shapes the app has (dp and percent corners). A shape that reads other state is not remembered. */
     fun of(shape: Shape, scope: DrawScope): Float {
-        if (shape !== this.shape || scope.size != size || scope.layoutDirection != direction || scope.density != density) {
+        if (shape !== this.shape || scope.size != size || scope.layoutDirection != direction ||
+            scope.density != density || scope.fontScale != fontScale
+        ) {
             this.shape = shape
             size = scope.size
             direction = scope.layoutDirection
             density = scope.density
+            fontScale = scope.fontScale
             val outline = shape.createOutline(scope.size, scope.layoutDirection, scope)
             radius = (outline as? Outline.Rounded)?.roundRect?.topLeftCornerRadius?.x ?: 0f
         }
