@@ -203,11 +203,12 @@ class MainActivity :
         middleItem.importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS
         // The disc takes touches over the bar's middle item and nowhere else. On a phone that item is a fifth of
         // the bar; on a tablet the five items are narrower than that and stand together in the bar's middle, where
-        // a fifth of the bar would also cover part of Explore and Activity. So the share is measured.
-        middleItem.addOnLayoutChangeListener { item, _, _, _, _, _, _, _, _ ->
+        // a fifth of the bar would also cover part of Explore and Activity. So the share is measured, whenever
+        // the item or the bar is laid out again (a resized window can change the bar and leave the item as it was).
+        val fitDiscToMiddleItem = View.OnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
             val bar = binding.bottomNavigationView.width
-            if (bar > 0 && item.width > 0) {
-                val share = item.width / bar.toFloat()
+            if (bar > 0 && middleItem.width > 0) {
+                val share = middleItem.width / bar.toFloat()
                 val params = binding.fabMain.layoutParams as ConstraintLayout.LayoutParams
                 if (abs(params.matchConstraintPercentWidth - share) > 0.002f) {
                     params.matchConstraintPercentWidth = share
@@ -215,6 +216,8 @@ class MainActivity :
                 }
             }
         }
+        middleItem.addOnLayoutChangeListener(fitDiscToMiddleItem)
+        binding.bottomNavigationView.addOnLayoutChangeListener(fitDiscToMiddleItem)
 
         ViewCompat.setAccessibilityDelegate(binding.fabMain, object : androidx.core.view.AccessibilityDelegateCompat() {
             override fun onInitializeAccessibilityNodeInfo(host: View, info: androidx.core.view.accessibility.AccessibilityNodeInfoCompat) {
