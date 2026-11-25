@@ -45,7 +45,7 @@ kotlin {
 // Google Play published 3.9.2 build 5 (3090205) at 100% on 17 November 2026.
 // From 3.9.0: versionCode = MAJOR * 1_000_000 + MINOR * 10_000 + PATCH * 100 + BUILD (00..99),
 // so 3.9.0 build 1 is 3090001.
-val appVersionName = "3.9.2"
+val appVersionName = "3.9.5"
 val appVersionCodeBase = appVersionName.split('.').map(String::toInt)
     .let { (major, minor, patch) -> major * 1_000_000 + minor * 10_000 + patch * 100 }
 val playLastPublishedVersionCode = 3090205
