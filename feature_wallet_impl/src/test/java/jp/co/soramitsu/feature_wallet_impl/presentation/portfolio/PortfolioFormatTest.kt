@@ -43,6 +43,14 @@ class PortfolioFormatTest {
     }
 
     @Test
+    fun `a positive amount under the list's precision is never printed as nothing`() {
+        // The list rounds to 8 decimals; a smaller holding is shown to its first digit, rounded down, never as "0".
+        assertEquals("0.0000000001 XOR", format.amount(BigDecimal("0.000000000123"), "XOR"))
+        assertEquals("0.000000000000000001 XOR", format.amount(BigDecimal("0.000000000000000001"), "XOR"))
+        assertEquals("0 XOR", format.amount(BigDecimal.ZERO, "XOR"))
+    }
+
+    @Test
     fun `a row with a value shows the amount over the value`() {
         val priced = PortfolioFixtures.holding(MAIN, PortfolioFixtures.token(AssetHolder.XOR_ASSET_ID, "XOR", 2.0), "10")
         assertEquals(RowNumbers("10 XOR", "$20"), format.rowNumbers(listOf(priced), priced.total, "XOR"))

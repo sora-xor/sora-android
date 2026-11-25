@@ -65,6 +65,15 @@ class PortfolioCalculatorTest {
     }
 
     @Test
+    fun `a row's value prices exactly the amount it shows`() {
+        val partly = holding(MAIN, xor, "100", transferable = "20")
+        assertEquals(0.4, PortfolioCalculator.countedFiat(partly)!!, 1e-12)
+        assertEquals(0.08, PortfolioCalculator.countedFiat(partly, partly.transferable)!!, 1e-12)
+        assertNull(PortfolioCalculator.countedFiat(holding(MAIN, kxor, "100", transferable = "20"), BigDecimal("20")))
+        assertNull(PortfolioCalculator.countedFiat(holding(MAIN, xor, "100", network = WalletNetworkId.TAIRA), BigDecimal("20")))
+    }
+
+    @Test
     fun `24 h change comes from each counted token's own price change`() {
         val totals = PortfolioCalculator.totals(listOf(holding(MAIN, xor, "1000"), holding(MAIN, eth, "1"), holding(MAIN, pswap, "100")))
         val xorChange = 4.0 - 4.0 / 1.05

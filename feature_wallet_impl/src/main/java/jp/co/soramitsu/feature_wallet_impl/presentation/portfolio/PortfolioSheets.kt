@@ -321,8 +321,9 @@ private fun HoldingChooser(model: PortfolioModel, candidates: List<PortfolioHold
                 },
                 title = "${holding.token.symbol} · ${networkName(holding.network)}",
                 subtitle = model.wallet(holding.walletId)?.name,
+                // The value is of what can be sent, the amount shown above it, never of all that is held.
                 trailingTop = format.amount(holding.transferable),
-                trailingBottom = PortfolioCalculator.countedFiat(holding)?.let(format::fiat),
+                trailingBottom = PortfolioCalculator.countedFiat(holding, holding.transferable)?.let(format::fiat),
             )
         }
     }

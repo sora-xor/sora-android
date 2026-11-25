@@ -628,7 +628,7 @@ internal fun SheetRow(
                 if (trailingTop != null || trailingBottom != null) {
                     Column(horizontalAlignment = Alignment.End) {
                         trailingTop?.let {
-                            FittedText(AnnotatedString(it), NeonType.amountM.copy(color = n.textPrimary, textAlign = TextAlign.End))
+                            FittedText(AnnotatedString(it), NeonType.amountM.copy(color = n.textPrimary, textAlign = TextAlign.End), maxLines = 2)
                         }
                         trailingBottom?.let {
                             FittedText(AnnotatedString(it), NeonType.amountS.copy(color = n.textSecondary, textAlign = TextAlign.End))

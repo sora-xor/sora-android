@@ -961,7 +961,8 @@ private fun RowAmounts(numbers: RowNumbers, amountSize: TextUnit = TOKEN_ROW_AMO
     // On a line of their own the figures may take the row's whole width; past that they are set smaller, and never cut
     // silently.
     Column(horizontalAlignment = Alignment.End) {
-        FittedText(AnnotatedString(numbers.main), NeonType.amountM.copy(fontSize = amountSize, color = n.textPrimary))
+        // The amount is never cut: set smaller, then on a second line.
+        FittedText(AnnotatedString(numbers.main), NeonType.amountM.copy(fontSize = amountSize, color = n.textPrimary), maxLines = 2)
         numbers.detail?.let {
             Spacer(Modifier.height(gap))
             FittedText(AnnotatedString(it), NeonType.amountS.copy(color = n.textSecondary))

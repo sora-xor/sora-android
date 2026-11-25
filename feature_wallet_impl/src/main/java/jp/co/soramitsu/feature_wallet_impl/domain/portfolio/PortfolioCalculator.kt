@@ -106,10 +106,16 @@ object PortfolioCalculator {
     }
 
     /** Amount × the asset's own price, for a counted holding only. A group never lends a price. */
-    fun countedFiat(holding: PortfolioHolding): Double? {
+    fun countedFiat(holding: PortfolioHolding): Double? = countedFiat(holding, holding.total)
+
+    /**
+     * [amount] of a counted holding's token × its own price: the value a row prices for exactly the amount it shows
+     * (what can be sent, say, rather than all that is held).
+     */
+    fun countedFiat(holding: PortfolioHolding, amount: BigDecimal): Double? {
         if (exclusion(holding) != null) return null
         val price = holding.token.price ?: return null
-        return holding.total.toDouble() * price
+        return amount.toDouble() * price
     }
 
     /** Fiat change over 24 h of a counted holding, from its token's own price change. */

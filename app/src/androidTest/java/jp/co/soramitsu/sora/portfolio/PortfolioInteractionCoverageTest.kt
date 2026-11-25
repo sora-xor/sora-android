@@ -462,6 +462,14 @@ class PortfolioInteractionCoverageTest {
         compose.onNodeWithText("XOR · SORA2").performClick()
         compose.runOnIdle { assertEquals(listOf("sheet:${PortfolioSheet.Move(source.key)}"), actions.events); assertNull(actions.move) }
     }
+    @Test fun aChooserRowPricesTheAmountItShowsNotAllThatIsHeld() {
+        val partly = source.copy(total = BigDecimal("100"), transferable = BigDecimal("20"))
+        val format = PortfolioFormat(NumbersFormatter(), "$")
+        sheet(model(holdings = listOf(partly)), PortfolioSheet.Move(null))
+        compose.onNodeWithText(format.amount(BigDecimal("20")), useUnmergedTree = true).assertExists()
+        compose.onNodeWithText(format.fiat(40.0), useUnmergedTree = true).assertExists()
+        compose.onNodeWithText(format.fiat(200.0), useUnmergedTree = true).assertDoesNotExist()
+    }
     @Test fun swapChooserUsesTheSelectedHoldingAndDoesNotSubmitFromTheList() {
         sheet(model(holdings = listOf(source)), PortfolioSheet.Swap(null))
         compose.onNodeWithText(text(R.string.portfolio_choose_holding), ignoreCase = true).assertExists()
