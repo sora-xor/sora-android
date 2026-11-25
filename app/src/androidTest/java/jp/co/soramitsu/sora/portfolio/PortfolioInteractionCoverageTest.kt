@@ -182,10 +182,26 @@ class PortfolioInteractionCoverageTest {
         } }
         node(R.string.portfolio_route_test).assertExists()
         node(R.string.network_tag_testnet).assertExists()
-        // A dash over the amount on the row, as for every testnet holding.
+        // The total is a dash; the row shows the amount alone, as for every testnet holding.
         compose.onAllNodesWithText(PortfolioFormat.NO_VALUE).onFirst().assertExists()
         compose.onNodeWithText(format.amount(BigDecimal("1000"), "XOR")).performScrollTo().assertIsDisplayed()
         compose.onNodeWithText("$0", substring = true).assertDoesNotExist()
+    }
+
+    @Test fun aRowShowsTheAmountOverItsValueInLargerType() {
+        val format = PortfolioFormat(NumbersFormatter(), "$")
+        val model = model(holdings = listOf(source), expanded = false)
+        show { Column(Modifier.verticalScroll(rememberScrollState())) { PortfolioList(model, format, actions) } }
+        val amount = compose.onNodeWithText(format.amount(source.total, xor.symbol), useUnmergedTree = true).assertIsDisplayed()
+        val value = compose.onNodeWithText(format.fiat(40.0), useUnmergedTree = true).assertIsDisplayed()
+        assertTrue(amount.getUnclippedBoundsInRoot().bottom <= value.getUnclippedBoundsInRoot().top)
+        assertTrue(fontSize(amount) > fontSize(value))
+    }
+
+    private fun fontSize(node: SemanticsNodeInteraction): Float {
+        val layouts = mutableListOf<androidx.compose.ui.text.TextLayoutResult>()
+        node.fetchSemanticsNode().config[androidx.compose.ui.semantics.SemanticsActions.GetTextLayoutResult].action?.invoke(layouts)
+        return layouts.single().layoutInput.style.fontSize.value
     }
 
     @Test fun aWalletThatIsStillBeingReadIsNotEmptyAndNotZero() {
@@ -247,9 +263,9 @@ class PortfolioInteractionCoverageTest {
         compose.onNodeWithText("Savings wallet").performScrollTo().performClick()
         // The tapped holding goes with it, so the page opens on that wallet, not on the largest.
         compose.runOnIdle { assertEquals(listOf("token:${xor.id}@${secondary.key}"), actions.events) }
-        // The testnet holding: a dash over its amount, never a value.
+        // The testnet holding: its amount alone, never a value and never a dash.
         compose.onNodeWithText(format.amount(BigDecimal("1000"), "XOR")).performScrollTo().assertIsDisplayed()
-        compose.onNodeWithText(PortfolioFormat.NO_VALUE).assertExists()
+        compose.onNodeWithText(PortfolioFormat.NO_VALUE).assertDoesNotExist()
     }
 
     @Test fun walletsSheetPreservesSelectionAndProvidesRefreshAndManageActions() {

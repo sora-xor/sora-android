@@ -61,6 +61,7 @@ import androidx.compose.ui.graphics.layer.GraphicsLayer
 import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.graphics.rememberGraphicsLayer
 import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
@@ -950,19 +951,29 @@ private fun ExpandChevron(expanded: Boolean) {
     PortfolioGlyph(Glyph.CHEVRON_DOWN, MaterialTheme.neon.textTertiary, Modifier.size(20.dp).rotate(angle))
 }
 
+/**
+ * A row's figures: the amount held on top in bold at [amountSize], a clear step over its value, which is set small
+ * and secondary under it.
+ */
 @Composable
-private fun RowAmounts(numbers: RowNumbers) {
+private fun RowAmounts(numbers: RowNumbers, amountSize: TextUnit = TOKEN_ROW_AMOUNT_SIZE, gap: Dp = 2.dp) {
     val n = MaterialTheme.neon
     // On a line of their own the figures may take the row's whole width; past that they are set smaller, and never cut
     // silently.
     Column(horizontalAlignment = Alignment.End) {
-        FittedText(AnnotatedString(numbers.main), NeonType.amountM.copy(color = n.textPrimary))
+        FittedText(AnnotatedString(numbers.main), NeonType.amountM.copy(fontSize = amountSize, color = n.textPrimary))
         numbers.detail?.let {
-            Spacer(Modifier.height(2.dp))
+            Spacer(Modifier.height(gap))
             FittedText(AnnotatedString(it), NeonType.amountS.copy(color = n.textSecondary))
         }
     }
 }
+
+/** The amount on a token row of the Wallet home. */
+private val TOKEN_ROW_AMOUNT_SIZE = 17.sp
+
+/** The amount on a holding row under a token, and on Where it lives. */
+private val HOLDING_ROW_AMOUNT_SIZE = 16.sp
 
 @Composable
 private fun ChangeBadge(change: Double?, format: PortfolioFormat) {
@@ -1155,15 +1166,7 @@ internal fun HoldingRow(
                     }
                 }
             },
-            figures = {
-                Column(horizontalAlignment = Alignment.End) {
-                    FittedText(AnnotatedString(numbers.main), NeonType.amountS.copy(fontWeight = FontWeight.SemiBold, color = n.textPrimary))
-                    numbers.detail?.let {
-                        Spacer(Modifier.height(3.dp))
-                        FittedText(AnnotatedString(it), NeonType.amountS.copy(color = n.textSecondary))
-                    }
-                }
-            },
+            figures = { RowAmounts(numbers, amountSize = HOLDING_ROW_AMOUNT_SIZE, gap = 3.dp) },
         )
     }
 }

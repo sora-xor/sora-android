@@ -43,9 +43,21 @@ class PortfolioFormatTest {
     }
 
     @Test
-    fun `a row with a value shows it over the amount`() {
+    fun `a row with a value shows the amount over the value`() {
         val priced = PortfolioFixtures.holding(MAIN, PortfolioFixtures.token(AssetHolder.XOR_ASSET_ID, "XOR", 2.0), "10")
-        assertEquals(RowNumbers("$20", "10 XOR"), format.rowNumbers(listOf(priced), priced.total, "XOR"))
+        assertEquals(RowNumbers("10 XOR", "$20"), format.rowNumbers(listOf(priced), priced.total, "XOR"))
+    }
+
+    @Test
+    fun `the amount is the row's number in every case`() {
+        val prices = listOf(2.0, null, 0.0)
+        prices.forEach { price ->
+            val xor = PortfolioFixtures.token(AssetHolder.XOR_ASSET_ID, "XOR", price)
+            listOf(WalletNetworkId.SORA2, WalletNetworkId.TAIRA).forEach { network ->
+                val held = PortfolioFixtures.holding(MAIN, xor, "7", network = network)
+                assertEquals("7 XOR", format.rowNumbers(listOf(held), held.total, "XOR").main)
+            }
+        }
     }
 
     @Test
@@ -56,12 +68,12 @@ class PortfolioFormatTest {
     }
 
     @Test
-    fun `a testnet holding has no value at all, whatever the token's price`() {
+    fun `a testnet holding shows the amount alone, whatever the token's price`() {
         listOf(null, 2.0).forEach { price ->
             val xor = PortfolioFixtures.token(AssetHolder.XOR_ASSET_ID, "XOR", price)
             val held = PortfolioFixtures.holding(MAIN, xor, "25000", network = WalletNetworkId.TAIRA)
             assertEquals(
-                RowNumbers(PortfolioFormat.NO_VALUE, "25${g}000 XOR"),
+                RowNumbers("25${g}000 XOR", null),
                 format.rowNumbers(listOf(held), held.total, "XOR"),
             )
         }
@@ -72,14 +84,14 @@ class PortfolioFormatTest {
         val xor = PortfolioFixtures.token(AssetHolder.XOR_ASSET_ID, "XOR", 2.0)
         val main = PortfolioFixtures.holding(MAIN, xor, "10")
         val test = PortfolioFixtures.holding(MAIN, xor, "25000", network = WalletNetworkId.TAIRA)
-        assertEquals(RowNumbers("$20", "10 XOR"), format.rowNumbers(listOf(main, test), main.total, "XOR"))
+        assertEquals(RowNumbers("10 XOR", "$20"), format.rowNumbers(listOf(main, test), main.total, "XOR"))
     }
 
     @Test
-    fun `a real price of nothing is a real zero`() {
+    fun `a real price of nothing is a real zero under the amount`() {
         val xor = PortfolioFixtures.token(AssetHolder.XOR_ASSET_ID, "XOR", 0.0)
         val held = PortfolioFixtures.holding(MAIN, xor, "10")
-        assertEquals(RowNumbers("$0", "10 XOR"), format.rowNumbers(listOf(held), held.total, "XOR"))
+        assertEquals(RowNumbers("10 XOR", "$0"), format.rowNumbers(listOf(held), held.total, "XOR"))
     }
 
     @Test

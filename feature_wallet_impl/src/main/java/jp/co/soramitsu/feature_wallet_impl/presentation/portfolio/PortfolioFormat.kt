@@ -17,7 +17,7 @@ import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.PortfolioTotals
 import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.isTestnet
 import kotlin.math.abs
 
-/** A row's number, and the smaller one under it if it has one. */
+/** A row's number (the amount held), and the smaller one under it (its value) if it has one. */
 internal data class RowNumbers(val main: String, val detail: String?)
 
 /**
@@ -59,18 +59,18 @@ internal class PortfolioFormat(
     }
 
     /**
-     * What a row of [holdings] shows. With a value: the value over the amount. Without a price the
-     * amount is the row's number: the list still says what is held, with no price note on every
-     * line while prices are out. A testnet has no value at all: a dash over the amount.
+     * What a row of [holdings] shows: the amount held is always the row's number, with its value
+     * under it. Without a price, or on a testnet (no value at all), the amount stands alone: no
+     * dash and no price note on every line while prices are out. A real price of nothing is "$0".
      */
     fun rowNumbers(holdings: List<PortfolioHolding>, total: BigDecimal, symbol: String): RowNumbers {
         val held = amount(total, symbol)
         val value = holdings.sumOf { PortfolioCalculator.countedFiat(it) ?: 0.0 }
         return when {
-            value > 0.0 -> RowNumbers(fiat(value), held)
-            holdings.all { it.network.isTestnet } -> RowNumbers(NO_VALUE, held)
-            holdings.any { it.token.price == null && !it.network.isTestnet } -> RowNumbers(held, null)
-            else -> RowNumbers(fiat(0.0), held)
+            value > 0.0 -> RowNumbers(held, fiat(value))
+            holdings.all { it.network.isTestnet } ||
+                holdings.any { it.token.price == null && !it.network.isTestnet } -> RowNumbers(held, null)
+            else -> RowNumbers(held, fiat(0.0))
         }
     }
 
