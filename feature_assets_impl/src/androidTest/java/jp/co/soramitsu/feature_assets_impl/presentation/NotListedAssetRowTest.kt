@@ -44,11 +44,11 @@ class NotListedAssetRowTest {
     @get:Rule
     val rule = createComposeRule()
 
-    private fun row(id: String, name: String, amount: String, notListed: Boolean) = AssetItemCardState(
+    private fun row(id: String, name: String, symbol: String, amount: String, notListed: Boolean) = AssetItemCardState(
         tokenIcon = DEFAULT_ICON_URI,
         tokenId = id,
         tokenName = name,
-        tokenSymbol = "",
+        tokenSymbol = symbol,
         assetAmount = amount,
         assetFiatAmount = "",
         fiatChange = "",
@@ -62,12 +62,12 @@ class NotListedAssetRowTest {
             SoraAppTheme(darkTheme = false) {
                 Column {
                     AssetItem(
-                        assetState = row("0x" + "bb".repeat(32), "Unlisted", "5 ABC", notListed = true),
+                        assetState = row("0x" + "bb".repeat(32), "Unlisted", "ABC", "5 ABC", notListed = true),
                         testTag = "NotListedRow",
                         onClick = { opened += it },
                     )
                     AssetItem(
-                        assetState = row("0x0200040000000000000000000000000000000000000000000000000000000000", "SORA Validator Token", "5 VAL", notListed = false),
+                        assetState = row("0x0200040000000000000000000000000000000000000000000000000000000000", "SORA Validator Token", "VAL", "5 VAL", notListed = false),
                         testTag = "ListedRow",
                         onClick = {},
                     )
@@ -75,9 +75,12 @@ class NotListedAssetRowTest {
             }
         }
 
-        rule.onNodeWithText("5 ABC · Not listed by Polkaswap").assertIsDisplayed().performClick()
+        // The amount is the row's figure; the note is on the line under the name, after the symbol.
+        rule.onNodeWithText("ABC · Not listed by Polkaswap").assertIsDisplayed()
+        rule.onNodeWithText("5 ABC").assertIsDisplayed().performClick()
         assertEquals(listOf("0x" + "bb".repeat(32)), opened)
-        // A listed token's row reads as it always did.
-        rule.onNodeWithText("5 VAL ").assertIsDisplayed()
+        // A listed token's row has the symbol alone under its name.
+        rule.onNodeWithText("VAL").assertIsDisplayed()
+        rule.onNodeWithText("5 VAL").assertIsDisplayed()
     }
 }

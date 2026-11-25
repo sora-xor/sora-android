@@ -24,7 +24,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material.MaterialTheme
@@ -33,6 +33,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -48,6 +49,11 @@ import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
 
+/**
+ * The pools the account is in. On each row the pooled amounts ("2 XOR - 5 VAL") are the figure, at the end in the
+ * larger type, breaking only between the two amounts when the row is short; the value and the reward tokens are the
+ * small line under them.
+ */
 @Composable
 fun PoolsList(
     cardState: PoolsListState,
@@ -57,10 +63,11 @@ fun PoolsList(
         Row(
             modifier = Modifier
                 .padding(vertical = Dimens.x1)
-                .height(Size.Small)
+                .heightIn(min = Size.Small)
                 .fillMaxWidth()
                 .padding(horizontal = Dimens.x3)
-                .clickable { onPoolClick?.invoke(poolState.tokenIds) }
+                .clickable { onPoolClick?.invoke(poolState.tokenIds) },
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             ConstraintLayout(
                 modifier = Modifier.wrapContentSize()
@@ -95,27 +102,26 @@ fun PoolsList(
                     color = MaterialTheme.customColors.fgPrimary,
                     style = MaterialTheme.customTypography.textM
                 )
-
-                Text(
-                    color = MaterialTheme.customColors.fgSecondary,
-                    style = MaterialTheme.customTypography.textXSBold,
-                    text = poolState.poolAmounts,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
             }
             Column(
-                modifier = Modifier
-                    .wrapContentSize(),
+                modifier = Modifier.weight(1f, fill = false),
                 horizontalAlignment = Alignment.End,
             ) {
                 Text(
                     color = MaterialTheme.customColors.fgPrimary,
                     style = MaterialTheme.customTypography.textM,
-                    text = poolState.fiat,
-                    maxLines = 1,
+                    text = pooledAmountsText(poolState.poolAmounts),
+                    textAlign = TextAlign.End,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
                 )
-                Row {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        color = MaterialTheme.customColors.fgSecondary,
+                        style = MaterialTheme.customTypography.textXSBold,
+                        text = poolState.fiat,
+                        maxLines = 1,
+                    )
                     poolState.rewardTokenIconsList.forEach {
                         TokenIcon(
                             modifier = Modifier.padding(horizontal = 2.dp),
@@ -128,6 +134,12 @@ fun PoolsList(
         }
     }
 }
+
+/** "2 XOR - 5 VAL" with each amount kept whole, so a short row breaks the line only between the two amounts. */
+internal fun pooledAmountsText(amounts: String): String =
+    amounts.split(POOLED_AMOUNTS_DELIMITER).joinToString(POOLED_AMOUNTS_DELIMITER) { it.replace(' ', '\u00A0') }
+
+private const val POOLED_AMOUNTS_DELIMITER = " - "
 
 @Composable
 @Preview

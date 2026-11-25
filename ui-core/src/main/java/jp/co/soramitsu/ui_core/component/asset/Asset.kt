@@ -4,8 +4,11 @@ import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material.MaterialTheme
@@ -68,6 +71,67 @@ fun Asset(
                         style = MaterialTheme.customTypography.textXSBold,
                         color = it.changePriceColor()
                     )
+                }
+            }
+        }
+    )
+}
+
+/**
+ * A row for something held: the amount held ("12.5 XOR") is the row's figure, on top at the end in the larger type;
+ * its value and 24 h change are the small line under it, and are left out when there are none (no price, a testnet).
+ * [subtitle] is the line under the name: the symbol and any notes on the holding.
+ */
+@Composable
+fun AssetHolding(
+    modifier: Modifier = Modifier,
+    icon: Uri,
+    name: String,
+    subtitle: String,
+    amount: String,
+    onClick: () -> Unit,
+    fiat: String = "",
+    change: String = "",
+    tokenBadge: (@Composable () -> Unit)? = null,
+) {
+    AssetInfo(
+        modifier,
+        icon,
+        name,
+        balance = "",
+        symbol = subtitle,
+        onClick = onClick,
+        tokenBadge = tokenBadge,
+        rightContent = {
+            Column(
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.End
+            ) {
+                Text(
+                    text = amount,
+                    style = MaterialTheme.customTypography.textM,
+                    color = MaterialTheme.customColors.fgPrimary,
+                    textAlign = TextAlign.End,
+                )
+                val value = listOf(fiat, change).filter(String::isNotBlank)
+                if (value.isNotEmpty()) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        if (fiat.isNotBlank()) {
+                            Text(
+                                text = fiat,
+                                style = MaterialTheme.customTypography.textXSBold,
+                                color = MaterialTheme.customColors.fgSecondary,
+                            )
+                        }
+                        if (value.size == 2) Spacer(Modifier.width(4.dp))
+                        if (change.isNotBlank()) {
+                            Text(
+                                text = change,
+                                style = MaterialTheme.customTypography.textXSBold,
+                                color = change.changePriceColor(),
+                            )
+                        }
+                    }
                 }
             }
         }

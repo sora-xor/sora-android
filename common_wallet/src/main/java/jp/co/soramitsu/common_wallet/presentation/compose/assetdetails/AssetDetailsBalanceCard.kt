@@ -44,6 +44,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import jp.co.soramitsu.common.R
@@ -138,8 +139,10 @@ fun AssetDetailsBalanceCard(
                             contentDescription = "",
                         )
                     }
+                    // The frozen amount is the figure; its value is the small line under it.
                     Text(
-                        text = frozenAmountFiat,
+                        modifier = Modifier.testTagAsId("AssetFrozenAmount"),
+                        text = frozenAmount,
                         color = MaterialTheme.customColors.fgPrimary,
                         style = MaterialTheme.customTypography.headline2
                     )
@@ -148,8 +151,9 @@ fun AssetDetailsBalanceCard(
                     modifier = Modifier
                         .padding(horizontal = Dimens.x3)
                         .fillMaxWidth()
-                        .testTagAsId("AssetFrozenAmount"),
-                    text = frozenAmount,
+                        .testTagAsId("AssetFrozenAmountFiat"),
+                    text = frozenAmountFiat,
+                    textAlign = TextAlign.End,
                     style = MaterialTheme.customTypography.textXSBold,
                     color = MaterialTheme.customColors.fgSecondary
                 )
