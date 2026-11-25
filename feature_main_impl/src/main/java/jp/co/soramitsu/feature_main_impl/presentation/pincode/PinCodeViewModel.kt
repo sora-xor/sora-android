@@ -505,6 +505,10 @@ class PinCodeViewModel @Inject constructor(
             timerStartedTimeStamp = interactor.retrieveTimerStartedTimestamp()
             startTimer()
             return
+        } catch (error: Throwable) {
+            // Only the trace section is closed here; the error goes on exactly as before.
+            UnlockJourneyTrace.pinAnswered(acceptedForUnlock = false)
+            throw error
         }
 
         UnlockJourneyTrace.pinAnswered(acceptedForUnlock = result && unlocking)
