@@ -31,6 +31,8 @@ import jp.co.soramitsu.common.nexus.WalletNetworkChoices
 import jp.co.soramitsu.common.nexus.WalletNetworkId
 import jp.co.soramitsu.common.presentation.compose.neon.safemode.AccountReadOnlyNotice
 import jp.co.soramitsu.common.presentation.compose.neon.safemode.LocalSelectedAccountReadOnly
+import jp.co.soramitsu.common.util.OnFirstFrameDrawn
+import jp.co.soramitsu.common.util.UnlockJourneyTrace
 import jp.co.soramitsu.common_wallet.presentation.compose.states.CardsState
 import jp.co.soramitsu.feature_wallet_impl.data.nexus.NexusPortfolioBalance
 import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.PortfolioScope
@@ -70,6 +72,7 @@ internal fun PortfolioHomeHost(
     val busy by portfolio.busy.collectAsStateWithLifecycle()
     val pinned by portfolio.pinnedTilt.collectAsStateWithLifecycle()
     val inFront = navController.isCurrent(theOnlyRoute)
+    if (model != null) OnFirstFrameDrawn(UnlockJourneyTrace::homeDrawn)
     // Send and Receive ask which network only when the wallet has a real choice, as on the
     // classic home. All wallets first asks which wallet, then the same question for that wallet.
     val latestModel by rememberUpdatedState(model)

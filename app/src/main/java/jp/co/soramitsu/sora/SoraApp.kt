@@ -38,6 +38,7 @@ import jp.co.soramitsu.common.logger.WalletDiagnostics
 import jp.co.soramitsu.common.util.BuildType
 import jp.co.soramitsu.common.util.BuildUtils
 import jp.co.soramitsu.common.util.Flavor
+import jp.co.soramitsu.common.util.UnlockJourneyTrace
 import jp.co.soramitsu.core_db.WalletUpgradeBackup
 import jp.co.soramitsu.feature_select_node_api.NodeManager
 import jp.co.soramitsu.feature_wallet_impl.presentation.portfolio.PortfolioPreload
@@ -71,6 +72,7 @@ open class SoraApp : Application(), Configuration.Provider, ImageLoaderFactory {
     override fun attachBaseContext(base: Context) {
         super.attachBaseContext(base)
         StartupTimeTrace.begin()
+        UnlockJourneyTrace.processAttached()
         // Hilt injects eager singletons before this class's onCreate body. Prepare the immutable
         // wallet backup first so no injected database consumer can race the upgrade gate.
         WalletUpgradeBackup.prepare(this)

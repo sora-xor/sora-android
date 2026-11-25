@@ -42,6 +42,8 @@ import jp.co.soramitsu.common.domain.BottomBarController
 import jp.co.soramitsu.common.io.MainThreadExecutor
 import jp.co.soramitsu.common.presentation.args.addresses
 import jp.co.soramitsu.common.presentation.view.SoraProgressDialog
+import jp.co.soramitsu.common.util.OnFirstFrameDrawn
+import jp.co.soramitsu.common.util.UnlockJourneyTrace
 import jp.co.soramitsu.common.util.ext.runDelayed
 import jp.co.soramitsu.feature_main_api.domain.model.PinCodeAction
 import jp.co.soramitsu.feature_main_impl.R
@@ -245,6 +247,7 @@ class PincodeFragment : SoraBaseFragment<PinCodeViewModel>() {
         scrollState: ScrollState,
         navController: NavHostController
     ) {
+        val unlocking = requireArguments().action == PinCodeAction.TIMEOUT_CHECK
         composable(
             route = theOnlyRoute,
         ) {
@@ -267,6 +270,7 @@ class PincodeFragment : SoraBaseFragment<PinCodeViewModel>() {
                 )
                 return@composable
             }
+            if (unlocking) OnFirstFrameDrawn(UnlockJourneyTrace::pinPadDrawn)
             PincodeScreen(
                 pinCodeScreenState = viewModel.state,
                 onNumClick = viewModel::pinCodeNumberClicked,

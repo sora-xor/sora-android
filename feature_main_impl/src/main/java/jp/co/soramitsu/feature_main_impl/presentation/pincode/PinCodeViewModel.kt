@@ -44,6 +44,7 @@ import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.interfaces.WithProgress
 import jp.co.soramitsu.common.presentation.compose.SnackBarState
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
+import jp.co.soramitsu.common.util.UnlockJourneyTrace
 import jp.co.soramitsu.common.presentation.viewmodel.FailureNotice
 import jp.co.soramitsu.common.util.KeyMaterialUnavailableException
 import jp.co.soramitsu.common.util.WalletStorageFailures
@@ -492,9 +493,12 @@ class PinCodeViewModel @Inject constructor(
     }
 
     private suspend fun checkPinCode() {
+        val unlocking = action == PinCodeAction.TIMEOUT_CHECK
+        if (unlocking) UnlockJourneyTrace.pinEntered()
         val result = try {
             interactor.checkPin(inputedCode)
         } catch (_: WalletPinLockedException) {
+            UnlockJourneyTrace.pinAnswered(acceptedForUnlock = false)
             inputedCode = ""
             state = state.copy(checkedDotsCount = 0, isBackButtonVisible = false)
             triesUsed = interactor.retrieveTriesUsed()
@@ -503,6 +507,7 @@ class PinCodeViewModel @Inject constructor(
             return
         }
 
+        UnlockJourneyTrace.pinAnswered(acceptedForUnlock = result && unlocking)
         if (result) {
             if (action == PinCodeAction.APPROVE_BIOMETRICS) {
                 approveBiometricsAfterPin()
