@@ -20,6 +20,8 @@ limitations under the License.
 package jp.co.soramitsu.feature_assets_impl.presentation
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.width
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
@@ -30,6 +32,7 @@ import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import jp.co.soramitsu.common.domain.DEFAULT_ICON_URI
 import jp.co.soramitsu.common.presentation.compose.theme.SoraAppTheme
@@ -64,6 +67,14 @@ class HoldingFiguresOrderTest {
         val layouts = mutableListOf<TextLayoutResult>()
         fetchSemanticsNode().config[SemanticsActions.GetTextLayoutResult].action?.invoke(layouts)
         return layouts.single().layoutInput.style.fontSize.value
+    }
+
+    private fun SemanticsNodeInteraction.assertNotCut() {
+        val layouts = mutableListOf<TextLayoutResult>()
+        fetchSemanticsNode().config[SemanticsActions.GetTextLayoutResult].action?.invoke(layouts)
+        val layout = layouts.single()
+        assertTrue("the amount is never cut", (0 until layout.lineCount).none(layout::isLineEllipsized))
+        assertTrue("the amount is never cut", !layout.didOverflowWidth && !layout.didOverflowHeight)
     }
 
     private fun assertAmountOverValue(amount: SemanticsNodeInteraction, value: SemanticsNodeInteraction) {
@@ -160,5 +171,58 @@ class HoldingFiguresOrderTest {
             rule.onNode(tagEndsWith("AssetFrozenAmount"), useUnmergedTree = true),
             rule.onNode(tagEndsWith("AssetFrozenAmountFiat"), useUnmergedTree = true),
         )
+    }
+
+    @Test
+    fun aLongAmountOnANarrowScreenIsNeverCutAndTheNameKeepsItsSymbol() {
+        rule.setContent {
+            SoraAppTheme(darkTheme = false) {
+                Column(Modifier.width(320.dp)) {
+                    AssetItem(
+                        assetState = holding("PSWAP", LONG_AMOUNT, "$1\u00A0234\u00A0567.89", "-3.1 %").copy(tokenName = "Polkaswap"),
+                        testTag = "LongRow",
+                        onClick = {},
+                    )
+                }
+            }
+        }
+        text(LONG_AMOUNT).assertIsDisplayed().assertNotCut()
+        val symbol = text("PSWAP").assertIsDisplayed()
+        assertTrue("the name keeps its symbol", symbol.getUnclippedBoundsInRoot().width.value > 0f)
+        symbol.assertNotCut()
+    }
+
+    @Test
+    fun longPooledAmountsOnANarrowScreenAreNeverCut() {
+        rule.setContent {
+            SoraAppTheme(darkTheme = false) {
+                Column(Modifier.width(320.dp)) {
+                    PoolsList(
+                        PoolsListState(
+                            listOf(
+                                PoolsListItemState(
+                                    token1Icon = DEFAULT_ICON_URI,
+                                    token2Icon = DEFAULT_ICON_URI,
+                                    poolToken1Symbol = "XOR",
+                                    poolToken2Symbol = "PSWAP",
+                                    poolAmounts = "$LONG_AMOUNT - $LONG_AMOUNT",
+                                    fiat = "$99",
+                                    fiatChange = "",
+                                    tokenIds = "xor" to "pswap",
+                                    rewardTokenIconsList = emptyList(),
+                                )
+                            )
+                        )
+                    )
+                }
+            }
+        }
+        val whole = LONG_AMOUNT.replace(' ', '\u00A0')
+        text("$whole - $whole").assertIsDisplayed().assertNotCut()
+        text("$99").assertIsDisplayed()
+    }
+
+    private companion object {
+        const val LONG_AMOUNT = "123\u00A0456\u00A0789.123456 PSWAP"
     }
 }

@@ -33,8 +33,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
@@ -46,6 +46,7 @@ import jp.co.soramitsu.common_wallet.presentation.compose.states.PoolsListItemSt
 import jp.co.soramitsu.common_wallet.presentation.compose.states.PoolsListState
 import jp.co.soramitsu.ui_core.component.button.properties.Size
 import jp.co.soramitsu.ui_core.resources.Dimens
+import jp.co.soramitsu.ui_core.component.text.FittedText
 import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
 
@@ -103,17 +104,19 @@ fun PoolsList(
                     style = MaterialTheme.customTypography.textM
                 )
             }
+            // The amounts may take up to two thirds of the row's room; the pair keeps the rest. They are set smaller,
+            // then wrap, and are never cut.
             Column(
-                modifier = Modifier.weight(1f, fill = false),
+                modifier = Modifier.weight(2f, fill = false),
                 horizontalAlignment = Alignment.End,
             ) {
-                Text(
-                    color = MaterialTheme.customColors.fgPrimary,
-                    style = MaterialTheme.customTypography.textM,
-                    text = pooledAmountsText(poolState.poolAmounts),
-                    textAlign = TextAlign.End,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
+                FittedText(
+                    text = AnnotatedString(pooledAmountsText(poolState.poolAmounts)),
+                    style = MaterialTheme.customTypography.textM.copy(
+                        color = MaterialTheme.customColors.fgPrimary,
+                        textAlign = TextAlign.End,
+                    ),
+                    maxLines = POOLED_AMOUNTS_LINES,
                 )
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
@@ -140,6 +143,9 @@ internal fun pooledAmountsText(amounts: String): String =
     amounts.split(POOLED_AMOUNTS_DELIMITER).joinToString(POOLED_AMOUNTS_DELIMITER) { it.replace(' ', '\u00A0') }
 
 private const val POOLED_AMOUNTS_DELIMITER = " - "
+
+/** Two amounts, and room for either to wrap once more before anything could be cut. */
+private const val POOLED_AMOUNTS_LINES = 4
 
 @Composable
 @Preview

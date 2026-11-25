@@ -17,9 +17,11 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import jp.co.soramitsu.ui_core.component.text.FittedText
 import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
 
@@ -103,15 +105,20 @@ fun AssetHolding(
         onClick = onClick,
         tokenBadge = tokenBadge,
         rightContent = {
+            // The amount may take up to two thirds of the room beside the icon: past that the name keeps the rest, and
+            // the amount is set smaller and then wraps, never cut.
             Column(
+                modifier = Modifier.weight(2f, fill = false),
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.End
             ) {
-                Text(
-                    text = amount,
-                    style = MaterialTheme.customTypography.textM,
-                    color = MaterialTheme.customColors.fgPrimary,
-                    textAlign = TextAlign.End,
+                FittedText(
+                    text = AnnotatedString(amount),
+                    style = MaterialTheme.customTypography.textM.copy(
+                        color = MaterialTheme.customColors.fgPrimary,
+                        textAlign = TextAlign.End,
+                    ),
+                    maxLines = AMOUNT_LINES,
                 )
                 val value = listOf(fiat, change).filter(String::isNotBlank)
                 if (value.isNotEmpty()) {
@@ -137,6 +144,9 @@ fun AssetHolding(
         }
     )
 }
+
+/** An amount sets smaller first, then takes as many lines as this before anything could be cut. */
+private const val AMOUNT_LINES = 3
 
 @Preview
 @Composable

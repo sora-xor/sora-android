@@ -5,6 +5,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -32,7 +33,7 @@ internal fun AssetInfo(
     symbol: String,
     onClick: (() -> Unit)? = null,
     leftContent: @Composable (() -> Unit)? = null,
-    rightContent: @Composable (() -> Unit)? = null,
+    rightContent: @Composable (RowScope.() -> Unit)? = null,
     tokenBadge: (@Composable () -> Unit)? = null,
 ) {
     Row(
@@ -80,6 +81,6 @@ internal fun AssetInfo(
             )
         }
 
-        rightContent?.invoke()
+        rightContent?.invoke(this)
     }
 }

@@ -57,4 +57,12 @@ class AssetCardStateTest {
         assertNull(rows[0].frozenAmount)
         assertNull(rows[1].frozenAmount)
     }
+
+    @Test
+    fun `a positive balance under the row's precision is never printed as 0`() {
+        val dust = mapAssetsToCardState(listOf(TestAssets.xorAsset(BigDecimal("0.000000000123"))), formatter).single()
+        assertEquals("0.0000000001 XOR", dust.assetAmount)
+        val none = mapAssetsToCardState(listOf(TestAssets.xorAsset(BigDecimal.ZERO)), formatter).single()
+        assertEquals("0 XOR", none.assetAmount)
+    }
 }
