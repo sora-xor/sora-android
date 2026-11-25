@@ -110,6 +110,31 @@ fun ExtrinsicBuilder.transfer(
         )
     )
 
+/**
+ * HASHI bridge: `ethBridge.transfer_to_sidechain(asset_id, to, amount, network_id)`. The encoding
+ * is pinned in [jp.co.soramitsu.sora.substrate.runtime.Sora2CallTable].
+ */
+fun ExtrinsicBuilder.transferToSidechain(
+    assetId: String,
+    ethereumRecipient: ByteArray,
+    amount: BigInteger,
+    networkId: Int,
+): ExtrinsicBuilder {
+    require(ethereumRecipient.size == 20) { "ETH_BRIDGE_RECIPIENT_INVALID" }
+    require(amount.signum() > 0 && amount.bitLength() <= 128) { "ETH_BRIDGE_AMOUNT_INVALID" }
+    require(networkId >= 0) { "ETH_BRIDGE_NETWORK_INVALID" }
+    return this.call(
+        Pallete.ETH_BRIDGE.palletName,
+        Method.TRANSFER_TO_SIDECHAIN.methodName,
+        mapOf(
+            "asset_id" to assetId.mapCodeToken(),
+            "to" to ethereumRecipient.copyOf(),
+            "amount" to amount,
+            "network_id" to networkId.toBigInteger(),
+        )
+    )
+}
+
 fun ExtrinsicBuilder.migrate(
     irohaAddress: String,
     irohaPublicKey: String,

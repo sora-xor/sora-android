@@ -153,6 +153,11 @@ internal object Sora2CallTable {
             "DemeterFarmingPlatform", "get_rewards",
             "50:50:3($FARM,is_farm:bool)",
         ),
+        // HASHI bridge (SORA → Ethereum). Pinned from mainnet runtime 142 (sora2-network 4.8.15).
+        PinnedCall(
+            "EthBridge", "transfer_to_sidechain",
+            "31:31:3(asset_id:$ASSET,to:bytes[20],amount:$BALANCE,network_id:u32)",
+        ),
         // Test networks only; mainnet has no faucet.
         PinnedCall(
             "Faucet", "transfer",

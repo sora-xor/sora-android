@@ -21,6 +21,7 @@ import jp.co.soramitsu.sora.substrate.substrate.removeLiquidity
 import jp.co.soramitsu.sora.substrate.substrate.setReferrer
 import jp.co.soramitsu.sora.substrate.substrate.swap
 import jp.co.soramitsu.sora.substrate.substrate.transfer
+import jp.co.soramitsu.sora.substrate.substrate.transferToSidechain
 import jp.co.soramitsu.sora.substrate.substrate.withdrawDemeter
 import jp.co.soramitsu.sora.substrate.testing.TestRuntimeSnapshots
 import jp.co.soramitsu.xcrypto.util.fromHex
@@ -123,6 +124,8 @@ class Sora2CallTableTest {
             "DemeterFarmingPlatform.get_rewards" to "50:50:3",
             "DemeterFarmingPlatform.withdraw" to "50:50:4",
             "Faucet.transfer" to "80:80:0",
+            // Pinned from runtime 142 (4.8.15); the index is the same in 4.8.13.
+            "EthBridge.transfer_to_sidechain" to "31:31:3",
             "Utility.batch" to "11:11:0",
             "Utility.batch_all" to "11:11:2",
         )
@@ -221,6 +224,7 @@ class Sora2CallTableTest {
         builder.withdrawDemeter(asset, asset, asset, true, amount)
         builder.claimDemeter(asset, asset, asset, true)
         builder.faucetTransfer(asset, account, amount)
+        builder.transferToSidechain(asset, ByteArray(20) { 2 }, amount, 0)
         // ExtrinsicBuilder.build wraps several calls in Utility.batch or Utility.batch_all.
         built += listOf("Utility.batch", "Utility.batch_all")
 
