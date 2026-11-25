@@ -15,6 +15,9 @@ import kotlinx.serialization.json.addJsonArray
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.intOrNull
 
+/** A request status and its raw SCALE value (`Failed(e)` and `Broken(e1, e2)` keep their errors). */
+class HashiRequestStatusValue(val status: HashiRequestStatus, val raw: String)
+
 /** Where the operators' signer report is read from (the app's remote config document). */
 fun interface HashiSignerReportSource {
     /** The whole config document, or throws when it cannot be read. */
@@ -194,9 +197,13 @@ class HashiSoraRpcClient(
     )
 
     /** `requestStatuses(0, hash)`; null while the chain has no status for it. */
-    suspend fun requestStatus(requestHash: ByteArray): HashiRequestStatus? {
+    suspend fun requestStatus(requestHash: ByteArray): HashiRequestStatus? = requestStatusValue(requestHash)?.status
+
+    /** [requestStatus] with the raw SCALE value, which carries the errors of `Failed` and `Broken`. */
+    suspend fun requestStatusValue(requestHash: ByteArray): HashiRequestStatusValue? {
         val key = HashiSoraStorage.requestStatusKey(requestHash)
-        return storage(listOf(key))[key]?.let(HashiRequestStatus::fromScale)
+        val raw = storage(listOf(key))[key] ?: return null
+        return HashiRequestStatusValue(HashiRequestStatus.fromScale(raw), raw)
     }
 
     /** The incoming request hash of an Ethereum deposit, or null before peers imported it. */
