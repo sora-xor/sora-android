@@ -470,25 +470,23 @@ class HashiGoldenVectorsTest {
     }
 
     @Test
-    fun `the pinned contracts are the vectors' addresses, written with their EIP-55 checksum`() {
+    fun `the pinned contracts are the vectors' addresses in EIP-55 form, and the wrong-case form is refused`() {
         val contracts = eth.getValue("contracts").jsonObject
-        // The vectors copy the web's env.json, which writes the VAL master and the legacy XOR
-        // master in a letter case that is not a checksum: the 20 bytes are what is compared.
         listOf(
             "bridge" to HashiBridgeContract.BRIDGE_ADDRESS,
             "valMaster" to HashiBridgeContract.VAL_MASTER_ADDRESS,
             "valToken" to HashiBridgeContract.VAL_TOKEN_ADDRESS,
             "xorMasterLegacyDecommissioned" to HashiBridgeContract.LEGACY_XOR_MASTER_ADDRESS,
         ).forEach { (name, pinned) ->
-            assertArrayEquals(name, EthHex.decodeFixed(contracts.str(name), EthAddress.SIZE), EthHex.decodeFixed(pinned, EthAddress.SIZE))
-            // A pinned address must read as a valid typed address and print as itself.
-            assertNotNull(name, EthAddress.parse(pinned))
+            // The pin is exactly the vector, letter for letter, and that is its EIP-55 checksum.
+            assertEquals(name, contracts.str(name), pinned)
             assertEquals(name, pinned, EthAddress.checksum(EthHex.decodeFixed(pinned, EthAddress.SIZE)))
+            // The EIP-55 form is accepted as a typed address.
+            assertNotNull(name, EthAddress.parse(pinned))
         }
-        // The real mainnet VAL claim in the vectors was sent to the checksummed VAL master.
-        assertEquals("0xd1eEB2f30016FFfd746233Ee12c486E7Ca8eFeF1", HashiBridgeContract.VAL_MASTER_ADDRESS)
-        // The web's spelling is refused as a typed address: it is mixed case with a wrong checksum.
-        assertNull(EthAddress.parse(contracts.str("valMaster")))
+        // The letter case the web's env.json uses for these two is not a checksum: refused.
+        assertNull(EthAddress.parse("0xD1EEB2f30016fffd746233Ee12C486e7CA8eFeF1"))
+        assertNull(EthAddress.parse("0xc08edf13Be9B9CC584c5Da8004CE7e6be63C1316"))
     }
 
     private fun assertRefused(block: () -> Unit) {

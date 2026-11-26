@@ -4,8 +4,8 @@
   "chainId": 1,
   "contracts": {
     "bridge": "0x313416870A4da6F12505a550B67bB73c8E21D5d3",
-    "valMaster": "0xD1EEB2f30016fffd746233Ee12C486e7CA8eFeF1",
-    "xorMasterLegacyDecommissioned": "0xc08edf13Be9B9CC584c5Da8004CE7e6be63C1316",
+    "valMaster": "0xd1eEB2f30016FFfd746233Ee12c486E7Ca8eFeF1",
+    "xorMasterLegacyDecommissioned": "0xc08Edf13Be9b9cC584C5DA8004ce7E6Be63c1316",
     "valToken": "0xe88f8313e61A97cEc1871EE37fBbe2a8bf3ed1E4",
     "thischainTokensFromBridge_sidechainTokens": {
       "XOR": {
