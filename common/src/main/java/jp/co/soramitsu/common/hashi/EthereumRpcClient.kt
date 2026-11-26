@@ -178,7 +178,9 @@ class EthereumRpcClient(
         val block = receipt["blockNumber"]?.takeUnless { it is JsonNull }?.quantity() ?: return null
         val transactionHash = receipt["transactionHash"]?.takeUnless { it is JsonNull }?.data()
         require(transactionHash == null || transactionHash.contentEquals(hash)) { "ETH_RECEIPT_HASH_MISMATCH" }
-        val logs = (receipt["logs"] as? JsonArray ?: JsonArray(emptyList())).map { entry ->
+        // A receipt without its log list is unreadable, never "no events": a mined deposit read
+        // that way would look unproven.
+        val logs = (receipt["logs"] as? JsonArray ?: throw IllegalArgumentException("ETH_RECEIPT_LOGS_MISSING")).map { entry ->
             val log = entry as? JsonObject ?: throw IllegalArgumentException("ETH_RECEIPT_INVALID")
             EthLog(
                 address = EthHex.decodeFixed(

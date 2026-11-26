@@ -132,8 +132,15 @@ class HashiRpcClientsTest {
             Scripted { _, method, params ->
                 when (method) {
                     "eth_chainId" -> "0x1"
-                    "eth_getTransactionReceipt" -> if (params[0].jsonPrimitive.content.endsWith("01")) JsonNull else
-                        buildJsonObject { put("status", "0x1"); put("blockNumber", "0x10"); put("gasUsed", "0x5208") }
+                    "eth_getTransactionReceipt" -> when {
+                        params[0].jsonPrimitive.content.endsWith("01") -> JsonNull
+                        // A receipt without its log list.
+                        params[0].jsonPrimitive.content.endsWith("02") ->
+                            buildJsonObject { put("status", "0x1"); put("blockNumber", "0x10"); put("gasUsed", "0x5208") }
+                        else -> buildJsonObject {
+                            put("status", "0x1"); put("blockNumber", "0x10"); put("gasUsed", "0x5208"); put("logs", JsonArray(emptyList()))
+                        }
+                    }
                     "eth_getBlockByNumber" -> buildJsonObject { put("baseFeePerGas", "0x3b9aca00"); put("number", "0x1") }
                     "eth_call" -> EthHex.encode(EthAbi.uintWord(BigInteger.ONE))
                     else -> error(method)
@@ -145,6 +152,8 @@ class HashiRpcClientsTest {
         val receipt = checkNotNull(client.receipt(ByteArray(32)))
         assertEquals(1, receipt.status)
         assertEquals(BigInteger.valueOf(16), receipt.blockNumber)
+        // Missing logs are an unreadable receipt (read again later), not an empty event list.
+        assertTrue(runCatching { client.receipt(ByteArray(31) + byteArrayOf(2)) }.isFailure)
         assertEquals(BigInteger.valueOf(1_000_000_000), client.latestBaseFee())
         assertTrue(client.isUsed(HashiBridgeContract.bridge, ByteArray(32)))
     }
