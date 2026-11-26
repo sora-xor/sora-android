@@ -188,7 +188,8 @@ class HoldingFiguresOrderTest {
         }
         text(LONG_AMOUNT).assertIsDisplayed().assertNotCut()
         val symbol = text("PSWAP").assertIsDisplayed()
-        assertTrue("the name keeps its symbol", symbol.getUnclippedBoundsInRoot().width.value > 0f)
+        val bounds = symbol.getUnclippedBoundsInRoot()
+        assertTrue("the name keeps its symbol", (bounds.right - bounds.left).value > 0f)
         symbol.assertNotCut()
     }
 
