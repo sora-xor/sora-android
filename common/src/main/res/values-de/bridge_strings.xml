@@ -60,6 +60,7 @@
     <string name="hashi_bridge_error_eth_failed">Die Ethereum-Transaktion ist fehlgeschlagen. Du kannst es erneut versuchen.</string>
     <string name="hashi_bridge_error_eth_replaced">Eine andere Transaktion hat ihren Platz eingenommen. Du kannst es erneut versuchen.</string>
     <string name="hashi_bridge_error_eth_unproven">Die Ethereum-Transaktion wurde ausgeführt, aber die Bridge hat keinen Eintrag dazu. Sie wird nicht erneut gesendet.</string>
+    <string name="hashi_bridge_error_deposit_unconfirmed">Diese Einzahlung konnte auf Ethereum nicht bestätigt werden. Prüfe dein Token-Guthaben, bevor du erneut einzahlst.</string>
     <string name="hashi_bridge_error_allowance">Die Freigabe ist nicht wirksam geworden. Es wurde nichts eingezahlt.</string>
     <string name="hashi_bridge_error_pending">Eine frühere Transaktion ist noch ausstehend. Versuche es erneut, sobald sie bestätigt ist.</string>
     <string name="hashi_bridge_error_limit">Das Bridge-Limit für diesen Token ist erreicht. Versuche einen kleineren Betrag oder später erneut.</string>

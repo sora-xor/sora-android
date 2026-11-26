@@ -60,6 +60,7 @@
     <string name="hashi_bridge_error_eth_failed">The Ethereum transaction failed. You can try again.</string>
     <string name="hashi_bridge_error_eth_replaced">Another transaction took its place. You can try again.</string>
     <string name="hashi_bridge_error_eth_unproven">The Ethereum transaction went through, but the bridge has no record of it. It will not be sent again.</string>
+    <string name="hashi_bridge_error_deposit_unconfirmed">This deposit could not be confirmed on Ethereum. Check your token balance before you deposit again.</string>
     <string name="hashi_bridge_error_allowance">The approval did not take effect. Nothing was deposited.</string>
     <string name="hashi_bridge_error_pending">An earlier transaction is still pending. Try again once it is confirmed.</string>
     <string name="hashi_bridge_error_limit">The bridge limit for this token is reached. Try a smaller amount or try again later.</string>

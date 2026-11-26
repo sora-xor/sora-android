@@ -60,6 +60,7 @@
     <string name="hashi_bridge_error_eth_failed">La transaction Ethereum a échoué. Vous pouvez réessayer.</string>
     <string name="hashi_bridge_error_eth_replaced">Une autre transaction a pris sa place. Vous pouvez réessayer.</string>
     <string name="hashi_bridge_error_eth_unproven">La transaction Ethereum a été exécutée, mais le pont n’en a aucune trace. Elle ne sera pas renvoyée.</string>
+    <string name="hashi_bridge_error_deposit_unconfirmed">Ce dépôt n’a pas pu être confirmé sur Ethereum. Vérifiez votre solde de jetons avant de déposer à nouveau.</string>
     <string name="hashi_bridge_error_allowance">L’approbation n’a pas pris effet. Rien n’a été déposé.</string>
     <string name="hashi_bridge_error_pending">Une transaction précédente est encore en attente. Réessayez une fois qu’elle est confirmée.</string>
     <string name="hashi_bridge_error_limit">La limite du pont pour ce jeton est atteinte. Essayez un montant plus petit ou réessayez plus tard.</string>

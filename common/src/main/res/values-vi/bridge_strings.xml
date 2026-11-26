@@ -60,6 +60,7 @@
     <string name="hashi_bridge_error_eth_failed">Giao dịch Ethereum thất bại. Bạn có thể thử lại.</string>
     <string name="hashi_bridge_error_eth_replaced">Một giao dịch khác đã thay thế nó. Bạn có thể thử lại.</string>
     <string name="hashi_bridge_error_eth_unproven">Giao dịch Ethereum đã được thực hiện nhưng cầu không có bản ghi về giao dịch này. Giao dịch sẽ không được gửi lại.</string>
+    <string name="hashi_bridge_error_deposit_unconfirmed">Không thể xác nhận khoản nạp này trên Ethereum. Hãy kiểm tra số dư token trước khi nạp lại.</string>
     <string name="hashi_bridge_error_allowance">Phê duyệt chưa có hiệu lực. Chưa nạp gì cả.</string>
     <string name="hashi_bridge_error_pending">Một giao dịch trước đó vẫn đang chờ. Hãy thử lại khi nó được xác nhận.</string>
     <string name="hashi_bridge_error_limit">Đã đạt giới hạn của cầu cho token này. Hãy thử số lượng nhỏ hơn hoặc thử lại sau.</string>

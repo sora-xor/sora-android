@@ -60,6 +60,7 @@
     <string name="hashi_bridge_error_eth_failed">Ethereum-tapahtuma epäonnistui. Voit yrittää uudelleen.</string>
     <string name="hashi_bridge_error_eth_replaced">Toinen tapahtuma vei sen paikan. Voit yrittää uudelleen.</string>
     <string name="hashi_bridge_error_eth_unproven">Ethereum-tapahtuma meni läpi, mutta sillalla ei ole siitä merkintää. Sitä ei lähetetä uudelleen.</string>
+    <string name="hashi_bridge_error_deposit_unconfirmed">Tätä talletusta ei voitu vahvistaa Ethereumissa. Tarkista tokenisaldosi ennen kuin talletat uudelleen.</string>
     <string name="hashi_bridge_error_allowance">Hyväksyntä ei tullut voimaan. Mitään ei talletettu.</string>
     <string name="hashi_bridge_error_pending">Aiempi tapahtuma on vielä kesken. Yritä uudelleen, kun se on vahvistettu.</string>
     <string name="hashi_bridge_error_limit">Sillan raja tälle tokenille on täynnä. Kokeile pienempää määrää tai yritä myöhemmin.</string>

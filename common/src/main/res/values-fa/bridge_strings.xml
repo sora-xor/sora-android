@@ -60,6 +60,7 @@
     <string name="hashi_bridge_error_eth_failed">تراکنش Ethereum ناموفق بود. می‌توانید دوباره تلاش کنید.</string>
     <string name="hashi_bridge_error_eth_replaced">تراکنش دیگری جای آن را گرفت. می‌توانید دوباره تلاش کنید.</string>
     <string name="hashi_bridge_error_eth_unproven">تراکنش Ethereum انجام شد، اما پل هیچ سابقه‌ای از آن ندارد. دوباره ارسال نمی‌شود.</string>
+    <string name="hashi_bridge_error_deposit_unconfirmed">این واریز در Ethereum تأیید نشد. پیش از واریز دوباره، موجودی توکن خود را بررسی کنید.</string>
     <string name="hashi_bridge_error_allowance">تأیید اعمال نشد. چیزی واریز نشد.</string>
     <string name="hashi_bridge_error_pending">یک تراکنش قبلی هنوز در انتظار است. پس از تأیید آن دوباره تلاش کنید.</string>
     <string name="hashi_bridge_error_limit">سقف پل برای این توکن پر شده است. مقدار کمتری را امتحان کنید یا بعداً دوباره تلاش کنید.</string>

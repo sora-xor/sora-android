@@ -60,6 +60,7 @@
     <string name="hashi_bridge_error_eth_failed">Ethereum əməliyyatı alınmadı. Yenidən cəhd edə bilərsiniz.</string>
     <string name="hashi_bridge_error_eth_replaced">Onun yerini başqa əməliyyat tutdu. Yenidən cəhd edə bilərsiniz.</string>
     <string name="hashi_bridge_error_eth_unproven">Ethereum əməliyyatı icra olundu, lakin körpüdə onun qeydi yoxdur. Yenidən göndərilməyəcək.</string>
+    <string name="hashi_bridge_error_deposit_unconfirmed">Bu depozit Ethereum-da təsdiqlənə bilmədi. Yenidən depozit etməzdən əvvəl token balansınızı yoxlayın.</string>
     <string name="hashi_bridge_error_allowance">Təsdiq qüvvəyə minmədi. Heç nə depozit edilmədi.</string>
     <string name="hashi_bridge_error_pending">Əvvəlki əməliyyat hələ gözləmədədir. Təsdiqləndikdən sonra yenidən cəhd edin.</string>
     <string name="hashi_bridge_error_limit">Bu token üçün körpü limiti dolub. Daha kiçik məbləğ yoxlayın və ya sonra yenidən cəhd edin.</string>

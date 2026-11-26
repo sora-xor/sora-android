@@ -60,6 +60,7 @@
     <string name="hashi_bridge_error_eth_failed">De Ethereum-transactie is mislukt. Je kunt het opnieuw proberen.</string>
     <string name="hashi_bridge_error_eth_replaced">Een andere transactie heeft haar plaats ingenomen. Je kunt het opnieuw proberen.</string>
     <string name="hashi_bridge_error_eth_unproven">De Ethereum-transactie is uitgevoerd, maar de bridge heeft er geen registratie van. Ze wordt niet opnieuw verzonden.</string>
+    <string name="hashi_bridge_error_deposit_unconfirmed">Deze storting kon niet worden bevestigd op Ethereum. Controleer je tokensaldo voordat je opnieuw stort.</string>
     <string name="hashi_bridge_error_allowance">De goedkeuring is niet doorgevoerd. Er is niets gestort.</string>
     <string name="hashi_bridge_error_pending">Een eerdere transactie is nog in behandeling. Probeer het opnieuw zodra die is bevestigd.</string>
     <string name="hashi_bridge_error_limit">De bridge-limiet voor deze token is bereikt. Probeer een kleiner bedrag of probeer het later opnieuw.</string>

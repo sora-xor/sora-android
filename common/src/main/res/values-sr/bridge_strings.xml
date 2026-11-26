@@ -60,6 +60,7 @@
     <string name="hashi_bridge_error_eth_failed">Ethereum трансакција није успела. Можете покушати поново.</string>
     <string name="hashi_bridge_error_eth_replaced">Друга трансакција је заузела њено место. Можете покушати поново.</string>
     <string name="hashi_bridge_error_eth_unproven">Ethereum трансакција је извршена, али мост нема запис о њој. Неће бити поново послата.</string>
+    <string name="hashi_bridge_error_deposit_unconfirmed">Овај депозит није могао да се потврди на Ethereum мрежи. Проверите стање токена пре него што поново уплатите.</string>
     <string name="hashi_bridge_error_allowance">Одобрење није ступило на снагу. Ништа није депоновано.</string>
     <string name="hashi_bridge_error_pending">Претходна трансакција је још на чекању. Покушајте поново када буде потврђена.</string>
     <string name="hashi_bridge_error_limit">Достигнут је лимит моста за овај токен. Пробајте мањи износ или покушајте касније.</string>

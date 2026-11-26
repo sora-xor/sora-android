@@ -60,6 +60,7 @@
     <string name="hashi_bridge_error_eth_failed">Ethereum işlemi başarısız oldu. Tekrar deneyebilirsiniz.</string>
     <string name="hashi_bridge_error_eth_replaced">Yerini başka bir işlem aldı. Tekrar deneyebilirsiniz.</string>
     <string name="hashi_bridge_error_eth_unproven">Ethereum işlemi gerçekleşti ancak köprüde kaydı yok. Tekrar gönderilmeyecek.</string>
+    <string name="hashi_bridge_error_deposit_unconfirmed">Bu yatırma Ethereum üzerinde doğrulanamadı. Tekrar yatırmadan önce token bakiyenizi kontrol edin.</string>
     <string name="hashi_bridge_error_allowance">Onay geçerli olmadı. Hiçbir şey yatırılmadı.</string>
     <string name="hashi_bridge_error_pending">Önceki bir işlem hâlâ beklemede. Onaylandıktan sonra tekrar deneyin.</string>
     <string name="hashi_bridge_error_limit">Bu token için köprü limiti doldu. Daha küçük bir tutar deneyin veya daha sonra tekrar deneyin.</string>

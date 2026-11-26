@@ -60,6 +60,7 @@
     <string name="hashi_bridge_error_eth_failed">Ethereum-transaksjonen mislyktes. Du kan prøve igjen.</string>
     <string name="hashi_bridge_error_eth_replaced">En annen transaksjon tok plassen dens. Du kan prøve igjen.</string>
     <string name="hashi_bridge_error_eth_unproven">Ethereum-transaksjonen ble gjennomført, men broen har ingen registrering av den. Den sendes ikke på nytt.</string>
+    <string name="hashi_bridge_error_deposit_unconfirmed">Dette innskuddet kunne ikke bekreftes på Ethereum. Sjekk tokensaldoen din før du setter inn på nytt.</string>
     <string name="hashi_bridge_error_allowance">Godkjenningen trådte ikke i kraft. Ingenting ble satt inn.</string>
     <string name="hashi_bridge_error_pending">En tidligere transaksjon venter fortsatt. Prøv igjen når den er bekreftet.</string>
     <string name="hashi_bridge_error_limit">Broens grense for denne tokenen er nådd. Prøv et mindre beløp, eller prøv igjen senere.</string>

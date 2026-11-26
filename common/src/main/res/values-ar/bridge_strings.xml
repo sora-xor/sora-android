@@ -60,6 +60,7 @@
     <string name="hashi_bridge_error_eth_failed">فشلت معاملة Ethereum. يمكنك المحاولة مرة أخرى.</string>
     <string name="hashi_bridge_error_eth_replaced">حلّت معاملة أخرى محلها. يمكنك المحاولة مرة أخرى.</string>
     <string name="hashi_bridge_error_eth_unproven">تمت معاملة Ethereum، لكن الجسر لا يملك سجلًا لها. لن تُرسل مرة أخرى.</string>
+    <string name="hashi_bridge_error_deposit_unconfirmed">تعذّر تأكيد هذا الإيداع على Ethereum. تحقّق من رصيد الرمز قبل أن تودع مرة أخرى.</string>
     <string name="hashi_bridge_error_allowance">لم تُفعَّل الموافقة. لم يُودَع شيء.</string>
     <string name="hashi_bridge_error_pending">توجد معاملة سابقة ما زالت معلّقة. حاول مرة أخرى بعد تأكيدها.</string>
     <string name="hashi_bridge_error_limit">تم بلوغ حد الجسر لهذا الرمز. جرّب مبلغًا أصغر أو حاول لاحقًا.</string>

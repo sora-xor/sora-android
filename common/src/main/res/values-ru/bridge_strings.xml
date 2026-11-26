@@ -60,6 +60,7 @@
     <string name="hashi_bridge_error_eth_failed">Транзакция Ethereum не удалась. Можно попробовать ещё раз.</string>
     <string name="hashi_bridge_error_eth_replaced">Её место заняла другая транзакция. Можно попробовать ещё раз.</string>
     <string name="hashi_bridge_error_eth_unproven">Транзакция Ethereum прошла, но у моста нет записи о ней. Повторно она отправлена не будет.</string>
+    <string name="hashi_bridge_error_deposit_unconfirmed">Не удалось подтвердить этот депозит в Ethereum. Проверьте баланс токена, прежде чем вносить снова.</string>
     <string name="hashi_bridge_error_allowance">Одобрение не вступило в силу. Депозит не выполнен.</string>
     <string name="hashi_bridge_error_pending">Предыдущая транзакция ещё не подтверждена. Повторите попытку после её подтверждения.</string>
     <string name="hashi_bridge_error_limit">Достигнут лимит моста для этого токена. Попробуйте меньшую сумму или повторите позже.</string>

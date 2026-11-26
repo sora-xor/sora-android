@@ -60,6 +60,7 @@
     <string name="hashi_bridge_error_eth_failed">Ethereum 交易失敗。您可以重試。</string>
     <string name="hashi_bridge_error_eth_replaced">該交易已被另一筆交易取代。您可以重試。</string>
     <string name="hashi_bridge_error_eth_unproven">Ethereum 交易已執行，但跨鏈橋沒有這筆交易的記錄。不會再次傳送。</string>
+    <string name="hashi_bridge_error_deposit_unconfirmed">無法在 Ethereum 上確認這筆存入。再次存入前，請先檢查您的代幣餘額。</string>
     <string name="hashi_bridge_error_allowance">授權未生效。未存入任何資產。</string>
     <string name="hashi_bridge_error_pending">先前的一筆交易仍在處理中。請在確認後重試。</string>
     <string name="hashi_bridge_error_limit">該代幣已達到跨鏈橋限額。請減少數量或稍後重試。</string>

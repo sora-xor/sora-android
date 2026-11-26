@@ -60,6 +60,7 @@
     <string name="hashi_bridge_error_eth_failed">עסקת Ethereum נכשלה. אפשר לנסות שוב.</string>
     <string name="hashi_bridge_error_eth_replaced">עסקה אחרת תפסה את מקומה. אפשר לנסות שוב.</string>
     <string name="hashi_bridge_error_eth_unproven">עסקת Ethereum בוצעה, אבל לגשר אין תיעוד שלה. היא לא תישלח שוב.</string>
+    <string name="hashi_bridge_error_deposit_unconfirmed">לא ניתן היה לאשר את ההפקדה הזו ב-Ethereum. בדוק את יתרת הטוקן שלך לפני שתפקיד שוב.</string>
     <string name="hashi_bridge_error_allowance">האישור לא נכנס לתוקף. דבר לא הופקד.</string>
     <string name="hashi_bridge_error_pending">עסקה קודמת עדיין ממתינה. נסה שוב לאחר שתאושר.</string>
     <string name="hashi_bridge_error_limit">הגעת למגבלת הגשר עבור הטוקן הזה. נסה סכום קטן יותר או נסה שוב מאוחר יותר.</string>

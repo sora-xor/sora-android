@@ -60,6 +60,7 @@
     <string name="hashi_bridge_error_eth_failed">Transaksi Ethereum gagal. Anda dapat mencoba lagi.</string>
     <string name="hashi_bridge_error_eth_replaced">Transaksi lain menggantikannya. Anda dapat mencoba lagi.</string>
     <string name="hashi_bridge_error_eth_unproven">Transaksi Ethereum berhasil diproses, tetapi jembatan tidak memiliki catatannya. Transaksi ini tidak akan dikirim ulang.</string>
+    <string name="hashi_bridge_error_deposit_unconfirmed">Setoran ini tidak dapat dikonfirmasi di Ethereum. Periksa saldo token Anda sebelum menyetor lagi.</string>
     <string name="hashi_bridge_error_allowance">Persetujuan tidak berlaku. Tidak ada yang disetor.</string>
     <string name="hashi_bridge_error_pending">Transaksi sebelumnya masih tertunda. Coba lagi setelah dikonfirmasi.</string>
     <string name="hashi_bridge_error_limit">Batas jembatan untuk token ini telah tercapai. Coba jumlah yang lebih kecil atau coba lagi nanti.</string>

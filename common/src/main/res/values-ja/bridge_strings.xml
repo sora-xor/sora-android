@@ -60,6 +60,7 @@
     <string name="hashi_bridge_error_eth_failed">Ethereumのトランザクションが失敗しました。もう一度お試しいただけます。</string>
     <string name="hashi_bridge_error_eth_replaced">別のトランザクションに置き換えられました。もう一度お試しいただけます。</string>
     <string name="hashi_bridge_error_eth_unproven">Ethereumのトランザクションは処理されましたが、ブリッジに記録がありません。再送はしません。</string>
+    <string name="hashi_bridge_error_deposit_unconfirmed">この預け入れはEthereumで確認できませんでした。もう一度預け入れる前に、トークンの残高をご確認ください。</string>
     <string name="hashi_bridge_error_allowance">承認が反映されませんでした。預け入れは行われていません。</string>
     <string name="hashi_bridge_error_pending">前のトランザクションがまだ処理中です。確定してからもう一度お試しください。</string>
     <string name="hashi_bridge_error_limit">このトークンのブリッジ上限に達しています。数量を減らすか、しばらくしてからお試しください。</string>

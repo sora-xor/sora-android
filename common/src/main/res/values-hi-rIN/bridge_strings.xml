@@ -60,6 +60,7 @@
     <string name="hashi_bridge_error_eth_failed">Ethereum लेनदेन विफल रहा। आप फिर से कोशिश कर सकते हैं।</string>
     <string name="hashi_bridge_error_eth_replaced">किसी दूसरे लेनदेन ने इसकी जगह ले ली। आप फिर से कोशिश कर सकते हैं।</string>
     <string name="hashi_bridge_error_eth_unproven">Ethereum लेनदेन पूरा हुआ, लेकिन ब्रिज के पास इसका कोई रिकॉर्ड नहीं है। इसे दोबारा नहीं भेजा जाएगा।</string>
+    <string name="hashi_bridge_error_deposit_unconfirmed">यह जमा Ethereum पर पुष्टि नहीं हो सका। दोबारा जमा करने से पहले अपना टोकन बैलेंस जाँचें।</string>
     <string name="hashi_bridge_error_allowance">मंज़ूरी लागू नहीं हुई। कुछ भी जमा नहीं हुआ।</string>
     <string name="hashi_bridge_error_pending">पिछला लेनदेन अभी लंबित है। उसकी पुष्टि होने के बाद फिर से कोशिश करें।</string>
     <string name="hashi_bridge_error_limit">इस टोकन के लिए ब्रिज की सीमा पूरी हो गई है। कम राशि आज़माएँ या बाद में फिर से कोशिश करें।</string>
