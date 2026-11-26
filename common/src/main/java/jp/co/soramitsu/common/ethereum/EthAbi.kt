@@ -133,6 +133,12 @@ object EthAbi {
 
     private val ERROR_SELECTOR = selector("Error(string)")
 
+    /** [value] as an Int, or [ArithmeticException] when it does not fit (intValueExact needs API 31). */
+    private fun smallInt(value: BigInteger): Int {
+        if (value.bitLength() > 31) throw ArithmeticException("ABI_OFFSET_TOO_LARGE")
+        return value.toInt()
+    }
+
     /**
      * The message of a Solidity `revert("…")` / `require(…, "…")`: `Error(string)` data. Null when
      * the data is something else (a custom error, a panic or nothing).
@@ -141,8 +147,8 @@ object EthAbi {
         if (data.size < 4 + 3 * WORD || !data.copyOfRange(0, 4).contentEquals(ERROR_SELECTOR)) return null
         val body = data.copyOfRange(4, data.size)
         return try {
-            val offset = BigInteger(1, body.copyOfRange(0, WORD)).intValueExact()
-            val length = BigInteger(1, body.copyOfRange(offset, offset + WORD)).intValueExact()
+            val offset = smallInt(BigInteger(1, body.copyOfRange(0, WORD)))
+            val length = smallInt(BigInteger(1, body.copyOfRange(offset, offset + WORD)))
             if (length > 1024 || offset + WORD + length > body.size) return null
             String(body.copyOfRange(offset + WORD, offset + WORD + length), Charsets.UTF_8)
         } catch (_: ArithmeticException) {
