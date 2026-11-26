@@ -187,6 +187,7 @@ class HashiTexts(private val resources: ResourceManager, private val numbers: Nu
         HashiFailure.ETHEREUM_REVERTED -> resources.getString(R.string.hashi_bridge_error_eth_failed)
         HashiFailure.ETHEREUM_REPLACED -> resources.getString(R.string.hashi_bridge_error_eth_replaced)
         HashiFailure.ETHEREUM_UNPROVEN -> resources.getString(R.string.hashi_bridge_error_eth_unproven)
+        HashiFailure.DEPOSIT_UNCONFIRMED -> resources.getString(R.string.hashi_bridge_error_deposit_unconfirmed)
         HashiFailure.ETHEREUM_REFUSED -> resources.getString(R.string.hashi_bridge_error_reverted).format(record.error.orEmpty())
         HashiFailure.ALLOWANCE_NOT_SET -> resources.getString(R.string.hashi_bridge_error_allowance)
     }
@@ -333,7 +334,7 @@ class HashiTexts(private val resources: ResourceManager, private val numbers: Nu
                     amount(BigInteger(approved), record.ethDecimals, record.symbol),
                     amount(BigInteger(expected), record.ethDecimals, record.symbol),
                 )
-            } ?: (if (failed) failure(record) else null)
+            } ?: (if (failed) failure(record) ?: record.error else null)
                 // Broken: both errors the bridge recorded, kept as it gave them.
                 ?: record.error?.takeIf { record.state == HashiTransferState.NEEDS_OPERATORS }
                 ?: savedRefusal(record),
@@ -343,7 +344,9 @@ class HashiTexts(private val resources: ResourceManager, private val numbers: Nu
                 HashiTransferState.READY_TO_CLAIM -> HashiTransferAction.CLAIM
                 HashiTransferState.READY_TO_DEPOSIT -> HashiTransferAction.CONTINUE_DEPOSIT
                 // A transaction mined without its proof is never offered again.
-                HashiTransferState.ETHEREUM_STEP_FAILED -> HashiTransferAction.TRY_AGAIN.takeUnless { record.failure == HashiFailure.ETHEREUM_UNPROVEN }
+                HashiTransferState.ETHEREUM_STEP_FAILED -> HashiTransferAction.TRY_AGAIN.takeUnless {
+                    record.failure == HashiFailure.ETHEREUM_UNPROVEN || record.failure == HashiFailure.DEPOSIT_UNCONFIRMED
+                }
                 else -> null
             }.takeUnless { working },
             canSpeedUp = openStep != null,

@@ -3,6 +3,7 @@ package jp.co.soramitsu.feature_wallet_impl.bridge
 import java.math.BigInteger
 import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.hashi.EthReceipt
+import jp.co.soramitsu.common.hashi.EthTransactionLookup
 import jp.co.soramitsu.common.hashi.HashiApprovedRequest
 import jp.co.soramitsu.common.hashi.HashiAvailability
 import jp.co.soramitsu.common.hashi.HashiDryRunResult
@@ -72,6 +73,9 @@ interface HashiEthereumGateway {
     suspend fun priorityFee(): BigInteger
     suspend fun send(raw: ByteArray, hash: ByteArray)
     suspend fun receipt(hash: ByteArray): EthReceipt?
+
+    /** What every endpoint knows of [hash]; throws when too few answer to call it absent. */
+    suspend fun lookupEverywhere(hash: ByteArray): EthTransactionLookup
 }
 
 /** The wallet's Ethereum account (spec §1). */
@@ -84,4 +88,11 @@ interface HashiEthereumAccounts {
      * The key never leaves [block].
      */
     suspend fun <T> withPrivateKey(account: SoraAccount, expectedAddress: String, block: (ByteArray) -> T): T
+
+    /**
+     * [address] derived again from the stored phrase now (not from the cache), or null when the
+     * account can no longer derive it (re-imported from a raw seed, phrase unreadable). Used
+     * before a transfer whose claim this account will have to sign.
+     */
+    suspend fun verifiedAddress(account: SoraAccount): String? = address(account)
 }

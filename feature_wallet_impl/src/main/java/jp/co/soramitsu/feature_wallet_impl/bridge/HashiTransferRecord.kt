@@ -127,6 +127,12 @@ enum class HashiFailure {
      */
     ETHEREUM_UNPROVEN,
 
+    /**
+     * A deposit whose nonce another transaction took. Which one is not known, so it is never
+     * signed again (it may have been this deposit, seen late); the person checks the balance.
+     */
+    DEPOSIT_UNCONFIRMED,
+
     /** An Ethereum node refused the signed transaction: nothing is pending. */
     ETHEREUM_REFUSED,
 

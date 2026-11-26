@@ -13,6 +13,7 @@ import jp.co.soramitsu.common.ethereum.SignedEthTransaction
 import jp.co.soramitsu.common.hashi.EthCallRevertedException
 import jp.co.soramitsu.common.hashi.EthFees
 import jp.co.soramitsu.common.hashi.EthReceipt
+import jp.co.soramitsu.common.hashi.EthTransactionLookup
 import jp.co.soramitsu.common.hashi.HashiAmounts
 import jp.co.soramitsu.common.hashi.HashiAssetKind
 import jp.co.soramitsu.common.hashi.HashiAvailability
@@ -133,6 +134,9 @@ class HashiBridgeService(
 
     /** Transfers whose one SORA submission this process is making right now. */
     private val submitting: MutableSet<String> = ConcurrentHashMap.newKeySet()
+
+    /** Ethereum attempts whose send this process is making right now: never sent twice at once. */
+    private val inFlight: MutableSet<String> = ConcurrentHashMap.newKeySet()
     private val monitoring = AtomicBoolean(false)
     private val _working = MutableStateFlow<Set<String>>(emptySet())
 
@@ -302,7 +306,9 @@ class HashiBridgeService(
     ): Pair<HashiTransferRecord, PreparedSoraTransfer> {
         requireOpen()
         requireNoUnresolvedSubmission(account.substrateAddress)
-        val ethAccount = accounts.address(account) ?: throw HashiRefusal(HashiRefusal.Reason.NO_ETHEREUM_ACCOUNT)
+        // Derived again after the PIN, not taken from the cache: the claim will need this
+        // account's key, so an address of a phrase the wallet no longer has must not be used.
+        val ethAccount = accounts.verifiedAddress(account) ?: throw HashiRefusal(HashiRefusal.Reason.NO_ETHEREUM_ACCOUNT)
         check(HashiSoraCalls.isU128(quote.soraAmount)) { "HASHI_AMOUNT_RANGE_INVALID" }
         val prepared = sora.signTransfer(account, quote.asset.assetId, quote.recipient, quote.soraAmount)
         val record = HashiTransferRecord(
@@ -473,7 +479,12 @@ class HashiBridgeService(
         val soraAmount = checkNotNull(HashiAmounts.incomingSoraAmount(ethAmount, asset, factor))
         // The pallet keeps balances in u128: a larger credit would fail on SORA after the
         // Ethereum side already took the tokens.
-        if (!HashiSoraCalls.isU128(soraAmount)) throw HashiRefusal(HashiRefusal.Reason.AMOUNT_INVALID)
+        // The pallet keeps balances in u128: it divides the Ethereum amount by the denomination
+        // factor and that must fit u128 before it converts the precision (InvalidAmount after
+        // the Ethereum side already took the tokens otherwise).
+        if (!HashiSoraCalls.isU128(ethAmount.divide(factor)) || !HashiSoraCalls.isU128(soraAmount)) {
+            throw HashiRefusal(HashiRefusal.Reason.AMOUNT_INVALID)
+        }
         requireIncomingAccepted(asset, soraAmount)
         val ethBalance = ethereum.balance(from)
         val baseFee = ethereum.baseFee()
@@ -521,6 +532,40 @@ class HashiBridgeService(
         }
     }
 
+    /** The asset exactly as the person confirmed it: the token and decimals saved in [record]. */
+    private fun assetOf(record: HashiTransferRecord, kind: HashiAssetKind): HashiBridgeAsset = HashiBridgeAsset(
+        kind, record.assetId, record.soraPrecision, EthHex.decodeFixed(record.ethToken, EthAddress.SIZE), record.ethDecimals,
+    )
+
+    /**
+     * [requireIncomingAccepted] for a saved deposit, against what both chains say now (read
+     * again, not from this session's cache): the asset is registered with the same kind, token,
+     * decimals and precision the person confirmed, and the saved Ethereum amount still credits
+     * exactly the saved SORA amount (the denomination can change). Returns the confirmed asset.
+     */
+    private suspend fun requireIncomingStillCredited(record: HashiTransferRecord): HashiBridgeAsset {
+        val registration = sora.registeredAssets().firstOrNull { it.assetId == record.assetId }
+            ?: throw HashiRefusal(HashiRefusal.Reason.NOT_BRIDGEABLE)
+        val asset = assetOf(record, registration.kind)
+        val registeredToken = registration.ethToken
+        val sameToken = when (registration.kind) {
+            // A SORA-native asset's ERC-20 and its decimals come from the bridge contract.
+            HashiAssetKind.THISCHAIN -> ethereum.sidechainToken(EthHex.decode(record.assetId))?.let { token ->
+                EthAddress.equal(token, asset.ethToken) && ethereum.decimals(token) == record.ethDecimals
+            } == true
+            else -> registeredToken != null && EthAddress.equal(registeredToken, asset.ethToken) &&
+                registration.ethDecimals == record.ethDecimals
+        }
+        if (!sameToken || registration.soraPrecision != record.soraPrecision) throw HashiRefusal(HashiRefusal.Reason.NOT_BRIDGEABLE)
+        val factor = sora.denominationFactor(record.assetId)
+        val credited = HashiAmounts.incomingSoraAmount(record.ethUnits, asset, factor)
+        if (credited == null || credited != record.soraUnits || !HashiSoraCalls.isU128(record.ethUnits.divide(factor))) {
+            throw HashiRefusal(HashiRefusal.Reason.NOT_BRIDGEABLE, "CREDIT_CHANGED")
+        }
+        requireIncomingAccepted(asset, record.soraUnits)
+        return asset
+    }
+
     /**
      * Starts a deposit the person confirmed with the PIN: approve 0 (when an older allowance
      * exists), approve the exact amount, then the deposit, each persisted and waited for. When the
@@ -533,7 +578,8 @@ class HashiBridgeService(
     }
 
     private suspend fun newIncoming(account: SoraAccount, quote: IncomingQuote, symbol: String): HashiTransferRecord {
-        val ethAccount = accounts.address(account) ?: throw HashiRefusal(HashiRefusal.Reason.NO_ETHEREUM_ACCOUNT)
+        // Derived again after the PIN (see prepareOutgoing): no deposit from a cached address.
+        val ethAccount = accounts.verifiedAddress(account) ?: throw HashiRefusal(HashiRefusal.Reason.NO_ETHEREUM_ACCOUNT)
         requireNoOpenEthereumStep(ethAccount)
         return HashiTransferRecord(
             id = newId(),
@@ -618,7 +664,8 @@ class HashiBridgeService(
         var record = store.get(account.substrateAddress, recordId) ?: throw HashiRefusal(HashiRefusal.Reason.NOT_READY)
         check(record.direction == HashiDirection.ETHEREUM_TO_SORA) { "HASHI_NOT_INCOMING" }
         requireOpen()
-        val asset = resolveAsset(record.assetId) ?: throw HashiRefusal(HashiRefusal.Reason.NOT_BRIDGEABLE)
+        // Every step uses the token the person confirmed, never a registration read later.
+        var asset = requireIncomingStillCredited(record)
         val from = parseAddress(record.ethAccount)
         // "Try again" after the allowance never reached the amount: one more approval may be signed.
         var approveAgain = record.failure == HashiFailure.ALLOWANCE_NOT_SET
@@ -635,7 +682,7 @@ class HashiBridgeService(
             // Read again right before anything is signed: the bridge can pause and liquidity or
             // the token's registration can change while an approval is mined or overnight.
             requireOpen()
-            requireIncomingAccepted(asset, record.soraUnits)
+            asset = requireIncomingStillCredited(record)
             if (asset.isNativeEther) {
                 return deposit(account, record, HashiBridgeContract.bridge, amount, HashiBridgeCalls.sendEthToSidechain(destination), waitForConfirmation)
             }
@@ -756,17 +803,32 @@ class HashiBridgeService(
         if (previous != null) {
             check(!previous.state.isOpen) { "HASHI_STEP_STILL_OPEN" }
             if (previous.state == HashiEthStepState.CONFIRMED && !repeatConfirmed) return null
-            // A new nonce only once the old one is provably consumed by a transaction that is
-            // none of ours (REPLACED) or by ours with status 0 (REVERTED).
-            check(ethereum.latestNonce(from) > previous.nonceValue) { "HASHI_OLD_NONCE_NOT_CONSUMED" }
+            // A deposit whose nonce another transaction took, or that was mined without the
+            // bridge's event, is never signed again: without proof of which transaction used the
+            // nonce a second deposit could pay twice. A new transfer is the person's decision.
+            if (intent == HashiEthIntent.DEPOSIT && previous.state != HashiEthStepState.CONFIRMED &&
+                (previous.failure == NONCE_USED_ELSEWHERE || previous.failure == EVENT_MISSING)
+            ) {
+                throw HashiRefusal(HashiRefusal.Reason.NOT_READY, "DEPOSIT_NOT_REPEATED")
+            }
+            // Never again while an earlier attempt is mined or still pending anywhere.
             if (previous.state != HashiEthStepState.CONFIRMED) requireNoAttemptMined(record, previous)
+        }
+        // The same intent at the SAME nonce while that nonce is still free (the node refused the
+        // earlier bytes): at most one of them can ever be mined. A new nonce only once the old
+        // one is consumed.
+        val sameNonce = previous?.takeIf { it.state != HashiEthStepState.CONFIRMED }?.let { old ->
+            // Free means: not mined, nothing pending at it (another wallet's payment), not seen used.
+            old.nonceValue.takeIf {
+                ethereum.latestNonce(from) <= it && ethereum.pendingNonce(from) <= it && minedNonceFloor(record.ethAccount) <= it
+            }
         }
         val fees = quotedFees ?: fees(from, to, data, value)
         if (ethereum.balance(from) < value.add(fees.maximumCost)) throw HashiRefusal(HashiRefusal.Reason.INSUFFICIENT_ETH_FOR_GAS)
         // Read now, under the signing lock, never from a quote: another transaction of this
         // account may have taken a nonce since. Never below a nonce this wallet saw mined (an
         // endpoint a block behind can still answer the old count).
-        val nonce = ethereum.pendingNonce(from).max(minedNonceFloor(record.ethAccount))
+        val nonce = sameNonce ?: ethereum.pendingNonce(from).max(minedNonceFloor(record.ethAccount))
         val transaction = Eip1559Transaction(
             chainId = HashiBridgeContract.ETHEREUM_CHAIN_ID,
             nonce = nonce,
@@ -804,6 +866,9 @@ class HashiBridgeService(
      */
     private suspend fun broadcast(record: HashiTransferRecord, step: HashiEthStep, raw: ByteArray, hash: ByteArray): HashiTransferRecord {
         val attemptHash = EthHex.encode(hash)
+        // While this send is out, the monitor does not send the same bytes on its own: an
+        // answer to one of the two must never be read as the fate of the other.
+        inFlight += attemptHash
         return try {
             ethereum.send(raw, hash)
             transition(record) { current ->
@@ -817,12 +882,20 @@ class HashiBridgeService(
                 // "nonce too low" can be this very transaction, mined after an earlier send whose
                 // answer was lost: unknown, never "nothing is pending". The receipts decide.
                 error.message.contains("nonce", ignoreCase = true) -> transition(record) { it }
-                // A speed-up the node refused: the earlier attempts stay pending and watched.
+                // A speed-up the node refused: nothing is removed or closed. Every attempt stays
+                // watched (the monitor may already have seen one of them mined meanwhile).
                 step.attempts.size > 1 -> {
+                    // The node refused these new bytes and no other endpoint can have them (see
+                    // EthereumRpcClient): drop them so the earlier, affordable bytes are the ones
+                    // sent again. Nothing changes once the step is no longer open.
                     transition(record) { current ->
-                        val inStore = current.stepLike(step) ?: return@transition current
-                        val kept = inStore.attempts.filterNot { it.hash == attemptHash }
-                        if (kept.isEmpty()) current else current.withStep(inStore.copy(attempts = kept, state = HashiEthStepState.BROADCAST))
+                        val inStore = current.stepLike(step)
+                        val kept = inStore?.attempts?.filterNot { it.hash == attemptHash }.orEmpty()
+                        if (inStore == null || !inStore.state.isOpen || kept.isEmpty() || inStore.confirmedHash == attemptHash) {
+                            current
+                        } else {
+                            current.withStep(inStore.copy(attempts = kept, state = HashiEthStepState.BROADCAST))
+                        }
                     }
                     throw HashiRefusal(HashiRefusal.Reason.CALL_REVERTED, error.message)
                 }
@@ -841,6 +914,8 @@ class HashiBridgeService(
         } catch (_: Exception) {
             // Unknown: the saved bytes are sent again when the transfer is refreshed.
             transition(record) { it }
+        } finally {
+            inFlight -= attemptHash
         }
     }
 
@@ -852,6 +927,17 @@ class HashiBridgeService(
         val record = store.get(account.substrateAddress, recordId) ?: throw HashiRefusal(HashiRefusal.Reason.NOT_READY)
         val step = record.ethSteps.lastOrNull { it.state.isOpen } ?: throw HashiRefusal(HashiRefusal.Reason.NOT_READY)
         val from = parseAddress(record.ethAccount)
+        if (record.direction == HashiDirection.ETHEREUM_TO_SORA) {
+            // A faster approval or deposit is still one: only while SORA would credit the deposit,
+            // and a deposit only while the allowance still covers it.
+            requireOpen()
+            val asset = requireIncomingStillCredited(record)
+            if (step.intent == HashiEthIntent.DEPOSIT && !asset.isNativeEther &&
+                ethereum.allowance(asset.ethToken, from, HashiBridgeContract.bridge) < record.ethUnits
+            ) {
+                throw HashiRefusal(HashiRefusal.Reason.NOT_READY, "ALLOWANCE_CHANGED")
+            }
+        }
         val old = EthFees(BigInteger(step.latest.maxPriorityFeePerGas), BigInteger(step.latest.maxFeePerGas), BigInteger(step.gasLimit))
         val current = HashiEthereumPolicy.fees(ethereum.baseFee(), ethereum.priorityFee(), BigInteger(step.gasLimit))
         val fees = HashiEthereumPolicy.speedUp(old, current.let { EthFees(it.maxPriorityFeePerGas, it.maxFeePerGas, old.gasLimit) })
@@ -886,8 +972,10 @@ class HashiBridgeService(
     suspend fun retryEthereumStep(account: SoraAccount, recordId: String): HashiTransferRecord {
         val record = store.get(account.substrateAddress, recordId) ?: throw HashiRefusal(HashiRefusal.Reason.NOT_READY)
         if (record.state != HashiTransferState.ETHEREUM_STEP_FAILED) throw HashiRefusal(HashiRefusal.Reason.NOT_READY)
-        // Mined without its proof: sending it again could pay twice.
-        if (record.failure == HashiFailure.ETHEREUM_UNPROVEN) throw HashiRefusal(HashiRefusal.Reason.NOT_READY)
+        // Mined without its proof, or a deposit whose nonce went elsewhere: again could pay twice.
+        if (record.failure == HashiFailure.ETHEREUM_UNPROVEN || record.failure == HashiFailure.DEPOSIT_UNCONFIRMED) {
+            throw HashiRefusal(HashiRefusal.Reason.NOT_READY)
+        }
         return when (record.direction) {
             HashiDirection.SORA_TO_ETHEREUM -> sendClaim(account, recordId, quoteClaim(account, recordId))
             HashiDirection.ETHEREUM_TO_SORA -> continueIncoming(account, recordId, waitForConfirmation = true)
@@ -995,8 +1083,8 @@ class HashiBridgeService(
                     // The wallet's journal takes a transaction before it is handed to the network.
                     // No journal entry therefore means it was never sent: the app stopped between
                     // signing and sending. While this process is still about to send it, wait.
-                    val sendingNow = record.id in submitting && now() - record.updatedAt <= NOT_SENT_AFTER_MILLIS
-                    return if (sendingNow) record else notSent
+                    // In memory only, so no clock change can end it early; a new process starts empty.
+                    return if (record.id in submitting) record else notSent
                 }
                 return when (outcome) {
                     is SoraSubmission.Included -> {
@@ -1140,6 +1228,7 @@ class HashiBridgeService(
             }
         }
         nonceUsedSince.remove(key)
+        if (key in inFlight) return record
         // The same bytes again: at once when the first broadcast's result is unknown, otherwise
         // at most once a minute while no receipt shows up.
         val last = rebroadcastAt[key]
@@ -1160,26 +1249,34 @@ class HashiBridgeService(
     }
 
     /**
-     * Before the same step is signed at a new nonce: no earlier attempt of it may have been mined
-     * with status 1. A receipt found now (an endpoint that lagged when the step was judged
-     * replaced, or a receipt without the contract's event) puts the step back under watch, and
-     * nothing new is signed.
+     * Before the same step is signed again: no earlier attempt of it may be mined with status 1
+     * or still pending anywhere. Every endpoint is asked (at least two must answer): one that
+     * lags must not make a mined deposit look absent. A mined or pending attempt puts the step
+     * back under watch, and nothing new is signed.
      */
     private suspend fun requireNoAttemptMined(record: HashiTransferRecord, step: HashiEthStep) {
-        val mined = step.attempts.any { attempt -> ethereum.receipt(EthHex.decodeFixed(attempt.hash, 32))?.status == 1 }
-        if (!mined) return
-        if (step.state == HashiEthStepState.REPLACED) {
-            transition(record) { current ->
-                val inStore = current.stepLike(step)
-                if (inStore != null && inStore.state == HashiEthStepState.REPLACED) {
-                    current.withStep(inStore.copy(state = HashiEthStepState.BROADCAST, failure = null))
-                        .copy(state = current.state.takeUnless { it == HashiTransferState.ETHEREUM_STEP_FAILED } ?: stepState(inStore.intent))
-                } else {
-                    current
-                }
+        // Newest first; the first live attempt decides (a later read failing must not hide it).
+        val live = step.attempts.asReversed().any { attempt ->
+            when (val found = ethereum.lookupEverywhere(EthHex.decodeFixed(attempt.hash, 32))) {
+                EthTransactionLookup.Pending -> true
+                is EthTransactionLookup.Mined -> found.status == 1
+                EthTransactionLookup.Unknown -> false
             }
         }
-        throw HashiRefusal(HashiRefusal.Reason.NOT_READY, "ATTEMPT_MINED")
+        if (!live) return
+        transition(record) { current ->
+            val inStore = current.stepLike(step)
+            if (inStore != null && (inStore.state == HashiEthStepState.REPLACED || inStore.state == HashiEthStepState.REVERTED)) {
+                current.withStep(inStore.copy(state = HashiEthStepState.BROADCAST, failure = null, confirmedHash = null))
+                    .copy(
+                        state = current.state.takeUnless { it == HashiTransferState.ETHEREUM_STEP_FAILED } ?: stepState(inStore.intent),
+                        failure = null,
+                    )
+            } else {
+                current
+            }
+        }
+        throw HashiRefusal(HashiRefusal.Reason.NOT_READY, "ATTEMPT_MINED_OR_PENDING")
     }
 
     /** The transfer state while a step of [intent] is open. */
@@ -1192,7 +1289,7 @@ class HashiBridgeService(
 
     /** One past the highest nonce of [ethAccount] this wallet saw mined (by a receipt), or 0. */
     private suspend fun minedNonceFloor(ethAccount: String): BigInteger =
-        store.openTransfers()
+        store.allTransfers()
             .filter { it.ethAccount == ethAccount }
             .flatMap { it.ethSteps }
             .filter { it.state == HashiEthStepState.CONFIRMED || it.state == HashiEthStepState.REVERTED }
@@ -1212,6 +1309,7 @@ class HashiBridgeService(
 
     private fun failureOf(step: HashiEthStep): HashiFailure = when {
         step.state == HashiEthStepState.REVERTED && step.failure == EVENT_MISSING -> HashiFailure.ETHEREUM_UNPROVEN
+        step.intent == HashiEthIntent.DEPOSIT && step.failure == NONCE_USED_ELSEWHERE -> HashiFailure.DEPOSIT_UNCONFIRMED
         step.state == HashiEthStepState.REVERTED -> HashiFailure.ETHEREUM_REVERTED
         step.failure == NONCE_USED_ELSEWHERE -> HashiFailure.ETHEREUM_REPLACED
         else -> HashiFailure.ETHEREUM_REFUSED
@@ -1319,7 +1417,6 @@ class HashiBridgeService(
         /** Ten minutes: an endpoint whose transaction index lags must not make a mined step look replaced. */
         const val REPLACED_AFTER_MILLIS = 10 * 60_000L
         const val REBROADCAST_MILLIS = 60_000L
-        const val NOT_SENT_AFTER_MILLIS = 10 * 60_000L
         const val NONCE_USED_ELSEWHERE = "NONCE_USED_ELSEWHERE"
         const val EVENT_MISSING = "EVENT_MISSING"
         const val MONITOR_FAST_ROUNDS = 50

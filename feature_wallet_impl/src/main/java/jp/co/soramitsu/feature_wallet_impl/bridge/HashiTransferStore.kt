@@ -31,6 +31,9 @@ interface HashiTransferStore {
      */
     suspend fun isComplete(): Boolean = true
 
+    /** Every saved transfer of every account, final ones included. */
+    suspend fun allTransfers(): List<HashiTransferRecord> = openTransfers()
+
     /** Writes [record] durably before returning (a crash right after keeps it). */
     suspend fun put(record: HashiTransferRecord)
 
@@ -105,11 +108,14 @@ class FileHashiTransferStore(private val directory: File) : HashiTransferStore {
      */
     override suspend fun openTransfers(): List<HashiTransferRecord> = mutex.withLock {
         if (!allLoaded) {
-            val files = withContext(Dispatchers.IO) {
-                directory.listFiles { file -> file.isFile && file.name.endsWith(".json") }.orEmpty().toList()
+            // null is an I/O error, never "no files" (unless the folder does not exist yet).
+            val listed = withContext(Dispatchers.IO) {
+                directory.listFiles { file -> file.isFile && file.name.endsWith(".json") }
+                    ?.toList() ?: if (directory.exists()) null else emptyList()
             }
+            val files = listed.orEmpty()
             val known = cache.keys.map(::fileOf).toSet()
-            var unreadable = 0
+            var unreadable = if (listed == null) 1 else 0
             files.filterNot { it in known }.forEach { file ->
                 val loaded = withContext(Dispatchers.IO) {
                     runCatching { json.decodeFromString(AccountFile.serializer(), file.readText()) }.getOrNull()
@@ -127,6 +133,11 @@ class FileHashiTransferStore(private val directory: File) : HashiTransferStore {
             allLoaded = unreadable == 0
         }
         cache.values.flatMap { flow -> flow.value.transfers.filterNot { it.state.isFinal } }
+    }
+
+    override suspend fun allTransfers(): List<HashiTransferRecord> {
+        openTransfers()
+        return mutex.withLock { cache.values.flatMap { flow -> flow.value.transfers } }
     }
 
     override suspend fun isComplete(): Boolean {

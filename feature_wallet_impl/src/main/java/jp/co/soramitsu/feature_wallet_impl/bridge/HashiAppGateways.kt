@@ -11,12 +11,14 @@ import jp.co.soramitsu.common.domain.TransactionChainFailure
 import jp.co.soramitsu.common.domain.TransactionOutcome
 import jp.co.soramitsu.common.ethereum.EthereumKeyDerivation
 import jp.co.soramitsu.common.hashi.EthReceipt
+import jp.co.soramitsu.common.hashi.EthTransactionLookup
 import jp.co.soramitsu.common.hashi.EthereumRpcClient
 import jp.co.soramitsu.common.hashi.HashiApprovedRequest
 import jp.co.soramitsu.common.hashi.HashiAvailability
 import jp.co.soramitsu.common.hashi.HashiBridgeContract
 import jp.co.soramitsu.common.hashi.HashiDryRunResult
 import jp.co.soramitsu.common.hashi.HashiRegisteredAsset
+import jp.co.soramitsu.common.hashi.HashiRequestStatus
 import jp.co.soramitsu.common.hashi.HashiRequestStatusValue
 import jp.co.soramitsu.common.hashi.HashiSignerReportSource
 import jp.co.soramitsu.common.hashi.HashiSignerReports
@@ -52,7 +54,13 @@ class AppHashiSoraGateway(
 
     override suspend fun approvedRequest(requestHash: ByteArray): HashiApprovedRequest? = rpc.approvedRequest(requestHash)
 
-    override suspend fun requestStatus(requestHash: ByteArray): HashiRequestStatusValue? = rpc.requestStatusValue(requestHash)
+    override suspend fun requestStatus(requestHash: ByteArray): HashiRequestStatusValue? {
+        val best = rpc.requestStatusValue(requestHash) ?: return null
+        if (best.status != HashiRequestStatus.FAILED) return best
+        // Failed is final for the wallet: believed only from a finalized block, never from a
+        // best block that a fork can still replace.
+        return rpc.requestStatusValue(requestHash, at = rpc.finalizedHead().first)
+    }
 
     override suspend fun incomingRequestHash(ethTxHash: ByteArray): ByteArray? = rpc.incomingRequestHash(ethTxHash)
 
@@ -160,6 +168,7 @@ class AppHashiEthereumGateway(private val client: EthereumRpcClient) : HashiEthe
         client.sendRawTransaction(raw, hash)
     }
     override suspend fun receipt(hash: ByteArray): EthReceipt? = client.receipt(hash)
+    override suspend fun lookupEverywhere(hash: ByteArray): EthTransactionLookup = client.lookupEverywhere(hash)
 }
 
 /**
@@ -186,6 +195,23 @@ class AppHashiEthereumAccounts(
             val key = deriveOrNull(account) ?: return@withContext null
             try {
                 key.checksumAddress.also { store.putEthereumAddress(account.substrateAddress, it) }
+            } finally {
+                key.destroy()
+            }
+        }
+    }
+
+    override suspend fun verifiedAddress(account: SoraAccount): String? = withContext(keyWork) {
+        // A key is derived here too: the same gates as a signature.
+        signingRefusal(account)?.let { reason -> error(reason) }
+        val key = deriveOrNull(account)
+        if (key == null) {
+            null
+        } else {
+            try {
+                key.checksumAddress.also { fresh ->
+                    if (store.ethereumAddress(account.substrateAddress) != fresh) store.putEthereumAddress(account.substrateAddress, fresh)
+                }
             } finally {
                 key.destroy()
             }
