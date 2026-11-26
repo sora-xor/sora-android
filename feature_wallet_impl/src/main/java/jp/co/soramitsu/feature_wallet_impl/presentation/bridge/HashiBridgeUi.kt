@@ -15,6 +15,7 @@ import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.feature_wallet_impl.bridge.HashiDirection
 import jp.co.soramitsu.feature_wallet_impl.bridge.HashiEthIntent
 import jp.co.soramitsu.feature_wallet_impl.bridge.HashiEthStepState
+import jp.co.soramitsu.feature_wallet_impl.bridge.HashiFailure
 import jp.co.soramitsu.feature_wallet_impl.bridge.HashiRefusal
 import jp.co.soramitsu.feature_wallet_impl.bridge.HashiTransferRecord
 import jp.co.soramitsu.feature_wallet_impl.bridge.HashiTransferState
@@ -49,10 +50,12 @@ data class HashiConfirmUi(
     val receive: String,
     val from: String,
     val to: String,
-    val fee: String,
-    val secondFee: String?,
-    val warning: String?,
+    /** Each fee with its own name: the SORA network fee in XOR, Ethereum gas in ETH. */
+    val fees: List<HashiFeeUi>,
+    val warning: String? = null,
 )
+
+data class HashiFeeUi(val label: String, val value: String)
 
 data class HashiHistoryItem(
     val id: String,
@@ -120,6 +123,14 @@ class HashiTexts(private val resources: ResourceManager, private val numbers: Nu
 
     fun eth(wei: BigInteger): String = amount(wei, 18, "ETH")
 
+    fun string(id: Int): String = resources.getString(id)
+
+    fun sorafee(units: BigInteger): HashiFeeUi = HashiFeeUi(resources.getString(R.string.hashi_bridge_fee_sora), amount(units, 18, "XOR"))
+
+    fun gas(wei: BigInteger): HashiFeeUi = HashiFeeUi(resources.getString(R.string.hashi_bridge_fee_ethereum), eth(wei))
+
+    fun claimEstimate(wei: BigInteger): HashiFeeUi = HashiFeeUi(resources.getString(R.string.hashi_bridge_claim_fee), eth(wei))
+
     fun refusal(error: HashiRefusal, decimals: Int): String = when (error.reason) {
         HashiRefusal.Reason.PAUSED -> resources.getString(R.string.hashi_bridge_paused)
         HashiRefusal.Reason.NO_ETHEREUM_ACCOUNT -> resources.getString(R.string.hashi_bridge_no_ethereum_account)
@@ -134,7 +145,7 @@ class HashiTexts(private val resources: ResourceManager, private val numbers: Nu
         HashiRefusal.Reason.NOT_ENOUGH_LOCKED_LIQUIDITY,
         HashiRefusal.Reason.BRIDGE_LACKS_TOKENS -> resources.getString(R.string.hashi_bridge_error_liquidity)
         HashiRefusal.Reason.TOKEN_NOT_ACCEPTED -> resources.getString(R.string.hashi_bridge_error_token)
-        HashiRefusal.Reason.DRY_RUN_FAILED -> resources.getString(R.string.hashi_bridge_error_rejected).format(error.detail.orEmpty())
+        HashiRefusal.Reason.DRY_RUN_FAILED -> soraRefusal(error.detail)
         HashiRefusal.Reason.CALL_REVERTED -> resources.getString(R.string.hashi_bridge_error_reverted).format(error.detail.orEmpty())
         HashiRefusal.Reason.AMOUNT_MISMATCH -> {
             val (expected, approved) = error.detail.orEmpty().split('/').let { it.getOrElse(0) { "" } to it.getOrElse(1) { "" } }
@@ -142,24 +153,74 @@ class HashiTexts(private val resources: ResourceManager, private val numbers: Nu
         }
         HashiRefusal.Reason.NOT_READY -> resources.getString(R.string.hashi_bridge_state_waiting)
         HashiRefusal.Reason.ALREADY_RECEIVED -> resources.getString(R.string.hashi_bridge_state_already_received)
+        HashiRefusal.Reason.EARLIER_TRANSACTION_PENDING -> resources.getString(R.string.hashi_bridge_error_pending)
         HashiRefusal.Reason.READ_FAILED -> resources.getString(R.string.hashi_bridge_error_read)
+    }
+
+    /**
+     * What SORA answered when the signed transfer was applied to its current state. The errors the
+     * bridge is known to give are said in plain words; any other is shown by the name the runtime
+     * gives it.
+     */
+    private fun soraRefusal(detail: String?): String {
+        val name = detail.orEmpty()
+        return when {
+            name.endsWith("TransferLimitReached") -> resources.getString(R.string.hashi_bridge_error_limit)
+            name.endsWith("NotEnoughLockedLiquidity") -> resources.getString(R.string.hashi_bridge_error_liquidity)
+            name.endsWith("RecoveryHalted") || name == "EthBridge.Unavailable" -> resources.getString(R.string.hashi_bridge_paused)
+            name.endsWith("NonZeroDust") || name.endsWith("InvalidAmount") -> resources.getString(R.string.hashi_bridge_error_amount)
+            name == "Invalid.Payment" -> resources.getString(R.string.hashi_bridge_error_fee_balance)
+            else -> resources.getString(R.string.hashi_bridge_error_rejected).format(name)
+        }
+    }
+
+    /** Why a transfer failed, in the person's words; the chain's own name follows where it helps. */
+    fun failure(record: HashiTransferRecord): String? = when (record.failure) {
+        null -> null
+        HashiFailure.NOT_SENT -> resources.getString(R.string.hashi_bridge_error_not_sent)
+        HashiFailure.REFUSED_BEFORE_SEND -> soraRefusal(record.error)
+        HashiFailure.FAILED_ON_SORA -> listOfNotNull(resources.getString(R.string.hashi_bridge_error_failed_on_sora), record.error)
+            .joinToString("\n")
+        // The bridge's own error follows (spec: show it; the SORA balance shows what came back).
+        HashiFailure.FAILED_BY_BRIDGE -> listOfNotNull(resources.getString(R.string.hashi_bridge_error_failed_by_bridge), record.error)
+            .joinToString("\n")
+        HashiFailure.ETHEREUM_REVERTED -> resources.getString(R.string.hashi_bridge_error_eth_failed)
+        HashiFailure.ETHEREUM_REPLACED -> resources.getString(R.string.hashi_bridge_error_eth_replaced)
+        HashiFailure.ETHEREUM_UNPROVEN -> resources.getString(R.string.hashi_bridge_error_eth_unproven)
+        HashiFailure.ETHEREUM_REFUSED -> resources.getString(R.string.hashi_bridge_error_reverted).format(record.error.orEmpty())
+        HashiFailure.ALLOWANCE_NOT_SET -> resources.getString(R.string.hashi_bridge_error_allowance)
+    }
+
+    /** The refusal of a step that ran after the confirmation closed (nothing was signed for it). */
+    private fun savedRefusal(record: HashiTransferRecord): String? {
+        val name = record.refusal ?: return null
+        val reason = HashiRefusal.Reason.values().firstOrNull { it.name == name } ?: HashiRefusal.Reason.READ_FAILED
+        return refusal(HashiRefusal(reason, record.error), record.ethDecimals)
     }
 
     fun title(record: HashiTransferRecord): String = resources.getString(
         if (record.direction == HashiDirection.SORA_TO_ETHEREUM) R.string.hashi_bridge_to_ethereum else R.string.hashi_bridge_to_sora
     )
 
+    /** One status for every state a transfer can be in, for its page and its history row. */
     fun status(record: HashiTransferRecord): Pair<String, HashiStatusKind> = when (record.state) {
+        HashiTransferState.SORA_SIGNED,
+        HashiTransferState.SORA_SUBMITTED -> resources.getString(R.string.hashi_bridge_state_sending_sora) to HashiStatusKind.PROGRESS
+        HashiTransferState.WAITING_APPROVALS,
+        HashiTransferState.WAITING_SORA -> resources.getString(R.string.hashi_bridge_state_waiting) to HashiStatusKind.PROGRESS
+        HashiTransferState.READY_TO_CLAIM -> resources.getString(R.string.hashi_bridge_state_ready_to_claim) to HashiStatusKind.ACTION
+        HashiTransferState.CLAIM_SUBMITTED -> resources.getString(R.string.hashi_bridge_state_receiving) to HashiStatusKind.PROGRESS
+        HashiTransferState.APPROVE_ZERO_SUBMITTED,
+        HashiTransferState.APPROVE_SUBMITTED -> resources.getString(R.string.hashi_bridge_state_approving) to HashiStatusKind.PROGRESS
+        HashiTransferState.READY_TO_DEPOSIT -> resources.getString(R.string.hashi_bridge_continue_deposit) to HashiStatusKind.ACTION
+        HashiTransferState.DEPOSIT_SUBMITTED -> resources.getString(R.string.hashi_bridge_state_depositing) to HashiStatusKind.PROGRESS
+        HashiTransferState.PAUSED_BY_BRIDGE -> resources.getString(R.string.hashi_bridge_state_paused) to HashiStatusKind.PROGRESS
+        HashiTransferState.NEEDS_OPERATORS -> resources.getString(R.string.hashi_bridge_state_needs_operators) to HashiStatusKind.PROGRESS
+        HashiTransferState.ETHEREUM_STEP_FAILED -> resources.getString(R.string.hashi_bridge_state_eth_failed) to HashiStatusKind.ACTION
         HashiTransferState.DONE -> resources.getString(
             if (record.error == "ALREADY_RECEIVED") R.string.hashi_bridge_state_already_received else R.string.common_done
         ) to HashiStatusKind.DONE
         HashiTransferState.FAILED -> resources.getString(R.string.common_failed) to HashiStatusKind.FAILED
-        HashiTransferState.ETHEREUM_STEP_FAILED -> resources.getString(R.string.hashi_bridge_state_eth_failed) to HashiStatusKind.ACTION
-        HashiTransferState.READY_TO_CLAIM -> resources.getString(R.string.hashi_bridge_state_ready_to_claim) to HashiStatusKind.ACTION
-        HashiTransferState.READY_TO_DEPOSIT -> resources.getString(R.string.hashi_bridge_continue_deposit) to HashiStatusKind.ACTION
-        HashiTransferState.PAUSED_BY_BRIDGE -> resources.getString(R.string.hashi_bridge_state_paused) to HashiStatusKind.PROGRESS
-        HashiTransferState.NEEDS_OPERATORS -> resources.getString(R.string.hashi_bridge_state_needs_operators) to HashiStatusKind.PROGRESS
-        else -> resources.getString(R.string.hashi_bridge_state_waiting) to HashiStatusKind.PROGRESS
     }
 
     fun historyItem(record: HashiTransferRecord): HashiHistoryItem {
@@ -249,10 +310,15 @@ class HashiTexts(private val resources: ResourceManager, private val numbers: Nu
         }
     }
 
-    fun transferState(record: HashiTransferRecord, busy: Boolean, confirm: HashiConfirmUi?): HashiTransferUiState {
+    /**
+     * The page of one transfer. [working] is true while a confirmed step of it is being signed,
+     * sent or waited for: its buttons are off until that ends.
+     */
+    fun transferState(record: HashiTransferRecord, busy: Boolean, confirm: HashiConfirmUi?, working: Boolean = false): HashiTransferUiState {
         val (status, kind) = status(record)
         val openStep = record.ethSteps.lastOrNull { it.state.isOpen }
         val lastEthHash = record.ethSteps.lastOrNull()?.let { it.confirmedHash ?: it.latest.hash }
+        val failed = record.state == HashiTransferState.FAILED || record.state == HashiTransferState.ETHEREUM_STEP_FAILED
         return HashiTransferUiState(
             loaded = true,
             title = title(record),
@@ -267,17 +333,21 @@ class HashiTexts(private val resources: ResourceManager, private val numbers: Nu
                     amount(BigInteger(approved), record.ethDecimals, record.symbol),
                     amount(BigInteger(expected), record.ethDecimals, record.symbol),
                 )
-            } ?: record.error?.takeIf { record.state == HashiTransferState.FAILED || record.state == HashiTransferState.ETHEREUM_STEP_FAILED },
+            } ?: (if (failed) failure(record) else null)
+                // Broken: both errors the bridge recorded, kept as it gave them.
+                ?: record.error?.takeIf { record.state == HashiTransferState.NEEDS_OPERATORS }
+                ?: savedRefusal(record),
             soraHash = record.soraExtrinsicHash,
             ethHash = lastEthHash,
             action = when (record.state) {
                 HashiTransferState.READY_TO_CLAIM -> HashiTransferAction.CLAIM
                 HashiTransferState.READY_TO_DEPOSIT -> HashiTransferAction.CONTINUE_DEPOSIT
-                HashiTransferState.ETHEREUM_STEP_FAILED -> HashiTransferAction.TRY_AGAIN
+                // A transaction mined without its proof is never offered again.
+                HashiTransferState.ETHEREUM_STEP_FAILED -> HashiTransferAction.TRY_AGAIN.takeUnless { record.failure == HashiFailure.ETHEREUM_UNPROVEN }
                 else -> null
-            },
+            }.takeUnless { working },
             canSpeedUp = openStep != null,
-            busy = busy,
+            busy = busy || working,
             confirm = confirm,
         )
     }

@@ -75,7 +75,11 @@ fun HashiBridgeScreen(
         verticalArrangement = Arrangement.spacedBy(Dimens.x2),
     ) {
         when (state.availability) {
-            HashiAvailabilityUi.PAUSED -> HashiBanner(stringResource(R.string.hashi_bridge_paused), "HashiPausedBanner")
+            HashiAvailabilityUi.PAUSED -> HashiBanner(
+                text = stringResource(R.string.hashi_bridge_paused),
+                testTag = "HashiPausedBanner",
+                note = stringResource(R.string.hashi_bridge_claims_open),
+            )
             HashiAvailabilityUi.UNREADABLE -> HashiBanner(
                 text = stringResource(R.string.hashi_bridge_error_read),
                 testTag = "HashiUnreadableBanner",
@@ -164,7 +168,7 @@ fun HashiBridgeScreen(
 }
 
 @Composable
-fun HashiBanner(text: String, testTag: String, action: String? = null, onAction: () -> Unit = {}) {
+fun HashiBanner(text: String, testTag: String, note: String? = null, action: String? = null, onAction: () -> Unit = {}) {
     ContentCard(
         modifier = Modifier.fillMaxWidth().testTagAsId(testTag),
         innerPadding = PaddingValues(Dimens.x2),
@@ -182,6 +186,14 @@ fun HashiBanner(text: String, testTag: String, action: String? = null, onAction:
                     modifier = Modifier.padding(start = Dimens.x1),
                     text = text,
                     style = MaterialTheme.customTypography.textSBold,
+                    color = MaterialTheme.customColors.fgPrimary,
+                )
+            }
+            if (note != null) {
+                Text(
+                    modifier = Modifier.padding(top = Dimens.x1),
+                    text = note,
+                    style = MaterialTheme.customTypography.paragraphS,
                     color = MaterialTheme.customColors.fgPrimary,
                 )
             }
@@ -342,9 +354,8 @@ fun HashiConfirmDialog(confirm: HashiConfirmUi, busy: Boolean, onConfirm: () -> 
                 Text(confirm.amount, style = MaterialTheme.customTypography.headline2, color = MaterialTheme.customColors.fgPrimary)
                 HashiDetail(stringResource(R.string.hashi_bridge_you_receive), confirm.receive)
                 HashiDetail(stringResource(R.string.hashi_bridge_from), confirm.from, mono = true)
-                HashiDetail(stringResource(R.string.common_recipient), confirm.to, mono = true)
-                HashiDetail(stringResource(R.string.common_fee), confirm.fee)
-                confirm.secondFee?.let { HashiDetail(stringResource(R.string.hashi_bridge_claim_fee), it) }
+                HashiDetail(stringResource(R.string.hashi_bridge_to), confirm.to, mono = true)
+                confirm.fees.forEach { fee -> HashiDetail(fee.label, fee.value) }
                 confirm.warning?.let {
                     Text(it, style = MaterialTheme.customTypography.paragraphS, color = MaterialTheme.customColors.statusError)
                 }
@@ -441,7 +452,7 @@ fun HashiTransferScreen(
         }
         ContentCard(modifier = Modifier.fillMaxWidth(), innerPadding = PaddingValues(Dimens.x2)) {
             Column(verticalArrangement = Arrangement.spacedBy(Dimens.x1)) {
-                HashiCopyRow(stringResource(R.string.common_recipient), state.recipient, onCopy)
+                HashiCopyRow(stringResource(R.string.hashi_bridge_to), state.recipient, onCopy)
                 state.soraHash?.let { HashiCopyRow(stringResource(R.string.hashi_bridge_sora_tx), it, onCopy) }
                 state.ethHash?.let { HashiCopyRow(stringResource(R.string.hashi_bridge_ethereum_tx), it, onCopy) }
             }

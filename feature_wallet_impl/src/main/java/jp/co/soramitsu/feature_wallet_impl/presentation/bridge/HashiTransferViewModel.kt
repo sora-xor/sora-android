@@ -59,6 +59,7 @@ class HashiTransferViewModel @Inject constructor(
     private var pending: Pending? = null
     private var polling: Job? = null
     private var busy = false
+    private var working = false
     private var confirm: HashiConfirmUi? = null
     private var notice: String? = null
 
@@ -73,11 +74,19 @@ class HashiTransferViewModel @Inject constructor(
                 }
             }
         }
+        viewModelScope.launch {
+            // A confirmed step of this transfer is running in the service: no second one meanwhile.
+            service.working.collect { ids ->
+                working = transferId in ids
+                render()
+            }
+        }
+        service.resumeMonitoring()
     }
 
     private fun show(next: HashiTransferRecord) {
         record = next
-        val ui = texts.transferState(next, busy, confirm)
+        val ui = texts.transferState(next, busy, confirm, working)
         _state.value = ui.copy(error = notice ?: ui.error)
     }
 
@@ -104,7 +113,7 @@ class HashiTransferViewModel @Inject constructor(
     fun onPrimaryAction() {
         val current = account ?: return
         val action = _state.value.action ?: return
-        if (busy) return
+        if (busy || working) return
         when (action) {
             HashiTransferAction.CLAIM -> {
                 setBusy(true)
@@ -118,9 +127,7 @@ class HashiTransferViewModel @Inject constructor(
                             receive = texts.amount(quote.claim.amount, record.ethDecimals, record.symbol),
                             from = record.ethAccount,
                             to = record.recipient,
-                            fee = texts.eth(quote.fees.maximumCost),
-                            secondFee = null,
-                            warning = null,
+                            fees = listOf(texts.gas(quote.fees.maximumCost)),
                         )
                         pending = Pending.CLAIM
                         notice = null

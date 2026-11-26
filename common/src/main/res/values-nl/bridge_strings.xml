@@ -20,11 +20,11 @@
     <string name="hashi_bridge_copy">Kopiëren</string>
     <string name="hashi_bridge_sora_tx">SORA-transactie</string>
     <string name="hashi_bridge_ethereum_tx">Ethereum-transactie</string>
-    <string name="hashi_bridge_step_sora">Verzonden op SORA</string>
-    <string name="hashi_bridge_step_approvals">Goedgekeurd door de bridge</string>
+    <string name="hashi_bridge_step_sora">Verzenden op SORA</string>
+    <string name="hashi_bridge_step_approvals">Goedkeuring van de bridge</string>
     <string name="hashi_bridge_step_claim">Ontvangen op Ethereum</string>
-    <string name="hashi_bridge_step_allowance">Toestemming op Ethereum</string>
-    <string name="hashi_bridge_step_deposit">Verzonden op Ethereum</string>
+    <string name="hashi_bridge_step_allowance">Tokengoedkeuring</string>
+    <string name="hashi_bridge_step_deposit">Storten op Ethereum</string>
     <string name="hashi_bridge_step_sora_credit">Ontvangen op SORA</string>
     <string name="hashi_bridge_state_waiting">Wachten op de bridge</string>
     <string name="hashi_bridge_state_ready_to_claim">Wacht op ontvangst op Ethereum</string>
@@ -49,4 +49,21 @@
     <string name="hashi_bridge_error_reverted">De Ethereum-transactie zou mislukken: %s</string>
     <string name="hashi_bridge_error_amount_mismatch">De bridge keurde %1$s goed, niet de verwachte %2$s. Er is niets verzonden.</string>
     <string name="hashi_bridge_error_read">De status van de bridge kon niet worden gelezen. Probeer het opnieuw.</string>
+    <string name="hashi_bridge_claims_open">Al goedgekeurde overboekingen kunnen nog steeds worden ontvangen.</string>
+    <string name="hashi_bridge_state_sending_sora">Wordt verzonden op SORA</string>
+    <string name="hashi_bridge_state_receiving">Wordt ontvangen op Ethereum</string>
+    <string name="hashi_bridge_state_approving">Wordt goedgekeurd op Ethereum</string>
+    <string name="hashi_bridge_state_depositing">Wordt gestort op Ethereum</string>
+    <string name="hashi_bridge_error_not_sent">Niet verzonden. Er heeft niets je wallet verlaten.</string>
+    <string name="hashi_bridge_error_failed_on_sora">De overboeking is mislukt op SORA. Alleen de netwerkkosten zijn betaald.</string>
+    <string name="hashi_bridge_error_failed_by_bridge">De bridge heeft deze overboeking als mislukt gemarkeerd. Controleer je SORA-saldo.</string>
+    <string name="hashi_bridge_error_eth_failed">De Ethereum-transactie is mislukt. Je kunt het opnieuw proberen.</string>
+    <string name="hashi_bridge_error_eth_replaced">Een andere transactie heeft haar plaats ingenomen. Je kunt het opnieuw proberen.</string>
+    <string name="hashi_bridge_error_eth_unproven">De Ethereum-transactie is uitgevoerd, maar de bridge heeft er geen registratie van. Ze wordt niet opnieuw verzonden.</string>
+    <string name="hashi_bridge_error_allowance">De goedkeuring is niet doorgevoerd. Er is niets gestort.</string>
+    <string name="hashi_bridge_error_pending">Een eerdere transactie is nog in behandeling. Probeer het opnieuw zodra die is bevestigd.</string>
+    <string name="hashi_bridge_error_limit">De bridge-limiet voor deze token is bereikt. Probeer een kleiner bedrag of probeer het later opnieuw.</string>
+    <string name="hashi_bridge_fee_sora">SORA-netwerkkosten</string>
+    <string name="hashi_bridge_fee_ethereum">Ethereum-gas</string>
+    <string name="hashi_bridge_to">Naar</string>
 </resources>

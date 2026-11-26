@@ -13,6 +13,7 @@ import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.domain.AssetAmountInputState
 import jp.co.soramitsu.common.domain.AssetHolder
+import jp.co.soramitsu.common.ethereum.EthAddress
 import jp.co.soramitsu.common.hashi.HashiAmounts
 import jp.co.soramitsu.common.hashi.HashiBridgeAsset
 import jp.co.soramitsu.common.hashi.HashiBridgeContract
@@ -64,6 +65,9 @@ class HashiBridgeViewModel @Inject constructor(
     private var incomingQuote: IncomingQuote? = null
     private var historyJob: Job? = null
 
+    /** Bumped by every input change: a quote read for older inputs is dropped. */
+    private var inputGeneration = 0
+
     init {
         _toolbarState.value = initSmallTitle2(title = R.string.hashi_bridge_title)
         val assetId = savedStateHandle.get<String>(ARG_ASSET_ID)
@@ -92,12 +96,21 @@ class HashiBridgeViewModel @Inject constructor(
     private fun observeHistory(current: SoraAccount) {
         historyJob?.cancel()
         historyJob = viewModelScope.launch {
-            service.observe(current.substrateAddress).collect { records ->
-                _state.update { state -> state.copy(history = records.sortedByDescending { it.createdAt }.map(texts::historyItem)) }
+            try {
+                service.observe(current.substrateAddress).collect { records ->
+                    _state.update { state -> state.copy(history = records.sortedByDescending { it.createdAt }.map(texts::historyItem)) }
+                }
+            } catch (cancel: CancellationException) {
+                throw cancel
+            } catch (_: Exception) {
+                // The saved transfers cannot be read: say so instead of closing the app.
+                _state.update { it.copy(notice = texts.refusal(HashiRefusal(HashiRefusal.Reason.READ_FAILED), 0)) }
             }
         }
-        // In-flight transfers are read again (never signed) when the screen opens.
+        // In-flight transfers are read again (never signed) when the screen opens, and kept
+        // being read until each is final.
         viewModelScope.launch { runCatching { service.refreshAll(current) } }
+        service.resumeMonitoring()
     }
 
     private suspend fun loadAssets(preselected: String?) {
@@ -205,7 +218,11 @@ class HashiBridgeViewModel @Inject constructor(
                 spendable.setScale(HashiAmounts.outgoingScale(asset), RoundingMode.DOWN).takeIf { it.signum() > 0 }
             } else {
                 _state.value.ethereumAccount?.let { address ->
-                    runCatching { service.tokenBalance(asset, address) }.getOrNull()?.let { HashiAmounts.fromUnits(it, asset.ethDecimals) }
+                    runCatching {
+                        // Ether pays its own gas: Max leaves the deposit's gas in the account.
+                        val reserve = if (asset.isNativeEther) service.etherDepositReserve() else java.math.BigInteger.ZERO
+                        service.tokenBalance(asset, address).subtract(reserve)
+                    }.getOrNull()?.takeIf { it.signum() > 0 }?.let { HashiAmounts.fromUnits(it, asset.ethDecimals) }
                 }
             }
             if (value != null) onAmount(value.stripTrailingZeros())
@@ -234,14 +251,20 @@ class HashiBridgeViewModel @Inject constructor(
         val amount = _state.value.input?.amount ?: return
         if (!_state.value.canContinue) return
         _state.update { it.copy(quoting = true, notice = null) }
+        val generation = inputGeneration
+        val direction = _state.value.direction
+        val recipient = _state.value.recipient
         viewModelScope.launch {
             try {
-                if (_state.value.direction == HashiDirection.SORA_TO_ETHEREUM) {
-                    val quote = service.quoteOutgoing(current, item.token.id, amount, _state.value.recipient)
+                if (direction == HashiDirection.SORA_TO_ETHEREUM) {
+                    val quote = service.quoteOutgoing(current, item.token.id, amount, recipient)
+                    // An input changed while the quote was read: it is not what the form shows.
+                    if (generation != inputGeneration) return@launch
                     outgoingQuote = quote
                     _state.update { it.copy(confirm = confirmOf(quote, item)) }
                 } else {
                     val quote = service.quoteIncoming(current, item.token.id, amount)
+                    if (generation != inputGeneration) return@launch
                     incomingQuote = quote
                     _state.update { it.copy(confirm = confirmOf(quote, item)) }
                 }
@@ -262,9 +285,9 @@ class HashiBridgeViewModel @Inject constructor(
         amount = texts.amount(quote.soraAmount, quote.asset.soraPrecision, item.token.symbol),
         receive = texts.amount(quote.ethAmount, quote.asset.ethDecimals, item.token.symbol),
         from = account?.substrateAddress.orEmpty(),
-        to = _state.value.recipient,
-        fee = texts.amount(quote.soraFee, 18, "XOR"),
-        secondFee = texts.eth(quote.claimCostEstimate),
+        // What will be signed, not what the field shows now.
+        to = EthAddress.checksum(quote.recipient),
+        fees = listOf(texts.sorafee(quote.soraFee), texts.claimEstimate(quote.claimCostEstimate)),
         warning = if (quote.ethTooLowToClaim) resources.getString(R.string.hashi_bridge_eth_low) else null,
     )
 
@@ -273,9 +296,7 @@ class HashiBridgeViewModel @Inject constructor(
         receive = texts.amount(quote.soraAmount, quote.asset.soraPrecision, item.token.symbol),
         from = _state.value.ethereumAccount.orEmpty(),
         to = account?.substrateAddress.orEmpty(),
-        fee = texts.eth(quote.gasCostEstimate),
-        secondFee = null,
-        warning = null,
+        fees = listOf(texts.gas(quote.gasCostEstimate)),
     )
 
     fun onDismissConfirm() {
@@ -298,8 +319,10 @@ class HashiBridgeViewModel @Inject constructor(
         _state.update { it.copy(sending = true) }
         viewModelScope.launch {
             try {
+                // Both return once the transfer is saved; sending goes on in the service, so
+                // leaving this screen cannot interrupt it. The transfer's page follows it.
                 val record = if (outgoing != null) {
-                    service.sendOutgoing(current, outgoing, item.token.symbol)
+                    service.beginOutgoing(current, outgoing, item.token.symbol)
                 } else {
                     service.beginIncoming(current, checkNotNull(incoming), item.token.symbol)
                 }
@@ -325,6 +348,7 @@ class HashiBridgeViewModel @Inject constructor(
     fun onHistoryItem(id: String) = walletRouter.openHashiBridgeTransfer(id)
 
     private fun clearQuote() {
+        inputGeneration += 1
         outgoingQuote = null
         incomingQuote = null
         _state.update { it.copy(confirm = null) }
