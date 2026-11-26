@@ -68,6 +68,9 @@ class HashiBridgeViewModel @Inject constructor(
     /** Bumped by every input change: a quote read for older inputs is dropped. */
     private var inputGeneration = 0
 
+    /** Bumped by every token or direction choice: a slower read for an older one is dropped. */
+    private var selectionGeneration = 0
+
     init {
         _toolbarState.value = initSmallTitle2(title = R.string.hashi_bridge_title)
         val assetId = savedStateHandle.get<String>(ARG_ASSET_ID)
@@ -146,7 +149,8 @@ class HashiBridgeViewModel @Inject constructor(
     fun onDirection(direction: HashiDirection) {
         if (direction == _state.value.direction) return
         clearQuote()
-        _state.update { it.copy(direction = direction, notice = null) }
+        resolved = null
+        _state.update { it.copy(direction = direction, notice = null, input = null) }
         selected?.let { item -> viewModelScope.launch { applySelection(item) } }
     }
 
@@ -158,13 +162,18 @@ class HashiBridgeViewModel @Inject constructor(
         val item = _state.value.assets.firstOrNull { it.token.id == assetId } ?: return
         selected = item
         clearQuote()
-        _state.update { it.copy(pickerOpen = false, notice = null) }
+        // The old token's amount is gone at once: nothing can be continued until the new one loads.
+        resolved = null
+        _state.update { it.copy(pickerOpen = false, notice = null, input = null) }
         viewModelScope.launch { applySelection(item) }
     }
 
     /** The amount field accepts only as many decimals as can cross the bridge in this direction. */
     private suspend fun applySelection(item: HashiAssetItem) {
+        val generation = ++selectionGeneration
         val asset = runCatching { service.resolveAsset(item.token.id) }.getOrNull()
+        // Another token or direction was chosen while this one was read: it no longer applies.
+        if (generation != selectionGeneration) return
         resolved = asset
         if (asset == null) {
             _state.update { it.copy(input = null, notice = texts.refusal(HashiRefusal(HashiRefusal.Reason.NOT_BRIDGEABLE), 0)) }
@@ -180,6 +189,7 @@ class HashiBridgeViewModel @Inject constructor(
                 }
             }.orEmpty()
         }
+        if (generation != selectionGeneration) return
         _state.update {
             it.copy(
                 input = AssetAmountInputState(
@@ -207,6 +217,7 @@ class HashiBridgeViewModel @Inject constructor(
      */
     fun onMax() {
         val asset = resolved ?: return
+        val generation = selectionGeneration
         viewModelScope.launch {
             val value = if (_state.value.direction == HashiDirection.SORA_TO_ETHEREUM) {
                 val transferable = assetsInteractor.getAssetOrThrow(asset.assetId).balance.transferable
@@ -225,7 +236,8 @@ class HashiBridgeViewModel @Inject constructor(
                     }.getOrNull()?.takeIf { it.signum() > 0 }?.let { HashiAmounts.fromUnits(it, asset.ethDecimals) }
                 }
             }
-            if (value != null) onAmount(value.stripTrailingZeros())
+            // A balance read for a token or direction that is no longer chosen is dropped.
+            if (value != null && generation == selectionGeneration) onAmount(value.stripTrailingZeros())
         }
     }
 
