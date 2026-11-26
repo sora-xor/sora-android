@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Debug builds only: renders the HASHI bridge progress page for a fake transfer at a given step,
+     for screenshots (adb shell am start -n <package>/<activity> -e step <name>). It reads no
+     wallet data and can sign nothing. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <application>
+        <activity
+            android:name="jp.co.soramitsu.feature_wallet_impl.presentation.bridge.debug.HashiBridgeScreenshotActivity"
+            android:exported="true" />
+    </application>
+</manifest>
