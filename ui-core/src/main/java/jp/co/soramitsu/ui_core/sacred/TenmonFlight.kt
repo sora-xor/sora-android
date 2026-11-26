@@ -8,7 +8,6 @@ import android.os.SystemClock
 import android.view.View
 import android.view.ViewGroup
 import android.view.Window
-import androidx.annotation.RequiresApi
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import jp.co.soramitsu.ui_core.lit.LitLightRig
@@ -19,12 +18,13 @@ import jp.co.soramitsu.ui_core.lit.LitLightRig
  * The startup screen [begin]s it: on the light page the mark comes down and the rings of mother of pearl spread
  * under it, and a pulse runs through them while the wallet is checked. The first screen (the PIN screen, or the
  * welcome) [carryOn]s it over itself exactly where it stood, and once that screen has said where it shows the mark
- * ([firstScreenShown]) the mark flies there, the rings sink into the page and the screen is uncovered. A tap on the
- * scene uncovers the screen at once.
+ * ([firstScreenShown]) the mark flies there, the rings sink into the page and the screen is uncovered. Until that
+ * word the scene keeps the screen covered and takes its touches: nothing of the screen behind the PIN shows before
+ * the PIN does.
  *
  * A phone that does not play the traced scene (Android 12 or older, power saving, animations removed, a hot phone,
- * or a GPU that will not draw it) shows the plain scene at rest on the startup screen, and its first screen opens
- * as it is. Call everything here on the main thread.
+ * or a GPU that will not draw it) shows the plain scene at rest on the startup screen, and its first screen carries
+ * that still picture until it is ready, then uncovers itself. Call everything here on the main thread.
  */
 object TenmonFlight {
     /** The page the scene plays on: the light page whatever theme is stored, as the launch window before it. */
@@ -60,7 +60,31 @@ object TenmonFlight {
     private var orphanedNanos = 0L
     private var carry: Carry? = null
 
-    /** Whether a scene is on that the next screen carries on: that screen then opens with no transition of its own. */
+    /** A startup screen began a launch, in any mode, that no first screen has carried on yet. */
+    private var launchPending = false
+
+    /** When that startup screen left its window; 0 while it is up. */
+    private var startupGoneNanos = 0L
+
+    /** Counts the launches begun: only the startup screen that began the newest one can end it by going. */
+    private var launches = 0
+
+    /**
+     * Whether the next first screen carries a launch on, traced or still: that screen then opens with no transition
+     * of its own, as the scene is over it from its first frame.
+     */
+    val carriesOn: Boolean
+        get() {
+            // A launch whose startup screen went away with no first screen after it is over.
+            if (launchPending && carry == null && startupGoneNanos != 0L &&
+                SystemClock.elapsedRealtimeNanos() - startupGoneNanos > REJOIN_NANOS
+            ) {
+                launchPending = false
+            }
+            return isPlaying || (launchPending && carry == null)
+        }
+
+    /** Whether the traced scene is on for the next screen to carry on. */
     val isPlaying: Boolean
         get() {
             // A scene whose startup screen went away with no first screen after it is over.
@@ -79,6 +103,23 @@ object TenmonFlight {
     fun begin(host: ViewGroup, motion: Boolean): Mode {
         val context = host.context
         host.removeAllViews()
+        if (carry == null) {
+            launchPending = true
+            startupGoneNanos = 0L
+            val launch = ++launches
+            // Only the startup screen's window going ends the launch: the scene taken out of it ([end]) does not, and
+            // neither does an older startup screen that goes after this one has begun.
+            host.addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
+                override fun onViewAttachedToWindow(view: View) = Unit
+
+                override fun onViewDetachedFromWindow(view: View) {
+                    view.removeOnAttachStateChangeListener(this)
+                    if (launch == launches && launchPending && carry == null) {
+                        startupGoneNanos = SystemClock.elapsedRealtimeNanos()
+                    }
+                }
+            })
+        }
         val stage = TenmonStage(context)
         host.addView(stage, ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
         val mode = mode(motion, Build.VERSION.SDK_INT, LitLightRig.isHot(context.applicationContext))
@@ -105,14 +146,17 @@ object TenmonFlight {
 
     /**
      * Stops the scene in [host] where it waits, with nothing moving, so what the startup screen shows over it is
-     * seen. The first screen then opens as it is.
+     * seen. The first screen then carries that still picture.
      */
     fun rest(host: ViewGroup) {
         (host.getChildAt(0) as? TenmonStage)?.rest()
         if (carry == null) playing = false
     }
 
-    /** Takes the scene out of [host]: the startup screen shows something else. The first screen opens as it is. */
+    /**
+     * Takes the scene out of [host]: the startup screen shows something else. The first screen still keeps itself
+     * covered, by the still picture, until it is ready.
+     */
     fun end(host: ViewGroup) {
         (host.getChildAt(0) as? TenmonStage)?.dropScene()
         host.removeAllViews()
@@ -123,36 +167,43 @@ object TenmonFlight {
     fun framesDrawn(host: ViewGroup): Int = (host.getChildAt(0) as? TenmonStage)?.scene?.framesCompleted ?: 0
 
     /**
-     * Carries the scene the startup screen began on over [activity]'s whole window, until its first screen is ready
-     * ([firstScreenShown]) or a moment has passed with no word from it. Returns whether there was a scene to carry.
+     * Carries the launch the startup screen began over [activity]'s whole window, until its first screen is ready
+     * ([firstScreenShown]) or, with no word from it, the longest wait is over. The traced scene goes on where it
+     * stood; a launch that showed the still picture, or none, keeps that picture over the screen. Returns whether
+     * there was a launch to carry.
      */
     fun carryOn(activity: Activity): Boolean {
-        if (!isPlaying || Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return false
+        if (!carriesOn) return false
         val window = activity.window ?: return false
         val decor = window.decorView as? ViewGroup ?: return false
-        carry = cover(activity, window, decor)
+        val traced = isPlaying && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
+        launchPending = false
+        carry = cover(activity, window, decor, traced)
         return true
     }
 
-    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
-    private fun cover(activity: Activity, window: Window, decor: ViewGroup): Carry {
+    private fun cover(activity: Activity, window: Window, decor: ViewGroup, traced: Boolean): Carry {
         val stage = TenmonStage(activity)
         // Over everything the window draws, the bars' own bands included: the scene stands where the startup screen
         // showed it.
         stage.translationZ = OVER_THE_WINDOW
         // Nothing below is touched while it is covered.
         stage.isClickable = true
-        val now = SystemClock.elapsedRealtimeNanos()
-        stage.play(timeline, if (timeline.isStarted) timeline.at(now) else null)
+        if (traced && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            stage.play(timeline, if (timeline.isStarted) timeline.at(SystemClock.elapsedRealtimeNanos()) else null)
+        } else {
+            // The rings at rest: traced where this phone has drawn the scene, plain where it has not.
+            stage.cover.showFrame(TenmonStage.RESTING, null)
+        }
         decor.addView(stage, ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
         // Dark icons in the bars over the light page, whatever the theme under it.
         val bars = WindowCompat.getInsetsController(window, decor)
         val made = Carry(stage, bars, bars.isAppearanceLightStatusBars, bars.isAppearanceLightNavigationBars)
         bars.isAppearanceLightStatusBars = true
         bars.isAppearanceLightNavigationBars = true
-        stage.onGaveUp = { finish(FADE_MILLIS) }
-        // A tap does not wait for the scene: what it shows fades at once, and the screen takes every touch from then.
-        stage.setOnClickListener { skip() }
+        // A scene that would not draw over this screen has left the still picture in its place, which keeps the screen
+        // covered until it is ready.
+        stage.onGaveUp = { }
         stage.addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
             override fun onViewAttachedToWindow(view: View) = Unit
 
@@ -172,9 +223,9 @@ object TenmonFlight {
      */
     fun firstScreenShown(landing: Landing?) {
         val carry = carry ?: return
-        val scene = carry.stage.scene ?: return
         if (carry.left) {
             // Laid out again before the mark has left: it flies to where the screen shows it now.
+            val scene = carry.stage.scene ?: return
             if (timeline.at(SystemClock.elapsedRealtimeNanos()).phase != TenmonScene.Phase.OUTRO) aim(carry, scene, landing)
             return
         }
@@ -203,9 +254,14 @@ object TenmonFlight {
         }
         if (scene.framesCompleted == 0) {
             // The scene's surface over this screen has no frame yet. The mark flies on when it has, so the way out
-            // is seen from its start; a surface that never draws gives way to the plain scene, or the longest wait
-            // ends it.
-            main.postDelayed(carry.leaves, FRAME_MILLIS)
+            // is seen from its start; a surface that has none soon after the screen is ready, the screen does not
+            // wait for: what the scene stands at fades over it.
+            if (carry.frameWaits++ < FRAME_WAITS) {
+                main.postDelayed(carry.leaves, FRAME_MILLIS)
+            } else {
+                carry.stage.cover.showFrame(timeline.at(SystemClock.elapsedRealtimeNanos()), carry.landing)
+                finish(FADE_MILLIS)
+            }
             return
         }
         carry.left = true
@@ -213,14 +269,6 @@ object TenmonFlight {
         aim(carry, scene, carry.landing)
         scene.onOver = { finish(FADE_MILLIS) }
         timeline.leave(SystemClock.elapsedRealtimeNanos())
-    }
-
-    /** A tap on the scene: the first screen is wanted now. What the scene shows fades over it at once. */
-    private fun skip() {
-        val carry = carry ?: return
-        if (carry.left) return
-        carry.stage.cover.showFrame(timeline.at(SystemClock.elapsedRealtimeNanos()), carry.landing)
-        finish(FADE_MILLIS)
     }
 
     /**
@@ -257,6 +305,7 @@ object TenmonFlight {
     ) {
         var landing: Landing? = null
         var left = false
+        var frameWaits = 0
         val leaves = Runnable { leave() }
         val ends = Runnable { finish(FADE_MILLIS) }
     }
@@ -267,15 +316,21 @@ object TenmonFlight {
     /** 110 ms stepped twice by the golden ratio, as the iOS app fades what its scene ended on. */
     private val FADE_MILLIS = SacredGeometry.beatMillis(2).toLong()
 
-    /** How long the first screen has to say where it shows the mark before the scene leaves without its word. */
-    private const val FIRST_SCREEN_GRACE_MILLIS = 1000L
+    /**
+     * How long the first screen has to say it is ready before the scene leaves without its word. Every first screen
+     * says so as soon as it is laid out (the PIN screen, the welcome); this is only for one that never does.
+     */
+    private const val FIRST_SCREEN_GRACE_MILLIS = 4500L
 
     /** A screen's layout comes to rest within a few frames of its first. */
     private const val SETTLE_MILLIS = 48L
     private const val FRAME_MILLIS = 16L
 
+    /** How many frames' time a ready screen waits for the scene over it to draw before it is uncovered anyway. */
+    private const val FRAME_WAITS = 15
+
     /** However slow the phone, the first screen is uncovered by then. */
-    private const val LONGEST_MILLIS = 5000L
+    private const val LONGEST_MILLIS = 6000L
 
     /** A startup screen made again this soon after its scene left the window joins that scene. */
     private const val REJOIN_NANOS = 1_500_000_000L

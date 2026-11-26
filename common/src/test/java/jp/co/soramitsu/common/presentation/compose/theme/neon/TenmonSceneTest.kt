@@ -257,6 +257,7 @@ class TenmonSceneTest {
         )
         assertEquals(TenmonFlight.Mode.STILL, TenmonFlight.mode(motion = true, sdkInt = 36, hot = true))
         assertFalse("nothing to carry on before a scene has begun", TenmonFlight.isPlaying)
+        assertFalse("no launch for a first screen to carry on before one began", TenmonFlight.carriesOn)
     }
 
     @Test

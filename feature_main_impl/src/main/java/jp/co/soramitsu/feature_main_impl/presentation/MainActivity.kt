@@ -105,8 +105,8 @@ class MainActivity :
             val intent = Intent(context, MainActivity::class.java).apply {
                 flags = if (pinnedTask != null) 0 else Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             }
-            // While the launch scene plays, this screen carries it on from its first frame: nothing fades between.
-            val carriesLaunchScene = TenmonFlight.isPlaying
+            // At the end of a launch this screen carries the launch scene on from its first frame: nothing fades between.
+            val carriesLaunchScene = TenmonFlight.carriesOn
             val options = ActivityOptions.makeCustomAnimation(
                 context,
                 if (carriesLaunchScene) 0 else android.R.anim.fade_in,

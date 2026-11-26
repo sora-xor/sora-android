@@ -107,8 +107,8 @@ class LaunchSceneTest {
                 it.setContentView(host)
                 // Power saving, or animations removed: the motion policy says no before the GPU is asked anything.
                 assertEquals(TenmonFlight.Mode.STILL, TenmonFlight.begin(host, motion = false))
-                assertFalse("nothing for the first screen to carry on", TenmonFlight.isPlaying)
-                assertFalse(TenmonFlight.carryOn(it))
+                assertFalse("no traced scene for the first screen to carry on", TenmonFlight.isPlaying)
+                assertTrue("the first screen carries the still picture", TenmonFlight.carriesOn)
             }
             instrumentation.waitForIdleSync()
             SystemClock.sleep(300)
@@ -134,27 +134,28 @@ class LaunchSceneTest {
     }
 
     @Test
-    fun aTapOnTheSceneUncoversTheFirstScreenAtOnce() {
-        assumeTrue("the traced scene needs Android 13", Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+    fun theStillPictureCoversTheFirstScreenUntilItIsReady() {
         ActivityScenario.launch(ComponentActivity::class.java).use { scenario ->
-            val first = firstScreen(scenario)
-            assumeTrue("a hot phone shows the plain scene", first.mode == TenmonFlight.Mode.TRACED)
-            awaitFrames(first.host)
+            lateinit var first: FirstScreen
+            scenario.onActivity { first = makeFirstScreen(it, motion = false) }
+            assertEquals(TenmonFlight.Mode.STILL, first.mode)
             scenario.onActivity { activity ->
                 assertTrue(TenmonFlight.carryOn(activity))
-                assertEquals("the scene covers the whole window", first.uncovered + 1, first.decor.childCount)
+                assertEquals("the still picture covers the whole window", first.uncovered + 1, first.decor.childCount)
                 assertFalse("carried on once", TenmonFlight.carryOn(activity))
-                // The startup screen goes; the first screen's own copy of the scene plays on.
+                assertFalse(TenmonFlight.carriesOn)
                 TenmonFlight.end(first.host)
             }
             instrumentation.waitForIdleSync()
-            // Covered, the first screen is not seen: a tap is the person saying they will not wait, and only that.
+            // Before the first screen is ready nothing of it, or of what is behind it, takes a touch.
             tap(first.key)
             assertEquals("a covered key is not pressed", 0, first.taps.get())
+            SystemClock.sleep(300)
+            scenario.onActivity { assertEquals("still covered", first.uncovered + 1, first.decor.childCount) }
+            scenario.onActivity { TenmonFlight.firstScreenShown(null) }
             awaitUncovered(first)
             tap(first.key)
-            assertEquals("the next tap is the screen's", 1, first.taps.get())
-            scenario.onActivity { assertFalse(TenmonFlight.isPlaying) }
+            assertEquals("the first tap on the ready screen is the screen's", 1, first.taps.get())
         }
     }
 
@@ -238,18 +239,22 @@ class LaunchSceneTest {
 
     private fun firstScreen(scenario: ActivityScenario<ComponentActivity>): FirstScreen {
         lateinit var made: FirstScreen
-        scenario.onActivity { activity ->
-            val root = FrameLayout(activity)
-            val key = Button(activity)
-            val host = FrameLayout(activity)
-            root.addView(key, FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT))
-            root.addView(host, FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT))
-            activity.setContentView(root)
-            val decor = activity.window.decorView as ViewGroup
-            val mode = TenmonFlight.begin(host, motion = true)
-            made = FirstScreen(activity, host, key, decor, decor.childCount, mode)
-            key.setOnClickListener { made.taps.incrementAndGet() }
-        }
+        scenario.onActivity { made = makeFirstScreen(it, motion = true) }
+        return made
+    }
+
+    /** On the main thread: [activity] as a first screen, with the startup screen's scene begun over it. */
+    private fun makeFirstScreen(activity: ComponentActivity, motion: Boolean): FirstScreen {
+        val root = FrameLayout(activity)
+        val key = Button(activity)
+        val host = FrameLayout(activity)
+        root.addView(key, FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT))
+        root.addView(host, FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT))
+        activity.setContentView(root)
+        val decor = activity.window.decorView as ViewGroup
+        val mode = TenmonFlight.begin(host, motion)
+        val made = FirstScreen(activity, host, key, decor, decor.childCount, mode)
+        key.setOnClickListener { made.taps.incrementAndGet() }
         return made
     }
 

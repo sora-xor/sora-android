@@ -341,6 +341,8 @@ internal class TenmonView(context: Context) : SurfaceView(context), SurfaceHolde
     private fun fail() {
         if (stopped) return
         stop()
+        // The covers draw their pictures plainly from here: this GPU does not draw the scene.
+        TenmonCover.sharedTracer = null
         onFailed?.invoke()
     }
 
@@ -348,10 +350,14 @@ internal class TenmonView(context: Context) : SurfaceView(context), SurfaceHolde
         @Volatile
         private var running = true
 
-        /** Whether this surface has had a frame drawn into it. */
+        /**
+         * Whether a frame has really been drawn into this surface: one counts once the frame after it has been handed
+         * over, which the renderer accepts only when it has finished the one before.
+         */
         @Volatile
         var hasDrawn = false
             private set
+        private var handedOver = 0
 
         /** Draws no more after the frame it is on; does not wait for it. */
         fun halt() {
@@ -370,9 +376,11 @@ internal class TenmonView(context: Context) : SurfaceView(context), SurfaceHolde
                 if (running) post { fail() }
                 return
             }
-            // The covers draw their still frames with a shader of their own, built here rather than on the main thread.
+            // The covers draw their still frames with a shader of their own, built here rather than on the main thread,
+            // and handed to them once this one has had a frame drawn: a GPU that will not draw the scene never gets it
+            // into a window.
             if (TenmonCover.sharedTracer == null) {
-                TenmonCover.sharedTracer = try {
+                coverTracer = try {
                     TenmonTracer()
                 } catch (broken: RuntimeException) {
                     null
@@ -416,6 +424,7 @@ internal class TenmonView(context: Context) : SurfaceView(context), SurfaceHolde
             }
         }
 
+        private var coverTracer: Any? = null
         private var scene: TenmonScene? = null
         private var sceneFrame: TenmonFrame? = null
         private var sceneLanding: TenmonFlight.Landing? = null
@@ -445,8 +454,13 @@ internal class TenmonView(context: Context) : SurfaceView(context), SurfaceHolde
                     holder.unlockCanvasAndPost(canvas)
                 }
             }
-            hasDrawn = true
-            posted.incrementAndGet()
+            if (++handedOver >= 2) hasDrawn = true
+            if (posted.incrementAndGet() >= 2 && coverTracer != null) {
+                // The frame before this one has been drawn: the scene reaches the screen. (A scene stopped meanwhile,
+                // because it took too long or failed, hands nothing over: the covers stay plain.)
+                if (running && TenmonCover.sharedTracer == null) TenmonCover.sharedTracer = coverTracer
+                coverTracer = null
+            }
             return true
         }
     }
@@ -562,8 +576,8 @@ internal class TenmonStage(context: Context) : FrameLayout(context) {
         if (wanted) LitLightRig.enter(context) else LitLightRig.leave(context)
     }
 
-    private companion object {
+    companion object {
         /** The rings lying spread, as the wait begins. */
-        val RESTING = TenmonTimeline.Moment(TenmonScene.Phase.HOLD, 0f, 0f, 0f, false)
+        internal val RESTING = TenmonTimeline.Moment(TenmonScene.Phase.HOLD, 0f, 0f, 0f, false)
     }
 }

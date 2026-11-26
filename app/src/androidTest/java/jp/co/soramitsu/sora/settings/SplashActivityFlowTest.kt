@@ -260,7 +260,8 @@ class SplashActivityFlowTest {
             assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.loadingDisclaimerTextView).visibility)
             assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.loadingProgressBar).visibility)
             assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.launchScene).visibility)
-            assertFalse("a scene at rest is not carried on by the first screen", TenmonFlight.isPlaying)
+            assertFalse("the scene at rest no longer plays", TenmonFlight.isPlaying)
+            assertTrue("the first screen carries the still picture until it is ready", TenmonFlight.carriesOn)
         }
     }
 
@@ -307,6 +308,7 @@ class SplashActivityFlowTest {
             assertEquals("the launch scene is taken out", 0, scene.childCount)
             assertNull("the theme's own page shows under the panel", activity.findViewById<View>(R.id.splashContainer).background)
             assertFalse(TenmonFlight.isPlaying)
+            assertTrue("the first screen after the panel still keeps itself covered until it is ready", TenmonFlight.carriesOn)
             assertEquals(View.GONE, activity.findViewById<View>(R.id.loadingProgressBar).visibility)
         }
     }
