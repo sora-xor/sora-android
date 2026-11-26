@@ -32,6 +32,18 @@ class EthReceipt(
     val transactionHash: ByteArray? = null,
 )
 
+/** What the endpoints know of one transaction, asked of every one of them. */
+sealed class EthTransactionLookup {
+    /** In a block, with its receipt status (1 success, 0 reverted). */
+    data class Mined(val status: Int) : EthTransactionLookup()
+
+    /** Known to an endpoint, not mined yet. */
+    object Pending : EthTransactionLookup()
+
+    /** No endpoint that answered (at least two) has it. */
+    object Unknown : EthTransactionLookup()
+}
+
 /**
  * Ethereum mainnet JSON-RPC for the bridge: public endpoints without API keys, tried in order.
  *
@@ -52,21 +64,45 @@ class EthereumRpcClient(
         require(endpoints.isNotEmpty() && endpoints.all { it.startsWith("https://") }) { "ETH_RPC_ENDPOINTS_INVALID" }
     }
 
-    suspend fun request(method: String, params: JsonArray): JsonElement {
+    suspend fun request(method: String, params: JsonArray): JsonElement = request(method, params, broadcast = false)
+
+    /**
+     * [broadcast]: the call hands a transaction to the network. Once an earlier endpoint failed
+     * without an answer, it may have taken the transaction; a refusal from the next endpoint then
+     * says nothing about it (the bytes may be pending or mined already), so it is reported as
+     * unknown ([HashiRpcUnavailableException]), never as a refusal.
+     */
+    private suspend fun request(method: String, params: JsonArray, broadcast: Boolean): JsonElement {
         var firstFailure: Throwable? = null
+        // An earlier endpoint received the transaction and gave no final answer: it may have it.
+        var mayHaveIt = false
         for (endpoint in endpoints) {
             if (admitted[endpoint] == false) continue
             try {
                 if (admitted[endpoint] != true) admit(endpoint)
+            } catch (error: CancellationException) {
+                throw error
+            } catch (error: EthWrongChainException) {
+                firstFailure = firstFailure ?: error
+                continue
+            } catch (error: Exception) {
+                firstFailure = firstFailure?.also { it.addSuppressed(error) } ?: error
+                continue
+            }
+            try {
                 return send(endpoint, method, params)
             } catch (error: CancellationException) {
                 throw error
             } catch (error: HashiRpcErrorException) {
-                if (isFinalAnswer(error)) throw error
+                if (isFinalAnswer(error)) {
+                    val positive = error.message.contains("already known", ignoreCase = true)
+                    if (broadcast && mayHaveIt && !positive) throw HashiRpcUnavailableException(error)
+                    throw error
+                }
+                // An error answer (rate limit, unknown method) means this endpoint did not take it.
                 firstFailure = firstFailure?.also { it.addSuppressed(error) } ?: error
-            } catch (error: EthWrongChainException) {
-                firstFailure = firstFailure ?: error
             } catch (error: Exception) {
+                mayHaveIt = mayHaveIt || broadcast
                 firstFailure = firstFailure?.also { it.addSuppressed(error) } ?: error
             }
         }
@@ -162,7 +198,7 @@ class EthereumRpcClient(
      * returned. Any other error is final.
      */
     suspend fun sendRawTransaction(raw: ByteArray, expectedHash: ByteArray): ByteArray = try {
-        val returned = request("eth_sendRawTransaction", buildJsonArray { add(EthHex.encode(raw)) }).data()
+        val returned = request("eth_sendRawTransaction", buildJsonArray { add(EthHex.encode(raw)) }, broadcast = true).data()
         check(returned.contentEquals(expectedHash)) { "ETH_TX_HASH_MISMATCH" }
         returned
     } catch (error: HashiRpcErrorException) {
@@ -187,11 +223,47 @@ class EthereumRpcClient(
                     (log["address"] as? JsonPrimitive)?.content ?: throw IllegalArgumentException("ETH_RECEIPT_INVALID"),
                     EthAddress.SIZE,
                 ),
-                topics = (log["topics"] as? JsonArray ?: JsonArray(emptyList())).map { it.data() },
-                data = log["data"]?.data() ?: ByteArray(0),
+                // A log without its topics or data is unreadable: read the receipt again.
+                topics = (log["topics"] as? JsonArray ?: throw IllegalArgumentException("ETH_RECEIPT_INVALID")).map { topic ->
+                    topic.data().also { require(it.size == 32) { "ETH_RECEIPT_INVALID" } }
+                },
+                data = (log["data"] ?: throw IllegalArgumentException("ETH_RECEIPT_INVALID")).data(),
             )
         }
         return EthReceipt(status.toInt(), block, receipt["gasUsed"]?.takeUnless { it is JsonNull }?.quantity(), logs, transactionHash)
+    }
+
+    /**
+     * What every reachable endpoint knows of the transaction [hash]: ANY mined receipt (with its
+     * status), else KNOWN when one has it pending, else UNKNOWN when at least
+     * [MINIMUM_UNANIMOUS] endpoints answered and none has it. Fewer answers throw: a lagging or
+     * missing endpoint must never make a mined transaction look absent.
+     */
+    suspend fun lookupEverywhere(hash: ByteArray): EthTransactionLookup {
+        var answers = 0
+        var pending = false
+        var failure: Throwable? = null
+        for (endpoint in endpoints) {
+            if (admitted[endpoint] == false) continue
+            try {
+                if (admitted[endpoint] != true) admit(endpoint)
+                val receipt = send(endpoint, "eth_getTransactionReceipt", buildJsonArray { add(EthHex.encode(hash)) })
+                if (receipt is JsonObject) {
+                    val status = (receipt["status"] ?: throw IllegalArgumentException("ETH_RECEIPT_INVALID")).quantity()
+                    if (receipt["blockNumber"]?.takeUnless { it is JsonNull } != null) return EthTransactionLookup.Mined(status.toInt())
+                }
+                val transaction = send(endpoint, "eth_getTransactionByHash", buildJsonArray { add(EthHex.encode(hash)) })
+                if (transaction is JsonObject) pending = true
+                answers += 1
+            } catch (error: CancellationException) {
+                throw error
+            } catch (error: Exception) {
+                failure = failure?.also { it.addSuppressed(error) } ?: error
+            }
+        }
+        if (pending) return EthTransactionLookup.Pending
+        if (answers < minOf(MINIMUM_UNANIMOUS, endpoints.size)) throw HashiRpcUnavailableException(failure)
+        return EthTransactionLookup.Unknown
     }
 
     /** The nonce of the last mined transaction + 1 (`latest`, not `pending`). */
@@ -233,6 +305,7 @@ class EthereumRpcClient(
     }
 
     private companion object {
+        const val MINIMUM_UNANIMOUS = 2
         val FINAL_ERROR_MARKERS = listOf(
             "revert",
             "nonce",

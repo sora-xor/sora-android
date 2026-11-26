@@ -200,9 +200,9 @@ class HashiSoraRpcClient(
     suspend fun requestStatus(requestHash: ByteArray): HashiRequestStatus? = requestStatusValue(requestHash)?.status
 
     /** [requestStatus] with the raw SCALE value, which carries the errors of `Failed` and `Broken`. */
-    suspend fun requestStatusValue(requestHash: ByteArray): HashiRequestStatusValue? {
+    suspend fun requestStatusValue(requestHash: ByteArray, at: String? = null): HashiRequestStatusValue? {
         val key = HashiSoraStorage.requestStatusKey(requestHash)
-        val raw = storage(listOf(key))[key] ?: return null
+        val raw = storage(listOf(key), at = at)[key] ?: return null
         return HashiRequestStatusValue(HashiRequestStatus.fromScale(raw), raw)
     }
 
