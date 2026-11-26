@@ -9,7 +9,6 @@ constraint = "2.2.1"
 biometric = "1.1.0"
 navigation = "2.9.7"
 navigationCompose = "2.9.7"
-lottie = "4.2.0"
 insetter = "0.6.1"
 workManager = "2.11.0"
 coil = "2.7.0"
@@ -107,7 +106,6 @@ biometricDep = { module = "androidx.biometric:biometric", version.ref = "biometr
 navigationFragmentDep = { module = "androidx.navigation:navigation-fragment-ktx", version.ref = "navigation" }
 navigationUiDep = { module = "androidx.navigation:navigation-ui-ktx", version.ref = "navigation" }
 navigationComposeDep = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
-lottieDep = { module = "com.airbnb.android:lottie", version.ref = "lottie" }
 jdenticonDep = { module = "com.github.WycliffeAssociates:jdenticon-kotlin", version.ref = "jdenticon" }
 svgDep = { module = "com.caverock:androidsvg-aar", version.ref = "svg" }
 coilDep = { module = "io.coil-kt:coil", version.ref = "coil" }

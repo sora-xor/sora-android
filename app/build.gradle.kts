@@ -355,7 +355,6 @@ dependencies {
     implementation(libs.navigationFragmentDep)
     implementation(libs.navigationUiDep)
 
-    implementation(libs.lottieDep)
     implementation(libs.coilDep)
     implementation(libs.coilSvgDep)
 

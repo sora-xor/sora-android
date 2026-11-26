@@ -59,8 +59,6 @@ import jp.co.soramitsu.common.domain.BarsColorHandler
 import jp.co.soramitsu.common.domain.BottomBarController
 import jp.co.soramitsu.common.domain.DarkThemeManager
 import jp.co.soramitsu.common.presentation.compose.neon.safemode.WalletSessionState
-import jp.co.soramitsu.common.presentation.compose.theme.neon.FxPolicy
-import jp.co.soramitsu.common.presentation.compose.theme.neon.DeviceFxSignals
 import jp.co.soramitsu.common.presentation.view.ToolbarActivity
 import jp.co.soramitsu.common.util.DebounceClickHandler
 import jp.co.soramitsu.common.util.ext.attrColor
@@ -107,10 +105,12 @@ class MainActivity :
             val intent = Intent(context, MainActivity::class.java).apply {
                 flags = if (pinnedTask != null) 0 else Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             }
+            // While the launch scene plays, this screen carries it on from its first frame: nothing fades between.
+            val carriesLaunchScene = TenmonFlight.isPlaying
             val options = ActivityOptions.makeCustomAnimation(
                 context,
-                android.R.anim.fade_in,
-                android.R.anim.fade_out
+                if (carriesLaunchScene) 0 else android.R.anim.fade_in,
+                if (carriesLaunchScene) 0 else android.R.anim.fade_out
             )
             context.startActivity(intent, options.toBundle())
             pinnedTask?.finish()
@@ -270,10 +270,8 @@ class MainActivity :
             }
         }
 
-        // The flight through the gate of heaven: once for each start of the app, over the first screen.
-        if (!restoredFromSavedState) {
-            TenmonFlight.launchOnce(this, FxPolicy.from(DeviceFxSignals.read(this)).litMotion)
-        }
+        // The launch scene the startup screen began carries on over the first screen, and uncovers it.
+        if (!restoredFromSavedState) TenmonFlight.carryOn(this)
     }
 
     override fun onDestroy() {

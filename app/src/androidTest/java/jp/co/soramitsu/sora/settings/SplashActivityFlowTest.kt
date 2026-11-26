@@ -2,13 +2,14 @@ package jp.co.soramitsu.sora.settings
 
 import android.app.Activity
 import android.app.Application
-import android.os.Build
 import android.os.Bundle
 import android.app.Instrumentation
 import android.content.Intent
 import android.content.IntentFilter
+import android.graphics.drawable.ColorDrawable
 import android.provider.Settings
 import android.view.View
+import android.view.ViewGroup
 import android.view.WindowManager
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.MutableLiveData
@@ -29,6 +30,7 @@ import jp.co.soramitsu.feature_select_node_api.NodeManager
 import jp.co.soramitsu.sora.R
 import jp.co.soramitsu.sora.splash.presentation.*
 import jp.co.soramitsu.sora.splash.presentation.recovery.*
+import jp.co.soramitsu.ui_core.sacred.TenmonFlight
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -77,6 +79,9 @@ class SplashActivityFlowTest {
     @Before fun setup() {
         WalletRecoveryCapabilityGate.enterNormal()
         mockkObject(WalletUpgradeBackup)
+        // The view models are put in before onCreate, which only Android 10 and later announce. (After the mock, so
+        // the cleanup undoes exactly what was done.)
+        Assume.assumeTrue(android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q)
         every { WalletUpgradeBackup.startupFailureToShow(any()) } returns null
         every { WalletUpgradeBackup.blockingFailure() } returns null
         every { WalletUpgradeBackup.recoveryOptions() } returns null
@@ -148,18 +153,18 @@ class SplashActivityFlowTest {
     private fun panel() = RecoveryPanels.model(WalletRecoveryOptions.forState("FIXTURE_RECOVERY", false,
         RecoveryFacts(hasWalletFiles = true)), false, false)
 
-    @Test fun systemSplashDoesNotPlayASecondAnimationOrWaitForItsRenderer() {
-        Assume.assumeTrue(Build.VERSION.SDK_INT >= Build.VERSION_CODES.S)
-        // Observe readiness before yielding the main loop: a slow instrumented launch may
-        // legitimately outlast the renderer's four-second fallback before launch() returns.
+    @Test fun startupShowsTheLaunchSceneAndNeverWaitsForIt() {
+        // Readiness is observed before the main loop is yielded: the checks go on the moment the
+        // wallet is ready, whatever the launch scene has or has not drawn by then.
         afterActivityCreated = {
             verify(exactly = 0) { splashModel.nextScreen() }
             runtimeReady.value = true
         }
         launch().onMainActivity { activity ->
-            val animation = activity.findViewById<com.airbnb.lottie.LottieAnimationView>(R.id.animation_view)
-            assertEquals(View.GONE, animation.visibility)
-            assertFalse(animation.isAnimating)
+            val scene = activity.findViewById<ViewGroup>(R.id.launchScene)
+            assertEquals(View.VISIBLE, scene.visibility)
+            assertEquals("the launch scene fills its host", 1, scene.childCount)
+            assertEquals(TenmonFlight.PAGE, (activity.findViewById<View>(R.id.splashContainer).background as ColorDrawable).color)
         }
         verify(exactly = 1) { splashModel.nextScreen() }
         instrumentation.runOnMainSync { runtimeReady.value = true }
@@ -167,10 +172,9 @@ class SplashActivityFlowTest {
         verify(exactly = 1) { splashModel.nextScreen() }
     }
 
-    // A start that plays no animation (Android 12 and later) asks once for the early route; the question it
-    // hands over says no while a recovery state is known.
-    @Test fun aStartThatPlaysNothingAsksForTheEarlyRouteAndRefusesItOverRecovery() {
-        Assume.assumeTrue(Build.VERSION.SDK_INT >= Build.VERSION_CODES.S)
+    // The launch scene never holds the start, so every ordinary start asks once for the early route; the question
+    // it hands over says no while a recovery state is known.
+    @Test fun anOrdinaryStartAsksForTheEarlyRouteAndRefusesItOverRecovery() {
         val mayOpen = slot<() -> Boolean>()
         every { splashModel.routeEarly(capture(mayOpen)) } just Runs
         launch()
@@ -183,10 +187,11 @@ class SplashActivityFlowTest {
         instrumentation.runOnMainSync { safe.value = SafeModeUiState(visible = true, panel = panel()) }
         assertFalse(mayOpen.captured())
     }
-    @Test fun anAnimatedStartNeverAsksForTheEarlyRoute() {
-        Assume.assumeTrue(Build.VERSION.SDK_INT < Build.VERSION_CODES.S && android.animation.ValueAnimator.areAnimatorsEnabled())
-        launch()
-        verify(exactly = 0) { splashModel.routeEarly(any()) }
+    @Test fun theEarlyRouteIsAskedForWhileTheLaunchSceneShows() {
+        launch().onMainActivity { activity ->
+            assertEquals("the launch scene is up when the early route is asked for", 1, activity.findViewById<ViewGroup>(R.id.launchScene).childCount)
+        }
+        verify(exactly = 1) { splashModel.routeEarly(any()) }
     }
     @Test fun retryFromHomeNeverAsksForTheEarlyRoute() {
         every { WalletUpgradeBackup.recoveryOptions() } returns WalletRecoveryOptions.forState("FIXTURE_RECOVERY", false, RecoveryFacts()); launch(retry = true)
@@ -199,8 +204,7 @@ class SplashActivityFlowTest {
     }
     // A wallet opened before the usual moment is final: the usual moment neither routes again nor starts the
     // progress screen's timer.
-    // The route is emitted before the screen starts (delivered at onStart), so a slow launch cannot reach the
-    // four-second animation fallback first.
+    // The route is emitted before the screen starts (delivered at onStart), before the usual moment.
     @Test fun aWalletOpenedEarlyIsNotRoutedAgainAndShowsNoProgressScreen() {
         afterActivityCreated = { activity ->
             activity.mainStarter = mainStarter
@@ -226,7 +230,6 @@ class SplashActivityFlowTest {
     }
     // A screen recreated after the early route decided the start neither routes nor starts the progress timer.
     @Test fun aStartAlreadyDecidedEarlyIsNotRoutedAgainByARecreatedScreen() {
-        Assume.assumeTrue(Build.VERSION.SDK_INT >= Build.VERSION_CODES.S)
         every { splashModel.isStartDecided } returns true
         afterActivityCreated = { runtimeReady.value = true }
         launch()
@@ -236,12 +239,10 @@ class SplashActivityFlowTest {
     }
     // The wallet is routed while the screen is in the background: on return it opens once, with no progress screen.
     @Test fun aRouteDecidedWhileStoppedOpensOnReturnWithoutTheProgressScreen() {
-        Assume.assumeTrue(Build.VERSION.SDK_INT >= Build.VERSION_CODES.S)
         var nextScreenCalls = 0
         every { splashModel.nextScreen() } answers { nextScreenCalls += 1 }
         launch(); scenario!!.moveToState(Lifecycle.State.CREATED); drainMainQueue()
-        // A launch slow enough for the four-second fallback has already gone the usual way: nothing to check here.
-        Assume.assumeTrue(nextScreenCalls == 0)
+        assertEquals("the usual moment has not come: nothing routed yet", 0, nextScreenCalls)
         // As the early route does: the start is decided, then the route is emitted.
         every { splashModel.isStartDecided } returns true
         instrumentation.runOnMainSync { main.value = Unit; runtimeReady.value = true }; drainMainQueue()
@@ -252,6 +253,17 @@ class SplashActivityFlowTest {
         verify(exactly = 0) { safeModel.showStartupProgress() }
         assertEquals(0, nextScreenCalls)
     }
+    @Test fun slowStartNoteShowsOverTheLaunchSceneAtRest() {
+        launch()
+        instrumentation.runOnMainSync { loading.value = Unit }
+        drainMainQueue(); scenario!!.onMainActivity { activity ->
+            assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.loadingDisclaimerTextView).visibility)
+            assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.loadingProgressBar).visibility)
+            assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.launchScene).visibility)
+            assertFalse("a scene at rest is not carried on by the first screen", TenmonFlight.isPlaying)
+        }
+    }
+
     @Test fun publishedLauncherAliasStillStartsWalletVerification() {
         launch(legacyLauncher = true).onMainActivity { activity ->
             assertEquals(WalletStartupActivity::class.java, activity.javaClass)
@@ -290,7 +302,11 @@ class SplashActivityFlowTest {
         launch(); instrumentation.runOnMainSync { safe.value = SafeModeUiState(visible = true, panel = panel()) }
         drainMainQueue(); scenario!!.onMainActivity { activity ->
             assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.walletRecoveryCompose).visibility)
-            assertEquals(View.GONE, activity.findViewById<View>(R.id.animation_view).visibility)
+            val scene = activity.findViewById<ViewGroup>(R.id.launchScene)
+            assertEquals(View.GONE, scene.visibility)
+            assertEquals("the launch scene is taken out", 0, scene.childCount)
+            assertNull("the theme's own page shows under the panel", activity.findViewById<View>(R.id.splashContainer).background)
+            assertFalse(TenmonFlight.isPlaying)
             assertEquals(View.GONE, activity.findViewById<View>(R.id.loadingProgressBar).visibility)
         }
     }

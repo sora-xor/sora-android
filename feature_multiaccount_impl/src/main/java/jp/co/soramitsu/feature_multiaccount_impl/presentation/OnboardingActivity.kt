@@ -100,6 +100,7 @@ import jp.co.soramitsu.feature_multiaccount_impl.presentation.tutorial.TutorialS
 import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.component.button.properties.Size
 import jp.co.soramitsu.ui_core.resources.Dimens
+import jp.co.soramitsu.ui_core.sacred.TenmonFlight
 import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
 
@@ -133,10 +134,12 @@ class OnboardingActivity : SoraBaseActivity<OnboardingViewModel>() {
                 }
                 putExtra(EXTRA_ENTRY, entry.name)
             }
+            // While the launch scene plays, this screen carries it on from its first frame: nothing fades between.
+            val carriesLaunchScene = TenmonFlight.isPlaying
             val options = ActivityOptions.makeCustomAnimation(
                 context,
-                android.R.anim.fade_in,
-                android.R.anim.fade_out
+                if (carriesLaunchScene) 0 else android.R.anim.fade_in,
+                if (carriesLaunchScene) 0 else android.R.anim.fade_out
             )
             context.startActivity(intent, options.toBundle())
         }
@@ -280,6 +283,8 @@ class OnboardingActivity : SoraBaseActivity<OnboardingViewModel>() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // The launch scene the startup screen began carries on over the welcome, and uncovers it.
+        if (savedInstanceState == null) TenmonFlight.carryOn(this)
         viewModel.consentExceptionHandler.observe(this) {
             consentHandlerLauncher.launch(it)
         }
@@ -306,6 +311,8 @@ class OnboardingActivity : SoraBaseActivity<OnboardingViewModel>() {
             navController.addOnDestinationChangedListener { _, destination, _ ->
                 viewModel.onDestinationChanged(destination.route ?: "")
             }
+            // This screen shows no mark for the launch scene's to set down on: it gives way with its rings.
+            TenmonFlight.firstScreenShown(null)
         }
 
         viewModel.skipDialogState.observeAsState().value?.let {

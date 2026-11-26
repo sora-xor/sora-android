@@ -218,7 +218,8 @@ object LitLightRig : SensorEventListener {
         refresh(context.applicationContext)
     }
 
-    private fun isHot(context: Context): Boolean =
+    /** A hot phone leaves the light still, and plays no launch scene. */
+    internal fun isHot(context: Context): Boolean =
         Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q &&
             (context.getSystemService(PowerManager::class.java)?.currentThermalStatus ?: 0) >= PowerManager.THERMAL_STATUS_SEVERE
 

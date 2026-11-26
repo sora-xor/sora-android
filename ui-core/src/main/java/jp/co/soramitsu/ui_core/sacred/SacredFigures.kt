@@ -33,6 +33,9 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.drawscope.translate
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInWindow
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -66,12 +69,15 @@ object SacredGeometry {
     fun seedStartDegrees(index: Int): Float = -90f + 60f * index + 180f
 }
 
+/** The emblem's ring stands this far inside its square. */
+private val EMBLEM_INSET = 2.dp
+
 /** The gold of a mended bowl: the lit lines of the figures on a pale page. */
 val SacredGold = Color(0xFFA87A2E)
-private val PlanetRed = Color(0xFFE3232C)
+internal val PlanetRed = Color(0xFFE3232C)
 
 /** 天 on its 22-unit disc: point for point the token's own mark. */
-private fun soraMark(): Path = Path().apply {
+internal fun soraMark(): Path = Path().apply {
     moveTo(5.8f, 20.7f)
     cubicTo(7.5f, 18.1f, 9.3f, 15.5f, 11.1f, 12.9f)
     lineTo(16.3f, 20.7f)
@@ -102,6 +108,7 @@ private fun DrawScope.planet(centre: Offset, radius: Float, mark: Path) {
  *
  * @param share how much of the code is entered, 0..1
  * @param wrong the code was wrong: the whole ring shows in [wrongColor]
+ * @param receivesLaunchMark the launch scene's mark sets down on this emblem's: it is told where that stands
  */
 @Composable
 fun SacredEmblem(
@@ -113,6 +120,7 @@ fun SacredEmblem(
     diameter: Dp = 132.dp,
     lit: Color = SacredGold,
     reduceMotion: Boolean = false,
+    receivesLaunchMark: Boolean = false,
 ) {
     val drawn by animateFloatAsState(
         targetValue = if (wrong) 1f else share.coerceIn(0f, 1f),
@@ -125,9 +133,25 @@ fun SacredEmblem(
         label = "sacredRim",
     )
     val mark = remember { soraMark() }
-    Canvas(modifier.size(diameter).clearAndSetSemantics { }) {
+    val inset = with(LocalDensity.current) { EMBLEM_INSET.toPx() }
+    val placed = if (receivesLaunchMark) {
+        Modifier.onGloballyPositioned { place ->
+            val corner = place.positionInWindow()
+            val side = minOf(place.size.width, place.size.height)
+            TenmonFlight.firstScreenShown(
+                TenmonFlight.Landing(
+                    x = corner.x + place.size.width / 2f,
+                    y = corner.y + place.size.height / 2f,
+                    radius = (side / 2f - inset) / SacredGeometry.RING_TO_PLANET,
+                ),
+            )
+        }
+    } else {
+        Modifier
+    }
+    Canvas(modifier.size(diameter).then(placed).clearAndSetSemantics { }) {
         val middle = Offset(size.width / 2f, size.height / 2f)
-        val ring = size.minDimension / 2f - 2.dp.toPx()
+        val ring = size.minDimension / 2f - inset
         val planetRadius = ring / SacredGeometry.RING_TO_PLANET
         // A breath of the mark's red on the page round it.
         drawCircle(

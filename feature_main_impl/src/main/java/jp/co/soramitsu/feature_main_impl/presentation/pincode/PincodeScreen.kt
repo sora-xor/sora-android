@@ -74,6 +74,7 @@ import jp.co.soramitsu.ui_core.lit.LitBead
 import jp.co.soramitsu.ui_core.lit.LocalLitPalette
 import jp.co.soramitsu.ui_core.lit.litWell
 import jp.co.soramitsu.ui_core.sacred.SacredEmblem
+import jp.co.soramitsu.ui_core.sacred.TenmonFlight
 import jp.co.soramitsu.common.presentation.compose.theme.tokens.NeonType
 import jp.co.soramitsu.common.util.ext.shake
 import jp.co.soramitsu.common.util.testTagAsId
@@ -135,7 +136,8 @@ fun PincodeScreen(
                     )
                 }
             }
-            // The SORA mark in its ring. The ring is the lock: each digit draws one more of its circles.
+            // The SORA mark in its ring. The ring is the lock: each digit draws one more of its circles. At the start
+            // of the app the launch scene's mark flies to this one and sets down on it.
             if (showsEmblem) {
                 SacredEmblem(
                     share = pinCodeScreenState.checkedDotsCount.toFloat() / pinCodeScreenState.maxDotsCount.coerceAtLeast(1),
@@ -143,7 +145,11 @@ fun PincodeScreen(
                     line = LocalLitPalette.current.ink,
                     wrongColor = n.error,
                     reduceMotion = fx.reduceMotion,
+                    receivesLaunchMark = true,
                 )
+            } else {
+                // No emblem for the launch scene's mark to set down on: it gives way with its rings.
+                LaunchedEffect(Unit) { TenmonFlight.firstScreenShown(null) }
             }
             CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
                 PincodeInputView(

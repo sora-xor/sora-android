@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+      The launch page: the light page whatever theme is stored or the system is in, so there is no
+      night variant. The launch window, the startup screen and the launch scene (TenmonFlight.PAGE)
+      all show it, and nothing flashes between them.
+    -->
+    <color name="launch_page">#ECE9E3</color>
+    <!-- Ink and the SORA red on that page. -->
+    <color name="launch_ink">#4C4A45</color>
+    <color name="launch_red">#DA2530</color>
+</resources>

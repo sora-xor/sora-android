@@ -19,10 +19,10 @@ limitations under the License.
 
 package jp.co.soramitsu.sora.splash.presentation
 
-import android.animation.ValueAnimator
 import android.content.ActivityNotFoundException
 import android.content.ClipData
 import android.content.Intent
+import android.graphics.Color
 import android.net.Uri
 import android.os.Build
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
@@ -40,13 +40,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.core.net.toUri
+import androidx.core.view.WindowCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import com.airbnb.lottie.LottieProperty
-import com.airbnb.lottie.model.KeyPath
-import com.airbnb.lottie.value.LottieValueCallback
 import dagger.hilt.android.AndroidEntryPoint
 import java.io.File
 import javax.inject.Inject
@@ -57,6 +55,10 @@ import jp.co.soramitsu.common.domain.DarkThemeManager
 import jp.co.soramitsu.common.presentation.compose.neon.safemode.TechnicalDetail
 import jp.co.soramitsu.common.presentation.compose.neon.safemode.WalletUpgradeRetry
 import jp.co.soramitsu.common.presentation.compose.theme.SoraAppTheme
+import jp.co.soramitsu.common.presentation.compose.theme.neon.DeviceFxSignals
+import jp.co.soramitsu.common.presentation.compose.theme.neon.FxPolicy
+import jp.co.soramitsu.common.util.ext.setNavigationBarColorCompat
+import jp.co.soramitsu.common.util.ext.setStatusBarColorCompat
 import jp.co.soramitsu.core_db.WalletUpgradeBackup
 import jp.co.soramitsu.feature_main_api.launcher.MainStarter
 import jp.co.soramitsu.feature_main_impl.presentation.pincode.ScreenLockPrompt
@@ -69,6 +71,7 @@ import jp.co.soramitsu.sora.splash.presentation.recovery.SafeModeCallbacks
 import jp.co.soramitsu.sora.splash.presentation.recovery.SafeModeEvent
 import jp.co.soramitsu.sora.splash.presentation.recovery.SafeModeViewModel
 import jp.co.soramitsu.sora.splash.presentation.recovery.SplashSafeMode
+import jp.co.soramitsu.ui_core.sacred.TenmonFlight
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -77,6 +80,10 @@ import kotlinx.coroutines.launch
  * Coordinates wallet verification, startup navigation, and Safe Mode (design spec
  * 9) when the upgrade needs the person: the upgrade progress (U1, U5), the storage screen (U4)
  * and the recovery options (U6), hosted in the `walletRecoveryCompose` view.
+ *
+ * While the wallet is verified the launch scene plays on the light launch page ([TenmonFlight]):
+ * the mark comes down, the rings spread and wait. The first screen carries the scene on. It is
+ * presentation only: the checks and the navigation never wait for it.
  */
 @AndroidEntryPoint
 class WalletStartupActivity : AppCompatActivity() {
@@ -98,37 +105,23 @@ class WalletStartupActivity : AppCompatActivity() {
     @Inject
     lateinit var nodeManager: dagger.Lazy<NodeManager>
 
-    private var isFirstPartFinished = false
-    private var isSecondPartStarted = false
     private var isNavigationRequested = false
     private var isStartupReadyReported = false
     private var isSplashViewModelBound = false
     private var openedForRetry = false
     private var progressWatchdog: Job? = null
-    private var animationFallback: Job? = null
-
-    private val animatorUpdateListener = ValueAnimator.AnimatorUpdateListener {
-        val progress = it.animatedFraction
-        if (progress >= 0.8 && !isFirstPartFinished) {
-            isFirstPartFinished = true
-            viewBinding.animationView.pauseAnimation()
-        }
-        if (splashViewModel.runtimeInitiated.value == true && isFirstPartFinished && !isSecondPartStarted) {
-            isSecondPartStarted = true
-            viewBinding.animationView.resumeAnimation()
-        }
-        if (progress >= 0.89) {
-            goNext()
-        }
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         // Android owns the launch splash and switches to the saved application theme.
         installSplashScreen()
         super.onCreate(savedInstanceState)
         setContentView(ActivitySplashBinding.inflate(layoutInflater).also { viewBinding = it }.root)
+        // The launch page runs under the bars, as the first screen does, so the launch scene
+        // stands in the same place on both.
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        window.setStatusBarColorCompat(Color.TRANSPARENT)
+        window.setNavigationBarColorCompat(Color.TRANSPARENT)
         setUpSafeMode()
-        applySplashTheme()
 
         val retryInProgress = savedInstanceState?.getBoolean(STATE_OPENED_FOR_RETRY) == true &&
             safeModeViewModel.state.value.visible
@@ -166,26 +159,29 @@ class WalletStartupActivity : AppCompatActivity() {
         // that holds the backup's lock ([WalletUpgradeBackup.startupFailureToShow]).
         val startupFailure = WalletUpgradeBackup.startupFailureToShow(applicationContext)
         if (startupFailure == null) {
-            viewBinding.animationView.addAnimatorUpdateListener(animatorUpdateListener)
-            if (shouldReduceSplashMotion()) {
-                // Nothing plays here, so nothing is waited for: a verified wallet whose routing reads answer at once
-                // opens now. Anything else takes the usual way below, at the usual time. (The check holds the
-                // recovery view model, never this screen.)
-                val safeMode = safeModeViewModel
-                splashViewModel.routeEarly(
-                    mayOpen = { !safeMode.state.value.visible && WalletUpgradeBackup.blockingFailure() == null },
-                )
-                finishSplashWithoutMotion()
-            } else {
-                viewBinding.animationView.playAnimation()
-            }
-            // Motion is presentation only: a renderer failure must never block wallet checks.
-            animationFallback = lifecycleScope.launch {
-                delay(ANIMATION_FALLBACK_MILLIS)
-                if (!isSafeModeVisible()) goNext()
-            }
+            // The motion policy is asked first: a phone that will not play the traced scene
+            // (power saving, animations removed) shows it at rest and never opens the GPU for it.
+            TenmonFlight.begin(viewBinding.launchScene, FxPolicy.from(DeviceFxSignals.read(this)).litMotion)
+            showLaunchPageBars(true)
+            // The launch scene plays beside the start and never holds it, so nothing is waited for: a verified
+            // wallet whose routing reads answer at once opens now, and its first screen carries the scene on.
+            // Anything else takes the usual way, at the usual time. (The check holds the recovery view model,
+            // never this screen.)
+            val safeMode = safeModeViewModel
+            splashViewModel.routeEarly(
+                mayOpen = { !safeMode.state.value.visible && WalletUpgradeBackup.blockingFailure() == null },
+            )
         } else {
             showRecovery(startupFailure.code)
+        }
+    }
+
+    /** Dark icons in the bars over the light launch page; the theme's own once it has gone. */
+    private fun showLaunchPageBars(launchPage: Boolean) {
+        val light = launchPage || resources.getBoolean(jp.co.soramitsu.common.R.bool.neon_light_system_bars)
+        WindowCompat.getInsetsController(window, window.decorView).apply {
+            isAppearanceLightStatusBars = light
+            isAppearanceLightNavigationBars = light
         }
     }
 
@@ -201,19 +197,15 @@ class WalletStartupActivity : AppCompatActivity() {
         if (isSplashViewModelBound) return
         isSplashViewModelBound = true
         splashViewModel.runtimeInitiated.observe(this) {
-            if (it && !isSafeModeVisible()) {
-                // Wallet verification starts independently in start(). Let the historical
-                // introduction finish even when that work is ready before the animation.
-                if (shouldReduceSplashMotion()) {
-                    finishSplashWithoutMotion()
-                } else if (isFirstPartFinished && !isSecondPartStarted) {
-                    isSecondPartStarted = true
-                    viewBinding.animationView.resumeAnimation()
-                }
-            }
+            // Wallet verification starts independently in start(); the launch scene plays
+            // beside it and never holds it up.
+            if (it && !isSafeModeVisible()) goNext()
         }
         splashViewModel.loadingTextVisiblity.observe(this) {
             if (!isSafeModeVisible()) {
+                // The scene's surface lies over this window: it comes to rest in the window
+                // itself, and the note shows on it.
+                TenmonFlight.rest(viewBinding.launchScene)
                 viewBinding.loadingDisclaimerTextView.visibility = View.VISIBLE
                 viewBinding.loadingProgressBar.visibility = View.VISIBLE
             }
@@ -250,8 +242,10 @@ class WalletStartupActivity : AppCompatActivity() {
         viewBinding.walletRecoveryCompose.setContent {
             val dark by darkThemeManager.darkModeStatusFlow.collectAsStateWithLifecycle()
             val state by safeModeViewModel.state.collectAsStateWithLifecycle()
-            SoraAppTheme(darkTheme = dark) {
-                if (state.visible) {
+            // The theme (and the moving light it puts the screen under) only while the panel is up: a hidden panel
+            // keeps no tilt sensor on behind the launch scene.
+            if (state.visible) {
+                SoraAppTheme(darkTheme = dark) {
                     val labels = detailLabels()
                     val details = safeModeViewModel.technicalDetails().map { (key, value) ->
                         TechnicalDetail(labels[key] ?: key, value)
@@ -341,41 +335,9 @@ class WalletStartupActivity : AppCompatActivity() {
         }
     }
 
-    private fun applySplashTheme() {
-        // Preserve the original ring motion while adapting its light-only gradients.
-        viewBinding.animationView.addValueCallback(
-            KeyPath("**", "Gradient Fill 1"),
-            LottieProperty.GRADIENT_COLOR,
-            LottieValueCallback(arrayOf(
-                ContextCompat.getColor(this, jp.co.soramitsu.common.R.color.neon_canvas),
-                ContextCompat.getColor(this, jp.co.soramitsu.common.R.color.neon_surface),
-                ContextCompat.getColor(this, jp.co.soramitsu.common.R.color.neon_surface_variant),
-            )),
-        )
-        viewBinding.animationView.addValueCallback(
-            KeyPath("**", "Fill 1"),
-            LottieProperty.COLOR,
-            LottieValueCallback(ContextCompat.getColor(this, jp.co.soramitsu.common.R.color.neon_brand_red)),
-        )
-    }
-
-    private fun shouldReduceSplashMotion(): Boolean =
-        Build.VERSION.SDK_INT >= Build.VERSION_CODES.S || !ValueAnimator.areAnimatorsEnabled()
-
-    private fun finishSplashWithoutMotion() {
-        viewBinding.animationView.removeUpdateListener(animatorUpdateListener)
-        viewBinding.animationView.cancelAnimation()
-        viewBinding.animationView.progress = 0.89f
-        // Android 12+ already showed the system splash; do not present a second launch animation.
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) viewBinding.animationView.visibility = View.GONE
-        if (splashViewModel.runtimeInitiated.value == true) goNext()
-    }
-
     private fun goNext() {
         if (isNavigationRequested) return
         isNavigationRequested = true
-        animationFallback?.cancel()
-        viewBinding.animationView.removeUpdateListener(animatorUpdateListener)
         // A recreated screen whose start the early route already decided: nothing to route, no progress screen.
         if (splashViewModel.isStartDecided) return
         splashViewModel.nextScreen()
@@ -411,10 +373,12 @@ class WalletStartupActivity : AppCompatActivity() {
 
     private fun isSafeModeVisible(): Boolean = safeModeViewModel.state.value.visible
 
+    /** The launch scene and its light page give way to what this screen shows in the theme's own colours. */
     private fun hideStartAnimation() {
-        animationFallback?.cancel()
-        viewBinding.animationView.cancelAnimation()
-        viewBinding.animationView.visibility = View.GONE
+        TenmonFlight.end(viewBinding.launchScene)
+        viewBinding.launchScene.visibility = View.GONE
+        viewBinding.splashContainer.background = null
+        showLaunchPageBars(false)
         viewBinding.loadingDisclaimerTextView.visibility = View.GONE
         viewBinding.loadingProgressBar.visibility = View.GONE
     }
@@ -579,7 +543,6 @@ class WalletStartupActivity : AppCompatActivity() {
 
     private companion object {
         const val FINISH_TICK_MILLIS = 300L
-        const val ANIMATION_FALLBACK_MILLIS = 4_000L
         const val STATE_OPENED_FOR_RETRY = "safeModeOpenedForRetry"
         const val STATE_SPLASH_BOUND = "safeModeSplashBound"
     }
