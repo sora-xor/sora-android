@@ -19,6 +19,7 @@ limitations under the License.
 
 package jp.co.soramitsu.sora.baselineprofile
 
+import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.os.SystemClock
 import java.security.MessageDigest
@@ -84,7 +85,9 @@ internal object SoraJourney {
     /**
      * Refuses to touch an install that is not the benchmark build: the journeys clear app data and type a test PIN,
      * which must never reach a wallet someone uses. A store install has another signer (and the test-key build cannot
-     * be installed over it), so its data is never cleared and its PIN attempts are never spent.
+     * be installed over it), so its data is never cleared and its PIN attempts are never spent. A debug build is
+     * signed with the same test key but may hold a developer's or tester's own wallet: debuggable installs are
+     * refused too (the benchmark and non-minified release builds are not debuggable).
      */
     fun requireTestKeyInstall() {
         val context = InstrumentationRegistry.getInstrumentation().context
@@ -99,6 +102,12 @@ internal object SoraJourney {
         assertTrue(
             "Refusing to clear or unlock $PACKAGE_NAME: it is not signed with the repository's test key ($signers)",
             signers == listOf(TEST_KEY_SHA256),
+        )
+        val debuggable = (info.applicationInfo?.flags ?: ApplicationInfo.FLAG_DEBUGGABLE) and
+            ApplicationInfo.FLAG_DEBUGGABLE != 0
+        assertTrue(
+            "Refusing to clear or unlock $PACKAGE_NAME: it is a debuggable build, not a benchmark build",
+            !debuggable,
         )
     }
 
