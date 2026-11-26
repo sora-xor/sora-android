@@ -8,6 +8,7 @@ import jp.co.soramitsu.common.ethereum.EthHex
 import jp.co.soramitsu.common.hashi.EthCallRevertedException
 import jp.co.soramitsu.common.hashi.EthLog
 import jp.co.soramitsu.common.hashi.EthReceipt
+import jp.co.soramitsu.common.hashi.EthTransactionLookup
 import jp.co.soramitsu.common.hashi.HashiApprovedRequest
 import jp.co.soramitsu.common.hashi.HashiAssetKind
 import jp.co.soramitsu.common.hashi.HashiAvailability
@@ -149,6 +150,15 @@ internal class FakeEthereum : HashiEthereumGateway {
     }
     override suspend fun receipt(hash: ByteArray) = receipts[EthHex.encode(hash)]
 
+    /** Hashes another endpoint still has pending (not mined). */
+    val pendingElsewhere = mutableSetOf<String>()
+
+    override suspend fun lookupEverywhere(hash: ByteArray): EthTransactionLookup {
+        val key = EthHex.encode(hash)
+        receipts[key]?.let { return EthTransactionLookup.Mined(it.status) }
+        return if (key in pendingElsewhere) EthTransactionLookup.Pending else EthTransactionLookup.Unknown
+    }
+
     fun used(contract: ByteArray, txHash: ByteArray) {
         used += EthHex.encode(contract) + EthHex.encode(txHash)
     }
@@ -210,6 +220,7 @@ internal class InMemoryStore : HashiTransferStore {
     override fun observe(wallet: String): Flow<List<HashiTransferRecord>> = state.map { all -> all.values.filter { it.wallet == wallet } }
     override suspend fun get(wallet: String, id: String) = state.value[id]?.takeIf { it.wallet == wallet }
     override suspend fun openTransfers() = state.value.values.filterNot { it.state.isFinal }
+    override suspend fun allTransfers() = state.value.values.toList()
     override suspend fun put(record: HashiTransferRecord) {
         history += record
         state.value = state.value + (record.id to record)

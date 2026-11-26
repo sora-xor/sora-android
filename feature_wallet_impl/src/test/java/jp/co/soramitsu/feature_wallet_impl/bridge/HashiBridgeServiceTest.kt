@@ -381,6 +381,76 @@ class HashiBridgeServiceTest {
     }
 
     @Test
+    fun `a refused claim is signed again at the same nonce while that nonce is still free`() = runBlocking {
+        val record = readyToClaim()
+        ethereum.failNextSends(HashiRpcErrorException(-32000, "insufficient funds for gas * price + value", null))
+        val failed = service.sendClaim(testAccount, record.id, service.quoteClaim(testAccount, record.id))
+        assertEquals(HashiTransferState.ETHEREUM_STEP_FAILED, failed.state)
+        // Ether topped up from elsewhere: the account's nonce did not move.
+        ethereum.sendFailure = null
+        val retried = service.retryEthereumStep(testAccount, record.id)
+        val claims = retried.ethSteps.filter { it.intent == HashiEthIntent.CLAIM }
+        assertEquals(listOf("5"), claims.map { it.nonce })
+        assertEquals(HashiEthStepState.BROADCAST, claims.single().state)
+        assertEquals(HashiTransferState.CLAIM_SUBMITTED, retried.state)
+    }
+
+    @Test
+    fun `an attempt still pending on another endpoint is watched again instead of being signed anew`() = runBlocking {
+        val record = readyToClaim()
+        val sent = service.sendClaim(testAccount, record.id, service.quoteClaim(testAccount, record.id))
+        val step = sent.step(HashiEthIntent.CLAIM)!!
+        ethereum.latestNonce = BigInteger.valueOf(6)
+        service.refresh(testAccount, record.id)
+        clock += 11 * 60_000
+        assertEquals(HashiEthStepState.REPLACED, service.refresh(testAccount, record.id)!!.step(HashiEthIntent.CLAIM)!!.state)
+        ethereum.pendingElsewhere += step.latest.hash
+        val derivations = accounts.derivations
+        val refusal = runCatching { service.retryEthereumStep(testAccount, record.id) }.exceptionOrNull() as? HashiRefusal
+        assertEquals(HashiRefusal.Reason.NOT_READY, refusal?.reason)
+        assertEquals(derivations, accounts.derivations)
+        val reopened = service.transfer(testAccount.substrateAddress, record.id)!!
+        assertEquals(HashiEthStepState.BROADCAST, reopened.step(HashiEthIntent.CLAIM)!!.state)
+        assertEquals(HashiTransferState.CLAIM_SUBMITTED, reopened.state)
+    }
+
+    @Test
+    fun `a refused speed-up keeps the step open and the earlier bytes are the ones sent again`() = runBlocking {
+        val record = readyToClaim()
+        val first = service.sendClaim(testAccount, record.id, service.quoteClaim(testAccount, record.id)).step(HashiEthIntent.CLAIM)!!
+        ethereum.failNextSends(HashiRpcErrorException(-32000, "replacement transaction underpriced", null))
+        val refusal = runCatching { service.speedUp(testAccount, record.id) }.exceptionOrNull() as? HashiRefusal
+        assertEquals(HashiRefusal.Reason.CALL_REVERTED, refusal?.reason)
+        val step = service.transfer(testAccount.substrateAddress, record.id)!!.step(HashiEthIntent.CLAIM)!!
+        assertEquals(listOf(first.latest.hash), step.attempts.map { it.hash })
+        assertTrue(step.state.isOpen)
+        ethereum.sendFailure = null
+        ethereum.confirm(first.latest.hash, listOf(Logs.withdrawal(requestHash)))
+        assertEquals(HashiTransferState.DONE, service.refresh(testAccount, record.id)!!.state)
+    }
+
+    @Test
+    fun `a deposit whose nonce another transaction took is never signed again`() = runBlocking {
+        ethereum.allowance = BigInteger.valueOf(1_000_000)
+        val record = service.startIncoming(testAccount, service.quoteIncoming(testAccount, USDT_ID, BigDecimal.ONE), "USDT")
+        // startIncoming waits for the deposit's receipt; none comes and the nonce is used.
+        ethereum.latestNonce = BigInteger.valueOf(6)
+        service.refresh(testAccount, record.id)
+        clock += 11 * 60_000
+        val replaced = service.refresh(testAccount, record.id)!!
+        assertEquals(HashiTransferState.ETHEREUM_STEP_FAILED, replaced.state)
+        assertEquals(HashiFailure.DEPOSIT_UNCONFIRMED, replaced.failure)
+        val derivations = accounts.derivations
+        val sent = ethereum.sent.size
+        val refusal = runCatching { service.retryEthereumStep(testAccount, record.id) }.exceptionOrNull() as? HashiRefusal
+        assertEquals(HashiRefusal.Reason.NOT_READY, refusal?.reason)
+        val continued = runCatching { service.continueIncoming(testAccount, record.id, waitForConfirmation = false) }.exceptionOrNull() as? HashiRefusal
+        assertEquals(HashiRefusal.Reason.NOT_READY, continued?.reason)
+        assertEquals(derivations, accounts.derivations)
+        assertEquals(sent, ethereum.sent.size)
+    }
+
+    @Test
     fun `a nonce taken by another transaction marks the step replaced, ours are looked up first`() = runBlocking {
         val record = readyToClaim()
         val sent = service.sendClaim(testAccount, record.id, service.quoteClaim(testAccount, record.id))

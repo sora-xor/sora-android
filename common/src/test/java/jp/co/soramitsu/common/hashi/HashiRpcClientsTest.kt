@@ -115,6 +115,55 @@ class HashiRpcClientsTest {
     }
 
     @Test
+    fun `a refusal after an earlier endpoint took the transaction without answering is unknown, not a refusal`() = runBlocking {
+        val hash = ByteArray(32) { 9 }
+        var second: Any = RpcError(-32000, "replacement transaction underpriced")
+        val transport = Scripted { endpoint, method, _ ->
+            when {
+                method == "eth_chainId" -> "0x1"
+                endpoint.contains("a.") -> IOException("timeout after the request was sent")
+                else -> second
+            }
+        }
+        val client = EthereumRpcClient(transport, endpoints)
+        assertTrue(runCatching { client.sendRawTransaction(byteArrayOf(2), hash) }.exceptionOrNull() is HashiRpcUnavailableException)
+        second = RpcError(-32000, "nonce too low")
+        assertTrue(runCatching { client.sendRawTransaction(byteArrayOf(2), hash) }.exceptionOrNull() is HashiRpcUnavailableException)
+        // "Already known" is still the node holding these very bytes.
+        second = RpcError(-32000, "already known")
+        assertArrayEquals(hash, client.sendRawTransaction(byteArrayOf(2), hash))
+        // Reads are not affected: a final answer stays final.
+        second = RpcError(3, "execution reverted")
+        assertTrue(runCatching { client.estimateGas(ByteArray(20), ByteArray(20), ByteArray(4)) }.exceptionOrNull() is EthCallRevertedException)
+    }
+
+    @Test
+    fun `a transaction is absent only when at least two endpoints answer and none has it`() = runBlocking {
+        val hash = ByteArray(32) { 7 }
+        var a: (String) -> Any? = { null }
+        var b: (String) -> Any? = { null }
+        val transport = Scripted { endpoint, method, _ ->
+            when {
+                method == "eth_chainId" -> "0x1"
+                endpoint.contains("a.") -> a(method)
+                else -> b(method)
+            }
+        }
+        val client = EthereumRpcClient(transport, endpoints)
+        assertEquals(EthTransactionLookup.Unknown, client.lookupEverywhere(hash))
+        // One endpoint down: not enough answers to call it absent.
+        a = { IOException("down") }
+        assertTrue(runCatching { client.lookupEverywhere(hash) }.exceptionOrNull() is HashiRpcUnavailableException)
+        // The lagging one has nothing, the other has it mined.
+        a = { null }
+        b = { method -> if (method == "eth_getTransactionReceipt") buildJsonObject { put("status", "0x1"); put("blockNumber", "0x10"); put("logs", JsonArray(emptyList())) } else null }
+        assertEquals(EthTransactionLookup.Mined(1), client.lookupEverywhere(hash))
+        // Pending somewhere.
+        b = { method -> if (method == "eth_getTransactionByHash") buildJsonObject { put("hash", EthHex.encode(hash)) } else null }
+        assertEquals(EthTransactionLookup.Pending, client.lookupEverywhere(hash))
+    }
+
+    @Test
     fun `a transaction the node already has keeps its own hash, another hash is refused`() = runBlocking {
         val hash = ByteArray(32) { 9 }
         var reply: Any = RpcError(-32000, "already known")
