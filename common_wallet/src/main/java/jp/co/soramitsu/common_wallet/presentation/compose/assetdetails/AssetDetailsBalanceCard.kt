@@ -86,6 +86,8 @@ fun AssetDetailsBalanceCard(
     onBalanceClick: (() -> Unit)?,
     readOnly: Boolean = rememberWalletReadOnly() || LocalSelectedAccountReadOnly.current,
     swapAvailable: Boolean = true,
+    /** The HASHI bridge for an asset registered on it (SORA network only); null hides the action. */
+    onBridgeClick: (() -> Unit)? = null,
     receiveText: String = stringResource(id = R.string.common_receive),
     balanceTitle: String = stringResource(R.string.asset_details_liquid_balance),
     notes: @Composable ColumnScope.() -> Unit = {},
@@ -216,6 +218,15 @@ fun AssetDetailsBalanceCard(
                         enabled = !readOnly,
                         ownColors = true,
                         onClick = onSwapClick,
+                    )
+                }
+                if (onBridgeClick != null) {
+                    AmountCardIcon(
+                        res = R.drawable.ic_hashi_bridge_24,
+                        text = stringResource(id = R.string.hashi_bridge_action),
+                        // The bridge signs transfers: off in read-only mode, like Send and Swap.
+                        enabled = !readOnly,
+                        onClick = onBridgeClick,
                     )
                 }
             }

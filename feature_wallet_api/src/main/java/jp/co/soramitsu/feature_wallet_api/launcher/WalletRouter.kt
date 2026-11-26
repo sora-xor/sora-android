@@ -37,4 +37,10 @@ interface WalletRouter {
     fun openQrCodeFlow(shouldNavigateToScannerDirectly: Boolean = false)
 
     fun openEditCardsHub()
+
+    /** The HASHI bridge screen, with [assetId] chosen, or with the token picker when null. */
+    fun openHashiBridge(assetId: String? = null)
+
+    /** The progress page of one bridge transfer. */
+    fun openHashiBridgeTransfer(transferId: String)
 }

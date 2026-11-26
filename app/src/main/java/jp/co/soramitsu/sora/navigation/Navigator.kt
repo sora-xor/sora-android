@@ -59,6 +59,8 @@ import jp.co.soramitsu.feature_select_node_impl.presentation.nodeAddress
 import jp.co.soramitsu.feature_select_node_impl.presentation.nodeName
 import jp.co.soramitsu.feature_select_node_impl.presentation.pinCodeChecked
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
+import jp.co.soramitsu.feature_wallet_impl.presentation.bridge.HashiBridgeFragment
+import jp.co.soramitsu.feature_wallet_impl.presentation.bridge.HashiTransferFragment
 import jp.co.soramitsu.sora.R
 
 class Navigator :
@@ -230,6 +232,19 @@ class Navigator :
             R.id.liquidityRemoveFragment,
             LiquidityRemoveFragment.createBundle(ids),
         )
+    }
+
+    override fun openHashiBridge(assetId: String?) {
+        navController?.navigate(R.id.hashiBridgeFragment, HashiBridgeFragment.createBundle(assetId))
+    }
+
+    override fun openHashiBridgeTransfer(transferId: String) {
+        val navController = navController ?: return
+        // A transfer opened from the form replaces the form: Back returns to where the bridge was opened.
+        val options = NavOptions.Builder()
+            .setPopUpTo(R.id.hashiTransferFragment, true)
+            .build()
+        navController.navigate(R.id.hashiTransferFragment, HashiTransferFragment.createBundle(transferId), options)
     }
 
     override fun openQrCodeFlow(shouldNavigateToScannerDirectly: Boolean) {

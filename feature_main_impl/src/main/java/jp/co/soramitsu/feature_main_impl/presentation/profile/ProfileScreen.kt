@@ -37,6 +37,7 @@ internal fun ProfileItems(
     state: ProfileScreenState,
     onAccountsClick: () -> Unit,
     onPolkamarktClick: () -> Unit,
+    onHashiBridgeClick: () -> Unit = {},
     onNodeClick: () -> Unit,
     onAppSettingsClick: () -> Unit,
     onLoginClick: () -> Unit,
@@ -63,6 +64,17 @@ internal fun ProfileItems(
             subtitle = stringResource(id = R.string.polkamarkt_subtitle),
             icon = R.drawable.ic_settings_buy_crypto,
             onClick = onPolkamarktClick,
+        )
+    }
+    if (state.hashiBridgeVisible) {
+        CategoryItem(
+            modifier = Modifier
+                .testTagAsId("HashiBridge")
+                .padding(top = Dimens.x2),
+            title = stringResource(id = R.string.hashi_bridge_title),
+            subtitle = stringResource(id = R.string.hashi_bridge_more_subtitle),
+            icon = R.drawable.ic_hashi_bridge_24,
+            onClick = onHashiBridgeClick,
         )
     }
     CategoryItem(

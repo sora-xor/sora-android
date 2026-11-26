@@ -48,6 +48,8 @@ internal data class AssetCardStateData(
     val events: List<EventUiModel>,
     /** Names the XOR that is free on the chain and locked; null when nothing is locked. */
     val lockedNote: String? = null,
+    /** The asset is registered on the HASHI bridge: the Bridge action is shown. */
+    val bridgeAvailable: Boolean = false,
 )
 
 internal val emptyAssetCardState = AssetCardStateData(

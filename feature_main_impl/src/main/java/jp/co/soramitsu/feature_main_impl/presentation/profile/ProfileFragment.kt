@@ -84,6 +84,7 @@ class ProfileFragment : SoraBaseFragment<ProfileViewModel>() {
                     state = state,
                     onAccountsClick = viewModel::showAccountList,
                     onPolkamarktClick = viewModel::showPolkamarkt,
+                    onHashiBridgeClick = viewModel::showHashiBridge,
                     onNodeClick = viewModel::showSelectNode,
                     onAppSettingsClick = viewModel::showAppSettings,
                     onLoginClick = viewModel::showLogin,

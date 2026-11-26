@@ -82,6 +82,7 @@ class AssetDetailsFragment : SoraBaseFragment<AssetDetailsViewModel>() {
                     onRecentClick = viewModel::onRecentClick,
                     onHistoryItemClick = viewModel::onHistoryItemClick,
                     onAssetIdClick = viewModel::onAssetIdClick,
+                    onBridgeClick = viewModel::bridgeClicked,
                 )
             }
         }

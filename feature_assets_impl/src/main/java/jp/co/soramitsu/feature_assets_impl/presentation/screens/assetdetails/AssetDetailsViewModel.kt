@@ -57,6 +57,7 @@ import jp.co.soramitsu.feature_assets_impl.presentation.states.emptyAssetCardSta
 import jp.co.soramitsu.feature_blockexplorer_api.domain.TransactionHistoryHandler
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsInteractor
 import jp.co.soramitsu.feature_polkaswap_api.launcher.PolkaswapRouter
+import jp.co.soramitsu.feature_wallet_api.domain.interfaces.HashiBridgeAssets
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import kotlinx.coroutines.CancellationException
@@ -80,6 +81,7 @@ class AssetDetailsViewModel @AssistedInject constructor(
     private val transactionHistoryHandler: TransactionHistoryHandler,
     private val resourceManager: ResourceManager,
     private val coroutineManager: CoroutineManager,
+    private val hashiBridgeAssets: HashiBridgeAssets,
 ) : BaseViewModel() {
 
     @AssistedFactory
@@ -126,6 +128,13 @@ class AssetDetailsViewModel @AssistedInject constructor(
             .onEach { refreshActivities() }
             .launchIn(viewModelScope)
         onPullToRefresh()
+        if (hashiBridgeAssets.supported) {
+            viewModelScope.launch {
+                // This page is the SORA network's asset page; Nexus and Taira have their own.
+                val registered = hashiBridgeAssets.isRegistered(assetId)
+                state = state.copy(state = state.state.copy(bridgeAvailable = registered))
+            }
+        }
     }
 
     private fun getBalance() {
@@ -260,6 +269,10 @@ class AssetDetailsViewModel @AssistedInject constructor(
 
     fun receiveClicked() {
         walletRouter.openQrCodeFlow()
+    }
+
+    fun bridgeClicked() {
+        walletRouter.openHashiBridge(assetId)
     }
 
     fun onPoolClick(ids: StringPair) {

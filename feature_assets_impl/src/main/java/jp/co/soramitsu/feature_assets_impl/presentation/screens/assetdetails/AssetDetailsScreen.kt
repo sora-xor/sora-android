@@ -58,6 +58,7 @@ internal fun AssetDetailsScreen(
     onRecentClick: () -> Unit,
     onHistoryItemClick: (String) -> Unit,
     onAssetIdClick: () -> Unit,
+    onBridgeClick: () -> Unit = {},
 ) {
     if (stateData.xorBalance != null) {
         XorBalancesDialog(
@@ -90,6 +91,7 @@ internal fun AssetDetailsScreen(
             onReceiveClick = onReceiveClick,
             onSwapClick = onSwapClick,
             onBalanceClick = onBalanceClick,
+            onBridgeClick = if (stateData.bridgeAvailable) onBridgeClick else null,
         )
         if (stateData.poolsState.pools.isNotEmpty()) {
             Spacer(modifier = Modifier.size(Dimens.x2))

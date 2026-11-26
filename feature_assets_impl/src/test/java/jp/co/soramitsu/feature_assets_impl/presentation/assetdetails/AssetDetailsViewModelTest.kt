@@ -106,6 +106,7 @@ class AssetDetailsViewModelTest {
             transactionHistoryHandler = historyHandler,
             resourceManager = resourceManager,
             coroutineManager = coroutineManager,
+            hashiBridgeAssets = mockk(relaxed = true),
         )
     }
 
