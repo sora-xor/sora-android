@@ -23,6 +23,7 @@ import android.content.ActivityNotFoundException
 import android.content.ClipData
 import android.content.Intent
 import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.net.Uri
 import android.os.Build
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
@@ -116,6 +117,7 @@ class WalletStartupActivity : AppCompatActivity() {
         installSplashScreen()
         super.onCreate(savedInstanceState)
         setContentView(ActivitySplashBinding.inflate(layoutInflater).also { viewBinding = it }.root)
+        showLaunchPage(true)
         // The launch page runs under the bars, as the first screen does, so the launch scene
         // stands in the same place on both.
         WindowCompat.setDecorFitsSystemWindows(window, false)
@@ -173,6 +175,24 @@ class WalletStartupActivity : AppCompatActivity() {
             )
         } else {
             showRecovery(startupFailure.code)
+        }
+    }
+
+    /**
+     * The window's own page: the light launch page under the launch scene, as in the launch window before it, and
+     * the theme's page under everything else this screen shows. It is the window's one background, not a second
+     * page painted over the theme's.
+     */
+    private fun showLaunchPage(launchPage: Boolean) {
+        if (launchPage) {
+            window.setBackgroundDrawable(ColorDrawable(ContextCompat.getColor(this, R.color.launch_page)))
+            return
+        }
+        val themed = obtainStyledAttributes(intArrayOf(android.R.attr.windowBackground))
+        try {
+            window.setBackgroundDrawable(themed.getDrawable(0))
+        } finally {
+            themed.recycle()
         }
     }
 
@@ -377,7 +397,7 @@ class WalletStartupActivity : AppCompatActivity() {
     private fun hideStartAnimation() {
         TenmonFlight.end(viewBinding.launchScene)
         viewBinding.launchScene.visibility = View.GONE
-        viewBinding.splashContainer.background = null
+        showLaunchPage(false)
         showLaunchPageBars(false)
         viewBinding.loadingDisclaimerTextView.visibility = View.GONE
         viewBinding.loadingProgressBar.visibility = View.GONE

@@ -7,6 +7,7 @@ import android.app.Instrumentation
 import android.content.Intent
 import android.content.IntentFilter
 import android.graphics.drawable.ColorDrawable
+import android.graphics.drawable.InsetDrawable
 import android.provider.Settings
 import android.view.View
 import android.view.ViewGroup
@@ -153,6 +154,12 @@ class SplashActivityFlowTest {
     private fun panel() = RecoveryPanels.model(WalletRecoveryOptions.forState("FIXTURE_RECOVERY", false,
         RecoveryFacts(hasWalletFiles = true)), false, false)
 
+    /** The colour of the window's own background (Android may inset it for the bars). */
+    private fun windowPage(activity: Activity): Int {
+        val background = activity.window.decorView.background
+        return (((background as? InsetDrawable)?.drawable ?: background) as ColorDrawable).color
+    }
+
     @Test fun startupShowsTheLaunchSceneAndNeverWaitsForIt() {
         // Readiness is observed before the main loop is yielded: the checks go on the moment the
         // wallet is ready, whatever the launch scene has or has not drawn by then.
@@ -164,7 +171,8 @@ class SplashActivityFlowTest {
             val scene = activity.findViewById<ViewGroup>(R.id.launchScene)
             assertEquals(View.VISIBLE, scene.visibility)
             assertEquals("the launch scene fills its host", 1, scene.childCount)
-            assertEquals(TenmonFlight.PAGE, (activity.findViewById<View>(R.id.splashContainer).background as ColorDrawable).color)
+            assertEquals("the launch page is the window's own", TenmonFlight.PAGE, windowPage(activity))
+            assertNull("and nothing is painted over it", activity.findViewById<View>(R.id.splashContainer).background)
         }
         verify(exactly = 1) { splashModel.nextScreen() }
         instrumentation.runOnMainSync { runtimeReady.value = true }
@@ -306,7 +314,11 @@ class SplashActivityFlowTest {
             val scene = activity.findViewById<ViewGroup>(R.id.launchScene)
             assertEquals(View.GONE, scene.visibility)
             assertEquals("the launch scene is taken out", 0, scene.childCount)
-            assertNull("the theme's own page shows under the panel", activity.findViewById<View>(R.id.splashContainer).background)
+            val themed = activity.obtainStyledAttributes(intArrayOf(android.R.attr.windowBackground))
+            val themePage = themed.getColor(0, 0)
+            themed.recycle()
+            assertEquals("the theme's own page shows under the panel", themePage, windowPage(activity))
+            assertNull(activity.findViewById<View>(R.id.splashContainer).background)
             assertFalse(TenmonFlight.isPlaying)
             assertTrue("the first screen after the panel still keeps itself covered until it is ready", TenmonFlight.carriesOn)
             assertEquals(View.GONE, activity.findViewById<View>(R.id.loadingProgressBar).visibility)
