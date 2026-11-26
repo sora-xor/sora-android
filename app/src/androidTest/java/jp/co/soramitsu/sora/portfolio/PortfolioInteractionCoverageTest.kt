@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -17,6 +18,7 @@ import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.domain.AssetHolder
 import jp.co.soramitsu.common.nexus.WalletNetworkId
 import jp.co.soramitsu.common.presentation.compose.theme.SoraAppTheme
+import jp.co.soramitsu.common.presentation.compose.theme.neon.LocalFx
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.*
 import jp.co.soramitsu.feature_wallet_impl.presentation.portfolio.*
@@ -66,7 +68,14 @@ class PortfolioInteractionCoverageTest {
     private fun text(id: Int, vararg args: Any) = compose.activity.getString(id, *args)
     private fun node(id: Int) = compose.onNodeWithText(text(id))
     private fun show(content: @Composable () -> Unit) {
-        compose.setContent { SoraAppTheme { content() } }
+        // What the screens say and do is tested here, not how they move (PortfolioSkyMotionTest does that on a test
+        // clock). On a phone that plays the lit motion (the full tier, animations on) the hero's comet never rests,
+        // so Compose would never be idle and every test that shows the hero would time out in setContent.
+        compose.setContent {
+            SoraAppTheme {
+                CompositionLocalProvider(LocalFx provides LocalFx.current.copy(reduceMotion = true)) { content() }
+            }
+        }
     }
     private fun sheet(model: PortfolioModel, sheet: PortfolioSheet, busy: Boolean = false) = show {
         PortfolioSheetHost(model, sheet, PortfolioFormat(NumbersFormatter(), "$"), busy, actions)
@@ -182,8 +191,10 @@ class PortfolioInteractionCoverageTest {
         } }
         node(R.string.portfolio_route_test).assertExists()
         node(R.string.network_tag_testnet).assertExists()
-        // The total is a dash; the row shows the amount alone, as for every testnet holding.
-        compose.onAllNodesWithText(PortfolioFormat.NO_VALUE).onFirst().assertExists()
+        // The total is a dash, read out as the reason there is none.
+        compose.onNode(hasContentDescription(text(R.string.portfolio_route_test), substring = true)).assertExists()
+        // The row shows the amount alone, as for every testnet holding: no dash anywhere a figure is read.
+        compose.onNodeWithText(PortfolioFormat.NO_VALUE).assertDoesNotExist()
         compose.onNodeWithText(format.amount(BigDecimal("1000"), "XOR")).performScrollTo().assertIsDisplayed()
         compose.onNodeWithText("$0", substring = true).assertDoesNotExist()
     }
