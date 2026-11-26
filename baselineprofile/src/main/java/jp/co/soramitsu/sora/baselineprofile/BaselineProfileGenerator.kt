@@ -19,65 +19,88 @@ limitations under the License.
 
 package jp.co.soramitsu.sora.baselineprofile
 
-import android.os.SystemClock
 import androidx.benchmark.macro.junit4.BaselineProfileRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.uiautomator.By
-import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.Until
+import jp.co.soramitsu.sora.baselineprofile.SoraJourney.ONBOARDING_ACTIVITY
+import jp.co.soramitsu.sora.baselineprofile.SoraJourney.PACKAGE_NAME
+import jp.co.soramitsu.sora.baselineprofile.SoraJourney.STARTUP_TIMEOUT
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
+/**
+ * Collects the profile from the ways people really open and use SORA. Nearly every start is an existing wallet:
+ * launch, PIN, the Wallet home. A fresh install's way to onboarding is kept as well. Each test sets up the state it
+ * needs itself, so they run in any order.
+ */
 @RunWith(AndroidJUnit4::class)
 class BaselineProfileGenerator {
 
     @get:Rule
     val baselineProfileRule = BaselineProfileRule()
 
+    /** A fresh install: launch through the startup checks to onboarding. */
     @Test
-    fun startup() = baselineProfileRule.collect(
-        packageName = PACKAGE_NAME,
-        includeInStartupProfile = true,
-    ) {
-        pressHome()
-        startActivityAndWait()
-        // Keep collecting through Splash's asynchronous Room open and wallet migration. This is
-        // a production-shaped fresh install, whose expected destination is onboarding.
-        assertTrue(
-            "Splash did not complete while collecting the startup profile",
-            device.wait(
-                Until.gone(By.res(PACKAGE_NAME, "animation_view")),
-                STARTUP_TIMEOUT_MILLIS,
-            ),
-        )
-        assertFreshInstallReachedOnboarding(device)
-        device.waitForIdle()
+    fun startup() {
+        // Another test may have left a wallet: this one starts from nothing, like a fresh install.
+        SoraJourney.clearAppData(SoraJourney.instrumentationDevice())
+        baselineProfileRule.collect(
+            packageName = PACKAGE_NAME,
+            includeInStartupProfile = true,
+        ) {
+            pressHome()
+            startActivityAndWait()
+            // Keep collecting through Splash's asynchronous Room open and wallet migration. This is
+            // a production-shaped fresh install, whose expected destination is onboarding.
+            assertTrue(
+                "Splash did not complete while collecting the startup profile",
+                device.wait(
+                    Until.gone(By.res(PACKAGE_NAME, "animation_view")),
+                    STARTUP_TIMEOUT,
+                ),
+            )
+            assertTrue(
+                "Fresh install did not reach onboarding; a recovery route must not generate the profile",
+                SoraJourney.waitForActivity(device, ONBOARDING_ACTIVITY),
+            )
+            device.waitForIdle()
+        }
     }
 
-    private fun assertFreshInstallReachedOnboarding(device: UiDevice) {
-        assertTrue(
-            "Fresh install did not reach onboarding; a recovery route must not generate the profile",
-            waitForActivity(device, ONBOARDING_ACTIVITY),
-        )
+    /** An existing wallet: cold launch, PIN, the Wallet home with its balances. */
+    @Test
+    fun unlockExistingWallet() {
+        SoraJourney.ensureTestWallet(SoraJourney.instrumentationDevice())
+        baselineProfileRule.collect(
+            packageName = PACKAGE_NAME,
+            includeInStartupProfile = true,
+        ) {
+            // A cold start every time: a running wallet would open without its PIN.
+            killProcess()
+            pressHome()
+            startActivityAndWait()
+            SoraJourney.unlock(device)
+        }
     }
 
-    private fun waitForActivity(device: UiDevice, activityName: String): Boolean {
-        val deadline = SystemClock.uptimeMillis() + STARTUP_TIMEOUT_MILLIS
-        do {
-            val activityState = device.executeShellCommand("dumpsys activity activities")
-            if (activityState.contains(activityName)) return true
-            SystemClock.sleep(ACTIVITY_POLL_INTERVAL_MILLIS)
-        } while (SystemClock.uptimeMillis() < deadline)
-        return false
-    }
-
-    private companion object {
-        const val PACKAGE_NAME = "jp.co.soramitsu.sora"
-        const val ONBOARDING_ACTIVITY =
-            "jp.co.soramitsu.feature_multiaccount_impl.presentation.OnboardingActivity"
-        const val STARTUP_TIMEOUT_MILLIS = 30_000L
-        const val ACTIVITY_POLL_INTERVAL_MILLIS = 100L
+    /** On the home: scroll it, open a token and come back, switch tabs. Not part of the startup profile. */
+    @Test
+    fun useWalletHome() {
+        SoraJourney.ensureTestWallet(SoraJourney.instrumentationDevice())
+        baselineProfileRule.collect(
+            packageName = PACKAGE_NAME,
+            includeInStartupProfile = false,
+        ) {
+            killProcess()
+            pressHome()
+            startActivityAndWait()
+            SoraJourney.unlock(device)
+            SoraJourney.scrollHome(device)
+            assertTrue("The home's XOR row did not open its token page", SoraJourney.openTokenAndBack(device))
+            SoraJourney.switchTabs(device)
+        }
     }
 }
