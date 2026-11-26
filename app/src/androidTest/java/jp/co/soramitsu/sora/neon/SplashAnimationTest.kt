@@ -7,7 +7,10 @@ import android.content.res.Configuration
 import android.view.ContextThemeWrapper
 import android.util.TypedValue
 import android.os.Build
+import android.animation.ValueAnimator
 import android.app.Activity
+import android.app.Application
+import android.os.Bundle
 import android.graphics.Bitmap
 import android.graphics.HardwareRenderer
 import android.os.SystemClock
@@ -106,14 +109,39 @@ class SplashAnimationTest {
         inspect: ((LottieAnimationView, () -> Boolean) -> Unit)? = null,
     ): Long {
         val monitor = instrumentation.addMonitor(MainActivity::class.java.name, null, false)
+        // Where the startup screen plays nothing (Android 12 and later, or animations removed) a verified wallet is
+        // routed as soon as its checks answer, possibly before the scenario could reach the startup screen: its
+        // animation view is taken as the screen starts, before any route can be delivered.
+        var madeAnimation: LottieAnimationView? = null
+        val application = context.applicationContext as Application
+        val made = object : Application.ActivityLifecycleCallbacks {
+            override fun onActivityStarted(activity: Activity) {
+                if (activity !is SplashActivity || madeAnimation != null) return
+                madeAnimation = activity.findViewById<LottieAnimationView>(R.id.animation_view).also {
+                    if (pauseRenderer) it.pauseAnimation()
+                }
+            }
+            override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) = Unit
+            override fun onActivityResumed(activity: Activity) = Unit
+            override fun onActivityPaused(activity: Activity) = Unit
+            override fun onActivityStopped(activity: Activity) = Unit
+            override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) = Unit
+            override fun onActivityDestroyed(activity: Activity) = Unit
+        }
+        val early = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S || !ValueAnimator.areAnimatorsEnabled()
+        if (early) application.registerActivityLifecycleCallbacks(made)
         val start = SystemClock.elapsedRealtime()
         try {
             ActivityScenario.launch(SplashActivity::class.java).use { scenario ->
                 if (inspect != null || pauseRenderer) {
                     lateinit var animation: LottieAnimationView
-                    scenario.onActivity { activity ->
-                        animation = activity.findViewById(R.id.animation_view)
-                        if (pauseRenderer) animation.pauseAnimation()
+                    if (early) {
+                        animation = requireNotNull(madeAnimation) { "The startup screen was not made" }
+                    } else {
+                        scenario.onActivity { activity ->
+                            animation = activity.findViewById(R.id.animation_view)
+                            if (pauseRenderer) animation.pauseAnimation()
+                        }
                     }
                     inspect?.invoke(animation) { monitor.hits == 0 }
                 }
@@ -131,6 +159,7 @@ class SplashAnimationTest {
                 return elapsed
             }
         } finally {
+            if (early) application.unregisterActivityLifecycleCallbacks(made)
             instrumentation.removeMonitor(monitor)
         }
     }

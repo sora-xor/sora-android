@@ -167,6 +167,91 @@ class SplashActivityFlowTest {
         verify(exactly = 1) { splashModel.nextScreen() }
     }
 
+    // A start that plays no animation (Android 12 and later) asks once for the early route; the question it
+    // hands over says no while a recovery state is known.
+    @Test fun aStartThatPlaysNothingAsksForTheEarlyRouteAndRefusesItOverRecovery() {
+        Assume.assumeTrue(Build.VERSION.SDK_INT >= Build.VERSION_CODES.S)
+        val mayOpen = slot<() -> Boolean>()
+        every { splashModel.routeEarly(capture(mayOpen)) } just Runs
+        launch()
+        verify(exactly = 1) { splashModel.routeEarly(any()) }
+        assertTrue(mayOpen.captured())
+        every { WalletUpgradeBackup.blockingFailure() } returns WalletUpgradeBackup.Failure("FIXTURE_BLOCKED")
+        assertFalse(mayOpen.captured())
+        every { WalletUpgradeBackup.blockingFailure() } returns null
+        assertTrue(mayOpen.captured())
+        instrumentation.runOnMainSync { safe.value = SafeModeUiState(visible = true, panel = panel()) }
+        assertFalse(mayOpen.captured())
+    }
+    @Test fun anAnimatedStartNeverAsksForTheEarlyRoute() {
+        Assume.assumeTrue(Build.VERSION.SDK_INT < Build.VERSION_CODES.S && android.animation.ValueAnimator.areAnimatorsEnabled())
+        launch()
+        verify(exactly = 0) { splashModel.routeEarly(any()) }
+    }
+    @Test fun retryFromHomeNeverAsksForTheEarlyRoute() {
+        every { WalletUpgradeBackup.recoveryOptions() } returns WalletRecoveryOptions.forState("FIXTURE_RECOVERY", false, RecoveryFacts()); launch(retry = true)
+        verify(exactly = 0) { splashModel.routeEarly(any()) }
+    }
+    @Test fun aStartHeldAtRecoveryNeverAsksForTheEarlyRoute() {
+        every { WalletUpgradeBackup.startupFailureToShow(any()) } returns WalletUpgradeBackup.Failure("INSUFFICIENT_BACKUP_STORAGE")
+        launch()
+        verify(exactly = 0) { splashModel.routeEarly(any()) }
+    }
+    // A wallet opened before the usual moment is final: the usual moment neither routes again nor starts the
+    // progress screen's timer.
+    // The route is emitted before the screen starts (delivered at onStart), so a slow launch cannot reach the
+    // four-second animation fallback first.
+    @Test fun aWalletOpenedEarlyIsNotRoutedAgainAndShowsNoProgressScreen() {
+        afterActivityCreated = { activity ->
+            activity.mainStarter = mainStarter
+            activity.nodeManager = dagger.Lazy { node }
+            main.value = Unit
+        }
+        launch()
+        instrumentation.runOnMainSync { runtimeReady.value = true }; drainMainQueue()
+        verify(exactly = 1) { mainStarter.start(any()) }
+        verify(exactly = 0) { splashModel.nextScreen() }
+        Thread.sleep(SafeModeViewModel.SILENT_UPGRADE_MILLIS + 500)
+        verify(exactly = 0) { safeModel.showStartupProgress() }
+    }
+    @Test fun onboardingOpenedEarlyIsNotRoutedAgain() {
+        afterActivityCreated = { activity ->
+            activity.multiaccStarter = onboardingStarter
+            onboarding.value = OnboardingState.INITIAL
+        }
+        launch()
+        instrumentation.runOnMainSync { runtimeReady.value = true }; drainMainQueue()
+        verify(exactly = 1) { onboardingStarter.startOnboardingFlow(any()) }
+        verify(exactly = 0) { splashModel.nextScreen() }
+    }
+    // A screen recreated after the early route decided the start neither routes nor starts the progress timer.
+    @Test fun aStartAlreadyDecidedEarlyIsNotRoutedAgainByARecreatedScreen() {
+        Assume.assumeTrue(Build.VERSION.SDK_INT >= Build.VERSION_CODES.S)
+        every { splashModel.isStartDecided } returns true
+        afterActivityCreated = { runtimeReady.value = true }
+        launch()
+        verify(exactly = 0) { splashModel.nextScreen() }
+        Thread.sleep(SafeModeViewModel.SILENT_UPGRADE_MILLIS + 500)
+        verify(exactly = 0) { safeModel.showStartupProgress() }
+    }
+    // The wallet is routed while the screen is in the background: on return it opens once, with no progress screen.
+    @Test fun aRouteDecidedWhileStoppedOpensOnReturnWithoutTheProgressScreen() {
+        Assume.assumeTrue(Build.VERSION.SDK_INT >= Build.VERSION_CODES.S)
+        var nextScreenCalls = 0
+        every { splashModel.nextScreen() } answers { nextScreenCalls += 1 }
+        launch(); scenario!!.moveToState(Lifecycle.State.CREATED); drainMainQueue()
+        // A launch slow enough for the four-second fallback has already gone the usual way: nothing to check here.
+        Assume.assumeTrue(nextScreenCalls == 0)
+        // As the early route does: the start is decided, then the route is emitted.
+        every { splashModel.isStartDecided } returns true
+        instrumentation.runOnMainSync { main.value = Unit; runtimeReady.value = true }; drainMainQueue()
+        verify(exactly = 0) { mainStarter.start(any()) }
+        scenario!!.moveToState(Lifecycle.State.RESUMED); drainMainQueue()
+        verify(exactly = 1) { mainStarter.start(any()) }
+        Thread.sleep(SafeModeViewModel.SILENT_UPGRADE_MILLIS + 500)
+        verify(exactly = 0) { safeModel.showStartupProgress() }
+        assertEquals(0, nextScreenCalls)
+    }
     @Test fun publishedLauncherAliasStillStartsWalletVerification() {
         launch(legacyLauncher = true).onMainActivity { activity ->
             assertEquals(WalletStartupActivity::class.java, activity.javaClass)

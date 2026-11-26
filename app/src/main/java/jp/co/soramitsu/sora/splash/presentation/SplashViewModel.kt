@@ -35,7 +35,11 @@ import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
 import jp.co.soramitsu.sora.splash.domain.PendingRecoveryStartupScheduler
 import jp.co.soramitsu.sora.splash.domain.SplashInteractor
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -62,12 +66,16 @@ class SplashViewModel @Inject constructor(
     val showOnBoardingScreen = SingleLiveEvent<OnboardingState>()
     val showMigrationRecovery = SingleLiveEvent<WalletMigrationRecoveryUiState>()
 
+    /** The usual moment the start is decided ([runtimeInitiated]); before it the early route shows only a route. */
+    private val usualMoment = CompletableDeferred<Unit>()
+
     init {
         viewModelScope.launch {
             tryCatch {
                 delay(500)
                 _runtimeInitiated.value = true
             }
+            usualMoment.complete(Unit)
         }
         viewModelScope.launch {
             tryCatch {
@@ -78,6 +86,21 @@ class SplashViewModel @Inject constructor(
     }
 
     private var verificationStarted = false
+
+    /** The early route of a start that plays no animation ([routeEarly]); at most one per view model. */
+    private var earlyRoute: Job? = null
+
+    /** [nextScreen] has begun: from here on it alone decides the start. */
+    private var nextScreenStarted = false
+
+    /** The early route opened the wallet (or onboarding): the start is decided and is not routed again. */
+    private var routedEarly = false
+
+    /**
+     * The early route has decided this start: a recreated startup screen neither routes again nor starts the
+     * progress screen's timer.
+     */
+    val isStartDecided: Boolean get() = routedEarly
 
     /**
      * Starts the wallet verification of a normal app start (once per view model, so a recreated
@@ -91,7 +114,54 @@ class SplashViewModel @Inject constructor(
         interactor.startMigration()
     }
 
+    /**
+     * Android 12 and later (and Remove animations) play no animation on the startup screen, so the wallet need not
+     * wait for one: when the verification has passed and the routing reads answer at their first try, the wallet (or
+     * onboarding) opens at once. Everything else is left to [nextScreen] at its usual moment, with its usual retries,
+     * progress screen and recovery options: a verification that fails or has not finished, a busy disk or Keystore,
+     * an unexpected error, or [mayOpen] saying no (a recovery state the screen knows of). Before the usual moment
+     * nothing is shown from here but a successful route, and the verification is still awaited before it.
+     */
+    fun routeEarly(mayOpen: () -> Boolean) {
+        if (earlyRoute != null || nextScreenStarted) return
+        earlyRoute = viewModelScope.launch {
+            val route = try {
+                if (!interactor.getMigrationDoneAsync().await()) return@launch
+                // The reads run to their end even when nextScreen gives way to them: a read may finish a pending
+                // wallet deletion step, which is never cut short here.
+                withContext(NonCancellable) { decideRoute(readOnce = true) }
+            } catch (error: CancellationException) {
+                throw error
+            } catch (_: Throwable) {
+                // Left to nextScreen, which reads again and shows what it always showed.
+                return@launch
+            }
+            ensureActive()
+            if (nextScreenStarted || !mayOpen()) return@launch
+            // Nothing suspends from here to the route, so nextScreen cannot start in between.
+            routedEarly = true
+            try {
+                WalletDiagnostics.log(WalletDiagnostics.Breadcrumb.SPLASH_NAVIGATION)
+                pendingRecoveryStartupScheduler.scheduleAfterWalletMigration()
+                show(route)
+            } catch (error: CancellationException) {
+                throw error
+            } catch (error: Throwable) {
+                // As in nextScreen: startup never crashes into a loop. The recovery options appear no sooner than
+                // nextScreen could have shown them.
+                usualMoment.await()
+                showRecoveryAfterUnexpectedError("WALLET_VERIFICATION_FAILED", error)
+            }
+        }
+    }
+
     fun nextScreen() {
+        // The early route already opened the wallet: the start is not decided twice.
+        if (routedEarly) return
+        nextScreenStarted = true
+        // An early route still waiting for the verification or a read gives way: from here the start is exactly
+        // the usual one.
+        earlyRoute?.cancel()
         viewModelScope.launch {
             try {
                 val migrationDone = interactor.getMigrationDoneAsync().await()
@@ -120,21 +190,35 @@ class SplashViewModel @Inject constructor(
      */
     private suspend fun routeAfterVerifiedWallet() {
         pendingRecoveryStartupScheduler.scheduleAfterWalletMigration()
-        when (val state = readForRouting { interactor.getRegistrationState() }) {
-            OnboardingState.REGISTRATION_FINISHED -> {
-                if (readForRouting { interactor.hasExistingWallet() }) {
-                    showMainScreen.trigger()
-                } else {
-                    showOnBoardingScreen.value = OnboardingState.INITIAL
-                }
-            }
-            OnboardingState.INITIAL -> {
-                if (readForRouting { interactor.hasExistingWallet() }) {
-                    showMainScreen.trigger()
-                } else {
-                    showOnBoardingScreen.value = state
-                }
-            }
+        show(decideRoute(readOnce = false))
+    }
+
+    /** Where a verified wallet's start goes. */
+    private sealed interface Route {
+        data object Main : Route
+        data class Onboarding(val state: OnboardingState) : Route
+    }
+
+    /**
+     * Reads the registration state, then whether an account exists. [readOnce] reads each once and lets a failure
+     * through (the early route); otherwise each read is retried as [readForRouting] does.
+     */
+    private suspend fun decideRoute(readOnce: Boolean): Route {
+        val state = read(readOnce) { interactor.getRegistrationState() }
+        val hasAccount = read(readOnce) { interactor.hasExistingWallet() }
+        return when {
+            hasAccount -> Route.Main
+            state == OnboardingState.REGISTRATION_FINISHED -> Route.Onboarding(OnboardingState.INITIAL)
+            else -> Route.Onboarding(state)
+        }
+    }
+
+    private suspend fun <T> read(once: Boolean, read: suspend () -> T): T = if (once) read() else readForRouting(read)
+
+    private fun show(route: Route) {
+        when (route) {
+            Route.Main -> showMainScreen.trigger()
+            is Route.Onboarding -> showOnBoardingScreen.value = route.state
         }
     }
 

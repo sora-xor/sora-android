@@ -168,6 +168,13 @@ class WalletStartupActivity : AppCompatActivity() {
         if (startupFailure == null) {
             viewBinding.animationView.addAnimatorUpdateListener(animatorUpdateListener)
             if (shouldReduceSplashMotion()) {
+                // Nothing plays here, so nothing is waited for: a verified wallet whose routing reads answer at once
+                // opens now. Anything else takes the usual way below, at the usual time. (The check holds the
+                // recovery view model, never this screen.)
+                val safeMode = safeModeViewModel
+                splashViewModel.routeEarly(
+                    mayOpen = { !safeMode.state.value.visible && WalletUpgradeBackup.blockingFailure() == null },
+                )
                 finishSplashWithoutMotion()
             } else {
                 viewBinding.animationView.playAnimation()
@@ -212,6 +219,9 @@ class WalletStartupActivity : AppCompatActivity() {
             }
         }
         splashViewModel.showMainScreen.observe(this) {
+            // A route decided (early or not) is final: a later goNext neither routes again nor starts the progress
+            // screen's timer.
+            isNavigationRequested = true
             val backupFailure = WalletUpgradeBackup.blockingFailure()
             if (backupFailure == null) {
                 afterVerification {
@@ -225,6 +235,7 @@ class WalletStartupActivity : AppCompatActivity() {
             }
         }
         splashViewModel.showOnBoardingScreen.observe(this) {
+            isNavigationRequested = true
             afterVerification {
                 reportStartupReady()
                 multiaccStarter.startOnboardingFlow(this)
@@ -365,6 +376,8 @@ class WalletStartupActivity : AppCompatActivity() {
         isNavigationRequested = true
         animationFallback?.cancel()
         viewBinding.animationView.removeUpdateListener(animatorUpdateListener)
+        // A recreated screen whose start the early route already decided: nothing to route, no progress screen.
+        if (splashViewModel.isStartDecided) return
         splashViewModel.nextScreen()
         // U0: a verification that finishes within 1.5 s stays silent; after that the progress
         // screen shows its real phases (U1, or U5 when resuming an interrupted one).
