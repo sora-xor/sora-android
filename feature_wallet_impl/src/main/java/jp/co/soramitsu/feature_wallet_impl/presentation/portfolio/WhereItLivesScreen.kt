@@ -501,15 +501,15 @@ private fun TokenHeader(model: PortfolioModel, locations: TokenLocations, format
         )
         Spacer(Modifier.height(6.dp))
         FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text(
-                when {
-                    testnetOnly -> PortfolioFormat.NO_VALUE
-                    token.price == null -> stringResource(R.string.tx_outcome_quote_unavailable)
-                    else -> format.fiat(locations.countedFiat)
-                },
-                style = NeonType.amountM.copy(fontWeight = FontWeight.Normal),
-                color = n.textSecondary,
-            )
+            // The value stands under the amount only when there is one: on a testnet, or with no price, the amount
+            // stands alone, with no dash and no price note under it.
+            if (!testnetOnly && token.price != null) {
+                Text(
+                    format.fiat(locations.countedFiat),
+                    style = NeonType.amountM.copy(fontWeight = FontWeight.Normal),
+                    color = n.textSecondary,
+                )
+            }
             token.change24h?.takeIf { kotlin.math.abs(it) >= 0.0005 && !testnetOnly }?.let { change ->
                 val up = change > 0
                 Text(

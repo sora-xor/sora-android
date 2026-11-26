@@ -414,10 +414,20 @@ class PortfolioInteractionCoverageTest {
         val format = PortfolioFormat(NumbersFormatter(), "$")
         val model = model(holdings = listOf(source.copy(token = unpriced)))
         show { WhereItLivesScreen(model, unpriced.id, format, TiltState(), rememberScrollState(), actions) }
-        node(R.string.tx_outcome_quote_unavailable).assertExists()
+        // The amount stands alone at the head of the page too: no price note under it.
+        node(R.string.tx_outcome_quote_unavailable).assertDoesNotExist()
         compose.onNodeWithText(text(R.string.portfolio_share_of_all, format.share(0.0))).assertDoesNotExist()
         // The header's amount, the row's number, and the breakdown's total.
         compose.onAllNodesWithText(format.amount(source.total, unpriced.symbol)).assertCountEquals(3)
+    }
+
+    @Test fun aTestnetTokenShowsItsAmountAloneWithNoDashUnderIt() {
+        val format = PortfolioFormat(NumbersFormatter(), "$")
+        val model = model(holdings = listOf(testnet))
+        show { WhereItLivesScreen(model, xor.id, format, TiltState(), rememberScrollState(), actions) }
+        compose.onAllNodesWithText(format.amount(testnet.total, xor.symbol)).onFirst().assertExists()
+        compose.onNodeWithText(PortfolioFormat.NO_VALUE).assertDoesNotExist()
+        compose.onNodeWithText("$0", substring = true).assertDoesNotExist()
     }
 
     @Test fun aPricedTokenSaysItsShareOfTheTotal() {
