@@ -244,6 +244,7 @@ class PinCodeViewModel @Inject constructor(
                 PinCodeAction.CUSTOM_NODE,
                 PinCodeAction.SELECT_NODE,
                 PinCodeAction.GOOGLE_BACKUP,
+                PinCodeAction.CONFIRM_BRIDGE,
                 PinCodeAction.APPROVE_BIOMETRICS -> {
                     state = state.copy(
                         toolbarTitleString = resourceManager.getString(R.string.pincode_enter_pin_code),
@@ -698,6 +699,10 @@ class PinCodeViewModel @Inject constructor(
 
                 PinCodeAction.GOOGLE_BACKUP -> {
                     mainRouter.returnFromPinConfirmation(PinCodeAction.GOOGLE_BACKUP)
+                }
+
+                PinCodeAction.CONFIRM_BRIDGE -> {
+                    mainRouter.returnFromPinConfirmation(PinCodeAction.CONFIRM_BRIDGE)
                 }
 
                 PinCodeAction.APPROVE_BIOMETRICS -> {

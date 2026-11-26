@@ -45,6 +45,13 @@ enum class PinCodeAction {
      * approve them. The unlock itself never asks (update rule of 2026-11-09).
      */
     APPROVE_BIOMETRICS,
+
+    /**
+     * HASHI bridge: signing a SORA transfer to Ethereum, an Ethereum deposit, a claim or a speed-up.
+     * On success the PIN screen closes and hands [PIN_CONFIRMED_ACTION_KEY] back to the bridge
+     * screen that asked (MainRouter.returnFromPinConfirmation), like [GOOGLE_BACKUP].
+     */
+    CONFIRM_BRIDGE,
 }
 
 /**

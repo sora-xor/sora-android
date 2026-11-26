@@ -773,6 +773,32 @@ class PinCodeViewModelTest {
     }
 
     @Test
+    fun `the PIN for a HASHI bridge signature returns the confirmation to the bridge screen`() = runTest {
+        pinCodeViewModel.startAuth(PinCodeAction.CONFIRM_BRIDGE)
+        advanceUntilIdle()
+        assertEquals(false, pinCodeViewModel.state.isBiometricButtonVisible)
+
+        given(interactor.checkPin(anyString())).willReturn(true)
+        listOf("1", "2", "3", "4", "5", "6").forEach(pinCodeViewModel::pinCodeNumberClicked)
+        advanceUntilIdle()
+
+        verify(mainRouter).returnFromPinConfirmation(PinCodeAction.CONFIRM_BRIDGE)
+        verify(mainRouter, never()).popBackStack()
+    }
+
+    @Test
+    fun `a wrong PIN or biometrics alone never confirm a HASHI bridge signature`() = runTest {
+        pinCodeViewModel.startAuth(PinCodeAction.CONFIRM_BRIDGE)
+        advanceUntilIdle()
+        pinCodeViewModel.onAuthenticationSucceeded()
+        given(interactor.checkPin(anyString())).willReturn(false)
+        listOf("1", "2", "3", "4", "5", "6").forEach(pinCodeViewModel::pinCodeNumberClicked)
+        advanceUntilIdle()
+
+        verify(mainRouter, never()).returnFromPinConfirmation(PinCodeAction.CONFIRM_BRIDGE)
+    }
+
+    @Test
     fun `a wrong PIN for a Google backup confirms nothing`() = runTest {
         pinCodeViewModel.startAuth(PinCodeAction.GOOGLE_BACKUP)
         given(interactor.checkPin(anyString())).willReturn(false)
