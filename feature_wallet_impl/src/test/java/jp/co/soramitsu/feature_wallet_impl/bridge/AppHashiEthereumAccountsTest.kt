@@ -53,6 +53,16 @@ class AppHashiEthereumAccountsTest {
     }
 
     @Test
+    fun `no key is derived while the wallet's signing rule refuses (recovery mode, read-only account)`() = runBlocking {
+        val accounts = AppHashiEthereumAccounts(credentials, InMemoryStore(), signingRefusal = { "WALLET_RECOVERY_READ_ONLY" })
+        val refused = runCatching {
+            accounts.withPrivateKey(testAccount, TestEthAccount.ADDRESS) { error("must not run") }
+        }.exceptionOrNull()
+        assertEquals("WALLET_RECOVERY_READ_ONLY", refused?.message)
+        coVerify(exactly = 0) { credentials.retrieveBackupMaterial(any()) }
+    }
+
+    @Test
     fun `seed or JSON imports and watch-only accounts have no Ethereum account`() = runBlocking {
         coEvery { credentials.retrieveBackupMaterial(any()) } returns material(emptyList())
         assertNull(AppHashiEthereumAccounts(credentials, InMemoryStore()).address(testAccount))

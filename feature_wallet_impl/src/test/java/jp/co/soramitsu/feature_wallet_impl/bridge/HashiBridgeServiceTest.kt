@@ -331,7 +331,7 @@ class HashiBridgeServiceTest {
     @Test
     fun `a node that refuses the bytes ends the step and the claim may be sent again at a new nonce`() = runBlocking {
         val record = readyToClaim()
-        ethereum.failNextSends(HashiRpcErrorException(-32000, "nonce too low", null))
+        ethereum.failNextSends(HashiRpcErrorException(-32000, "insufficient funds for gas * price + value", null))
         val failed = service.sendClaim(testAccount, record.id, service.quoteClaim(testAccount, record.id))
         assertEquals(HashiTransferState.ETHEREUM_STEP_FAILED, failed.state)
         ethereum.sendFailure = null
@@ -344,6 +344,43 @@ class HashiBridgeServiceTest {
     }
 
     @Test
+    fun `nonce too low after a lost answer is not a refusal - the step stays watched and its receipt confirms it`() = runBlocking {
+        val record = readyToClaim()
+        // The first send reached a node but its answer was lost; the next endpoint says the
+        // nonce is used - by this very transaction.
+        ethereum.failNextSends(HashiRpcErrorException(-32000, "nonce too low: next nonce 6, tx nonce 5", null))
+        val sent = service.sendClaim(testAccount, record.id, service.quoteClaim(testAccount, record.id))
+        val step = sent.step(HashiEthIntent.CLAIM)!!
+        assertEquals(HashiTransferState.CLAIM_SUBMITTED, sent.state)
+        assertTrue(step.state.isOpen)
+        ethereum.sendFailure = null
+        ethereum.latestNonce = BigInteger.valueOf(6)
+        // Nothing can be signed again for it while it is open.
+        assertEquals(HashiRefusal.Reason.NOT_READY, runCatching { service.quoteClaim(testAccount, record.id) }.exceptionOrNull().let { (it as? HashiRefusal)?.reason })
+        ethereum.confirm(step.latest.hash, listOf(Logs.withdrawal(requestHash)))
+        assertEquals(HashiTransferState.DONE, service.refresh(testAccount, record.id)!!.state)
+    }
+
+    @Test
+    fun `a step judged replaced whose own attempt turns out mined is watched again, not signed again`() = runBlocking {
+        val record = readyToClaim()
+        val sent = service.sendClaim(testAccount, record.id, service.quoteClaim(testAccount, record.id))
+        val step = sent.step(HashiEthIntent.CLAIM)!!
+        ethereum.latestNonce = BigInteger.valueOf(6)
+        service.refresh(testAccount, record.id)
+        clock += 11 * 60_000
+        assertEquals(HashiEthStepState.REPLACED, service.refresh(testAccount, record.id)!!.step(HashiEthIntent.CLAIM)!!.state)
+        // The endpoint that lagged now has the receipt of our own claim.
+        ethereum.confirm(step.latest.hash, listOf(Logs.withdrawal(requestHash)))
+        val derivations = accounts.derivations
+        val refusal = runCatching { service.retryEthereumStep(testAccount, record.id) }.exceptionOrNull() as? HashiRefusal
+        assertEquals(HashiRefusal.Reason.NOT_READY, refusal?.reason)
+        assertEquals(derivations, accounts.derivations)
+        assertEquals(1, ethereum.sent.size)
+        assertEquals(HashiTransferState.DONE, service.refresh(testAccount, record.id)!!.state)
+    }
+
+    @Test
     fun `a nonce taken by another transaction marks the step replaced, ours are looked up first`() = runBlocking {
         val record = readyToClaim()
         val sent = service.sendClaim(testAccount, record.id, service.quoteClaim(testAccount, record.id))
@@ -351,6 +388,9 @@ class HashiBridgeServiceTest {
         // Seen once is not enough: endpoints can briefly disagree.
         assertEquals(HashiEthStepState.BROADCAST, service.refresh(testAccount, record.id)!!.step(HashiEthIntent.CLAIM)!!.state)
         clock += 61_000
+        // A minute is not enough either: an endpoint's transaction index can lag behind its nonce.
+        assertEquals(HashiEthStepState.BROADCAST, service.refresh(testAccount, record.id)!!.step(HashiEthIntent.CLAIM)!!.state)
+        clock += 10 * 60_000
         val replaced = service.refresh(testAccount, record.id)!!
         assertEquals(HashiEthStepState.REPLACED, replaced.step(HashiEthIntent.CLAIM)!!.state)
         assertEquals(HashiTransferState.ETHEREUM_STEP_FAILED, replaced.state)

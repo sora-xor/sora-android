@@ -36,6 +36,14 @@ data class HashiTransferRecord(
     val ethSteps: List<HashiEthStep> = emptyList(),
     /** A chain error or refusal, as the chain named it. */
     val error: String? = null,
+    /** Why the transfer or its last Ethereum step failed; [error] carries the chain's own words. */
+    val failure: HashiFailure? = null,
+    /**
+     * The last refusal of a step that ran after the confirmation screen closed (a deposit's
+     * approvals and deposit): a [HashiRefusal.Reason] name, and its detail in [error]. Nothing was
+     * signed for it. Cleared by the next step.
+     */
+    val refusal: String? = null,
     /** Outgoing claim: SORA approved another amount than expected (both shown, nothing sent). */
     val approvedAmountMismatch: String? = null,
     val createdAt: Long,
@@ -87,6 +95,43 @@ enum class HashiTransferState {
     FAILED;
 
     val isFinal: Boolean get() = this == DONE || this == FAILED
+
+    /** The SORA transfer is signed and its result is not known yet. */
+    val isSoraUnresolved: Boolean get() = this == SORA_SIGNED || this == SORA_SUBMITTED
+}
+
+/** Why a transfer is [HashiTransferState.FAILED] or its Ethereum step failed. */
+@Serializable
+enum class HashiFailure {
+    /** Never handed to the network: nothing left the wallet and no fee was paid. */
+    NOT_SENT,
+
+    /** Applied to SORA's current state before sending and refused there: nothing was sent. */
+    REFUSED_BEFORE_SEND,
+
+    /** Included in a finalized SORA block and failed there: only the fee was paid. */
+    FAILED_ON_SORA,
+
+    /** The bridge marked the request `Failed`. */
+    FAILED_BY_BRIDGE,
+
+    /** An Ethereum transaction of the wallet has status 0, or lacks the contract's event. */
+    ETHEREUM_REVERTED,
+
+    /** Another transaction used the nonce. */
+    ETHEREUM_REPLACED,
+
+    /**
+     * Mined with status 1 but without the contract's event that proves it. It is never signed
+     * again (that could send the funds twice); it needs a look by a person.
+     */
+    ETHEREUM_UNPROVEN,
+
+    /** An Ethereum node refused the signed transaction: nothing is pending. */
+    ETHEREUM_REFUSED,
+
+    /** The allowance did not reach the amount after the approvals. */
+    ALLOWANCE_NOT_SET,
 }
 
 @Serializable

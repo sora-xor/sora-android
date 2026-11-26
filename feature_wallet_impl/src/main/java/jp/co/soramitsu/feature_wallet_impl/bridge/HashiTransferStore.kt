@@ -22,6 +22,15 @@ interface HashiTransferStore {
     fun observe(wallet: String): Flow<List<HashiTransferRecord>>
     suspend fun get(wallet: String, id: String): HashiTransferRecord?
 
+    /** The transfers of every account that are not final yet. */
+    suspend fun openTransfers(): List<HashiTransferRecord>
+
+    /**
+     * False while a saved account file cannot be read: the open Ethereum transactions in it (and
+     * so the nonces in use) are unknown, and nothing new may be signed on Ethereum.
+     */
+    suspend fun isComplete(): Boolean = true
+
     /** Writes [record] durably before returning (a crash right after keeps it). */
     suspend fun put(record: HashiTransferRecord)
 
@@ -46,6 +55,8 @@ class FileHashiTransferStore(private val directory: File) : HashiTransferStore {
     private val json = Json { ignoreUnknownKeys = true; encodeDefaults = true }
     private val mutex = Mutex()
     private val cache = mutableMapOf<String, MutableStateFlow<AccountFile>>()
+    private var allLoaded = false
+    private var unreadableFiles = 0
 
     private fun fileOf(wallet: String): File {
         val digest = MessageDigest.getInstance("SHA-256").digest(wallet.toByteArray(Charsets.UTF_8))
@@ -85,6 +96,42 @@ class FileHashiTransferStore(private val directory: File) : HashiTransferStore {
 
     override suspend fun get(wallet: String, id: String): HashiTransferRecord? = mutex.withLock {
         state(wallet).value.transfers.firstOrNull { it.id == id }
+    }
+
+    /**
+     * Every account's file is read once per process and then answered from memory. A file that
+     * cannot be read is left alone (never rewritten) and read again on the next call; until it
+     * reads, [isComplete] is false.
+     */
+    override suspend fun openTransfers(): List<HashiTransferRecord> = mutex.withLock {
+        if (!allLoaded) {
+            val files = withContext(Dispatchers.IO) {
+                directory.listFiles { file -> file.isFile && file.name.endsWith(".json") }.orEmpty().toList()
+            }
+            val known = cache.keys.map(::fileOf).toSet()
+            var unreadable = 0
+            files.filterNot { it in known }.forEach { file ->
+                val loaded = withContext(Dispatchers.IO) {
+                    runCatching { json.decodeFromString(AccountFile.serializer(), file.readText()) }.getOrNull()
+                }
+                if (loaded == null) {
+                    unreadable += 1
+                    return@forEach
+                }
+                val wallet = loaded.transfers.firstOrNull()?.wallet
+                if (wallet != null && fileOf(wallet) == file && wallet !in cache) {
+                    cache[wallet] = MutableStateFlow(loaded)
+                }
+            }
+            unreadableFiles = unreadable
+            allLoaded = unreadable == 0
+        }
+        cache.values.flatMap { flow -> flow.value.transfers.filterNot { it.state.isFinal } }
+    }
+
+    override suspend fun isComplete(): Boolean {
+        openTransfers()
+        return mutex.withLock { unreadableFiles == 0 }
     }
 
     override suspend fun put(record: HashiTransferRecord) = mutex.withLock {

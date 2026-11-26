@@ -54,6 +54,9 @@ internal class FakeSora : HashiSoraGateway {
     var dryRun: HashiDryRunResult = HashiDryRunResult.Ok
     var submission: SoraSubmission = SoraSubmission.Included("0x" + "bb".repeat(32))
     var journal: SoraSubmission? = null
+    var journalTakesSubmissions = true
+    var submitInterruption: Throwable? = null
+    var outcomeReads = 0
     var requestHash: ByteArray? = ByteArray(32) { 0x11 }
     val signed = mutableListOf<PreparedSoraTransfer>()
     val submitted = mutableListOf<PreparedSoraTransfer>()
@@ -80,9 +83,16 @@ internal class FakeSora : HashiSoraGateway {
     override suspend fun submit(prepared: PreparedSoraTransfer, reviewedFee: BigInteger): SoraSubmission {
         onSubmit()
         submitted += prepared
+        // Like the wallet's journal: it has the transaction from the moment it is handed over.
+        if (journalTakesSubmissions && journal == null && submission !is SoraSubmission.NotSent) journal = SoraSubmission.Pending
+        // The app stopping (or the screen's scope ending) in the middle of the submission.
+        submitInterruption?.let { throw it }
         return submission
     }
-    override suspend fun submissionOutcome(wallet: String, extrinsicHash: String) = journal
+    override suspend fun submissionOutcome(wallet: String, extrinsicHash: String): SoraSubmission? {
+        outcomeReads += 1
+        return journal
+    }
     override suspend fun requestHashOf(blockHash: String, extrinsicHash: String) = requestHash
 }
 
@@ -90,6 +100,10 @@ internal class FakeEthereum : HashiEthereumGateway {
     val balances = mutableMapOf<String, BigInteger>()
     val tokenBalances = mutableMapOf<String, BigInteger>()
     var allowance: BigInteger = BigInteger.ZERO
+
+    /** Answers of a node that is a block behind: given, in order, before [allowance]. */
+    val staleAllowances = ArrayDeque<BigInteger>()
+    var allowanceReads = 0
     val sidechainTokens = mutableMapOf(HashiBridgeContract.XOR_ASSET_ID to XOR_TOKEN)
     val decimals = mutableMapOf(EthHex.encode(XOR_TOKEN) to 18)
     val accepted = mutableSetOf(EthHex.encode(USDT_TOKEN))
@@ -108,7 +122,10 @@ internal class FakeEthereum : HashiEthereumGateway {
     override suspend fun balance(address: ByteArray) = balances[EthHex.encode(address)] ?: BigInteger.TEN.pow(20)
     override suspend fun tokenBalance(token: ByteArray, owner: ByteArray) =
         tokenBalances[EthHex.encode(token) + EthHex.encode(owner)] ?: BigInteger.TEN.pow(30)
-    override suspend fun allowance(token: ByteArray, owner: ByteArray, spender: ByteArray) = allowance
+    override suspend fun allowance(token: ByteArray, owner: ByteArray, spender: ByteArray): BigInteger {
+        allowanceReads += 1
+        return staleAllowances.removeFirstOrNull() ?: allowance
+    }
     override suspend fun decimals(token: ByteArray) = decimals.getValue(EthHex.encode(token))
     override suspend fun sidechainToken(assetId: ByteArray) = sidechainTokens[EthHex.encode(assetId)]
     override suspend fun sidechainAssetOfToken(token: ByteArray): ByteArray =
@@ -165,9 +182,13 @@ internal class FakeAccounts(var address: String? = TestEthAccount.ADDRESS) : Has
     var derivations = 0
     val keysHandedOut = mutableListOf<ByteArray>()
 
+    /** Runs before each key is handed out; a test can hold a signature here. */
+    var beforeKey: (suspend () -> Unit)? = null
+
     override suspend fun address(account: SoraAccount) = address
 
     override suspend fun <T> withPrivateKey(account: SoraAccount, expectedAddress: String, block: (ByteArray) -> T): T {
+        beforeKey?.invoke()
         derivations += 1
         check(expectedAddress == address) { "HASHI_ETHEREUM_ACCOUNT_MISMATCH" }
         val key = TestEthAccount.privateKey.copyOf()
@@ -188,6 +209,7 @@ internal class InMemoryStore : HashiTransferStore {
     override suspend fun transfers(wallet: String) = state.value.values.filter { it.wallet == wallet }.sortedByDescending { it.createdAt }
     override fun observe(wallet: String): Flow<List<HashiTransferRecord>> = state.map { all -> all.values.filter { it.wallet == wallet } }
     override suspend fun get(wallet: String, id: String) = state.value[id]?.takeIf { it.wallet == wallet }
+    override suspend fun openTransfers() = state.value.values.filterNot { it.state.isFinal }
     override suspend fun put(record: HashiTransferRecord) {
         history += record
         state.value = state.value + (record.id to record)

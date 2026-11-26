@@ -53,4 +53,25 @@ class FileHashiTransferStoreTest {
         assertTrue(names.all { it.endsWith(".json") })
         assertFalse(names.any { it.contains("cnA") })
     }
+
+    @Test
+    fun `a file that cannot be read keeps the store incomplete, is left as it is, and counts once it reads`() = runBlocking {
+        val directory = File(folder.root, "hashi-bridge")
+        val first = FileHashiTransferStore(directory)
+        first.put(record("a"))
+        first.put(record("c", wallet = "cnB"))
+        val fileB = directory.listFiles()!!.single { file -> file.readText().contains("\"cnB\"") }
+        val good = fileB.readText()
+        // Written by a newer app version (an unknown state), or damaged.
+        fileB.writeText(good.replace("SORA_SIGNED", "STATE_FROM_THE_FUTURE"))
+
+        val reopened = FileHashiTransferStore(directory)
+        assertEquals(listOf("a"), reopened.openTransfers().map { it.id })
+        assertFalse(reopened.isComplete())
+        assertTrue(fileB.readText().contains("STATE_FROM_THE_FUTURE"))
+        // Readable again: read on the next call, and the store is complete.
+        fileB.writeText(good)
+        assertEquals(setOf("a", "c"), reopened.openTransfers().map { it.id }.toSet())
+        assertTrue(reopened.isComplete())
+    }
 }
