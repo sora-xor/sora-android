@@ -41,6 +41,7 @@ import jp.co.soramitsu.common.util.Flavor
 import jp.co.soramitsu.common.util.UnlockJourneyTrace
 import jp.co.soramitsu.core_db.WalletUpgradeBackup
 import jp.co.soramitsu.feature_select_node_api.NodeManager
+import jp.co.soramitsu.feature_wallet_impl.bridge.HashiBridgeService
 import jp.co.soramitsu.feature_wallet_impl.presentation.portfolio.PortfolioPreload
 import jp.co.soramitsu.sora.splash.domain.StartupTimeTrace
 import timber.log.Timber
@@ -53,6 +54,11 @@ open class SoraApp : Application(), Configuration.Provider, ImageLoaderFactory {
     // node socket or fetches node lists.
     @Inject
     lateinit var nodeManager: dagger.Lazy<NodeManager>
+
+    // Started with the node: follows HASHI bridge transfers that were not final when the app last
+    // stopped (it only reads; it never signs). Nothing to do when there are none.
+    @Inject
+    lateinit var hashiBridge: dagger.Lazy<HashiBridgeService>
 
     @Inject
     lateinit var resourceManager: ResourceManager
@@ -138,6 +144,7 @@ open class SoraApp : Application(), Configuration.Provider, ImageLoaderFactory {
             if (WalletUpgradeBackup.blockingFailure() != null) return
             if (nodeManager.get().ensureStarted()) {
                 unregisterActivityLifecycleCallbacks(this)
+                hashiBridge.get().resumeMonitoring()
             }
         }
 
