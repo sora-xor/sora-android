@@ -467,12 +467,28 @@ class HashiGoldenVectorsTest {
         listOf("receiveByEthereumAssetAddress", "mintTokensByPeers", "receiveBySidechainAssetId", "used(txHash)").forEach {
             assertTrue(it, it in rules)
         }
+    }
+
+    @Test
+    fun `the pinned contracts are the vectors' addresses, written with their EIP-55 checksum`() {
         val contracts = eth.getValue("contracts").jsonObject
-        assertEquals(contracts.str("bridge"), HashiBridgeContract.BRIDGE_ADDRESS)
-        assertEquals(contracts.str("valMaster"), HashiBridgeContract.VAL_MASTER_ADDRESS)
-        assertEquals(contracts.str("valToken"), HashiBridgeContract.VAL_TOKEN_ADDRESS)
-        assertEquals(contracts.str("xorMasterLegacyDecommissioned"), HashiBridgeContract.LEGACY_XOR_MASTER_ADDRESS)
-        assertNotNull(EthAddress.parse(contracts.str("bridge")))
+        // The vectors copy the web's env.json, which writes the VAL master and the legacy XOR
+        // master in a letter case that is not a checksum: the 20 bytes are what is compared.
+        listOf(
+            "bridge" to HashiBridgeContract.BRIDGE_ADDRESS,
+            "valMaster" to HashiBridgeContract.VAL_MASTER_ADDRESS,
+            "valToken" to HashiBridgeContract.VAL_TOKEN_ADDRESS,
+            "xorMasterLegacyDecommissioned" to HashiBridgeContract.LEGACY_XOR_MASTER_ADDRESS,
+        ).forEach { (name, pinned) ->
+            assertArrayEquals(name, EthHex.decodeFixed(contracts.str(name), EthAddress.SIZE), EthHex.decodeFixed(pinned, EthAddress.SIZE))
+            // A pinned address must read as a valid typed address and print as itself.
+            assertNotNull(name, EthAddress.parse(pinned))
+            assertEquals(name, pinned, EthAddress.checksum(EthHex.decodeFixed(pinned, EthAddress.SIZE)))
+        }
+        // The real mainnet VAL claim in the vectors was sent to the checksummed VAL master.
+        assertEquals("0xd1eEB2f30016FFfd746233Ee12c486E7Ca8eFeF1", HashiBridgeContract.VAL_MASTER_ADDRESS)
+        // The web's spelling is refused as a typed address: it is mixed case with a wrong checksum.
+        assertNull(EthAddress.parse(contracts.str("valMaster")))
     }
 
     private fun assertRefused(block: () -> Unit) {

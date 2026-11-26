@@ -21,11 +21,14 @@ object HashiBridgeContract {
     const val TRANSFER_TO_SIDECHAIN_CALL_INDEX = 3
     const val REQUEST_REGISTERED_EVENT_INDEX = 0
 
+    // Addresses are written with their EIP-55 checksum (the web's env.json writes the VAL master
+    // and the legacy XOR master in another letter case, which is not a checksum).
+
     /** The bridge contract on Ethereum (3 peers, the same set as on SORA). */
     const val BRIDGE_ADDRESS = "0x313416870A4da6F12505a550B67bB73c8E21D5d3"
 
     /** The VAL master contract; it mints VAL ([VAL_TOKEN_ADDRESS]) for `SidechainOwned` claims. */
-    const val VAL_MASTER_ADDRESS = "0xD1EEB2f30016fffd746233Ee12C486e7CA8eFeF1"
+    const val VAL_MASTER_ADDRESS = "0xd1eEB2f30016FFfd746233Ee12c486E7Ca8eFeF1"
 
     const val VAL_TOKEN_ADDRESS = "0xe88f8313e61A97cEc1871EE37fBbe2a8bf3ed1E4"
 
@@ -33,7 +36,7 @@ object HashiBridgeContract {
      * The decommissioned legacy XOR master. It is never called: SORA no longer approves claims
      * through it (the web app still points at it; that is a web bug).
      */
-    const val LEGACY_XOR_MASTER_ADDRESS = "0xc08edf13Be9B9CC584c5Da8004CE7e6be63C1316"
+    const val LEGACY_XOR_MASTER_ADDRESS = "0xc08Edf13Be9b9cC584C5DA8004ce7E6Be63c1316"
 
     val bridge: ByteArray get() = EthHex.decodeFixed(BRIDGE_ADDRESS, EthAddress.SIZE)
     val valMaster: ByteArray get() = EthHex.decodeFixed(VAL_MASTER_ADDRESS, EthAddress.SIZE)
