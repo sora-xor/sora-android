@@ -178,9 +178,59 @@ class LaunchSceneTest {
             scenario.onActivity { assertEquals("the scene still covers the screen", first.uncovered + 1, first.decor.childCount) }
             tap(first.key)
             assertEquals("the first tap goes through the scene as it gives way", 1, first.taps.get())
+            // That tap also said the person will not wait: the scene is over, and what it ends on fades.
+            scenario.onActivity {
+                if (first.decor.childCount == first.uncovered + 1) {
+                    assertNull("a tap ends the scene", find(first.decor.getChildAt(first.decor.childCount - 1)))
+                }
+            }
             awaitUncovered(first)
             tap(first.key)
             assertEquals(2, first.taps.get())
+        }
+    }
+
+    @Test
+    fun aTapOnTheCoveredSceneUncoversTheScreenTheMomentItIsReady() {
+        assumeTrue("the traced scene needs Android 13", Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+        ActivityScenario.launch(ComponentActivity::class.java).use { scenario ->
+            val first = firstScreen(scenario)
+            assumeTrue("a hot phone shows the plain scene", first.mode == TenmonFlight.Mode.TRACED)
+            awaitFrames(first.host)
+            scenario.onActivity { activity ->
+                assertTrue(TenmonFlight.carryOn(activity))
+                TenmonFlight.end(first.host)
+            }
+            instrumentation.waitForIdleSync()
+            // Covered, the first screen is not there yet: the tap is kept from what is behind the scene, and only
+            // says the person will not wait.
+            tap(first.key)
+            assertEquals("a covered key is not pressed", 0, first.taps.get())
+            scenario.onActivity {
+                assertEquals("still covered: the screen is not ready", first.uncovered + 1, first.decor.childCount)
+                TenmonFlight.firstScreenShown(null)
+            }
+            // Ready: the scene does not play its way out. The moment it lets touches through, its surface is gone.
+            val deadline = SystemClock.uptimeMillis() + 20_000
+            var through = false
+            var playsOn = false
+            while (!through && SystemClock.uptimeMillis() < deadline) {
+                SystemClock.sleep(16)
+                instrumentation.runOnMainSync {
+                    if (first.decor.childCount == first.uncovered) {
+                        through = true
+                    } else {
+                        val top = first.decor.getChildAt(first.decor.childCount - 1)
+                        through = !top.isClickable
+                        playsOn = through && find(top) != null
+                    }
+                }
+            }
+            assertTrue("the ready screen is let through", through)
+            assertFalse("a scene asked not to wait does not play its way out", playsOn)
+            awaitUncovered(first)
+            tap(first.key)
+            assertEquals("the next tap is the screen's", 1, first.taps.get())
         }
     }
 

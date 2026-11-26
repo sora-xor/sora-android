@@ -12,6 +12,7 @@ import android.graphics.Shader
 import android.os.Build
 import android.os.SystemClock
 import android.util.Log
+import android.view.MotionEvent
 import android.view.SurfaceHolder
 import android.view.SurfaceView
 import android.view.View
@@ -490,6 +491,9 @@ internal class TenmonStage(context: Context) : FrameLayout(context) {
     /** The traced scene would not draw here; the plain scene at rest has taken its place. */
     var onGaveUp: (() -> Unit)? = null
 
+    /** A finger was set down on the stage. Told before the touch goes to anything, the stage itself included. */
+    var onTouched: (() -> Unit)? = null
+
     private var underLight = false
 
     init {
@@ -551,6 +555,11 @@ internal class TenmonStage(context: Context) : FrameLayout(context) {
         dropScene()
         cover.showRest()
         onGaveUp?.invoke()
+    }
+
+    override fun dispatchTouchEvent(event: MotionEvent): Boolean {
+        if (event.actionMasked == MotionEvent.ACTION_DOWN) onTouched?.invoke()
+        return super.dispatchTouchEvent(event)
     }
 
     override fun onAttachedToWindow() {

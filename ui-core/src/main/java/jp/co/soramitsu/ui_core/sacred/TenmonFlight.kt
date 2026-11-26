@@ -20,7 +20,8 @@ import jp.co.soramitsu.ui_core.lit.LitLightRig
  * welcome) [carryOn]s it over itself exactly where it stood, and once that screen has said where it shows the mark
  * ([firstScreenShown]) the mark flies there, the rings sink into the page and the screen is uncovered. Until that
  * word the scene keeps the screen covered and takes its touches: nothing of the screen behind the PIN shows before
- * the PIN does.
+ * the PIN does. A tap on the scene says the person will not wait for it: it goes the moment the screen is ready,
+ * or at once if the mark is already on its way, and from then every touch is the screen's.
  *
  * A phone that does not play the traced scene (Android 12 or older, power saving, animations removed, a hot phone,
  * or a GPU that will not draw it) shows the plain scene at rest on the startup screen, and its first screen carries
@@ -189,6 +190,7 @@ object TenmonFlight {
         stage.translationZ = OVER_THE_WINDOW
         // Nothing below is touched while it is covered.
         stage.isClickable = true
+        stage.onTouched = { skip() }
         if (traced && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             stage.play(timeline, if (timeline.isStarted) timeline.at(SystemClock.elapsedRealtimeNanos()) else null)
         } else {
@@ -252,6 +254,13 @@ object TenmonFlight {
             finish(FADE_MILLIS)
             return
         }
+        if (carry.skipped) {
+            // Asked not to wait: the scene does not play its way out. The mark stands where the screen shows its
+            // own, and fades over it.
+            carry.stage.cover.showFrame(ARRIVED, carry.landing)
+            finish(FADE_MILLIS)
+            return
+        }
         if (scene.framesCompleted == 0) {
             // The scene's surface over this screen has no frame yet. The mark flies on when it has, so the way out
             // is seen from its start; a surface that has none soon after the screen is ready, the screen does not
@@ -272,6 +281,17 @@ object TenmonFlight {
     }
 
     /**
+     * A finger set down on the scene: the person will not wait for it. While the first screen is not ready the scene
+     * keeps it covered, and this touch from what is behind it, and goes the moment the screen is ready. Once the
+     * mark is on its way, what the scene ends on fades at once, and the touch is the screen's.
+     */
+    private fun skip() {
+        val carry = carry ?: return
+        carry.skipped = true
+        if (carry.left) finish(FADE_MILLIS)
+    }
+
+    /**
      * Uncovers the first screen: the surface goes, and what the scene ended on fades in the window over the screen,
      * whose own mark stands where the scene's landed. While its window is [detaching] the stage is left to go with
      * it: a view is never taken out of a parent that is taking its children out of the window.
@@ -283,8 +303,9 @@ object TenmonFlight {
         val stage = carry.stage
         main.removeCallbacks(carry.leaves)
         main.removeCallbacks(carry.ends)
-        // From here every touch reaches the screen. (Clearing the click listener would make the stage clickable again.)
+        // From here every touch reaches the screen.
         stage.isClickable = false
+        stage.onTouched = null
         stage.dropScene()
         carry.bars.isAppearanceLightStatusBars = carry.lightStatusBar
         carry.bars.isAppearanceLightNavigationBars = carry.lightNavigationBar
@@ -305,6 +326,7 @@ object TenmonFlight {
     ) {
         var landing: Landing? = null
         var left = false
+        var skipped = false
         var frameWaits = 0
         val leaves = Runnable { leave() }
         val ends = Runnable { finish(FADE_MILLIS) }
