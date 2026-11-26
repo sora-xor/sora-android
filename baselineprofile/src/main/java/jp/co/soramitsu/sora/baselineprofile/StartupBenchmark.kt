@@ -30,8 +30,6 @@ import androidx.benchmark.macro.TraceSectionMetric
 import androidx.benchmark.macro.junit4.MacrobenchmarkRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
-import androidx.test.uiautomator.By
-import androidx.test.uiautomator.Until
 import jp.co.soramitsu.sora.baselineprofile.SoraJourney.ONBOARDING_ACTIVITY
 import jp.co.soramitsu.sora.baselineprofile.SoraJourney.PACKAGE_NAME
 import jp.co.soramitsu.sora.baselineprofile.SoraJourney.SECTION_LAUNCH_TO_PIN_PAD
@@ -132,15 +130,8 @@ class StartupBenchmark {
             measureBlock = {
                 startActivityAndWait()
                 assertTrue(
-                    "Splash did not complete during the startup benchmark",
-                    device.wait(
-                        Until.gone(By.res(PACKAGE_NAME, "animation_view")),
-                        STARTUP_TIMEOUT,
-                    ),
-                )
-                assertTrue(
                     "Fresh install did not reach onboarding; a recovery route must not pass the benchmark",
-                    SoraJourney.waitForActivity(device, ONBOARDING_ACTIVITY),
+                    SoraJourney.waitForActivity(device, ONBOARDING_ACTIVITY, STARTUP_TIMEOUT),
                 )
             },
         )

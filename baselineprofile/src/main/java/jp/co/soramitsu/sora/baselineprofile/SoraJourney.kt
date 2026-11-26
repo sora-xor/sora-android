@@ -64,8 +64,18 @@ internal object SoraJourney {
 
     const val TIMEOUT_MILLIS = 30_000L
 
-    /** The launch scene's own limit is five seconds; a loaded emulator gets some more. */
-    private const val LAUNCH_SCENE_LONGEST_MILLIS = 12_000L
+    /**
+     * Long enough to watch the launch scene leave by itself once the PIN pad (or the welcome) is there: the rest of
+     * its one-second intro, the mark's flight of 0.6 s and the fade, with room for a loaded emulator.
+     */
+    private const val LAUNCH_SCENE_WATCH_MILLIS = 3_000L
+
+    /** What the row of PIN dots says to a screen reader, up to the count ("PIN digits entered: 2 of 6"). */
+    private const val PIN_DIGITS_ENTERED = "PIN digits entered: "
+
+    /** How long a pressed PIN key has to show as entered, and how often a key that was not taken is pressed again. */
+    private const val PIN_KEY_SHOWN_MILLIS = 5_000L
+    private const val PIN_KEY_TRIES = 3
     const val STARTUP_TIMEOUT = TIMEOUT_MILLIS
     private const val POLL_MILLIS = 100L
 
@@ -194,8 +204,24 @@ internal object SoraJourney {
         device.wait(Until.findObject(By.text("Cancel")), 3_000)?.click()
     }
 
+    /**
+     * Types the test PIN. Every digit but the last (which starts the check, and the pad moves on) must show as
+     * entered before the next is pressed: a tap that the launch scene took, while it still covered a pad that was
+     * not ready, only told the scene not to wait, and that key is pressed again.
+     */
     fun typePin(device: UiDevice) {
-        TEST_PIN.forEach { digit -> waitFor(device, pinKey(digit), "PIN key $digit").click() }
+        TEST_PIN.forEachIndexed { index, digit ->
+            val entered = index + 1
+            var taken = false
+            var tries = 0
+            while (!taken && tries < PIN_KEY_TRIES) {
+                tries += 1
+                waitFor(device, pinKey(digit), "PIN key $digit").click()
+                taken = entered == TEST_PIN.length ||
+                    device.wait(Until.hasObject(By.descStartsWith("$PIN_DIGITS_ENTERED$entered ")), PIN_KEY_SHOWN_MILLIS) == true
+            }
+            assertTrue("PIN key $digit was pressed $tries times and never showed as entered", taken)
+        }
     }
 
     /**
@@ -205,14 +231,14 @@ internal object SoraJourney {
      */
     fun unlock(device: UiDevice, tapFlight: Boolean = false) {
         waitFor(device, pinKey('1'), "The PIN pad")
-        if (tapFlight) dismissLaunchFlight(device) else waitForLaunchFlightToEnd(device)
+        if (tapFlight) dismissLaunchFlight(device) else watchLaunchScene()
         typePin(device)
         waitForHome(device)
     }
 
     /**
-     * The launch scene covers the first screen for about two seconds on Android 13 and later and takes no keys; a
-     * tap ends it. Tapping the PIN screen's empty top changes nothing when there is no scene.
+     * A tap on the launch scene, at the PIN screen's empty top: the scene goes as soon as the pad is ready, at once
+     * if it is, without playing its way out. The tap changes nothing when no scene is there.
      */
     fun dismissLaunchFlight(device: UiDevice) {
         device.click(device.displayWidth / 2, device.displayHeight / 12)
@@ -220,24 +246,13 @@ internal object SoraJourney {
     }
 
     /**
-     * Waits until the launch scene has left by itself. Its host lies over the whole window and takes every touch
-     * (a clickable frame the size of the screen, which nothing else here is); it is gone at the latest five seconds
-     * after the wallet's screen was made.
+     * Leaves the launch scene the time to go by itself. It lies over the first screen until that screen is laid
+     * out, then the mark flies to the PIN emblem and the scene fades; it is kept out of what a screen reader (and
+     * so UI Automator) sees, so its end is waited for by the clock.
      */
-    fun waitForLaunchFlightToEnd(device: UiDevice) {
-        val deadline = SystemClock.uptimeMillis() + LAUNCH_SCENE_LONGEST_MILLIS
-        while (SystemClock.uptimeMillis() < deadline) {
-            if (!launchSceneCovers(device)) return
-            SystemClock.sleep(50)
-        }
-        throw AssertionError("The launch scene still covers the PIN pad after $LAUNCH_SCENE_LONGEST_MILLIS ms")
+    fun watchLaunchScene() {
+        SystemClock.sleep(LAUNCH_SCENE_WATCH_MILLIS)
     }
-
-    private fun launchSceneCovers(device: UiDevice): Boolean =
-        device.findObjects(By.clazz("android.widget.FrameLayout").clickable(true)).any { frame ->
-            val bounds = frame.visibleBounds
-            bounds.width() >= device.displayWidth && bounds.height() >= device.displayHeight * 3 / 4
-        }
 
     /** The home says its balances are live (the chip "LIVE · 3s"). False when it does not within [timeoutMillis]. */
     fun waitForLiveHome(device: UiDevice, timeoutMillis: Long): Boolean =

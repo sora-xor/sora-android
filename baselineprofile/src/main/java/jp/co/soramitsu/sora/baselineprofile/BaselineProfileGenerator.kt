@@ -21,8 +21,6 @@ package jp.co.soramitsu.sora.baselineprofile
 
 import androidx.benchmark.macro.junit4.BaselineProfileRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.test.uiautomator.By
-import androidx.test.uiautomator.Until
 import jp.co.soramitsu.sora.baselineprofile.SoraJourney.ONBOARDING_ACTIVITY
 import jp.co.soramitsu.sora.baselineprofile.SoraJourney.PACKAGE_NAME
 import jp.co.soramitsu.sora.baselineprofile.SoraJourney.STARTUP_TIMEOUT
@@ -53,19 +51,14 @@ class BaselineProfileGenerator {
         ) {
             pressHome()
             startActivityAndWait()
-            // Keep collecting through Splash's asynchronous Room open and wallet migration. This is
+            // Keep collecting through the startup screen's asynchronous Room open and wallet migration. This is
             // a production-shaped fresh install, whose expected destination is onboarding.
             assertTrue(
-                "Splash did not complete while collecting the startup profile",
-                device.wait(
-                    Until.gone(By.res(PACKAGE_NAME, "animation_view")),
-                    STARTUP_TIMEOUT,
-                ),
-            )
-            assertTrue(
                 "Fresh install did not reach onboarding; a recovery route must not generate the profile",
-                SoraJourney.waitForActivity(device, ONBOARDING_ACTIVITY),
+                SoraJourney.waitForActivity(device, ONBOARDING_ACTIVITY, STARTUP_TIMEOUT),
             )
+            // The launch scene carries on over the welcome and leaves by itself: that is part of every start.
+            SoraJourney.watchLaunchScene()
             device.waitForIdle()
         }
     }
