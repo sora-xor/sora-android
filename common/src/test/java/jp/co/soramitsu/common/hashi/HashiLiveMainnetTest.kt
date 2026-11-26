@@ -4,6 +4,7 @@ import java.time.Instant
 import jp.co.soramitsu.common.ethereum.EthAddress
 import jp.co.soramitsu.common.ethereum.EthHex
 import jp.co.soramitsu.common.network.BoundedHttpTextClient
+import jp.co.soramitsu.common.network.BoundedHttpTextException
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.add
@@ -30,7 +31,24 @@ import org.junit.Test
  */
 class HashiLiveMainnetTest {
 
-    private val transport = BoundedHashiRpcTransport(BoundedHttpTextClient())
+    private val bounded = BoundedHashiRpcTransport(BoundedHttpTextClient())
+
+    /**
+     * Every request here is a read, so a transport failure (a deadline on a loaded build machine,
+     * a dropped connection) is asked again, up to three times. An answer is never asked again:
+     * a node error or an unexpected value fails the test as it is.
+     */
+    private val transport = HashiRpcTransport { endpoint, body ->
+        var failure: BoundedHttpTextException? = null
+        repeat(TRANSPORT_ATTEMPTS) {
+            try {
+                return@HashiRpcTransport bounded.post(endpoint, body)
+            } catch (error: BoundedHttpTextException) {
+                failure = error
+            }
+        }
+        throw checkNotNull(failure)
+    }
     private val sora = HashiSoraRpcClient(transport)
     private val ethereum = EthereumRpcClient(transport)
     private val vectors = Json.parseToJsonElement(checkNotNull(javaClass.classLoader!!.getResource("hashi/eth.json")).readText()).jsonObject
@@ -38,6 +56,10 @@ class HashiLiveMainnetTest {
     @Before
     fun requireOptIn() {
         assumeTrue(System.getenv("RUN_LIVE_HASHI_TESTS") == "true")
+    }
+
+    private companion object {
+        const val TRANSPORT_ATTEMPTS = 3
     }
 
     @Test
