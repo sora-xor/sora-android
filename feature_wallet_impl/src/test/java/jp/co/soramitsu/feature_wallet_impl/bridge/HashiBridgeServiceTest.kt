@@ -149,7 +149,8 @@ class HashiBridgeServiceTest {
         sora.submission = SoraSubmission.FailedOnChain("EthBridge.RecoveryHalted")
         assertEquals("EthBridge.RecoveryHalted", service.sendOutgoing(testAccount, quote, "USDT").error)
         sora.submission = SoraSubmission.NotSent("Payment")
-        val notSent = service.sendOutgoing(testAccount, quote, "USDT")
+        // A new transfer is a new sheet: the first one is used up.
+        val notSent = service.sendOutgoing(testAccount, service.quoteOutgoing(testAccount, USDT_ID, BigDecimal.ONE, recipient), "USDT")
         assertEquals(HashiTransferState.FAILED, notSent.state)
     }
 

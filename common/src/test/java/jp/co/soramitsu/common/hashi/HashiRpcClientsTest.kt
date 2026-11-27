@@ -164,6 +164,28 @@ class HashiRpcClientsTest {
     }
 
     @Test
+    fun `a status-0 receipt on one endpoint never hides the same transaction pending or mined on another`() = runBlocking {
+        val hash = ByteArray(32) { 8 }
+        // After a reorganisation a lagging endpoint can still hold the old, reverted receipt.
+        val reverted = buildJsonObject { put("status", "0x0"); put("blockNumber", "0x10"); put("logs", JsonArray(emptyList())) }
+        var b: (String) -> Any? = { method -> if (method == "eth_getTransactionByHash") buildJsonObject { put("hash", EthHex.encode(hash)) } else null }
+        val transport = Scripted { endpoint, method, _ ->
+            when {
+                method == "eth_chainId" -> "0x1"
+                endpoint.contains("a.") -> if (method == "eth_getTransactionReceipt") reverted else null
+                else -> b(method)
+            }
+        }
+        val client = EthereumRpcClient(transport, endpoints)
+        assertEquals(EthTransactionLookup.Pending, client.lookupEverywhere(hash))
+        b = { method -> if (method == "eth_getTransactionReceipt") buildJsonObject { put("status", "0x1"); put("blockNumber", "0x11"); put("logs", JsonArray(emptyList())) } else null }
+        assertEquals(EthTransactionLookup.Mined(1), client.lookupEverywhere(hash))
+        // Only then does the reverted receipt count.
+        b = { null }
+        assertEquals(EthTransactionLookup.Mined(0), client.lookupEverywhere(hash))
+    }
+
+    @Test
     fun `a transaction the node already has keeps its own hash, another hash is refused`() = runBlocking {
         val hash = ByteArray(32) { 9 }
         var reply: Any = RpcError(-32000, "already known")

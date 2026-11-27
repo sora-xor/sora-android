@@ -73,8 +73,10 @@ internal class FakeSora : HashiSoraGateway {
     override suspend fun requestStatus(requestHash: ByteArray) = statuses[EthHex.encode(requestHash)]
     override suspend fun incomingRequestHash(ethTxHash: ByteArray) = incoming[EthHex.encode(ethTxHash)]
     override suspend fun lockedAssets(assetId: ByteArray) = locked[EthHex.encode(assetId)] ?: BigInteger.TEN.pow(30)
+    /** A test can change an asset's denomination factor. */
+    val factors = mutableMapOf<String, BigInteger>()
     override suspend fun denominationFactor(assetId: String): BigInteger =
-        if (assetId == HashiBridgeContract.TBCD_ASSET_ID) BigInteger.TEN.pow(38) else BigInteger.ONE
+        factors[assetId] ?: if (assetId == HashiBridgeContract.TBCD_ASSET_ID) BigInteger.TEN.pow(38) else BigInteger.ONE
     override suspend fun transferable(account: SoraAccount, assetId: String) =
         if (assetId == HashiBridgeContract.XOR_ASSET_ID) xorTransferable else transferable
     override suspend fun transferFee(account: SoraAccount, assetId: String, to: ByteArray, amount: BigInteger) = fee
@@ -132,9 +134,16 @@ internal class FakeEthereum : HashiEthereumGateway {
     override suspend fun sidechainAssetOfToken(token: ByteArray): ByteArray =
         sidechainTokens.entries.firstOrNull { it.value.contentEquals(token) }?.key?.let(EthHex::decode) ?: ByteArray(32)
     override suspend fun isAcceptedEthToken(token: ByteArray) = EthHex.encode(token) in accepted
-    override suspend fun isUsed(contract: ByteArray, txHash: ByteArray) = EthHex.encode(contract) + EthHex.encode(txHash) in used
+    /** Runs inside the next used() read (a test makes something happen while it is out). */
+    var onIsUsed: (suspend () -> Unit)? = null
+    override suspend fun isUsed(contract: ByteArray, txHash: ByteArray): Boolean {
+        onIsUsed?.invoke()
+        return EthHex.encode(contract) + EthHex.encode(txHash) in used
+    }
     override suspend fun hasNoCode(address: ByteArray) = EthHex.encode(address) !in withCode
-    override suspend fun pendingNonce(address: ByteArray) = pendingNonce
+    /** Answers of the next pendingNonce reads, before [pendingNonce] (endpoints that disagree). */
+    val pendingNonceAnswers = ArrayDeque<BigInteger>()
+    override suspend fun pendingNonce(address: ByteArray) = pendingNonceAnswers.removeFirstOrNull() ?: pendingNonce
     override suspend fun latestNonce(address: ByteArray) = latestNonce
     /** Gas the node estimates per call; a test can raise it (a token whose transfer costs more). */
     var gasEstimate: (ByteArray) -> BigInteger = { data ->

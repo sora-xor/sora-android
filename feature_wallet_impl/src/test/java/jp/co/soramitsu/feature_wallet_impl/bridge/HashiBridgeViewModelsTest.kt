@@ -132,6 +132,27 @@ class HashiBridgeViewModelsTest {
     }
 
     @Test
+    fun `a sheet refused after the PIN because the bridge paused meanwhile says why, and the banner shows it`() = runTest {
+        val viewModel = bridgeViewModel()
+        advanceUntilIdle()
+        viewModel.onAmount(BigDecimal.ONE)
+        viewModel.onContinue()
+        advanceUntilIdle()
+        assertNotNull(viewModel.state.value.confirm)
+        // The guardians halt the signers while the sheet is open.
+        sora.blocks = setOf(HashiBlock.GUARDIAN_HALT)
+        viewModel.onConfirm()
+        viewModel.onPinConfirmed()
+        advanceUntilIdle()
+        val paused = "s${jp.co.soramitsu.common.R.string.hashi_bridge_paused}"
+        val halt = "s${jp.co.soramitsu.common.R.string.hashi_bridge_reason_guardian_halt}"
+        assertEquals("$paused\n$halt", viewModel.state.value.notice)
+        assertEquals(HashiAvailabilityUi.PAUSED, viewModel.state.value.availability)
+        assertEquals(listOf(halt), viewModel.state.value.pauseReasons)
+        assertTrue(sora.signed.isEmpty())
+    }
+
+    @Test
     fun `a refused quote is explained and nothing is signed`() = runTest {
         sora.locked[USDT_ID] = BigInteger.ONE
         val viewModel = bridgeViewModel()
