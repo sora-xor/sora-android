@@ -548,7 +548,11 @@ class HashiBridgeService(
         val requestHash = EthHex.decodeFixed(checkNotNull(record.requestHash), 32)
         val request = sora.approvedRequest(requestHash) ?: throw HashiRefusal(HashiRefusal.Reason.NOT_READY)
         val factor = sora.denominationFactor(asset.assetId)
-        val expected = HashiAmounts.expectedEthAmount(record.soraUnits, asset, factor)
+        // SORA converted the amount at the denomination of the block that took the transfer. An
+        // approval of exactly the Ethereum amount the person confirmed (saved with the transfer)
+        // stays claimable after the denomination changes; any other amount must match today's.
+        val expected = record.ethUnits.takeIf { it == request.amount }
+            ?: HashiAmounts.expectedEthAmount(record.soraUnits, asset, factor)
         return try {
             HashiClaimPlanner.plan(asset, request, parseAddress(record.recipient), expected)
         } catch (mismatch: HashiClaimAmountMismatchException) {
