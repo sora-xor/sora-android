@@ -50,6 +50,12 @@
     <string name="hashi_bridge_error_amount_mismatch">Cầu đã phê duyệt %1$s, không phải %2$s như dự kiến. Chưa có gì được gửi.</string>
     <string name="hashi_bridge_error_read">Không đọc được trạng thái của cầu. Hãy thử lại.</string>
     <string name="hashi_bridge_claims_open">Các khoản chuyển đã được phê duyệt vẫn có thể nhận.</string>
+    <string name="hashi_bridge_reason_signers_unverified">Nhà vận hành cầu chưa xác nhận người ký đang trực tuyến.</string>
+    <string name="hashi_bridge_reason_signers_down">Không đủ người ký của cầu đang trực tuyến.</string>
+    <string name="hashi_bridge_reason_guardian_halt">Người giám hộ cầu đã dừng người ký.</string>
+    <string name="hashi_bridge_reason_recovery">Mạng SORA vẫn đang khôi phục cầu.</string>
+    <string name="hashi_bridge_reason_not_active">Cầu chưa hoạt động trên mạng SORA.</string>
+    <string name="hashi_bridge_reason_stalled">Các giao dịch chuyển trước vẫn đang chờ người ký.</string>
     <string name="hashi_bridge_state_sending_sora">Đang gửi trên SORA</string>
     <string name="hashi_bridge_state_receiving">Đang nhận trên Ethereum</string>
     <string name="hashi_bridge_state_approving">Đang phê duyệt trên Ethereum</string>
@@ -63,6 +69,7 @@
     <string name="hashi_bridge_error_deposit_unconfirmed">Không thể xác nhận khoản nạp này trên Ethereum. Hãy kiểm tra số dư token trước khi nạp lại.</string>
     <string name="hashi_bridge_error_allowance">Phê duyệt chưa có hiệu lực. Chưa nạp gì cả.</string>
     <string name="hashi_bridge_error_pending">Một giao dịch trước đó vẫn đang chờ. Hãy thử lại khi nó được xác nhận.</string>
+    <string name="hashi_bridge_error_cost_changed">Chi phí đã tăng. Hãy kiểm tra và xác nhận lại.</string>
     <string name="hashi_bridge_error_limit">Đã đạt giới hạn của cầu cho token này. Hãy thử số lượng nhỏ hơn hoặc thử lại sau.</string>
     <string name="hashi_bridge_fee_sora">Phí mạng SORA</string>
     <string name="hashi_bridge_fee_ethereum">Gas Ethereum</string>

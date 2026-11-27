@@ -50,6 +50,12 @@
     <string name="hashi_bridge_error_amount_mismatch">The bridge approved %1$s, not the expected %2$s. Nothing was sent.</string>
     <string name="hashi_bridge_error_read">The bridge status could not be read. Try again.</string>
     <string name="hashi_bridge_claims_open">Transfers already approved can still be received.</string>
+    <string name="hashi_bridge_reason_signers_unverified">The bridge operators haven\'t confirmed that the signers are online.</string>
+    <string name="hashi_bridge_reason_signers_down">Not enough bridge signers are online.</string>
+    <string name="hashi_bridge_reason_guardian_halt">The bridge guardians have stopped the signers.</string>
+    <string name="hashi_bridge_reason_recovery">The SORA network is still restoring the bridge.</string>
+    <string name="hashi_bridge_reason_not_active">The bridge is not active on the SORA network.</string>
+    <string name="hashi_bridge_reason_stalled">Earlier transfers are still waiting for signers.</string>
     <string name="hashi_bridge_state_sending_sora">Sending on SORA</string>
     <string name="hashi_bridge_state_receiving">Receiving on Ethereum</string>
     <string name="hashi_bridge_state_approving">Approving on Ethereum</string>
@@ -63,6 +69,7 @@
     <string name="hashi_bridge_error_deposit_unconfirmed">This deposit could not be confirmed on Ethereum. Check your token balance before you deposit again.</string>
     <string name="hashi_bridge_error_allowance">The approval did not take effect. Nothing was deposited.</string>
     <string name="hashi_bridge_error_pending">An earlier transaction is still pending. Try again once it is confirmed.</string>
+    <string name="hashi_bridge_error_cost_changed">The cost went up. Check it and confirm again.</string>
     <string name="hashi_bridge_error_limit">The bridge limit for this token is reached. Try a smaller amount or try again later.</string>
     <string name="hashi_bridge_fee_sora">SORA network fee</string>
     <string name="hashi_bridge_fee_ethereum">Ethereum gas</string>

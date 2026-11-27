@@ -50,6 +50,12 @@
     <string name="hashi_bridge_error_amount_mismatch">הגשר אישר %1$s ולא את %2$s הצפוי. לא נשלח דבר.</string>
     <string name="hashi_bridge_error_read">לא ניתן לקרוא את מצב הגשר. נסה שוב.</string>
     <string name="hashi_bridge_claims_open">העברות שכבר אושרו עדיין ניתנות לקבלה.</string>
+    <string name="hashi_bridge_reason_signers_unverified">מפעילי הגשר לא אישרו שהחותמים מחוברים.</string>
+    <string name="hashi_bridge_reason_signers_down">אין מספיק חותמי גשר מחוברים.</string>
+    <string name="hashi_bridge_reason_guardian_halt">שומרי הגשר עצרו את החותמים.</string>
+    <string name="hashi_bridge_reason_recovery">רשת SORA עדיין משחזרת את הגשר.</string>
+    <string name="hashi_bridge_reason_not_active">הגשר אינו פעיל ברשת SORA.</string>
+    <string name="hashi_bridge_reason_stalled">העברות קודמות עדיין ממתינות לחותמים.</string>
     <string name="hashi_bridge_state_sending_sora">בשליחה ב-SORA</string>
     <string name="hashi_bridge_state_receiving">בקבלה ב-Ethereum</string>
     <string name="hashi_bridge_state_approving">באישור ב-Ethereum</string>
@@ -63,6 +69,7 @@
     <string name="hashi_bridge_error_deposit_unconfirmed">לא ניתן היה לאשר את ההפקדה הזו ב-Ethereum. בדוק את יתרת הטוקן שלך לפני שתפקיד שוב.</string>
     <string name="hashi_bridge_error_allowance">האישור לא נכנס לתוקף. דבר לא הופקד.</string>
     <string name="hashi_bridge_error_pending">עסקה קודמת עדיין ממתינה. נסה שוב לאחר שתאושר.</string>
+    <string name="hashi_bridge_error_cost_changed">העלות עלתה. בדקו אותה ואשרו שוב.</string>
     <string name="hashi_bridge_error_limit">הגעת למגבלת הגשר עבור הטוקן הזה. נסה סכום קטן יותר או נסה שוב מאוחר יותר.</string>
     <string name="hashi_bridge_fee_sora">עמלת רשת SORA</string>
     <string name="hashi_bridge_fee_ethereum">גז Ethereum</string>

@@ -50,6 +50,12 @@
     <string name="hashi_bridge_error_amount_mismatch">Le pont a approuvé %1$s, et non les %2$s attendus. Rien n’a été envoyé.</string>
     <string name="hashi_bridge_error_read">Impossible de lire l’état du pont. Réessayez.</string>
     <string name="hashi_bridge_claims_open">Les transferts déjà approuvés peuvent toujours être reçus.</string>
+    <string name="hashi_bridge_reason_signers_unverified">Les opérateurs du pont n’ont pas confirmé que les signataires sont en ligne.</string>
+    <string name="hashi_bridge_reason_signers_down">Pas assez de signataires du pont en ligne.</string>
+    <string name="hashi_bridge_reason_guardian_halt">Les gardiens du pont ont arrêté les signataires.</string>
+    <string name="hashi_bridge_reason_recovery">Le réseau SORA restaure encore le pont.</string>
+    <string name="hashi_bridge_reason_not_active">Le pont n’est pas actif sur le réseau SORA.</string>
+    <string name="hashi_bridge_reason_stalled">Des transferts précédents attendent encore les signataires.</string>
     <string name="hashi_bridge_state_sending_sora">Envoi sur SORA en cours</string>
     <string name="hashi_bridge_state_receiving">Réception sur Ethereum en cours</string>
     <string name="hashi_bridge_state_approving">Approbation sur Ethereum en cours</string>
@@ -63,6 +69,7 @@
     <string name="hashi_bridge_error_deposit_unconfirmed">Ce dépôt n’a pas pu être confirmé sur Ethereum. Vérifiez votre solde de jetons avant de déposer à nouveau.</string>
     <string name="hashi_bridge_error_allowance">L’approbation n’a pas pris effet. Rien n’a été déposé.</string>
     <string name="hashi_bridge_error_pending">Une transaction précédente est encore en attente. Réessayez une fois qu’elle est confirmée.</string>
+    <string name="hashi_bridge_error_cost_changed">Le coût a augmenté. Vérifiez-le et confirmez à nouveau.</string>
     <string name="hashi_bridge_error_limit">La limite du pont pour ce jeton est atteinte. Essayez un montant plus petit ou réessayez plus tard.</string>
     <string name="hashi_bridge_fee_sora">Frais du réseau SORA</string>
     <string name="hashi_bridge_fee_ethereum">Gaz Ethereum</string>

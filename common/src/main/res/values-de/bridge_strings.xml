@@ -50,6 +50,12 @@
     <string name="hashi_bridge_error_amount_mismatch">Die Bridge hat %1$s bestätigt, nicht die erwarteten %2$s. Es wurde nichts gesendet.</string>
     <string name="hashi_bridge_error_read">Der Bridge-Status konnte nicht gelesen werden. Versuche es erneut.</string>
     <string name="hashi_bridge_claims_open">Bereits bestätigte Überweisungen können weiterhin empfangen werden.</string>
+    <string name="hashi_bridge_reason_signers_unverified">Die Betreiber der Brücke haben nicht bestätigt, dass die Signierer online sind.</string>
+    <string name="hashi_bridge_reason_signers_down">Es sind nicht genug Signierer der Brücke online.</string>
+    <string name="hashi_bridge_reason_guardian_halt">Die Wächter der Brücke haben die Signierer gestoppt.</string>
+    <string name="hashi_bridge_reason_recovery">Das SORA-Netzwerk stellt die Brücke noch wieder her.</string>
+    <string name="hashi_bridge_reason_not_active">Die Brücke ist im SORA-Netzwerk nicht aktiv.</string>
+    <string name="hashi_bridge_reason_stalled">Frühere Überweisungen warten noch auf Signierer.</string>
     <string name="hashi_bridge_state_sending_sora">Wird auf SORA gesendet</string>
     <string name="hashi_bridge_state_receiving">Wird auf Ethereum empfangen</string>
     <string name="hashi_bridge_state_approving">Wird auf Ethereum freigegeben</string>
@@ -63,6 +69,7 @@
     <string name="hashi_bridge_error_deposit_unconfirmed">Diese Einzahlung konnte auf Ethereum nicht bestätigt werden. Prüfe dein Token-Guthaben, bevor du erneut einzahlst.</string>
     <string name="hashi_bridge_error_allowance">Die Freigabe ist nicht wirksam geworden. Es wurde nichts eingezahlt.</string>
     <string name="hashi_bridge_error_pending">Eine frühere Transaktion ist noch ausstehend. Versuche es erneut, sobald sie bestätigt ist.</string>
+    <string name="hashi_bridge_error_cost_changed">Die Kosten sind gestiegen. Prüfe sie und bestätige erneut.</string>
     <string name="hashi_bridge_error_limit">Das Bridge-Limit für diesen Token ist erreicht. Versuche einen kleineren Betrag oder später erneut.</string>
     <string name="hashi_bridge_fee_sora">SORA-Netzwerkgebühr</string>
     <string name="hashi_bridge_fee_ethereum">Ethereum-Gas</string>

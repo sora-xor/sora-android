@@ -50,6 +50,12 @@
     <string name="hashi_bridge_error_amount_mismatch">وافق الجسر على %1$s وليس على %2$s المتوقع. لم يُرسل شيء.</string>
     <string name="hashi_bridge_error_read">تعذرت قراءة حالة الجسر. حاول مرة أخرى.</string>
     <string name="hashi_bridge_claims_open">ما زال بالإمكان استلام التحويلات التي تمت الموافقة عليها.</string>
+    <string name="hashi_bridge_reason_signers_unverified">لم يؤكد مشغلو الجسر أن الموقّعين متصلون.</string>
+    <string name="hashi_bridge_reason_signers_down">عدد موقّعي الجسر المتصلين غير كافٍ.</string>
+    <string name="hashi_bridge_reason_guardian_halt">أوقف حراس الجسر الموقّعين.</string>
+    <string name="hashi_bridge_reason_recovery">لا تزال شبكة SORA تستعيد الجسر.</string>
+    <string name="hashi_bridge_reason_not_active">الجسر غير نشط على شبكة SORA.</string>
+    <string name="hashi_bridge_reason_stalled">لا تزال تحويلات سابقة بانتظار الموقّعين.</string>
     <string name="hashi_bridge_state_sending_sora">جارٍ الإرسال على SORA</string>
     <string name="hashi_bridge_state_receiving">جارٍ الاستلام على Ethereum</string>
     <string name="hashi_bridge_state_approving">جارٍ منح الموافقة على Ethereum</string>
@@ -63,6 +69,7 @@
     <string name="hashi_bridge_error_deposit_unconfirmed">تعذّر تأكيد هذا الإيداع على Ethereum. تحقّق من رصيد الرمز قبل أن تودع مرة أخرى.</string>
     <string name="hashi_bridge_error_allowance">لم تُفعَّل الموافقة. لم يُودَع شيء.</string>
     <string name="hashi_bridge_error_pending">توجد معاملة سابقة ما زالت معلّقة. حاول مرة أخرى بعد تأكيدها.</string>
+    <string name="hashi_bridge_error_cost_changed">ارتفعت التكلفة. راجعها وأكّد مرة أخرى.</string>
     <string name="hashi_bridge_error_limit">تم بلوغ حد الجسر لهذا الرمز. جرّب مبلغًا أصغر أو حاول لاحقًا.</string>
     <string name="hashi_bridge_fee_sora">رسوم شبكة SORA</string>
     <string name="hashi_bridge_fee_ethereum">غاز Ethereum</string>

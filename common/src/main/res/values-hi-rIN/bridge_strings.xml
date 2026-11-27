@@ -50,6 +50,12 @@
     <string name="hashi_bridge_error_amount_mismatch">ब्रिज ने अपेक्षित %2$s नहीं, %1$s मंज़ूर किया। कुछ भी नहीं भेजा गया।</string>
     <string name="hashi_bridge_error_read">ब्रिज की स्थिति पढ़ी नहीं जा सकी। फिर से कोशिश करें।</string>
     <string name="hashi_bridge_claims_open">पहले से मंज़ूर ट्रांसफ़र अब भी प्राप्त किए जा सकते हैं।</string>
+    <string name="hashi_bridge_reason_signers_unverified">ब्रिज ऑपरेटरों ने पुष्टि नहीं की है कि साइनर ऑनलाइन हैं।</string>
+    <string name="hashi_bridge_reason_signers_down">पर्याप्त ब्रिज साइनर ऑनलाइन नहीं हैं।</string>
+    <string name="hashi_bridge_reason_guardian_halt">ब्रिज के संरक्षकों ने साइनर रोक दिए हैं।</string>
+    <string name="hashi_bridge_reason_recovery">SORA नेटवर्क अभी भी ब्रिज को बहाल कर रहा है।</string>
+    <string name="hashi_bridge_reason_not_active">SORA नेटवर्क पर ब्रिज सक्रिय नहीं है।</string>
+    <string name="hashi_bridge_reason_stalled">पिछले ट्रांसफ़र अभी भी साइनर की प्रतीक्षा में हैं।</string>
     <string name="hashi_bridge_state_sending_sora">SORA पर भेजा जा रहा है</string>
     <string name="hashi_bridge_state_receiving">Ethereum पर प्राप्त हो रहा है</string>
     <string name="hashi_bridge_state_approving">Ethereum पर मंज़ूरी दी जा रही है</string>
@@ -63,6 +69,7 @@
     <string name="hashi_bridge_error_deposit_unconfirmed">यह जमा Ethereum पर पुष्टि नहीं हो सका। दोबारा जमा करने से पहले अपना टोकन बैलेंस जाँचें।</string>
     <string name="hashi_bridge_error_allowance">मंज़ूरी लागू नहीं हुई। कुछ भी जमा नहीं हुआ।</string>
     <string name="hashi_bridge_error_pending">पिछला लेनदेन अभी लंबित है। उसकी पुष्टि होने के बाद फिर से कोशिश करें।</string>
+    <string name="hashi_bridge_error_cost_changed">लागत बढ़ गई है। इसे जाँचें और फिर से पुष्टि करें।</string>
     <string name="hashi_bridge_error_limit">इस टोकन के लिए ब्रिज की सीमा पूरी हो गई है। कम राशि आज़माएँ या बाद में फिर से कोशिश करें।</string>
     <string name="hashi_bridge_fee_sora">SORA नेटवर्क शुल्क</string>
     <string name="hashi_bridge_fee_ethereum">Ethereum गैस</string>

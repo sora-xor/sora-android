@@ -50,6 +50,12 @@
     <string name="hashi_bridge_error_amount_mismatch">Körpü gözlənilən %2$s yox, %1$s təsdiqlədi. Heç nə göndərilmədi.</string>
     <string name="hashi_bridge_error_read">Körpünün vəziyyəti oxunmadı. Yenidən cəhd edin.</string>
     <string name="hashi_bridge_claims_open">Artıq təsdiqlənmiş köçürmələri yenə də almaq olar.</string>
+    <string name="hashi_bridge_reason_signers_unverified">Körpü operatorları imzaçıların onlayn olduğunu təsdiqləməyib.</string>
+    <string name="hashi_bridge_reason_signers_down">Kifayət qədər körpü imzaçısı onlayn deyil.</string>
+    <string name="hashi_bridge_reason_guardian_halt">Körpünün mühafizəçiləri imzaçıları dayandırıb.</string>
+    <string name="hashi_bridge_reason_recovery">SORA şəbəkəsi hələ körpünü bərpa edir.</string>
+    <string name="hashi_bridge_reason_not_active">Körpü SORA şəbəkəsində aktiv deyil.</string>
+    <string name="hashi_bridge_reason_stalled">Əvvəlki köçürmələr hələ imzaçıları gözləyir.</string>
     <string name="hashi_bridge_state_sending_sora">SORA-da göndərilir</string>
     <string name="hashi_bridge_state_receiving">Ethereum-da alınır</string>
     <string name="hashi_bridge_state_approving">Ethereum-da təsdiqlənir</string>
@@ -63,6 +69,7 @@
     <string name="hashi_bridge_error_deposit_unconfirmed">Bu depozit Ethereum-da təsdiqlənə bilmədi. Yenidən depozit etməzdən əvvəl token balansınızı yoxlayın.</string>
     <string name="hashi_bridge_error_allowance">Təsdiq qüvvəyə minmədi. Heç nə depozit edilmədi.</string>
     <string name="hashi_bridge_error_pending">Əvvəlki əməliyyat hələ gözləmədədir. Təsdiqləndikdən sonra yenidən cəhd edin.</string>
+    <string name="hashi_bridge_error_cost_changed">Xərc artıb. Yoxlayın və yenidən təsdiqləyin.</string>
     <string name="hashi_bridge_error_limit">Bu token üçün körpü limiti dolub. Daha kiçik məbləğ yoxlayın və ya sonra yenidən cəhd edin.</string>
     <string name="hashi_bridge_fee_sora">SORA şəbəkə haqqı</string>
     <string name="hashi_bridge_fee_ethereum">Ethereum gas haqqı</string>

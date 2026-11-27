@@ -50,6 +50,12 @@
     <string name="hashi_bridge_error_amount_mismatch">پل %1$s را تأیید کرد، نه %2$s مورد انتظار را. چیزی ارسال نشد.</string>
     <string name="hashi_bridge_error_read">وضعیت پل خوانده نشد. دوباره تلاش کنید.</string>
     <string name="hashi_bridge_claims_open">انتقال‌هایی که قبلاً تأیید شده‌اند همچنان قابل دریافت‌اند.</string>
+    <string name="hashi_bridge_reason_signers_unverified">گردانندگان پل تأیید نکرده‌اند که امضاکنندگان آنلاین هستند.</string>
+    <string name="hashi_bridge_reason_signers_down">امضاکنندگان آنلاین پل کافی نیستند.</string>
+    <string name="hashi_bridge_reason_guardian_halt">نگهبانان پل امضاکنندگان را متوقف کرده‌اند.</string>
+    <string name="hashi_bridge_reason_recovery">شبکهٔ SORA هنوز در حال بازیابی پل است.</string>
+    <string name="hashi_bridge_reason_not_active">پل در شبکهٔ SORA فعال نیست.</string>
+    <string name="hashi_bridge_reason_stalled">انتقال‌های قبلی هنوز در انتظار امضاکنندگان هستند.</string>
     <string name="hashi_bridge_state_sending_sora">در حال ارسال در SORA</string>
     <string name="hashi_bridge_state_receiving">در حال دریافت در Ethereum</string>
     <string name="hashi_bridge_state_approving">در حال تأیید در Ethereum</string>
@@ -63,6 +69,7 @@
     <string name="hashi_bridge_error_deposit_unconfirmed">این واریز در Ethereum تأیید نشد. پیش از واریز دوباره، موجودی توکن خود را بررسی کنید.</string>
     <string name="hashi_bridge_error_allowance">تأیید اعمال نشد. چیزی واریز نشد.</string>
     <string name="hashi_bridge_error_pending">یک تراکنش قبلی هنوز در انتظار است. پس از تأیید آن دوباره تلاش کنید.</string>
+    <string name="hashi_bridge_error_cost_changed">هزینه بالا رفت. آن را بررسی کنید و دوباره تأیید کنید.</string>
     <string name="hashi_bridge_error_limit">سقف پل برای این توکن پر شده است. مقدار کمتری را امتحان کنید یا بعداً دوباره تلاش کنید.</string>
     <string name="hashi_bridge_fee_sora">کارمزد شبکه SORA</string>
     <string name="hashi_bridge_fee_ethereum">گاز Ethereum</string>

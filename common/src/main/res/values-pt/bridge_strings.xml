@@ -50,6 +50,12 @@
     <string name="hashi_bridge_error_amount_mismatch">A ponte aprovou %1$s, não os %2$s esperados. Nada foi enviado.</string>
     <string name="hashi_bridge_error_read">Não foi possível ler o estado da ponte. Tente novamente.</string>
     <string name="hashi_bridge_claims_open">Transferências já aprovadas ainda podem ser recebidas.</string>
+    <string name="hashi_bridge_reason_signers_unverified">Os operadores da ponte não confirmaram que os signatários estão online.</string>
+    <string name="hashi_bridge_reason_signers_down">Não há signatários da ponte suficientes online.</string>
+    <string name="hashi_bridge_reason_guardian_halt">Os guardiões da ponte pararam os signatários.</string>
+    <string name="hashi_bridge_reason_recovery">A rede SORA ainda está restaurando a ponte.</string>
+    <string name="hashi_bridge_reason_not_active">A ponte não está ativa na rede SORA.</string>
+    <string name="hashi_bridge_reason_stalled">Transferências anteriores ainda aguardam os signatários.</string>
     <string name="hashi_bridge_state_sending_sora">Enviando na SORA</string>
     <string name="hashi_bridge_state_receiving">Recebendo na Ethereum</string>
     <string name="hashi_bridge_state_approving">Aprovando na Ethereum</string>
@@ -63,6 +69,7 @@
     <string name="hashi_bridge_error_deposit_unconfirmed">Não foi possível confirmar este depósito na Ethereum. Verifique seu saldo do token antes de depositar novamente.</string>
     <string name="hashi_bridge_error_allowance">A aprovação não teve efeito. Nada foi depositado.</string>
     <string name="hashi_bridge_error_pending">Uma transação anterior ainda está pendente. Tente novamente quando ela for confirmada.</string>
+    <string name="hashi_bridge_error_cost_changed">O custo aumentou. Confira e confirme novamente.</string>
     <string name="hashi_bridge_error_limit">O limite da ponte para este token foi atingido. Tente uma quantia menor ou tente mais tarde.</string>
     <string name="hashi_bridge_fee_sora">Taxa da rede SORA</string>
     <string name="hashi_bridge_fee_ethereum">Gás da Ethereum</string>

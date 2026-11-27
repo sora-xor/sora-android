@@ -50,6 +50,12 @@
     <string name="hashi_bridge_error_amount_mismatch">ブリッジが承認したのは%1$sで、予定の%2$sではありません。何も送信されていません。</string>
     <string name="hashi_bridge_error_read">ブリッジの状態を確認できませんでした。もう一度お試しください。</string>
     <string name="hashi_bridge_claims_open">承認済みの送金は引き続き受け取れます。</string>
+    <string name="hashi_bridge_reason_signers_unverified">ブリッジ運営者は、署名者が稼働していることをまだ確認していません。</string>
+    <string name="hashi_bridge_reason_signers_down">稼働中のブリッジ署名者が足りません。</string>
+    <string name="hashi_bridge_reason_guardian_halt">ブリッジのガーディアンが署名者を停止しています。</string>
+    <string name="hashi_bridge_reason_recovery">SORAネットワークはまだブリッジを復旧中です。</string>
+    <string name="hashi_bridge_reason_not_active">SORAネットワークでブリッジが有効になっていません。</string>
+    <string name="hashi_bridge_reason_stalled">以前の送金がまだ署名者を待っています。</string>
     <string name="hashi_bridge_state_sending_sora">SORAで送信中</string>
     <string name="hashi_bridge_state_receiving">Ethereumで受け取り中</string>
     <string name="hashi_bridge_state_approving">Ethereumで承認中</string>
@@ -63,6 +69,7 @@
     <string name="hashi_bridge_error_deposit_unconfirmed">この預け入れはEthereumで確認できませんでした。もう一度預け入れる前に、トークンの残高をご確認ください。</string>
     <string name="hashi_bridge_error_allowance">承認が反映されませんでした。預け入れは行われていません。</string>
     <string name="hashi_bridge_error_pending">前のトランザクションがまだ処理中です。確定してからもう一度お試しください。</string>
+    <string name="hashi_bridge_error_cost_changed">必要なガス代が増えました。内容を確かめて、もう一度確認してください。</string>
     <string name="hashi_bridge_error_limit">このトークンのブリッジ上限に達しています。数量を減らすか、しばらくしてからお試しください。</string>
     <string name="hashi_bridge_fee_sora">SORAネットワーク手数料</string>
     <string name="hashi_bridge_fee_ethereum">Ethereumのガス代</string>

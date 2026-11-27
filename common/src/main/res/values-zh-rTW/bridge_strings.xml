@@ -50,6 +50,12 @@
     <string name="hashi_bridge_error_amount_mismatch">跨鏈橋核准的是 %1$s，而不是預期的 %2$s。未發送任何內容。</string>
     <string name="hashi_bridge_error_read">無法讀取跨鏈橋狀態，請重試。</string>
     <string name="hashi_bridge_claims_open">已核准的轉帳仍可領取。</string>
+    <string name="hashi_bridge_reason_signers_unverified">跨鏈橋營運方尚未確認簽署者在線。</string>
+    <string name="hashi_bridge_reason_signers_down">在線的跨鏈橋簽署者不足。</string>
+    <string name="hashi_bridge_reason_guardian_halt">跨鏈橋守護者已停止簽署者。</string>
+    <string name="hashi_bridge_reason_recovery">SORA 網路仍在恢復跨鏈橋。</string>
+    <string name="hashi_bridge_reason_not_active">跨鏈橋在 SORA 網路上未啟用。</string>
+    <string name="hashi_bridge_reason_stalled">先前的轉帳仍在等待簽署者。</string>
     <string name="hashi_bridge_state_sending_sora">正在 SORA 發送</string>
     <string name="hashi_bridge_state_receiving">正在 Ethereum 領取</string>
     <string name="hashi_bridge_state_approving">正在 Ethereum 授權</string>
@@ -63,6 +69,7 @@
     <string name="hashi_bridge_error_deposit_unconfirmed">無法在 Ethereum 上確認這筆存入。再次存入前，請先檢查您的代幣餘額。</string>
     <string name="hashi_bridge_error_allowance">授權未生效。未存入任何資產。</string>
     <string name="hashi_bridge_error_pending">先前的一筆交易仍在處理中。請在確認後重試。</string>
+    <string name="hashi_bridge_error_cost_changed">費用已上漲。請檢查後再次確認。</string>
     <string name="hashi_bridge_error_limit">該代幣已達到跨鏈橋限額。請減少數量或稍後重試。</string>
     <string name="hashi_bridge_fee_sora">SORA 網路費用</string>
     <string name="hashi_bridge_fee_ethereum">Ethereum Gas 費</string>

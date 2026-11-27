@@ -50,6 +50,12 @@
     <string name="hashi_bridge_error_amount_mismatch">Мост је одобрио %1$s, а не очекиваних %2$s. Ништа није послато.</string>
     <string name="hashi_bridge_error_read">Стање моста није могло да се прочита. Покушајте поново.</string>
     <string name="hashi_bridge_claims_open">Већ одобрени преноси и даље могу да се приме.</string>
+    <string name="hashi_bridge_reason_signers_unverified">Оператори моста нису потврдили да су потписници на мрежи.</string>
+    <string name="hashi_bridge_reason_signers_down">Нема довољно потписника моста на мрежи.</string>
+    <string name="hashi_bridge_reason_guardian_halt">Чувари моста су зауставили потписнике.</string>
+    <string name="hashi_bridge_reason_recovery">SORA мрежа још обнавља мост.</string>
+    <string name="hashi_bridge_reason_not_active">Мост није активан на SORA мрежи.</string>
+    <string name="hashi_bridge_reason_stalled">Ранији преноси још чекају потписнике.</string>
     <string name="hashi_bridge_state_sending_sora">Шаље се на SORA</string>
     <string name="hashi_bridge_state_receiving">Прима се на Ethereum</string>
     <string name="hashi_bridge_state_approving">Одобрава се на Ethereum</string>
@@ -63,6 +69,7 @@
     <string name="hashi_bridge_error_deposit_unconfirmed">Овај депозит није могао да се потврди на Ethereum мрежи. Проверите стање токена пре него што поново уплатите.</string>
     <string name="hashi_bridge_error_allowance">Одобрење није ступило на снагу. Ништа није депоновано.</string>
     <string name="hashi_bridge_error_pending">Претходна трансакција је још на чекању. Покушајте поново када буде потврђена.</string>
+    <string name="hashi_bridge_error_cost_changed">Трошак је порастао. Проверите га и потврдите поново.</string>
     <string name="hashi_bridge_error_limit">Достигнут је лимит моста за овај токен. Пробајте мањи износ или покушајте касније.</string>
     <string name="hashi_bridge_fee_sora">SORA мрежна накнада</string>
     <string name="hashi_bridge_fee_ethereum">Ethereum гас</string>

@@ -50,6 +50,12 @@
     <string name="hashi_bridge_error_amount_mismatch">Köprü beklenen %2$s değil, %1$s onayladı. Hiçbir şey gönderilmedi.</string>
     <string name="hashi_bridge_error_read">Köprü durumu okunamadı. Tekrar deneyin.</string>
     <string name="hashi_bridge_claims_open">Onaylanmış transferler yine de alınabilir.</string>
+    <string name="hashi_bridge_reason_signers_unverified">Köprü operatörleri imzacıların çevrimiçi olduğunu onaylamadı.</string>
+    <string name="hashi_bridge_reason_signers_down">Yeterli sayıda köprü imzacısı çevrimiçi değil.</string>
+    <string name="hashi_bridge_reason_guardian_halt">Köprü koruyucuları imzacıları durdurdu.</string>
+    <string name="hashi_bridge_reason_recovery">SORA ağı köprüyü hâlâ geri yüklüyor.</string>
+    <string name="hashi_bridge_reason_not_active">Köprü SORA ağında etkin değil.</string>
+    <string name="hashi_bridge_reason_stalled">Önceki transferler hâlâ imzacıları bekliyor.</string>
     <string name="hashi_bridge_state_sending_sora">SORA’da gönderiliyor</string>
     <string name="hashi_bridge_state_receiving">Ethereum’da alınıyor</string>
     <string name="hashi_bridge_state_approving">Ethereum’da onaylanıyor</string>
@@ -63,6 +69,7 @@
     <string name="hashi_bridge_error_deposit_unconfirmed">Bu yatırma Ethereum üzerinde doğrulanamadı. Tekrar yatırmadan önce token bakiyenizi kontrol edin.</string>
     <string name="hashi_bridge_error_allowance">Onay geçerli olmadı. Hiçbir şey yatırılmadı.</string>
     <string name="hashi_bridge_error_pending">Önceki bir işlem hâlâ beklemede. Onaylandıktan sonra tekrar deneyin.</string>
+    <string name="hashi_bridge_error_cost_changed">Maliyet arttı. Kontrol edip yeniden onaylayın.</string>
     <string name="hashi_bridge_error_limit">Bu token için köprü limiti doldu. Daha küçük bir tutar deneyin veya daha sonra tekrar deneyin.</string>
     <string name="hashi_bridge_fee_sora">SORA ağ ücreti</string>
     <string name="hashi_bridge_fee_ethereum">Ethereum gas ücreti</string>

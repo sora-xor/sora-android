@@ -50,6 +50,12 @@
     <string name="hashi_bridge_error_amount_mismatch">El puente aprobó %1$s, no los %2$s esperados. No se envió nada.</string>
     <string name="hashi_bridge_error_read">No se pudo leer el estado del puente. Inténtalo de nuevo.</string>
     <string name="hashi_bridge_claims_open">Las transferencias ya aprobadas aún se pueden recibir.</string>
+    <string name="hashi_bridge_reason_signers_unverified">Los operadores del puente no han confirmado que los firmantes estén en línea.</string>
+    <string name="hashi_bridge_reason_signers_down">No hay suficientes firmantes del puente en línea.</string>
+    <string name="hashi_bridge_reason_guardian_halt">Los guardianes del puente han detenido a los firmantes.</string>
+    <string name="hashi_bridge_reason_recovery">La red SORA todavía está restaurando el puente.</string>
+    <string name="hashi_bridge_reason_not_active">El puente no está activo en la red SORA.</string>
+    <string name="hashi_bridge_reason_stalled">Transferencias anteriores siguen esperando a los firmantes.</string>
     <string name="hashi_bridge_state_sending_sora">Enviando en SORA</string>
     <string name="hashi_bridge_state_receiving">Recibiendo en Ethereum</string>
     <string name="hashi_bridge_state_approving">Aprobando en Ethereum</string>
@@ -63,6 +69,7 @@
     <string name="hashi_bridge_error_deposit_unconfirmed">No se pudo confirmar este depósito en Ethereum. Revisa tu saldo del token antes de depositar de nuevo.</string>
     <string name="hashi_bridge_error_allowance">La aprobación no surtió efecto. No se depositó nada.</string>
     <string name="hashi_bridge_error_pending">Una transacción anterior sigue pendiente. Inténtalo de nuevo cuando se confirme.</string>
+    <string name="hashi_bridge_error_cost_changed">El coste ha subido. Revísalo y confirma de nuevo.</string>
     <string name="hashi_bridge_error_limit">Se alcanzó el límite del puente para este token. Prueba con una cantidad menor o más tarde.</string>
     <string name="hashi_bridge_fee_sora">Comisión de la red SORA</string>
     <string name="hashi_bridge_fee_ethereum">Gas de Ethereum</string>

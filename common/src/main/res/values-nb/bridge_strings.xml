@@ -50,6 +50,12 @@
     <string name="hashi_bridge_error_amount_mismatch">Broen godkjente %1$s, ikke de forventede %2$s. Ingenting ble sendt.</string>
     <string name="hashi_bridge_error_read">Kunne ikke lese broens status. Prøv igjen.</string>
     <string name="hashi_bridge_claims_open">Overføringer som allerede er godkjent, kan fortsatt mottas.</string>
+    <string name="hashi_bridge_reason_signers_unverified">Broens operatører har ikke bekreftet at signererne er på nett.</string>
+    <string name="hashi_bridge_reason_signers_down">Ikke nok av broens signerere er på nett.</string>
+    <string name="hashi_bridge_reason_guardian_halt">Broens voktere har stoppet signererne.</string>
+    <string name="hashi_bridge_reason_recovery">SORA-nettverket gjenoppretter fortsatt broen.</string>
+    <string name="hashi_bridge_reason_not_active">Broen er ikke aktiv på SORA-nettverket.</string>
+    <string name="hashi_bridge_reason_stalled">Tidligere overføringer venter fortsatt på signerere.</string>
     <string name="hashi_bridge_state_sending_sora">Sender på SORA</string>
     <string name="hashi_bridge_state_receiving">Mottar på Ethereum</string>
     <string name="hashi_bridge_state_approving">Godkjenner på Ethereum</string>
@@ -63,6 +69,7 @@
     <string name="hashi_bridge_error_deposit_unconfirmed">Dette innskuddet kunne ikke bekreftes på Ethereum. Sjekk tokensaldoen din før du setter inn på nytt.</string>
     <string name="hashi_bridge_error_allowance">Godkjenningen trådte ikke i kraft. Ingenting ble satt inn.</string>
     <string name="hashi_bridge_error_pending">En tidligere transaksjon venter fortsatt. Prøv igjen når den er bekreftet.</string>
+    <string name="hashi_bridge_error_cost_changed">Kostnaden har økt. Sjekk den og bekreft på nytt.</string>
     <string name="hashi_bridge_error_limit">Broens grense for denne tokenen er nådd. Prøv et mindre beløp, eller prøv igjen senere.</string>
     <string name="hashi_bridge_fee_sora">SORA-nettverksgebyr</string>
     <string name="hashi_bridge_fee_ethereum">Ethereum-gass</string>
