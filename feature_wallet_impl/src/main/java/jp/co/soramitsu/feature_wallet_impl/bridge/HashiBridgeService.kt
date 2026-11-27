@@ -1334,6 +1334,12 @@ class HashiBridgeService(
         val record = store.get(start.wallet, start.id) ?: start
         var next = record
         record.ethSteps.filter { it.state.isOpen }.forEach { step -> next = watchStep(next, step) }
+        // A deposit given up because its nonce was seen used with no receipt of ours is still
+        // looked up (receipts only, nothing is sent): a receipt that shows up late settles it, so a
+        // deposit SORA credits is never left "could not be confirmed".
+        record.ethSteps
+            .filter { it.intent == HashiEthIntent.DEPOSIT && it.state == HashiEthStepState.REPLACED && it.failure == NONCE_USED_ELSEWHERE }
+            .forEach { step -> next = settleByReceipt(next, step) }
         next = when (next.direction) {
             HashiDirection.SORA_TO_ETHEREUM -> refreshOutgoing(next)
             HashiDirection.ETHEREUM_TO_SORA -> refreshIncoming(next)
@@ -1433,14 +1439,16 @@ class HashiBridgeService(
         return when {
             deposit?.state == HashiEthStepState.CONFIRMED -> {
                 val depositHash = EthHex.decodeFixed(checkNotNull(deposit.confirmedHash), 32)
+                // A late receipt can confirm a deposit that was shown as unconfirmed.
+                val settled = if (record.failure == HashiFailure.DEPOSIT_UNCONFIRMED) record.copy(failure = null, error = null) else record
                 // Done only when the INCOMING TRANSFER request is Done (spec §8 H); the load
                 // request can be Done while the transfer is still pending.
-                val incoming = record.incomingRequestHash?.let { EthHex.decodeFixed(it, 32) } ?: sora.incomingRequestHash(depositHash)
+                val incoming = settled.incomingRequestHash?.let { EthHex.decodeFixed(it, 32) } ?: sora.incomingRequestHash(depositHash)
                 if (incoming == null) {
-                    record.copy(state = HashiTransferState.WAITING_SORA)
+                    settled.copy(state = HashiTransferState.WAITING_SORA)
                 } else {
                     val value = sora.requestStatus(incoming)
-                    val base = record.copy(incomingRequestHash = EthHex.encode(incoming), requestStatus = value?.status?.wireName)
+                    val base = settled.copy(incomingRequestHash = EthHex.encode(incoming), requestStatus = value?.status?.wireName)
                     when (value?.status) {
                         HashiRequestStatus.DONE -> base.copy(state = HashiTransferState.DONE, error = null, failure = null)
                         HashiRequestStatus.FAILED -> base.copy(
@@ -1518,6 +1526,20 @@ class HashiBridgeService(
         } catch (_: Exception) {
             record
         }
+    }
+
+    /** [step] confirmed or reverted by a receipt of one of its attempts, else unchanged. Never sends. */
+    private suspend fun settleByReceipt(record: HashiTransferRecord, step: HashiEthStep): HashiTransferRecord {
+        for (attempt in step.attempts.asReversed()) {
+            val receipt = ethereum.receipt(EthHex.decodeFixed(attempt.hash, 32)) ?: continue
+            val next = when {
+                receipt.status == 1 && proves(record, step, receipt) -> step.copy(state = HashiEthStepState.CONFIRMED, confirmedHash = attempt.hash, failure = null)
+                receipt.status == 1 -> step.copy(state = HashiEthStepState.REVERTED, confirmedHash = attempt.hash, failure = EVENT_MISSING)
+                else -> step.copy(state = HashiEthStepState.REVERTED, confirmedHash = attempt.hash, failure = "REVERTED")
+            }
+            return record.withStep(next)
+        }
+        return record
     }
 
     /**
