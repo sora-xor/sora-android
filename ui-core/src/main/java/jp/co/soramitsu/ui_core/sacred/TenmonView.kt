@@ -254,8 +254,6 @@ internal class TenmonView(context: Context) : SurfaceView(context), SurfaceHolde
     /** On the main thread: the way out has run its time and its last frame is drawn. */
     var onOver: (() -> Unit)? = null
 
-    private val posted = AtomicInteger()
-
     /** Held while a frame is drawn into the surface: once the surface is going, no frame is begun. */
     private val frameLock = Any()
     private var drawing: Drawing? = null
@@ -263,10 +261,11 @@ internal class TenmonView(context: Context) : SurfaceView(context), SurfaceHolde
     private val buildWatch = Runnable { if (drawing?.hasDrawn != true) fail() }
 
     /**
-     * Frames that have really been drawn: a frame counts once the one after it has been handed over, which the
-     * renderer accepts only when it has finished the one before.
+     * Frames that have really been drawn into the surface the view has now: a frame counts once the one after it has
+     * been handed over, which the renderer accepts only when it has finished the one before. A surface made again
+     * starts from none.
      */
-    val framesCompleted: Int get() = max(0, posted.get() - 1)
+    val framesCompleted: Int get() = max(0, (drawing?.posted?.get() ?: 0) - 1)
 
     init {
         // Over the window, not behind a hole in it: nothing shows black before the first frame.
@@ -360,6 +359,17 @@ internal class TenmonView(context: Context) : SurfaceView(context), SurfaceHolde
             private set
         private var handedOver = 0
 
+        /** Frames handed over to this surface. */
+        val posted = AtomicInteger()
+
+        /**
+         * On the main thread: the scene gives up, if this is still the view's worker. One whose surface went (and
+         * perhaps came again with a new worker) before this ran says nothing for the new one.
+         */
+        private fun failLater() {
+            post { if (drawing === this) fail() }
+        }
+
         /** Draws no more after the frame it is on; does not wait for it. */
         fun halt() {
             running = false
@@ -367,14 +377,14 @@ internal class TenmonView(context: Context) : SurfaceView(context), SurfaceHolde
 
         override fun run() {
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-                post { fail() }
+                failLater()
                 return
             }
             val tracer = try {
                 TenmonTracer()
             } catch (broken: RuntimeException) {
                 Log.w(TAG, "The launch scene's shader did not build", broken)
-                if (running) post { fail() }
+                if (running) failLater()
                 return
             }
             // The covers draw their still frames with a shader of their own, built here rather than on the main thread,
@@ -418,7 +428,7 @@ internal class TenmonView(context: Context) : SurfaceView(context), SurfaceHolde
                 // The surface went away mid-frame, or the device would not draw it.
                 if (running) {
                     Log.w(TAG, "The launch scene stopped drawing", gone)
-                    post { fail() }
+                    failLater()
                 }
             } catch (interrupted: InterruptedException) {
                 // Asked to stop.
