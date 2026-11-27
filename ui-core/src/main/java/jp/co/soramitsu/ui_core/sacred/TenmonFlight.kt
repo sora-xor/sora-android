@@ -70,6 +70,9 @@ object TenmonFlight {
     /** Counts the launches begun: only the startup screen that began the newest one can end it by going. */
     private var launches = 0
 
+    /** A finger was set down on the startup screen's scene: its first screen does not wait for the way out either. */
+    private var launchSkipped = false
+
     /**
      * Whether the next first screen carries a launch on, traced or still: that screen then opens with no transition
      * of its own, as the scene is over it from its first frame.
@@ -84,6 +87,10 @@ object TenmonFlight {
             }
             return isPlaying || (launchPending && carry == null)
         }
+
+    /** Whether the mark of the scene over a first screen is flying on to it: the scene is on its way out. */
+    val isLeaving: Boolean
+        get() = carry?.left == true
 
     /** Whether the traced scene is on for the next screen to carry on. */
     val isPlaying: Boolean
@@ -105,6 +112,8 @@ object TenmonFlight {
         val context = host.context
         host.removeAllViews()
         if (carry == null) {
+            // A startup screen made again joins its launch, and what was asked of it; a new launch starts afresh.
+            if (!carriesOn) launchSkipped = false
             launchPending = true
             startupGoneNanos = 0L
             val launch = ++launches
@@ -122,6 +131,8 @@ object TenmonFlight {
             })
         }
         val stage = TenmonStage(context)
+        // A tap on the scene while the wallet is checked: the person will not wait for its way out over the first screen.
+        stage.onTouched = { if (carry == null) launchSkipped = true }
         host.addView(stage, ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
         val mode = mode(motion, Build.VERSION.SDK_INT, LitLightRig.isHot(context.applicationContext))
         if (mode == Mode.STILL || Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
@@ -177,9 +188,12 @@ object TenmonFlight {
         if (!carriesOn) return false
         val window = activity.window ?: return false
         val decor = window.decorView as? ViewGroup ?: return false
-        val traced = isPlaying && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
+        // A phone that became hot while the wallet was checked carries the still picture, not a second traced surface.
+        val traced = isPlaying && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            !LitLightRig.isHot(activity.applicationContext)
         launchPending = false
-        carry = cover(activity, window, decor, traced)
+        carry = cover(activity, window, decor, traced).also { it.skipped = launchSkipped }
+        launchSkipped = false
         return true
     }
 
@@ -200,12 +214,24 @@ object TenmonFlight {
         decor.addView(stage, ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
         // Dark icons in the bars over the light page, whatever the theme under it.
         val bars = WindowCompat.getInsetsController(window, decor)
-        val made = Carry(stage, bars, bars.isAppearanceLightStatusBars, bars.isAppearanceLightNavigationBars)
+        // Nor does a screen reader reach what is covered: the screen's own views are kept from it until it is let through.
+        val content = decor.findViewById<View>(android.R.id.content)
+        val made = Carry(
+            stage, bars, bars.isAppearanceLightStatusBars, bars.isAppearanceLightNavigationBars,
+            content, content?.importantForAccessibility ?: View.IMPORTANT_FOR_ACCESSIBILITY_AUTO,
+        )
+        content?.importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS
         bars.isAppearanceLightStatusBars = true
         bars.isAppearanceLightNavigationBars = true
         // A scene that would not draw over this screen has left the still picture in its place, which keeps the screen
-        // covered until it is ready.
-        stage.onGaveUp = { }
+        // covered until it is ready. One that stops while the mark flies on leaves at once: the screen is ready under it.
+        stage.onGaveUp = {
+            val current = carry
+            if (current != null && current.stage === stage && current.left) {
+                stage.cover.showFrame(ARRIVED, current.landing)
+                finish(FADE_MILLIS)
+            }
+        }
         stage.addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
             override fun onViewAttachedToWindow(view: View) = Unit
 
@@ -232,9 +258,24 @@ object TenmonFlight {
             return
         }
         carry.landing = landing
-        // A screen is often laid out twice as its insets arrive: the mark flies to where it has come to rest.
+        // The screen is there: from now every touch is its own, the first included, while the scene still settles.
+        letThrough(carry)
         main.removeCallbacks(carry.leaves)
+        if (carry.skipped) {
+            // Asked not to wait while it covered the screen: it goes now, once the screen's layout pass is over.
+            main.post(carry.leaves)
+            return
+        }
+        // A screen is often laid out twice as its insets arrive: the mark flies to where it has come to rest.
         main.postDelayed(carry.leaves, SETTLE_MILLIS)
+    }
+
+    /** Touches, and a screen reader, reach the first screen from here. */
+    private fun letThrough(carry: Carry) {
+        carry.ready = true
+        carry.stage.isClickable = false
+        carry.content?.importantForAccessibility = carry.contentAccessibility
+        carry.content = null
     }
 
     private fun aim(carry: Carry, scene: TenmonView, landing: Landing?) {
@@ -274,7 +315,7 @@ object TenmonFlight {
             return
         }
         carry.left = true
-        carry.stage.isClickable = false
+        letThrough(carry)
         aim(carry, scene, carry.landing)
         scene.onOver = { finish(FADE_MILLIS) }
         timeline.leave(SystemClock.elapsedRealtimeNanos())
@@ -288,7 +329,11 @@ object TenmonFlight {
     private fun skip() {
         val carry = carry ?: return
         carry.skipped = true
-        if (carry.left) finish(FADE_MILLIS)
+        when {
+            carry.left -> finish(FADE_MILLIS)
+            // The screen is ready and takes this touch; the scene does not settle or play its way out first.
+            carry.ready -> leave()
+        }
     }
 
     /**
@@ -304,7 +349,7 @@ object TenmonFlight {
         main.removeCallbacks(carry.leaves)
         main.removeCallbacks(carry.ends)
         // From here every touch reaches the screen.
-        stage.isClickable = false
+        letThrough(carry)
         stage.onTouched = null
         stage.dropScene()
         carry.bars.isAppearanceLightStatusBars = carry.lightStatusBar
@@ -323,8 +368,13 @@ object TenmonFlight {
         val bars: WindowInsetsControllerCompat,
         val lightStatusBar: Boolean,
         val lightNavigationBar: Boolean,
+        /** The screen's own views, kept from a screen reader while covered; null once given back. */
+        var content: View?,
+        val contentAccessibility: Int,
     ) {
         var landing: Landing? = null
+        /** The first screen has said it is laid out: its touches are its own. */
+        var ready = false
         var left = false
         var skipped = false
         var frameWaits = 0

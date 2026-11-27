@@ -30,6 +30,7 @@ import kotlin.math.roundToInt
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Assume.assumeTrue
@@ -235,6 +236,78 @@ class LaunchSceneTest {
     }
 
     @Test
+    fun theFirstTapTheMomentTheStillCoveredScreenIsReadyIsTheScreens() {
+        ActivityScenario.launch(ComponentActivity::class.java).use { scenario ->
+            lateinit var first: FirstScreen
+            scenario.onActivity { first = makeFirstScreen(it, motion = false) }
+            scenario.onActivity { activity ->
+                assertTrue(TenmonFlight.carryOn(activity))
+                TenmonFlight.end(first.host)
+            }
+            instrumentation.waitForIdleSync()
+            scenario.onActivity {
+                TenmonFlight.firstScreenShown(null)
+                assertEquals("the picture still stands over the ready screen", first.uncovered + 1, first.decor.childCount)
+            }
+            // At once, before the scene has settled or gone: the screen is there, and the touch is its own.
+            tap(first.key)
+            assertEquals("the first tap on the ready screen is never lost", 1, first.taps.get())
+            awaitUncovered(first)
+        }
+    }
+
+    @Test
+    fun theFirstTapTheMomentTheTracedCoveredScreenIsReadyIsTheScreens() {
+        assumeTrue("the traced scene needs Android 13", Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+        ActivityScenario.launch(ComponentActivity::class.java).use { scenario ->
+            val first = firstScreen(scenario)
+            assumeTrue("a hot phone shows the plain scene", first.mode == TenmonFlight.Mode.TRACED)
+            awaitFrames(first.host)
+            scenario.onActivity { activity ->
+                assertTrue(TenmonFlight.carryOn(activity))
+                TenmonFlight.end(first.host)
+            }
+            instrumentation.waitForIdleSync()
+            scenario.onActivity {
+                TenmonFlight.firstScreenShown(null)
+                val top = first.decor.getChildAt(first.decor.childCount - 1)
+                assertNotNull("the traced scene still covers the ready screen", find(top))
+            }
+            tap(first.key)
+            assertEquals("the first tap on the ready screen is never lost", 1, first.taps.get())
+            awaitUncovered(first)
+        }
+    }
+
+    @Test
+    fun aTapOnTheStartupScreensSceneIsRememberedOverTheFirstScreen() {
+        assumeTrue("the traced scene needs Android 13", Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+        ActivityScenario.launch(ComponentActivity::class.java).use { scenario ->
+            val first = firstScreen(scenario)
+            assumeTrue("a hot phone shows the plain scene", first.mode == TenmonFlight.Mode.TRACED)
+            awaitFrames(first.host)
+            // While the wallet is checked: a finger on the rings.
+            tap(first.host)
+            scenario.onActivity { activity ->
+                assertTrue(TenmonFlight.carryOn(activity))
+                TenmonFlight.end(first.host)
+                assertEquals("still covered: the screen is not ready", first.uncovered + 1, first.decor.childCount)
+                TenmonFlight.firstScreenShown(null)
+            }
+            // Ready: the scene does not settle or play its way out, as if the tap had been on it over this screen.
+            instrumentation.runOnMainSync {
+                if (first.decor.childCount == first.uncovered + 1) {
+                    assertNull(
+                        "a scene asked not to wait does not play its way out",
+                        find(first.decor.getChildAt(first.decor.childCount - 1)),
+                    )
+                }
+            }
+            awaitUncovered(first)
+        }
+    }
+
+    @Test
     fun theMarkSetsDownWhereTheFirstScreenShowsIt() {
         assumeTrue("the traced scene needs Android 13", Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
         ActivityScenario.launch(ComponentActivity::class.java).use { scenario ->
@@ -308,18 +381,20 @@ class LaunchSceneTest {
         return made
     }
 
-    /** Until the scene over the first screen lets touches through: the mark has been told to fly on. */
+    /** Until the mark of the scene over the first screen flies on; the scene lets touches through from then at least. */
     private fun awaitFlyingOn(first: FirstScreen) {
         val deadline = SystemClock.uptimeMillis() + 20_000
-        var through = false
-        while (!through && SystemClock.uptimeMillis() < deadline) {
+        var flying = false
+        while (!flying && SystemClock.uptimeMillis() < deadline) {
             SystemClock.sleep(16)
             instrumentation.runOnMainSync {
                 val top = first.decor.getChildAt(first.decor.childCount - 1)
-                through = first.decor.childCount == first.uncovered + 1 && !top.isClickable
+                // Flying on, or (a surface that drew nothing in time) already fading without its way out.
+                flying = first.decor.childCount == first.uncovered + 1 && !top.isClickable &&
+                    (TenmonFlight.isLeaving || find(top) == null)
             }
         }
-        assertTrue("the mark flies on once the first screen has said where it shows it", through)
+        assertTrue("the mark flies on once the first screen has said where it shows it", flying)
     }
 
     private fun awaitUncovered(first: FirstScreen) {
