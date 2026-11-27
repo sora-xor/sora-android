@@ -1,12 +1,14 @@
 package jp.co.soramitsu.feature_wallet_impl.di
 
 import android.content.Context
+import dagger.BindsOptionalOf
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import java.io.File
+import java.util.Optional
 import javax.inject.Singleton
 import jp.co.soramitsu.common.account.WalletRecoveryCapabilityGate
 import jp.co.soramitsu.common.hashi.BoundedHashiRpcTransport
@@ -24,6 +26,7 @@ import jp.co.soramitsu.feature_wallet_impl.bridge.AppHashiSoraGateway
 import jp.co.soramitsu.feature_wallet_impl.bridge.FileHashiTransferStore
 import jp.co.soramitsu.feature_wallet_impl.bridge.HashiBridgeAssetsImpl
 import jp.co.soramitsu.feature_wallet_impl.bridge.HashiBridgeService
+import jp.co.soramitsu.feature_wallet_impl.bridge.HashiBridgeTestChains
 import jp.co.soramitsu.feature_wallet_impl.bridge.HashiTransferStore
 import jp.co.soramitsu.feature_wallet_impl.bridge.RemoteConfigSignerReports
 import jp.co.soramitsu.sora.substrate.runtime.Sora2BoundedRuntimeRpcClient
@@ -52,10 +55,13 @@ object HashiBridgeModule {
         assetsInteractor: AssetsInteractor,
         pendingSubmissions: Sora2PendingSubmissionCoordinator,
         database: AppDatabase,
+        testChains: Optional<HashiBridgeTestChains>,
     ): HashiBridgeService {
         val transport = BoundedHashiRpcTransport(http)
+        // Always absent in release builds: only a debug build has a provider (see HashiBridgeTestChains).
+        val standIn = testChains.orElse(null)?.gateways()
         return HashiBridgeService(
-            sora = AppHashiSoraGateway(
+            sora = standIn?.first ?: AppHashiSoraGateway(
                 rpc = HashiSoraRpcClient(transport),
                 signerReports = RemoteConfigSignerReports(http),
                 chainSupport = chainSupport,
@@ -65,7 +71,7 @@ object HashiBridgeModule {
                 assetsInteractor = assetsInteractor,
                 pendingSubmissions = pendingSubmissions,
             ),
-            ethereum = AppHashiEthereumGateway(EthereumRpcClient(transport)),
+            ethereum = standIn?.second ?: AppHashiEthereumGateway(EthereumRpcClient(transport)),
             accounts = AppHashiEthereumAccounts(credentials, store, signingRefusal = { account ->
                 // Exactly the rule of the SORA signer (ExtrinsicManager): recovery mode signs
                 // nothing, and an account whose keys are unavailable is read-only.
@@ -82,4 +88,12 @@ object HashiBridgeModule {
     @Provides
     @Singleton
     fun provideHashiBridgeAssets(service: HashiBridgeService): HashiBridgeAssets = HashiBridgeAssetsImpl(service)
+}
+
+/** Declares that [HashiBridgeTestChains] may be absent: it is, in every release build. */
+@Module
+@InstallIn(SingletonComponent::class)
+abstract class HashiBridgeTestChainsSlot {
+    @BindsOptionalOf
+    abstract fun testChains(): HashiBridgeTestChains
 }

@@ -78,6 +78,16 @@ interface HashiEthereumGateway {
     suspend fun lookupEverywhere(hash: ByteArray): EthTransactionLookup
 }
 
+/**
+ * A stand-in for both chains. Release builds have none (nothing provides one, so the bridge always
+ * talks to SORA and Ethereum mainnet); a debug build may provide one to drive the real screens,
+ * service, transfer store, PIN and Ethereum signing without sending anything to a network.
+ */
+interface HashiBridgeTestChains {
+    /** Null: the real chains. */
+    fun gateways(): Pair<HashiSoraGateway, HashiEthereumGateway>?
+}
+
 /** The wallet's Ethereum account (spec §1). */
 interface HashiEthereumAccounts {
     /** The checksummed address of [account]'s Ethereum account, or null when it has no phrase. */
