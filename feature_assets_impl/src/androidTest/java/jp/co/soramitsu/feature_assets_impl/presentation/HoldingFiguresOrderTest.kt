@@ -40,6 +40,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import jp.co.soramitsu.common.domain.DEFAULT_ICON_URI
@@ -100,16 +101,18 @@ class HoldingFiguresOrderTest {
         )
         assertTrue("no line falls below its place: $seen", layout.getLineBottom(lines - 1) <= node.size.height + 1f)
         // Nor is any line cut by what holds the text: each line's ink, placed in the text's place as its alignment puts
-        // it, lies within what shows of that place on screen (clipped by every parent), from the first line's top to
-        // the last line's baseline.
+        // it (End is the left in a right-to-left paragraph), lies within what shows of that place on screen (clipped by
+        // every parent), from the first line's top to the last line's bottom, its descenders included.
         val origin = node.positionInRoot
         val shown = node.boundsInRoot
         val align = layout.layoutInput.style.textAlign
+        val rtl = layout.layoutInput.layoutDirection == LayoutDirection.Rtl
+        val toRight = align == TextAlign.Right || (align == TextAlign.End && !rtl) || (align == TextAlign.Start && rtl)
         for (line in 0 until lines) {
             val width = layout.getLineRight(line) - layout.getLineLeft(line)
-            val left = origin.x + when (align) {
-                TextAlign.End, TextAlign.Right -> node.size.width - width
-                TextAlign.Center -> (node.size.width - width) / 2f
+            val left = origin.x + when {
+                toRight -> node.size.width - width
+                align == TextAlign.Center -> (node.size.width - width) / 2f
                 else -> layout.getLineLeft(line)
             }
             assertTrue(
@@ -122,8 +125,8 @@ class HoldingFiguresOrderTest {
             origin.y + layout.getLineTop(0) >= shown.top - CLIP_SLACK,
         )
         assertTrue(
-            "the last line shows down to its baseline, ${origin.y + layout.getLineBaseline(lines - 1)} over ${shown.bottom}: $seen",
-            origin.y + layout.getLineBaseline(lines - 1) <= shown.bottom + CLIP_SLACK,
+            "the last line shows down to its bottom, ${origin.y + layout.getLineBottom(lines - 1)} over ${shown.bottom}: $seen",
+            origin.y + layout.getLineBottom(lines - 1) <= shown.bottom + CLIP_SLACK,
         )
     }
 
