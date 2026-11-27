@@ -37,6 +37,7 @@ import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -97,13 +98,31 @@ class HoldingFiguresOrderTest {
             (0 until lines).all { layout.getLineRight(it) - layout.getLineLeft(it) <= node.size.width + 1f },
         )
         assertTrue("no line falls below its place: $seen", layout.getLineBottom(lines - 1) <= node.size.height + 1f)
-        // Nor is the place itself cut by what holds it: what shows of it on screen (clipped by every parent) is all of
-        // its width, and down to its last line's baseline.
+        // Nor is any line cut by what holds the text: each line's ink, placed in the text's place as its alignment puts
+        // it, lies within what shows of that place on screen (clipped by every parent), from the first line's top to
+        // the last line's baseline.
+        val origin = node.positionInRoot
         val shown = node.boundsInRoot
-        assertTrue("its whole width shows, ${shown.width} px of ${node.size.width}: $seen", shown.width >= node.size.width - 1f)
+        val align = layout.layoutInput.style.textAlign
+        for (line in 0 until lines) {
+            val width = layout.getLineRight(line) - layout.getLineLeft(line)
+            val left = origin.x + when (align) {
+                TextAlign.End, TextAlign.Right -> node.size.width - width
+                TextAlign.Center -> (node.size.width - width) / 2f
+                else -> layout.getLineLeft(line)
+            }
+            assertTrue(
+                "line $line shows whole across, $left..${left + width} in ${shown.left}..${shown.right}: $seen",
+                left >= shown.left - CLIP_SLACK && left + width <= shown.right + CLIP_SLACK,
+            )
+        }
         assertTrue(
-            "its last line shows, ${shown.height} px of ${node.size.height}: $seen",
-            shown.height >= layout.getLineBaseline(lines - 1) - 1f,
+            "the first line's top shows, ${origin.y + layout.getLineTop(0)} under ${shown.top}: $seen",
+            origin.y + layout.getLineTop(0) >= shown.top - CLIP_SLACK,
+        )
+        assertTrue(
+            "the last line shows down to its baseline, ${origin.y + layout.getLineBaseline(lines - 1)} over ${shown.bottom}: $seen",
+            origin.y + layout.getLineBaseline(lines - 1) <= shown.bottom + CLIP_SLACK,
         )
     }
 
@@ -245,6 +264,7 @@ class HoldingFiguresOrderTest {
         }
         text(LONG_AMOUNT).assertIsDisplayed().assertNotCut()
         text("PSWAP").assertIsDisplayed().assertNotCut()
+        text("$1\u00A0234\u00A0567.89").assertIsDisplayed().assertNotCut()
         assertAmountOverValue(text(LONG_AMOUNT), text("$1\u00A0234\u00A0567.89"))
     }
 
@@ -300,6 +320,7 @@ class HoldingFiguresOrderTest {
         }
         val whole = LONG_AMOUNT.replace(' ', '\u00A0')
         text("$whole - $whole").assertIsDisplayed().assertNotCut()
+        text("$99").assertIsDisplayed().assertNotCut()
         assertAmountOverValue(text("$whole - $whole"), text("$99"))
     }
 
@@ -334,6 +355,8 @@ class HoldingFiguresOrderTest {
     }
 
     private companion object {
+        /** Half a pixel: what rounding to whole pixels can leave between a line and the edge that shows it. */
+        const val CLIP_SLACK = 0.5f
         const val LONG_AMOUNT = "123\u00A0456\u00A0789.123456 PSWAP"
     }
 }
