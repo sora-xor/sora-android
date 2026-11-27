@@ -37,7 +37,9 @@ import org.junit.Assert.assertTrue
  *
  * The wallet is the public BIP39 test phrase ("abandon … about"), imported on the benchmark device only, behind a
  * PIN made for these runs. No real secret is ever typed. Runs only against the production-shaped benchmark build
- * signed with the test key.
+ * signed with the test key, installed as it is: such a build is disposable by contract (its data is cleared and its
+ * PIN typed), so nobody's own wallet belongs in it. The screens are found by their English text: run on a device in
+ * English.
  */
 internal object SoraJourney {
     const val PACKAGE_NAME = "jp.co.soramitsu.sora"
@@ -124,20 +126,35 @@ internal object SoraJourney {
     }
 
     /**
-     * Clears the app's data, only on a benchmark build that was installed as it is: a test-key build put over a debug
-     * build keeps that build's data (and its wallet) and is no longer debuggable, but its install time says it was
-     * put over something. Uninstall first to measure from a fresh install.
+     * Refuses, before anything can clear or reset it, an install that may hold someone's wallet: only a test-key,
+     * non-debuggable build installed as it is goes on. A test-key build put over a debug build keeps that build's
+     * data (and its wallet) and is no longer debuggable, but its install time says it was put over something.
+     * Macrobenchmark resets compilation by reinstalling the app on some Android versions, which clears its data,
+     * before a test's setup runs: the benchmark asks this first. Uninstall first to measure from a fresh install.
      */
-    fun clearAppData(device: UiDevice) {
+    fun requireInstalledAsItself() {
         requireTestKeyInstall()
         val info = InstrumentationRegistry.getInstrumentation().context.packageManager.getPackageInfo(PACKAGE_NAME, 0)
         assertTrue(
-            "Refusing to clear $PACKAGE_NAME: it was installed over an earlier install, whose wallet it may hold " +
-                "(uninstall it first)",
+            "Refusing to clear or reset $PACKAGE_NAME: it was installed over an earlier install, whose wallet it may " +
+                "hold (uninstall it first)",
             info.firstInstallTime == info.lastUpdateTime,
         )
-        device.executeShellCommand("pm clear $PACKAGE_NAME")
     }
+
+    /**
+     * Clears the app's data, only on a benchmark build installed as it is ([requireInstalledAsItself]), for the
+     * user these tests run as, and only if the clear succeeds.
+     */
+    fun clearAppData(device: UiDevice) {
+        requireInstalledAsItself()
+        // The user these tests run as, which the package was looked up for (a uid is user * 100000 + app id).
+        val user = android.os.Process.myUid() / PER_USER_RANGE
+        val result = device.executeShellCommand("pm clear --user $user $PACKAGE_NAME").trim()
+        assertTrue("Clearing $PACKAGE_NAME for user $user did not succeed: $result", result == "Success")
+    }
+
+    private const val PER_USER_RANGE = 100_000
 
     fun launchCold(device: UiDevice) {
         device.executeShellCommand("am force-stop $PACKAGE_NAME")
@@ -188,6 +205,9 @@ internal object SoraJourney {
         var source: UiObject2? = null
         var tries = 0
         while (source == null && tries < IMPORT_TRIES) {
+            // A source list that came up only after the last wait is taken as it is, not pressed for again.
+            source = if (tries > 0) device.findObject(By.text("Passphrase")) else null
+            if (source != null) break
             tries += 1
             waitFor(device, tag("ImportAccount"), "Import account").click()
             source = device.wait(Until.findObject(By.text("Passphrase")), IMPORT_SOURCE_MILLIS)
@@ -236,6 +256,11 @@ internal object SoraJourney {
             var taken = false
             var tries = 0
             while (!taken && tries < PIN_KEY_TRIES) {
+                // A digit that showed as entered only after the last wait is not pressed again.
+                if (tries > 0 && device.hasObject(By.descStartsWith("$PIN_DIGITS_ENTERED$entered "))) {
+                    taken = true
+                    break
+                }
                 tries += 1
                 waitFor(device, pinKey(digit), "PIN key $digit").click()
                 taken = entered == TEST_PIN.length ||
@@ -294,9 +319,12 @@ internal object SoraJourney {
             device.wait(Until.gone(By.descStartsWith(READING_BALANCES)), TIMEOUT_MILLIS) == true &&
                 device.wait(Until.gone(By.textStartsWith(READING_BALANCES)), TIMEOUT_MILLIS) == true,
         )
+        // A read that failed is not a read: the time to it is not a time to balances.
+        assertTrue("The Wallet home could not read its balances", !device.hasObject(By.text(BALANCE_UNAVAILABLE)))
     }
 
     private const val READING_BALANCES = "Reading balances"
+    private const val BALANCE_UNAVAILABLE = "Balance unavailable"
 
     /** The home's own scroller (the Column under the hero). */
     private fun homeScroller(device: UiDevice): UiObject2 =

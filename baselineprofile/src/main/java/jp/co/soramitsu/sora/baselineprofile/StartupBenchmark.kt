@@ -38,6 +38,7 @@ import jp.co.soramitsu.sora.baselineprofile.SoraJourney.SECTION_STARTUP_TO_SAFE_
 import jp.co.soramitsu.sora.baselineprofile.SoraJourney.SECTION_UNLOCK_TO_HOME
 import jp.co.soramitsu.sora.baselineprofile.SoraJourney.STARTUP_TIMEOUT
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -55,6 +56,13 @@ class StartupBenchmark {
 
     @get:Rule
     val benchmarkRule = MacrobenchmarkRule()
+
+    /**
+     * Before Macrobenchmark can reset compilation, which reinstalls the app on some Android versions and so clears
+     * its data: only a disposable benchmark install is measured.
+     */
+    @Before
+    fun onlyABenchmarkInstalledAsItself() = SoraJourney.requireInstalledAsItself()
 
     @Test
     fun coldStartupWithoutCompilation() = measureFreshInstall(CompilationMode.None())
