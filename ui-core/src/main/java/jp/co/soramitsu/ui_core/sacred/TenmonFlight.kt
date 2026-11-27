@@ -93,6 +93,10 @@ object TenmonFlight {
     val isLeaving: Boolean
         get() = carry?.left == true
 
+    /** Whether a launch scene still covers (or fades from) a first screen it was carried over. */
+    val isCovering: Boolean
+        get() = carry != null
+
     /** Whether the traced scene is on for the next screen to carry on. */
     val isPlaying: Boolean
         get() {
@@ -393,10 +397,13 @@ object TenmonFlight {
         // From here every touch reaches the screen.
         letThrough(carry)
         stage.onTouched = null
+        // The scene stops now; its surface goes once its worker has drawn its last frame, never here: taking it away
+        // waits for the frame being drawn, and a touch on the screen queued behind this would wait with it.
         stage.dropScene()
         carry.bars.isAppearanceLightStatusBars = carry.lightStatusBar
         carry.bars.isAppearanceLightNavigationBars = carry.lightNavigationBar
-        val gone = Runnable { (stage.parent as? ViewGroup)?.removeView(stage) }
+        // The stage leaves its window only after its surface has gone, for the same reason.
+        val gone = Runnable { stage.whenSceneGone { (stage.parent as? ViewGroup)?.removeView(stage) } }
         when {
             detaching -> main.post(gone)
             fadeMillis <= 0 || !stage.isAttachedToWindow -> gone.run()

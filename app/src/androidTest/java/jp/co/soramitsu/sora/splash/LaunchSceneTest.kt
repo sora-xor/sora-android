@@ -200,12 +200,9 @@ class LaunchSceneTest {
             instrumentation.runOnMainSync { touchKey(first, MotionEvent.ACTION_UP, down) }
             instrumentation.waitForIdleSync()
             assertEquals("the first tap goes through the scene as it gives way", 1, first.taps.get())
-            // That tap also said the person will not wait: the scene is over, and what it ends on fades.
-            scenario.onActivity {
-                if (first.decor.childCount == first.uncovered + 1) {
-                    assertNull("a tap ends the scene", find(first.decor.getChildAt(first.decor.childCount - 1)))
-                }
-            }
+            // That tap also said the person will not wait: the scene is over, and what it ends on fades (its surface
+            // goes once its drawing thread has let go of it).
+            scenario.onActivity { assertFalse("a tap ends the scene", TenmonFlight.isCovering) }
             awaitUncovered(first)
             tap(first.key)
             assertEquals(2, first.taps.get())
@@ -239,13 +236,9 @@ class LaunchSceneTest {
             while (!through && SystemClock.uptimeMillis() < deadline) {
                 SystemClock.sleep(16)
                 instrumentation.runOnMainSync {
-                    if (first.decor.childCount == first.uncovered) {
-                        through = true
-                    } else {
-                        val top = first.decor.getChildAt(first.decor.childCount - 1)
-                        through = !top.isClickable
-                        playsOn = through && find(top) != null
-                    }
+                    if (TenmonFlight.isLeaving) playsOn = true
+                    through = first.decor.childCount == first.uncovered ||
+                        !first.decor.getChildAt(first.decor.childCount - 1).isClickable
                 }
             }
             assertTrue("the ready screen is let through", through)
@@ -284,6 +277,8 @@ class LaunchSceneTest {
     @Test
     fun theFirstTapTheMomentTheTracedCoveredScreenIsReadyIsTheScreens() {
         assumeTrue("the traced scene needs Android 13", Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+        var endedFirst = false
+        var surfaceKept = false
         ActivityScenario.launch(ComponentActivity::class.java).use { scenario ->
             val first = firstScreen(scenario)
             assumeTrue("a hot phone shows the plain scene", first.mode == TenmonFlight.Mode.TRACED)
@@ -302,10 +297,20 @@ class LaunchSceneTest {
                 // The surface goes after the touch has reached the key, never in its way (removing it waits for the
                 // frame being drawn).
                 assertNotNull("the surface is not taken away in the touch's way", find(top))
+                // The touch said the person will not wait: the scene ends in the next turn. Its surface is not taken
+                // away in that turn either, but once its drawing thread has let go of it (which this check, queued
+                // before that thread can say so, always precedes): a touch queued behind the end never waits for a
+                // frame being drawn.
+                Handler(Looper.getMainLooper()).post {
+                    endedFirst = !TenmonFlight.isCovering
+                    surfaceKept = find(top) != null
+                }
             }
             instrumentation.runOnMainSync { touchKey(first, MotionEvent.ACTION_UP, down) }
             instrumentation.waitForIdleSync()
             assertEquals("the first tap on the ready screen is never lost, and counted once", 1, first.taps.get())
+            assertTrue("the tap ended the scene", endedFirst)
+            assertTrue("the surface is not taken away in the turn that ends the scene", surfaceKept)
             awaitUncovered(first)
         }
     }
@@ -327,12 +332,8 @@ class LaunchSceneTest {
             }
             // Ready: the scene does not settle or play its way out, as if the tap had been on it over this screen.
             instrumentation.runOnMainSync {
-                if (first.decor.childCount == first.uncovered + 1) {
-                    assertNull(
-                        "a scene asked not to wait does not play its way out",
-                        find(first.decor.getChildAt(first.decor.childCount - 1)),
-                    )
-                }
+                assertFalse("a scene asked not to wait does not play its way out", TenmonFlight.isLeaving)
+                assertFalse("a scene asked not to wait ends at once", TenmonFlight.isCovering)
             }
             awaitUncovered(first)
         }
@@ -406,12 +407,7 @@ class LaunchSceneTest {
                 assertNotNull("the surface is never taken away inside the screen's layout", find(top))
             }
             instrumentation.runOnMainSync {
-                if (first.decor.childCount == first.uncovered + 1) {
-                    assertNull(
-                        "asked not to wait, the scene ends at once rather than playing its way out",
-                        find(first.decor.getChildAt(first.decor.childCount - 1)),
-                    )
-                }
+                assertFalse("asked not to wait, the scene ends at once rather than playing its way out", TenmonFlight.isCovering)
             }
             awaitUncovered(first)
         }
@@ -424,8 +420,10 @@ class LaunchSceneTest {
             val first = graceWayOut(scenario, startupTap = false) { top ->
                 TenmonFlight.firstScreenShown(null)
                 assertFalse("the ready screen takes its touches at once", top.isClickable)
+                assertTrue("nobody asked it not to wait: still on its way out", TenmonFlight.isLeaving)
             }
             instrumentation.runOnMainSync {
+                assertTrue("the way out plays on after the screen's word", TenmonFlight.isLeaving)
                 assertEquals("still on its way out", first.uncovered + 1, first.decor.childCount)
                 assertNotNull(
                     "nobody asked it not to wait: the way out plays on",
@@ -620,12 +618,19 @@ class LaunchSceneTest {
             assertTrue(TenmonFlight.carryOn(activity))
             TenmonFlight.end(first.host)
         }
-        val deadline = SystemClock.uptimeMillis() + 20_000
+        val carried = SystemClock.uptimeMillis()
+        val deadline = carried + 20_000
         var seen = false
         var uncovered = false
         while (!seen && !uncovered && SystemClock.uptimeMillis() < deadline) {
             instrumentation.runOnMainSync {
                 uncovered = first.decor.childCount == first.uncovered
+                // Only the longest wait (4.5 s) uncovers a screen that never says it is ready, with or without a tap
+                // on the startup screen: an earlier uncover is a fault, not a renderer that drew too little.
+                assertFalse(
+                    "a screen that never said it is ready was uncovered before the longest wait",
+                    uncovered && SystemClock.uptimeMillis() - carried < EARLIEST_GRACE_UNCOVER_MILLIS,
+                )
                 val top = first.decor.getChildAt(first.decor.childCount - 1)
                 if (!uncovered && TenmonFlight.isLeaving && find(top) != null) {
                     first.atWayOut(top)
@@ -679,3 +684,6 @@ class LaunchSceneTest {
         ParcelFileDescriptor.AutoCloseInputStream(instrumentation.uiAutomation.executeShellCommand(command)).use { it.readBytes() }
     }
 }
+
+/** The longest wait uncovers a screen that never says it is ready 4.5 s after it was carried over: never sooner. */
+private const val EARLIEST_GRACE_UNCOVER_MILLIS = 4_000L

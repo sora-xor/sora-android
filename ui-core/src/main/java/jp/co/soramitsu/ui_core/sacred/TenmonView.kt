@@ -10,6 +10,8 @@ import android.graphics.RadialGradient
 import android.graphics.RuntimeShader
 import android.graphics.Shader
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import android.os.SystemClock
 import android.util.Log
 import android.view.MotionEvent
@@ -338,6 +340,18 @@ internal class TenmonView(context: Context) : SurfaceView(context), SurfaceHolde
         drawing?.halt()
     }
 
+    /**
+     * Draws no more after the frame it is on, and runs [then] on the main thread once the worker has let go of the
+     * surface: taking the view out of its window from there never waits for a frame (the surface going waits for the
+     * frame being drawn, and a touch queued behind that wait would wait with it). With no worker, [then] is posted
+     * at once.
+     */
+    fun stop(then: Runnable) {
+        val worker = drawing
+        stop()
+        if (worker == null) MAIN.post(then) else worker.afterExit(then)
+    }
+
     private fun fail() {
         if (stopped) return
         stop()
@@ -375,7 +389,32 @@ internal class TenmonView(context: Context) : SurfaceView(context), SurfaceHolde
             running = false
         }
 
+        private val exitLock = Any()
+        private var exited = false
+        private var whenExited: Runnable? = null
+
+        /** Posts [action] to the main thread once this worker has drawn its last frame and let go of the surface. */
+        fun afterExit(action: Runnable) {
+            val now = synchronized(exitLock) {
+                if (!exited) whenExited = action
+                exited
+            }
+            if (now) MAIN.post(action)
+        }
+
         override fun run() {
+            try {
+                drawFrames()
+            } finally {
+                val action = synchronized(exitLock) {
+                    exited = true
+                    whenExited.also { whenExited = null }
+                }
+                action?.let { MAIN.post(it) }
+            }
+        }
+
+        private fun drawFrames() {
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
                 failLater()
                 return
@@ -480,6 +519,9 @@ internal class TenmonView(context: Context) : SurfaceView(context), SurfaceHolde
         const val TAG = "SoraTenmon"
         const val FRAME_NANOS = 16_666_667L
 
+        /** The main thread, reached also by a view no longer in a window. */
+        val MAIN = Handler(Looper.getMainLooper())
+
         const val WARM_UP_LIMIT_MILLIS = 1200L
         const val PATIENT_TAG = "SoraTenmonPatient"
         const val PATIENT_LIMIT_MILLIS = 30_000L
@@ -545,19 +587,42 @@ internal class TenmonStage(context: Context) : FrameLayout(context) {
         val view = scene ?: return
         cover.showFrame(RESTING, null)
         scene = null
-        view.stop()
         seekLight()
-        // The still is on screen first, a frame later the surface over it goes.
-        postOnAnimation { postOnAnimation { removeView(view) } }
+        leaving += view
+        // The still is on screen first, a frame later the surface over it goes (once its worker has let go of it).
+        view.stop(Runnable { if (isAttachedToWindow) postOnAnimation { left(view) } else left(view) })
     }
 
-    /** Takes the traced scene's surface away. The still under it is what stays. */
+    /** Traced scenes taken off the stage whose workers have not yet let go of their surfaces. */
+    private val leaving = mutableListOf<TenmonView>()
+    private val whenLeft = mutableListOf<Runnable>()
+
+    /**
+     * Takes the traced scene's surface away. The still under it is what stays. The scene stops at once; its surface
+     * goes once its worker has drawn its last frame, so the main thread never waits for a frame here (nor does a touch
+     * queued behind it).
+     */
     fun dropScene() {
         val view = scene ?: return
         scene = null
-        view.stop()
-        removeView(view)
         seekLight()
+        leaving += view
+        view.stop(Runnable { left(view) })
+    }
+
+    private fun left(view: TenmonView) {
+        removeView(view)
+        leaving -= view
+        if (leaving.isEmpty()) {
+            val actions = whenLeft.toList()
+            whenLeft.clear()
+            actions.forEach(Runnable::run)
+        }
+    }
+
+    /** Runs [action] once no dropped scene's surface is left on the stage: at once when none is. */
+    fun whenSceneGone(action: Runnable) {
+        if (leaving.isEmpty()) action.run() else whenLeft += action
     }
 
     private fun giveUp() {
