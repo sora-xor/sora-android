@@ -88,15 +88,25 @@ internal object SoraJourney {
     const val STARTUP_TIMEOUT = TIMEOUT_MILLIS
     private const val POLL_MILLIS = 100L
 
-    /** Compose test tags are exported as resource ids under this prefix (`testTagAsId`). */
+    /**
+     * Compose test tags are exported as resource ids under this prefix (`testTagAsId`). Every flavor and every
+     * application id exports the same ids, so a tag alone could match another SORA install on screen.
+     */
     private const val TAG_PACKAGE = "jp.co.soramitsu.sora.develop"
 
-    fun tag(name: String): BySelector = By.res(TAG_PACKAGE, name)
+    /**
+     * [selector] limited to the benchmark build's own windows. UI Automator searches every window on screen; without
+     * this, a PIN key, an onboarding button or the home of another SORA install (one that holds someone's wallet)
+     * shown beside the benchmark build could be taken for the benchmark build's own.
+     */
+    fun inApp(selector: BySelector): BySelector = selector.pkg(PACKAGE_NAME)
+
+    fun tag(name: String): BySelector = inApp(By.res(TAG_PACKAGE, name))
 
     fun pinKey(digit: Char): BySelector = tag(digit.toString())
 
     /** The Wallet home with its Assets card, which the portfolio draws once it has a picture to show. */
-    val homeAssets: BySelector = By.text("Assets")
+    val homeAssets: BySelector get() = inApp(By.text("Assets"))
 
     /** SHA-256 of the certificate of `key/testdebug.jks`, the test key the benchmark build types sign with. */
     private const val TEST_KEY_SHA256 = "87a04d87933e53af0b8e16b5089135fb49bbfea50bee3086743a1509a44149e9"
@@ -150,13 +160,29 @@ internal object SoraJourney {
         assertTrue("SORA did not start: $result", result.contains("Status: ok"))
     }
 
+    /**
+     * True once the benchmark build's own [activityName] is the resumed activity (its component, not the same class
+     * of another install or a task left in the background); false when it is not within [timeoutMillis].
+     */
     fun waitForActivity(device: UiDevice, activityName: String, timeoutMillis: Long = TIMEOUT_MILLIS): Boolean {
+        val component = "$PACKAGE_NAME/$activityName"
         val deadline = SystemClock.uptimeMillis() + timeoutMillis
         do {
-            if (device.executeShellCommand("dumpsys activity activities").contains(activityName)) return true
+            val resumed = device.executeShellCommand("dumpsys activity activities").lineSequence()
+                .filter { it.contains("ResumedActivity") }
+            if (resumed.any { it.contains(component) }) return true
             SystemClock.sleep(POLL_MILLIS)
         } while (SystemClock.uptimeMillis() < deadline)
         return false
+    }
+
+    /**
+     * Fails the run unless the benchmark build is the app in front: a PIN digit is only ever pressed while it is, so
+     * no key press can land on another app's window that came up over it.
+     */
+    fun requireInFront(device: UiDevice, what: String) {
+        val front = device.currentPackageName
+        assertTrue("$PACKAGE_NAME lost the foreground to $front before $what; nothing pressed", front == PACKAGE_NAME)
     }
 
     fun waitFor(device: UiDevice, selector: BySelector, what: String, timeoutMillis: Long = TIMEOUT_MILLIS): UiObject2 {
@@ -196,7 +222,7 @@ internal object SoraJourney {
         var lastPress = 0L
         val deadline = SystemClock.uptimeMillis() + TIMEOUT_MILLIS
         while (source == null && SystemClock.uptimeMillis() < deadline) {
-            source = device.findObject(By.text("Passphrase"))
+            source = device.findObject(inApp(By.text("Passphrase")))
             if (source != null) break
             val importButton = device.findObject(tag("ImportAccount"))
             if (importButton != null && presses < IMPORT_TRIES && SystemClock.uptimeMillis() - lastPress > IMPORT_SOURCE_MILLIS) {
@@ -208,7 +234,7 @@ internal object SoraJourney {
         }
         assertTrue("Import account was pressed $presses times and never offered the Passphrase source", source != null)
         source!!.click()
-        val field = waitFor(device, By.clazz("android.widget.EditText"), "The recovery phrase field")
+        val field = waitFor(device, inApp(By.clazz("android.widget.EditText")), "The recovery phrase field")
         field.click()
         field.text = TEST_PHRASE
         device.pressBack() // closes the keyboard
@@ -222,9 +248,9 @@ internal object SoraJourney {
         val deadline = SystemClock.uptimeMillis() + TIMEOUT_MILLIS
         while (SystemClock.uptimeMillis() < deadline) {
             if (device.hasObject(pinKey('1'))) return
-            val next = device.findObject(By.text("Continue"))
-                ?: device.findObject(By.text("Skip"))
-                ?: device.findObject(By.text("Not now"))
+            val next = device.findObject(inApp(By.text("Continue")))
+                ?: device.findObject(inApp(By.text("Skip")))
+                ?: device.findObject(inApp(By.text("Not now")))
             if (next != null && next.isEnabled) next.click()
             SystemClock.sleep(500)
         }
@@ -236,27 +262,30 @@ internal object SoraJourney {
         // The confirmation pad starts with no digit entered.
         assertTrue(
             "The PIN confirmation did not come after the PIN was set up",
-            device.wait(Until.hasObject(By.descStartsWith("${PIN_DIGITS_ENTERED}0 ")), TIMEOUT_MILLIS) == true,
+            device.wait(Until.hasObject(inApp(By.descStartsWith("${PIN_DIGITS_ENTERED}0 "))), TIMEOUT_MILLIS) == true,
         )
         typePin(device) // Confirm pin code
         // A phone with a fingerprint is asked once whether to use it: not for the test wallet.
-        device.wait(Until.findObject(By.text("Cancel")), 3_000)?.click()
+        device.wait(Until.findObject(inApp(By.text("Cancel"))), 3_000)?.click()
     }
 
     /**
      * Types the test PIN, each key once. Every digit but the last (which starts the check, and the pad moves on) must
      * show as entered before the next is pressed; one that does not fails the run rather than being pressed again,
      * which could enter it twice and spend a PIN attempt. (The keys are seen only once the launch scene has let the
-     * pad through: while it covers the pad, its views are kept from UI Automator as from a screen reader.)
+     * pad through: while it covers the pad, its views are kept from UI Automator as from a screen reader.) Keys and
+     * dots are looked for in the benchmark build's windows only, and no key is pressed unless it is the app in front.
      */
     fun typePin(device: UiDevice) {
         TEST_PIN.forEachIndexed { index, digit ->
             val entered = index + 1
-            waitFor(device, pinKey(digit), "PIN key $digit").click()
+            val key = waitFor(device, pinKey(digit), "PIN key $digit")
+            requireInFront(device, "PIN key $digit")
+            key.click()
             if (entered < TEST_PIN.length) {
                 assertTrue(
                     "PIN key $digit did not show as entered; not pressed again",
-                    device.wait(Until.hasObject(By.descStartsWith("$PIN_DIGITS_ENTERED$entered ")), PIN_KEY_SHOWN_MILLIS) == true,
+                    device.wait(Until.hasObject(inApp(By.descStartsWith("$PIN_DIGITS_ENTERED$entered "))), PIN_KEY_SHOWN_MILLIS) == true,
                 )
             }
         }
@@ -279,6 +308,7 @@ internal object SoraJourney {
      * if it is, without playing its way out. The tap changes nothing when no scene is there.
      */
     fun dismissLaunchFlight(device: UiDevice) {
+        requireInFront(device, "the tap on the launch scene")
         device.click(device.displayWidth / 2, device.displayHeight / 12)
         SystemClock.sleep(400)
     }
@@ -294,7 +324,7 @@ internal object SoraJourney {
 
     /** The home says its balances are live (the chip "LIVE · 3s"). False when it does not within [timeoutMillis]. */
     fun waitForLiveHome(device: UiDevice, timeoutMillis: Long): Boolean =
-        device.wait(Until.hasObject(By.textStartsWith("LIVE")), timeoutMillis) == true
+        device.wait(Until.hasObject(inApp(By.textStartsWith("LIVE"))), timeoutMillis) == true
 
     fun waitForHome(device: UiDevice) {
         waitFor(device, homeAssets, "The Wallet home's Assets card")
@@ -322,7 +352,7 @@ internal object SoraJourney {
 
     /** The home's own scroller (the Column under the hero). */
     private fun homeScroller(device: UiDevice): UiObject2 =
-        device.findObject(By.scrollable(true)) ?: throw AssertionError("The Wallet home does not scroll")
+        device.findObject(inApp(By.scrollable(true))) ?: throw AssertionError("The Wallet home does not scroll")
 
     fun scrollHome(device: UiDevice, flings: Int = 2) {
         val scroller = homeScroller(device)
@@ -343,7 +373,7 @@ internal object SoraJourney {
      * token to open.
      */
     fun openTokenAndBack(device: UiDevice): Boolean {
-        val row = device.findObject(By.text("XOR")) ?: return false
+        val row = device.findObject(inApp(By.text("XOR"))) ?: return false
         row.click()
         // The token's page lists where the token is held.
         if (device.wait(Until.hasObject(tokenPage), TIMEOUT_MILLIS) != true) return false
@@ -354,13 +384,15 @@ internal object SoraJourney {
     }
 
     /** The token page's "Where it lives" list. */
-    private val tokenPage: BySelector = By.text("Where it lives")
+    private val tokenPage: BySelector get() = inApp(By.text("Where it lives"))
 
-    /** Explore, Activity and back to the Wallet tab. */
+    /** Explore, Activity and back to the Wallet tab: each tab must be there and must become the selected one. */
     fun switchTabs(device: UiDevice) {
         listOf("explore_nav_graph", "activities_nav_graph", "wallet_nav_graph").forEach { tab ->
             // A view id's package is the app's resources' own, whatever the application id: matched by its name.
-            device.findObject(By.res(Pattern.compile(".*:id/$tab")))?.click()
+            val item = waitFor(device, inApp(By.res(Pattern.compile(".*:id/$tab"))), "The $tab tab")
+            item.click()
+            assertTrue("The $tab tab did not become the selected one", item.wait(Until.selected(true), TIMEOUT_MILLIS) == true)
             device.waitForIdle()
         }
         waitForHome(device)
