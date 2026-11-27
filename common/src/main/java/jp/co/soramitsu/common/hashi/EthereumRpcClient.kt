@@ -235,15 +235,17 @@ class EthereumRpcClient(
 
     /**
      * What every reachable endpoint knows of the transaction [hash], the most live answer winning:
-     * a receipt with status 1 anywhere, else KNOWN when one has it pending (also over another
-     * endpoint's status-0 receipt, which a reorganisation can leave behind on a lagging node),
-     * else that status-0 receipt, else UNKNOWN when at least [MINIMUM_UNANIMOUS] endpoints answered
-     * and none has it. Fewer answers throw: a lagging or missing endpoint must never make a mined
-     * or pending transaction look absent.
+     * a receipt with status 1 anywhere; else KNOWN when one has it pending (also over another
+     * endpoint's status-0 receipt, which a reorganisation can leave behind on a lagging node); else
+     * that status-0 receipt; else KNOWN when one has it mined but cannot show its receipt (status
+     * unknown, so it counts as live); else UNKNOWN. Anything but a status-1 receipt needs at least
+     * [MINIMUM_UNANIMOUS] endpoints to have answered in full, else this throws: a lagging or missing
+     * endpoint must never make a mined or pending transaction look absent or reverted.
      */
     suspend fun lookupEverywhere(hash: ByteArray): EthTransactionLookup {
         var answers = 0
         var pending = false
+        var minedWithoutReceipt = false
         var reverted: EthTransactionLookup.Mined? = null
         var failure: Throwable? = null
         for (endpoint in endpoints) {
@@ -257,7 +259,9 @@ class EthereumRpcClient(
                     reverted = EthTransactionLookup.Mined(status)
                 } else {
                     val transaction = send(endpoint, "eth_getTransactionByHash", buildJsonArray { add(EthHex.encode(hash)) })
-                    if (transaction is JsonObject) pending = true
+                    if (transaction is JsonObject) {
+                        if (transaction["blockNumber"]?.takeUnless { it is JsonNull } != null) minedWithoutReceipt = true else pending = true
+                    }
                 }
                 answers += 1
             } catch (error: CancellationException) {
@@ -266,9 +270,10 @@ class EthereumRpcClient(
                 failure = failure?.also { it.addSuppressed(error) } ?: error
             }
         }
+        if (answers < minOf(MINIMUM_UNANIMOUS, endpoints.size)) throw HashiRpcUnavailableException(failure)
         if (pending) return EthTransactionLookup.Pending
         reverted?.let { return it }
-        if (answers < minOf(MINIMUM_UNANIMOUS, endpoints.size)) throw HashiRpcUnavailableException(failure)
+        if (minedWithoutReceipt) return EthTransactionLookup.Pending
         return EthTransactionLookup.Unknown
     }
 
