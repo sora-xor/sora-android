@@ -1022,11 +1022,15 @@ class HashiBridgeService(
         // The same intent at the SAME nonce while that nonce is still free (the node refused the
         // earlier bytes): at most one of them can ever be mined. A new nonce only once the old
         // one is consumed.
-        val sameNonce = previous?.takeIf { it.state != HashiEthStepState.CONFIRMED }?.let { old ->
+        // Each count is read once, under the signing lock: endpoints can answer differently from one
+        // call to the next, and a nonce ruled out below must not come back through a second read.
+        val latestCount = ethereum.latestNonce(from)
+        val pendingCount = ethereum.pendingNonce(from)
+        val usedFloor = usedNonceFloor(record.ethAccount)
+        val unsettled = previous?.takeIf { it.state != HashiEthStepState.CONFIRMED }
+        val sameNonce = unsettled?.let { old ->
             // Free means: not mined, nothing pending at it (another wallet's payment), not seen used.
-            old.nonceValue.takeIf {
-                ethereum.latestNonce(from) <= it && ethereum.pendingNonce(from) <= it && usedNonceFloor(record.ethAccount) <= it
-            }
+            old.nonceValue.takeIf { latestCount <= it && pendingCount <= it && usedFloor <= it }
         }
         val budget = record.gasBudget?.let(::BigInteger)
         val fees = if (quotedFees != null) {
@@ -1041,7 +1045,9 @@ class HashiBridgeService(
         // Read now, under the signing lock, never from a quote: another transaction of this
         // account may have taken a nonce since. Never below a nonce this wallet saw used (an
         // endpoint a block behind can still answer the old count).
-        val nonce = sameNonce ?: ethereum.pendingNonce(from).max(usedNonceFloor(record.ethAccount))
+        // A new nonce is past the old one when that one was found taken (by a payment pending there,
+        // say), whatever a lagging endpoint counts.
+        val nonce = sameNonce ?: listOfNotNull(pendingCount, usedFloor, unsettled?.nonceValue?.add(BigInteger.ONE)).max()
         val transaction = Eip1559Transaction(
             chainId = HashiBridgeContract.ETHEREUM_CHAIN_ID,
             nonce = nonce,
