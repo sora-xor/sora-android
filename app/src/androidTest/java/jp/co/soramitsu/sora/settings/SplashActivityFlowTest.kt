@@ -151,6 +151,19 @@ class SplashActivityFlowTest {
             if (action == Intent.ACTION_SENDTO) addDataScheme("mailto")
         }, Instrumentation.ActivityResult(Activity.RESULT_CANCELED, null), true)
             .also { monitors += it }
+    /**
+     * The screens [monitor] caught, once the event has had its turn: the first start of a cold test process on a
+     * loaded device can take its event a moment after the main queue was drained. Never more than one is counted.
+     */
+    private fun hitsOf(monitor: Instrumentation.ActivityMonitor): Int {
+        val deadline = android.os.SystemClock.uptimeMillis() + 5_000
+        while (monitor.hits == 0 && android.os.SystemClock.uptimeMillis() < deadline) {
+            android.os.SystemClock.sleep(50)
+            drainMainQueue()
+        }
+        drainMainQueue()
+        return monitor.hits
+    }
     private fun panel() = RecoveryPanels.model(WalletRecoveryOptions.forState("FIXTURE_RECOVERY", false,
         RecoveryFacts(hasWalletFiles = true)), false, false)
 
@@ -378,11 +391,11 @@ class SplashActivityFlowTest {
     }
     @Test fun storageSettingsEventUsesStorageScreenIntent() {
         launch(); val monitor = monitor(Settings.ACTION_INTERNAL_STORAGE_SETTINGS); emit(SafeModeEvent.OpenStorageSettings)
-        assertEquals(1, monitor.hits)
+        assertEquals(1, hitsOf(monitor))
     }
     @Test fun supportEmailIsDeliveredAsMailtoWithoutSendingAnything() {
         launch(); val monitor = monitor(Intent.ACTION_SENDTO); emit(SafeModeEvent.Email("Fixture subject", "Fixture body"))
-        assertEquals(1, monitor.hits)
+        assertEquals(1, hitsOf(monitor))
     }
     @Test fun pauseAndStopNotifyRecoveryLifecycle() {
         launch(); scenario!!.moveToState(Lifecycle.State.CREATED); drainMainQueue()
