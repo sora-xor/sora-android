@@ -52,6 +52,13 @@ data class HashiTransferRecord(
      * longer fits, nothing is signed and the person is shown the new cost. Null: nothing confirmed.
      */
     val gasBudget: String? = null,
+    /**
+     * How many confirmations of an Ethereum step sheet (receive, continue, try again, speed up)
+     * were taken for this transfer. A sheet remembers it when shown and is taken only while it is
+     * unchanged, so a sheet shown before another one was confirmed signs nothing, even when the
+     * other one's transaction was refused afterwards and left nothing behind.
+     */
+    val confirmations: Int = 0,
     val createdAt: Long,
     val updatedAt: Long,
 ) {
