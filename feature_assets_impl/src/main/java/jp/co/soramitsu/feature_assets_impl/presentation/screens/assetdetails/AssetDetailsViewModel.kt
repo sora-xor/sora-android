@@ -113,7 +113,8 @@ class AssetDetailsViewModel @AssistedInject constructor(
                     state = state.copy(
                         state = state.state.copy(
                             poolsState = mapped.first,
-                            poolsSum = AmountFormat.fiatAtLeastCent(mapped.second, it.fiatSymbol, numbersFormatter),
+                            // Pools none of which has a price show no total, never "$0".
+                            poolsSum = mapped.second?.let { sum -> AmountFormat.fiatAtLeastCent(sum, it.fiatSymbol, numbersFormatter) }.orEmpty(),
                         )
                     )
                 }

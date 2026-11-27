@@ -46,9 +46,10 @@ fun mapPoolsData(
     poolsData: List<CommonUserPoolData>,
     numbersFormatter: NumbersFormatter,
     rewardTokenIconsList: List<List<String>> = emptyList()
-): Pair<PoolsListState, Double> {
+): Pair<PoolsListState, Double?> {
     val formatted = poolsData.map { it.printFiat() }
-    val sum = formatted.map { it?.first ?: 0.0 }.sumOf { it }
+    // Pools of which none has a price have no value to sum: no value, never a zero. (No pools at all sum to zero.)
+    val sum = if (formatted.isNotEmpty() && formatted.all { it == null }) null else formatted.sumOf { it?.first ?: 0.0 }
     val state = PoolsListState(
         poolsData.mapIndexed { i, poolData ->
             val rewardIcons = if (rewardTokenIconsList.isEmpty()) {

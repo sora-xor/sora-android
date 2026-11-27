@@ -845,12 +845,10 @@ class CardsHubViewModel @Inject constructor(
 
         val data = mapPoolsData(pools.first, numbersFormatter, rewardTokensList)
         return TitledAmountCardState(
-            // A sum over pools without a price is no value, not a zero.
-            amount = if (pools.first.any { it.printFiat() != null }) {
-                AmountFormat.fiatAtLeastCent(data.second, pools.first.fiatSymbol, numbersFormatter)
-            } else {
-                PortfolioFormat.NO_VALUE
-            },
+            // A sum over pools without a price (or over no pools) is no value, not a zero.
+            amount = data.second?.takeIf { pools.first.isNotEmpty() }
+                ?.let { AmountFormat.fiatAtLeastCent(it, pools.first.fiatSymbol, numbersFormatter) }
+                ?: PortfolioFormat.NO_VALUE,
             title = CardHubType.POOLS.userName,
             state = FavoritePoolsCardState(
                 state = data.first

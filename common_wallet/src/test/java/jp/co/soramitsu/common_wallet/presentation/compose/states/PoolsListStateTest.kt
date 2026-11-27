@@ -27,6 +27,7 @@ import jp.co.soramitsu.common_wallet.domain.model.CommonUserPoolData
 import jp.co.soramitsu.common_wallet.domain.model.UserPoolData
 import jp.co.soramitsu.test_data.TestAssets
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Test
 
 class PoolsListStateTest {
@@ -44,7 +45,24 @@ class PoolsListStateTest {
         val dust = pool(priced(TestAssets.xorAsset().token, 0.004), priced(TestAssets.valAsset().token, 0.001), "1", "1")
         val (state, sum) = mapPoolsData(listOf(dust), NumbersFormatter())
         assertEquals("<$0.01", state.pools.single().fiat)
-        assertEquals(0.005, sum, 1e-12)
+        assertEquals(0.005, sum!!, 1e-12)
+    }
+
+    @Test
+    fun `pools none of which has a price sum to no value, never to zero`() {
+        val unpriced = pool(priced(TestAssets.xorAsset().token, 2.0), priced(TestAssets.pswapAsset().token, null), "1", "3")
+        val alsoUnpriced = pool(priced(TestAssets.valAsset().token, null), priced(TestAssets.pswapAsset().token, null), "2", "5")
+        val (state, sum) = mapPoolsData(listOf(unpriced, alsoUnpriced), NumbersFormatter())
+        assertNull("no pool has a value: the list's total is no value", sum)
+        assertEquals(listOf("", ""), state.pools.map { it.fiat })
+    }
+
+    @Test
+    fun `a priced pool beside unpriced ones sums to its own value, and no pools sum to zero`() {
+        val pricedPool = pool(priced(TestAssets.xorAsset().token, 2.0), priced(TestAssets.valAsset().token, 1.0), "1", "3")
+        val unpricedPool = pool(priced(TestAssets.xorAsset().token, 2.0), priced(TestAssets.pswapAsset().token, null), "1", "3")
+        assertEquals(5.0, mapPoolsData(listOf(unpricedPool, pricedPool), NumbersFormatter()).second!!, 1e-12)
+        assertEquals(0.0, mapPoolsData(emptyList(), NumbersFormatter()).second!!, 0.0)
     }
 
     @Test

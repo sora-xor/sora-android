@@ -32,6 +32,7 @@ import jp.co.soramitsu.common.domain.iconUri
 import jp.co.soramitsu.common.domain.printFiat
 import jp.co.soramitsu.common.domain.printFiatChange
 import jp.co.soramitsu.common.util.NumbersFormatter
+import jp.co.soramitsu.common_wallet.presentation.compose.util.AmountFormat
 
 data class CardsState(
     val accountAddress: String,
@@ -118,7 +119,8 @@ fun mapAssetsToCardState(
                 precision
             ),
             tokenSymbol = it.token.symbol,
-            assetFiatAmount = it.printFiat(nf),
+            // A holding worth under a cent reads "<$0.01", never "$0"; one without a price shows no value.
+            assetFiatAmount = it.fiat?.let { fiat -> AmountFormat.fiatAtLeastCent(fiat, it.token.fiatSymbol.orEmpty(), nf) }.orEmpty(),
             fiatChange = it.token.printFiatChange(nf),
             frozenAmount = it.balance.frozenTotal
                 .takeIf { frozen -> frozen > BigDecimal.ZERO }

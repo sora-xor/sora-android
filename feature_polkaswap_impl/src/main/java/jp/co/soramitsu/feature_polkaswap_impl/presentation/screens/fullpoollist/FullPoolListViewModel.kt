@@ -116,7 +116,8 @@ class FullPoolListViewModel @Inject constructor(
         _state.value = _state.value.copy(
             loading = false,
             list = data.first,
-            fiatSum = AmountFormat.fiatAtLeastCent(data.second, filtered.fiatSymbol, numbersFormatter),
+            // Pools none of which has a price show no total, never "$0".
+            fiatSum = data.second?.let { AmountFormat.fiatAtLeastCent(it, filtered.fiatSymbol, numbersFormatter) }.orEmpty(),
         )
     }
 
