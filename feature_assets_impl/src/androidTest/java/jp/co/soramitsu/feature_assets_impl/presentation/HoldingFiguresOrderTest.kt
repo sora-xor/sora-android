@@ -69,15 +69,28 @@ class HoldingFiguresOrderTest {
         return layouts.single().layoutInput.style.fontSize.value
     }
 
+    /**
+     * Every character of the text is laid out, none behind an ellipsis, and each line fits the text's place on screen.
+     * The place is the node's measured size: the layout a text node hands to a test can be made again at the width it
+     * was offered, wider than the text took, so its own overflow flags say nothing about what is drawn.
+     */
     private fun SemanticsNodeInteraction.assertNotCut() {
+        val node = fetchSemanticsNode()
         val layouts = mutableListOf<TextLayoutResult>()
-        fetchSemanticsNode().config[SemanticsActions.GetTextLayoutResult].action?.invoke(layouts)
+        node.config[SemanticsActions.GetTextLayoutResult].action?.invoke(layouts)
         val layout = layouts.single()
-        val seen = "\"${layout.layoutInput.text}\" in ${layout.size} of ${layout.layoutInput.constraints}, " +
-            "${layout.lineCount} lines, text ${layout.multiParagraph.width} x ${layout.multiParagraph.height}"
-        assertTrue("never cut with an ellipsis: $seen", (0 until layout.lineCount).none(layout::isLineEllipsized))
-        assertTrue("never wider than its place: $seen", !layout.didOverflowWidth)
-        assertTrue("never taller than its place: $seen", !layout.didOverflowHeight)
+        val text = layout.layoutInput.text
+        val lines = layout.lineCount
+        val seen = "\"$text\" in a ${node.size} place, $lines lines, " +
+            "widest ${(0 until lines).maxOf { layout.getLineRight(it) - layout.getLineLeft(it) }} px, " +
+            "bottom ${layout.getLineBottom(lines - 1)} px"
+        assertTrue("never cut with an ellipsis: $seen", (0 until lines).none(layout::isLineEllipsized))
+        assertTrue("every character is laid out: $seen", layout.getLineEnd(lines - 1, visibleEnd = true) >= text.trimEnd().length)
+        assertTrue(
+            "no line is wider than its place: $seen",
+            (0 until lines).all { layout.getLineRight(it) - layout.getLineLeft(it) <= node.size.width + 1f },
+        )
+        assertTrue("no line falls below its place: $seen", layout.getLineBottom(lines - 1) <= node.size.height + 1f)
     }
 
     private fun assertAmountOverValue(amount: SemanticsNodeInteraction, value: SemanticsNodeInteraction) {
