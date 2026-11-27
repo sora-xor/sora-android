@@ -36,7 +36,11 @@ interface MainRouter {
 
     fun showPinForBackup(action: PinCodeAction, addresses: List<String>)
 
-    fun showFlexibleUpdateScreen()
+    /**
+     * Closes the PIN screen after the PIN (or biometrics) confirmed [action], and tells the screen
+     * below it under [jp.co.soramitsu.feature_main_api.domain.model.PIN_CONFIRMED_ACTION_KEY].
+     */
+    fun returnFromPinConfirmation(action: PinCodeAction)
 
     fun popBackStack()
 
@@ -59,13 +63,13 @@ interface MainRouter {
 
     fun showDebugMenu()
 
-    fun currentDestinationIsPincode(): Boolean
-
-    fun currentDestinationIsClaimFragment(): Boolean
-
     fun currentDestinationIsPinCheckNeeded(): Boolean
 
-    fun showProfile()
+    /**
+     * Closes a phrase, seed or JSON export screen that is on top, with the screens that led to it.
+     * Opening one again takes the typed PIN, which a lock screen's fingerprint does not replace.
+     */
+    fun closeSecretScreensLeftOpen()
 
     fun showClaim()
 

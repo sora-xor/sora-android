@@ -4,8 +4,12 @@ import java.math.BigDecimal
 import jp.co.soramitsu.common.domain.AssetHolder
 import jp.co.soramitsu.common.domain.formatFiatAmount
 import jp.co.soramitsu.common.domain.formatFiatChange
+import jp.co.soramitsu.common.nexus.WalletNetworkId
 import jp.co.soramitsu.common.util.GROUPING_SEPARATOR
 import jp.co.soramitsu.common.util.NumbersFormatter
+import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.PortfolioFixtures
+import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.PortfolioFixtures.MAIN
+import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.PortfolioTotals
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -39,11 +43,81 @@ class PortfolioFormatTest {
     }
 
     @Test
-    fun `orbit amounts are short and never rounded up`() {
-        assertEquals("570K", format.compact(BigDecimal("570000")))
-        assertEquals("25K", format.compact(BigDecimal("25000")))
-        assertEquals("1.2M", format.compact(BigDecimal("1299999")))
-        assertEquals("999", format.compact(BigDecimal("999.99")))
+    fun `a positive amount under the list's precision is never printed as nothing`() {
+        // The list rounds to 8 decimals; a smaller holding is shown to its first digit, rounded down, never as "0".
+        assertEquals("0.0000000001 XOR", format.amount(BigDecimal("0.000000000123"), "XOR"))
+        assertEquals("0.000000000000000001 XOR", format.amount(BigDecimal("0.000000000000000001"), "XOR"))
+        assertEquals("0 XOR", format.amount(BigDecimal.ZERO, "XOR"))
+    }
+
+    @Test
+    fun `a row with a value shows the amount over the value`() {
+        val priced = PortfolioFixtures.holding(MAIN, PortfolioFixtures.token(AssetHolder.XOR_ASSET_ID, "XOR", 2.0), "10")
+        assertEquals(RowNumbers("10 XOR", "$20"), format.rowNumbers(listOf(priced), priced.total, "XOR"))
+    }
+
+    @Test
+    fun `the amount is the row's number in every case`() {
+        val prices = listOf(2.0, null, 0.0)
+        prices.forEach { price ->
+            val xor = PortfolioFixtures.token(AssetHolder.XOR_ASSET_ID, "XOR", price)
+            listOf(WalletNetworkId.SORA2, WalletNetworkId.TAIRA).forEach { network ->
+                val held = PortfolioFixtures.holding(MAIN, xor, "7", network = network)
+                assertEquals("7 XOR", format.rowNumbers(listOf(held), held.total, "XOR").main)
+            }
+        }
+    }
+
+    @Test
+    fun `without a price the amount is the row's number, with nothing under it`() {
+        val xor = PortfolioFixtures.token(AssetHolder.XOR_ASSET_ID, "XOR", null)
+        val held = PortfolioFixtures.holding(MAIN, xor, "25000")
+        assertEquals(RowNumbers("25${g}000 XOR", null), format.rowNumbers(listOf(held), held.total, "XOR"))
+    }
+
+    @Test
+    fun `a testnet holding shows the amount alone, whatever the token's price`() {
+        listOf(null, 2.0).forEach { price ->
+            val xor = PortfolioFixtures.token(AssetHolder.XOR_ASSET_ID, "XOR", price)
+            val held = PortfolioFixtures.holding(MAIN, xor, "25000", network = WalletNetworkId.TAIRA)
+            assertEquals(
+                RowNumbers("25${g}000 XOR", null),
+                format.rowNumbers(listOf(held), held.total, "XOR"),
+            )
+        }
+    }
+
+    @Test
+    fun `a token's value on a mainnet is never lost to its testnet holding`() {
+        val xor = PortfolioFixtures.token(AssetHolder.XOR_ASSET_ID, "XOR", 2.0)
+        val main = PortfolioFixtures.holding(MAIN, xor, "10")
+        val test = PortfolioFixtures.holding(MAIN, xor, "25000", network = WalletNetworkId.TAIRA)
+        assertEquals(RowNumbers("10 XOR", "$20"), format.rowNumbers(listOf(main, test), main.total, "XOR"))
+    }
+
+    @Test
+    fun `a real price of nothing is a real zero under the amount`() {
+        val xor = PortfolioFixtures.token(AssetHolder.XOR_ASSET_ID, "XOR", 0.0)
+        val held = PortfolioFixtures.holding(MAIN, xor, "10")
+        assertEquals(RowNumbers("10 XOR", "$0"), format.rowNumbers(listOf(held), held.total, "XOR"))
+    }
+
+    @Test
+    fun `a total without a counted holding is unknown, never a zero`() {
+        val nothingPriced = PortfolioTotals(0.0, 0.0, false, hidden = 0, unpriced = 3, testnet = 1)
+        assertEquals(PortfolioFormat.NO_VALUE, format.total(nothingPriced))
+        val unread = PortfolioTotals.ZERO.copy(unread = 2)
+        assertEquals(PortfolioFormat.NO_VALUE, format.total(unread))
+        val counted = PortfolioTotals(12.5, 0.0, false, hidden = 0, unpriced = 1, testnet = 0, priced = 1)
+        assertEquals("$12.5", format.total(counted))
+    }
+
+    @Test
+    fun `dust is never printed as nothing`() {
+        assertEquals("<$0.01", format.fiat(0.004))
+        assertEquals("$0", format.fiat(0.0))
+        assertEquals("$0.01", format.fiat(0.01))
+        assertEquals(Triple("<$", "0", ".01"), format.fiatParts(0.004))
     }
 
     @Test

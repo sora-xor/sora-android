@@ -33,14 +33,11 @@
   <string name="address_not_found_1">Không tìm thấy người nhận</string>
   <string name="amount_error_no_funds">Xin lỗi, bạn không có đủ tiền để chuyển số tiền đã chỉ định.</string>
   <string name="appearance_title">Hiện thị</string>
-  <string name="appearance_reduce_effects">Reduce effects</string>
-  <string name="appearance_reduce_effects_description">Turns off glow, glass and motion effects. Useful on older phones or to save battery.</string>
   <string name="apr_description">APR trong farm biểu thị lợi tức đầu tư hàng năm khi tham gia vào các hoạt động cung cấp thanh khoản DeFi hoặc đặt cược.</string>
   <string name="ask_biometry_message">Bạn có muốn sử dụng sinh trắc học để xác thực không?</string>
   <string name="asset_details_asset_id">ID Tài sản</string>
   <string name="asset_details_liquid_balance">Số dư thanh khoản</string>
   <string name="asset_details_recent_activity">Hoạt động gần đây</string>
-  <string name="asset_details_token_price">Giá token</string>
   <string name="asset_details_your_pools">%s pool của bạn</string>
   <string name="asset_to_send">Tài sản cần gửi</string>
   <string name="backup_not_enough_space_error">Sao lưu không thành công. Không đủ dung lượng trên Google Drive của bạn. Hãy giải phóng một số dung lượng và thử lại.</string>
@@ -70,7 +67,6 @@
   <string name="common_back">Trở lại</string>
   <string name="common_backup">Sao lưu</string>
   <string name="common_balance">Số dư</string>
-  <string name="common_bashkir">Tiếng Bashkir</string>
   <string name="common_bridged">Cầu nối</string>
   <string name="common_cancel">Huỷ bỏ</string>
   <string name="common_chinese">Tiếng Trung Quốc</string>
@@ -80,12 +76,10 @@
   <string name="common_close">Đóng</string>
   <string name="tx_details_view_on_explorer">Xem trong trình khám phá</string>
   <string name="common_confirm">Xác nhận</string>
-  <string name="common_connected">Đã kết nối</string>
   <string name="common_connecting">Đang kết nối…</string>
   <string name="common_continue">Tiếp tục</string>
   <string name="common_copied">Đã sao chép vào bảng tạm</string>
   <string name="common_create_qr_request">Tạo QR yêu cầu</string>
-  <string name="common_croatian">Tiếng Croatia</string>
   <string name="common_currencies">Tiền tệ</string>
   <string name="common_delete">Xóa</string>
   <string name="common_disabled">Đã tắt</string>
@@ -99,8 +93,6 @@
   <string name="common_error_fee_rate_not_available">Không thể liên hệ với nhà cung cấp dịch vụ rút tiền. Vui lòng thử lại sau.</string>
   <string name="common_error_general_message">Chúng tôi đang làm việc chăm chỉ để khắc phục sự cố. Vui lòng thử lại sau.</string>
   <string name="common_error_general_title">Lỗi</string>
-  <string name="common_error_internal_error_title">Lỗi nội bộ</string>
-  <string name="common_error_invalid_parameters">Thông số không hợp lệ</string>
   <string name="common_error_invalid_parameters_body">Vui lòng kiểm tra kết nối internet và thử lại sau.</string>
   <string name="common_error_invalid_query_format">Truy vấn của bạn là sai. Vui lòng thử lại.</string>
   <string name="common_error_invitation_accepting_window_closed">Đã đóng cửa sổ chấp nhận lời mời</string>
@@ -112,7 +104,6 @@
   <string name="common_error_network">Vui lòng kiểm tra kết nối internet và thử lại sau.</string>
   <string name="common_error_no_browser_error">Vui lòng cài đặt trình duyệt để mở liên kết</string>
   <string name="common_error_not_enough_invitations">Xin lỗi, nhưng bạn không có bất kỳ lời mời nào để chia sẻ</string>
-  <string name="common_error_not_found_title">Tài nguyên không có sẵn</string>
   <string name="common_error_phone_already_exists">Xin lỗi, số điện thoại này đã được sử dụng. Vui lòng thử một số khác.</string>
   <string name="common_error_phone_already_registered">Số điện thoại đã được sử dụng trong quá trình đăng ký với người dùng này hoặc người dùng khác</string>
   <string name="common_error_pincode_check_error">Mã đã nhập sai</string>
@@ -121,22 +112,18 @@
   <string name="common_error_seed_is_not_valid">Hãy đảm bảo rằng kí tự bạn nhập vào chứa 64 ký tự hex.</string>
   <string name="common_error_seed_is_not_valid_title">Mã seed không hợp lệ</string>
   <string name="common_error_self_invitation">Bạn không thể sử dụng mã mời cho chính mình</string>
-  <string name="common_error_unauthorized_body">Vui lòng kiểm tra kết nối internet và thử lại sau.</string>
-  <string name="common_error_unauthorized_title">Ủy quyển thất bại</string>
   <string name="common_error_user_not_found">Chuỗi từ khóa khôi phục của bạn không hợp lệ. Vui lòng thử một cái khác.</string>
   <string name="common_error_user_values_not_found">Không thể tiếp tục hoạt động vì không tìm thấy dữ liệu giá trị người dùng</string>
   <string name="common_error_votes_invalid_format">Xin lỗi, nhưng số phiếu bầu của bạn không thể diễn giải được. Vui lòng thử bỏ phiếu lại.</string>
   <string name="common_error_votes_not_enough">Xin lỗi, nhưng bạn không có đủ điểm để bình chọn.</string>
   <string name="common_error_voting_is_not_allowed">Xin lỗi, nhưng dự án không thể nhận được phiếu bầu nữa.</string>
   <string name="common_error_wrong_user_status">Không thể tiếp tục hoạt động vì trạng thái của người dùng không hợp lệ</string>
-  <string name="common_estonian">Tiếng Estonia</string>
   <string name="common_expand">Mở rộng</string>
   <string name="common_explore">Khám phá</string>
   <string name="common_failed">Thất bại</string>
   <string name="common_farming">Farming</string>
   <string name="common_farms">Farms</string>
   <string name="common_fee">Phí</string>
-  <string name="common_filipino">Tiếng Philippines</string>
   <string name="common_finnish">Tiếng Phần lan</string>
   <string name="common_french">Tiếng Pháp</string>
   <string name="common_german">Tiếng Đức</string>
@@ -144,15 +131,9 @@
   <string name="common_google_backup_decryption_failed_2">Có thể mật khẩu bạn nhập không hợp lệ.</string>
   <string name="common_hebrew">Hebrew</string>
   <string name="common_hindi">Hindi</string>
-  <plurals name="common_hour">
-    <item quantity="other">giờ</item>
-  </plurals>
   <string name="common_indonesian">Tiếng Indonesia</string>
   <string name="common_insufficient_balance">Số dư không đủ</string>
-  <string name="common_italian">Tiếng Ý</string>
   <string name="common_japanese">Tiếng Nhật</string>
-  <string name="common_khmer">Tiếng Khmer</string>
-  <string name="common_korean">Tiếng Hàn Quốc</string>
   <string name="common_loading">Loading</string>
   <string name="common_malay">Tiếng Mã Lai</string>
   <string name="common_max">tối đa</string>
@@ -176,7 +157,6 @@
   <string name="common_remove">Gỡ bỏ</string>
   <string name="common_request">Yêu cầu</string>
   <string name="common_russian">Tiếng Nga</string>
-  <string name="common_scan">Quét</string>
   <string name="common_scan_qr">Quét mã QR</string>
   <string name="common_search_pools">Tìm kiếm pool</string>
   <string name="common_sec">giây</string>
@@ -192,15 +172,11 @@
   <string name="common_sms_code_expired">Mã xác minh đã hết hạn. Vui lòng thử một cái khác.</string>
   <string name="common_sms_code_not_correct">Mã xác minh không chính xác</string>
   <string name="common_spanish">Tiếng Tây Ban Nha</string>
-  <string name="common_spanish_colombia">Tiếng Tây Ban Nha (Colombia)</string>
   <string name="common_supply">Nguồn cung</string>
   <string name="common_supply_liquidity_title">Thanh khoản cung cấp</string>
-  <string name="common_swedish">Tiếng Thụy Điển</string>
   <string name="common_terms_title">Điều khoản và Điều kiện</string>
-  <string name="common_thai">Tiếng Thái</string>
   <string name="common_today">Hôm nay</string>
   <string name="common_turkish">Tiếng Thổ Nhĩ Kỳ</string>
-  <string name="common_ukrainian">Tiếng Ukraina</string>
   <string name="common_update">Cập nhật</string>
   <string name="common_upload_from_library">Tải lên từ thư viện</string>
   <string name="common_vietnamese">Tiếng Việt</string>
@@ -237,10 +213,7 @@
   <string name="eth_tx_address">Địa chỉ tài khoản Ethereum</string>
   <string name="eth_tx_hash">Mã giao dịch Ethereum</string>
   <string name="explore_create_pool">Tạo pool</string>
-  <string name="explore_demeter_subtitle">Stake phần pool của bạn và kiếm thêm phần thưởng</string>
   <string name="explore_demeter_title">Demeter Farming</string>
-  <string name="explore_provide_and_earn">Cung cấp thanh khoản và kiếm phần thưởng</string>
-  <string name="explore_swap_tokens_on_sora">Hoán đổi token trên mạng SORA</string>
   <string name="export_account_details_backup_description">Nếu bạn mất quyền truy cập vào thiết bị này, tiền của bạn sẽ bị mất, trừ khi bạn sao lưu!</string>
   <string name="export_account_details_backup_options">Các tùy chọn sao lưu</string>
   <string name="export_account_details_show_passphrase">Hiển thị cụm mật khẩu</string>
@@ -275,10 +248,6 @@
   <string name="import_account_not_backed_up_alert_description">Nếu thiết bị của bạn bị mất hoặc bị đánh cắp, bạn sẽ mất ví và tất cả số tiền của mình mãi mãi.</string>
   <string name="import_more_title">Nhập thêm</string>
   <string name="imported_account_title">Tài khoản đã nhập</string>
-  <string name="invite_code_applied_body">Đã áp dụng mã thành công</string>
-  <string name="invite_code_applied_title">Xin chúc mừng!</string>
-  <string name="invite_enter_error_already_applied">Bạn đã áp dụng một mã mời khác</string>
-  <string name="invite_enter_error_time_is_up">Đã hết thời gian áp dụng mã mời</string>
   <string name="invoice_scan_error_match">Bạn không thể gửi token đến cùng một tài khoản mà bạn hiện đang kết nối</string>
   <string name="invoice_scan_error_no_info">Không thể giải mã QR</string>
   <string name="invoice_scan_error_user_not_found">Không thể tìm thấy người dùng từ mã QR</string>
@@ -365,22 +334,7 @@
   <string name="pool_share_title_1">Những pool bạn tham gia</string>
   <string name="pooled_assets">Nội dung tổng hợp</string>
   <string name="profile_biometry_title">Xác thực sinh trắc học</string>
-  <plurals name="project_date_day_plurals">
-    <item quantity="other">Còn lại %s ngày</item>
-  </plurals>
-  <plurals name="project_date_hour_plurals">
-    <item quantity="other">Còn lại %s giờ</item>
-  </plurals>
-  <plurals name="project_date_minute_plurals">
-    <item quantity="other">Còn lại %s phút</item>
-  </plurals>
-  <plurals name="project_date_second_plurals">
-    <item quantity="other">Còn lại %s giây</item>
-  </plurals>
-  <string name="project_ended_template">Đã kết thúc %s</string>
-  <string name="protect_loss_access_funds">Bảo vệ bạn khỏi mất quyền truy cập vào tiền của bạn</string>
   <string name="qr_code">Mã QR</string>
-  <string name="qr_upload">Từ bộ sưu tập</string>
   <string name="receive_tokens">Nhận token</string>
   <string name="received_from_adar">Đã nhận từ ADAR</string>
   <string name="recent_recipients">Người nhận gần đây</string>
@@ -426,7 +380,6 @@
   <string name="remove_pool_confirmation_description">Kết quả chỉ là ước lượng. Nếu giá biến động hơn %s%% thì giao dịch của bạn sẽ bị hoàn tác.</string>
   <string name="remove_pool_confirmation_title">Xác nhận Rút</string>
   <string name="request_supply_liquidity">Bạn cần cung cấp thanh khoản cho pool của một cặp token tương ứng để bắt đầu staking nhận thêm phần thưởng:</string>
-  <string name="restart_required">Yêu cầu khởi động lại</string>
   <string name="review">Kiểm tra lại</string>
   <string name="route">Route</string>
   <string name="scan_qr_show_my_qr">Hiển thị mã QR của tôi</string>
@@ -434,8 +387,6 @@
   <string name="search_token_placeholder">Tìm kiếm theo ID nội dung, tên hoặc mã token</string>
   <string name="select_account_address_1">Tìm kiếm hoặc thêm địa chỉ mới</string>
   <string name="select_account_import">Chọn tài khoản để nhập</string>
-  <string name="select_asset_receive">Chọn Tài sản để nhận</string>
-  <string name="select_asset_send">Chọn Tài sản để gửi</string>
   <string name="select_node_add_custom_node">Thêm node tùy chỉnh</string>
   <string name="select_node_custom_node_edit_node">Chỉnh sửa node</string>
   <string name="select_node_custom_nodes">Node tùy chỉnh</string>
@@ -452,20 +403,14 @@
   <string name="select_pool_share">Chọn pool của bạn để stake</string>
   <string name="select_recipient">Chọn người nhận</string>
   <string name="settings_accounts">Tài khoản</string>
-  <string name="settings_accounts_subtitle">Quản lý tài khoản, cụm mật khẩu sao lưu</string>
-  <string name="settings_app_subtitle">Ngôn ngữ, Hiển thị</string>
   <string name="settings_crypto_accounts">Tài khoản tiền điện tử</string>
   <string name="settings_header_app">Thiết lập ứng dụng</string>
-  <string name="settings_information_subtitle">Miễn trừ trách nhiệm, Câu hỏi thường gặp, Giới thiệu về ứng dụng</string>
   <string name="settings_information_title">Thông tin</string>
-  <string name="settings_invite_subtitle">Chia sẻ liên kết mời</string>
   <string name="settings_invite_title">Mời bạn bè và kiếm tiền</string>
-  <string name="settings_login_subtitle">Mã PIN và xác thực sinh trắc học</string>
   <string name="settings_login_title">Đăng nhập &amp; Bảo mật</string>
   <string name="settings_nodes">Node</string>
   <string name="show_more">Xem thêm</string>
   <string name="slippage">Trượt giá</string>
-  <string name="something_went_wrong">Đã xảy ra sự cố</string>
   <string name="start_staking">Bắt đầu stake</string>
   <string name="status_error">Lỗi</string>
   <string name="status_pending">Đang chờ xử lý</string>
@@ -477,13 +422,9 @@
   <string name="transaction_date_1">Ngày và giờ</string>
   <string name="transaction_id">Mã giao dịch</string>
   <string name="tutorial_many_world">Nhiều thế giới.\nMột nền kinh tế.</string>
-  <string name="tutorial_many_world_desc">SORA đang nỗ lực để trở thành một hệ thống kinh tế đa vũ trụ phi tập trung, cung cấp tài chính cho việc tạo ra các ứng dụng mới và thú vị, dưới sự giám sát dân chủ của Nghị viện SORA.</string>
   <string name="tutorial_privacy_policy">Chính sách bảo mật</string>
   <string name="tutorial_terms_and_conditions_3">Điều khoản &amp; Điều kiện</string>
   <string name="tutorial_terms_and_conditions_template_1">Bằng cách tiếp tục, bạn đồng ý với</string>
-  <string name="unexpected_error">Đã xảy ra lỗi không mong muốn. \n\n Bạn có thể khắc phục sự cố này trong cộng đồng SORA tại cuộc trò chuyện Telegram @sora_happy.</string>
-  <string name="update_downloaded">Bản cập nhật cho ứng dụng SORA đã được tải xuống và sẵn sàng cài đặt. \n\n Hãy sử dụng phiên bản mới nhất của ứng dụng. \n\n Để cập nhật ứng dụng thành công, bạn cần khởi động lại ứng dụng.</string>
-  <string name="update_install_now">Bạn có muốn cài đặt bản cập nhật ngay bây giờ không?</string>
   <string name="wallet_backup">Sao lưu ví</string>
   <string name="wallet_balance_locked">Đã khóa</string>
   <string name="wallet_balance_reserved">Dự trữ</string>
@@ -491,7 +432,6 @@
   <string name="wallet_connect_account">Tài khoản</string>
   <string name="wallet_connect_done">Hoàn tất</string>
   <string name="wallet_market_refresh">Làm mới</string>
-  <string name="wallet_network_activity">Hoạt động</string>
   <string name="wallet_qr_share_message_empty_template_v2" formatted="false">Quét mã QR này để gửi cho tôi %s. ID tài khoản của tôi %s:\n%s</string>
   <string name="wallet_receive_xor">Nhận XOR</string>
   <string name="wallet_redeemable">Có thể hoán đổi</string>
@@ -518,19 +458,11 @@
   <string name="safe_mode_updating_body">Your keys stay on this device. This usually takes under a minute.</string>
   <string name="safe_mode_finishing_title">Finishing your update</string>
   <string name="safe_mode_finishing_body">Picking up where we left off. Your keys stay on this device.</string>
-  <string name="safe_mode_checking_title">Checking your wallet</string>
-  <string name="safe_mode_checking_body">SORA is checking your account before opening the wallet. Your keys stay on this device.</string>
-  <string name="safe_mode_waiting_network_body">We\'ll continue as soon as you\'re back online.</string>
-  <string name="safe_mode_change_node">Change node</string>
   <string name="safe_mode_step_check_data">Checking wallet data</string>
   <string name="safe_mode_step_storage">Updating wallet storage</string>
   <string name="safe_mode_step_accounts">Checking your accounts</string>
   <string name="safe_mode_step_accounts_progress">%1$d of %2$d</string>
   <string name="safe_mode_step_finishing">Finishing up</string>
-  <string name="safe_mode_step_unlocked">Wallet unlocked</string>
-  <string name="safe_mode_step_network">Connecting to the network</string>
-  <string name="safe_mode_step_network_waiting">Waiting for network</string>
-  <string name="safe_mode_step_account_check">Checking your account</string>
   <string name="safe_mode_step_state_done">Done</string>
   <string name="safe_mode_step_state_running">In progress</string>
   <string name="safe_mode_step_state_waiting">Not started yet</string>
@@ -544,20 +476,10 @@
   <string name="safe_mode_learn_more">Learn more</string>
   <string name="safe_mode_new_pin_title">Choose a new 6-digit PIN</string>
   <string name="safe_mode_new_pin_body">This makes your wallet harder to guess. Your wallet and funds don\'t change.</string>
-  <string name="safe_mode_whats_new_title">Welcome to the new SORA Wallet</string>
-  <string name="safe_mode_whats_new_body">Your wallet was updated. Here is what SORA checked.</string>
-  <string name="safe_mode_whats_new_accounts">Your accounts are on this device</string>
-  <string name="safe_mode_whats_new_pin">Your wallet is locked with your PIN</string>
-  <string name="safe_mode_whats_new_balances">Balances loaded</string>
-  <string name="safe_mode_whats_new_balances_loading">Loading balances</string>
-  <string name="safe_mode_whats_new_backup">Back up your recovery phrase</string>
-  <string name="safe_mode_back_up_now">Back up now</string>
-  <string name="safe_mode_later">Later</string>
   <string name="safe_mode_device_transfer">Your wallet won\'t move to a new phone automatically. Keep your recovery phrase or a Google Drive backup.</string>
   <string name="safe_mode_pending_check">A previous transaction is still being checked. Sending is paused so nothing is sent twice.</string>
   <string name="safe_mode_tap_to_reveal">Tap to reveal</string>
   <string name="safe_mode_reveal_privacy">Make sure no one can see your screen.</string>
-  <string name="safe_mode_support_no_email">No email app is set up. You can write to %1$s.</string>
   <string name="safe_mode_retained_title">Wallets found on this phone</string>
   <string name="safe_mode_retained_body">SORA found wallet keys on this phone that no account uses, for example from an account setup that was not finished. They were kept and nothing was deleted. You can restore them here.</string>
   <string name="safe_mode_retained_restore">Restore this wallet</string>
@@ -575,7 +497,6 @@
   <string name="account_repair_confirm">Repair account</string>
   <string name="backup_no_matching_secret">No recovery phrase or seed saved on this phone matches this account, so none is shown. The account itself still works. To back it up, export it as an encrypted JSON file. You can bring it back later from Import account, Backup file (JSON).</string>
   <string name="backup_no_matching_secret_read_only">No recovery phrase or seed saved on this phone matches this account, so none is shown. To use this account on this phone again, go to Import account and enter its recovery phrase, raw seed or backup file.</string>
-  <string name="safe_mode_whats_new_accounts_some_read_only">Accounts that can send from this phone: %1$s of %2$s. To repair the rest, import their recovery phrase.</string>
   <string name="account_repair_title_backup">Repair this account from your backup</string>
   <string name="json_backup_invalid_title">This backup file can\'t be read</string>
   <string name="json_backup_invalid">This isn\'t an encrypted account backup (JSON) that SORA can read. Check that you chose the file you exported, or pasted all of its text. Nothing was changed.</string>
@@ -612,7 +533,6 @@
   <string name="recovery_json_no_file_picker">This phone has no app for choosing a file. Paste the text of your backup file into the field instead. Nothing was changed.</string>
   <string name="export_json_keys_unusable_named_title">Some accounts can\'t be exported</string>
   <string name="export_json_keys_unusable_named">These accounts can\'t be exported, because the keys saved for them on this phone can\'t be used:\n\n%1$s\n\nNo file was made. Export your other accounts without them. To use these accounts on this phone again, go to Import account and enter their recovery phrase, raw seed or backup file.</string>
-  <string name="safe_mode_whats_new_batch_export">A JSON backup file with several accounts made by an earlier version of SORA can be empty. If you rely on one, export your accounts again from Accounts.</string>
   <!-- ak2-readonly-ux: read-only accounts are labelled, explained and repairable; removal shows the matching backup first -->
   <string name="failure_generic_title">This wasn\'t completed</string>
   <string name="failure_generic_message">SORA couldn\'t complete this just now. Please try again in a moment. If you were making a transaction, check Activity first, so that nothing is sent twice.</string>
@@ -747,11 +667,12 @@
   <string name="neon_theme_light">Light</string>
   <!-- English fallback for new Nexus and recovery copy pending translation. -->
   <string name="nexus_production_address">Production address</string>
-  <string name="nexus_copy_production_address">Copy production address</string>
-  <string name="nexus_production_not_live">Not live yet</string>
   <string name="nexus_production_address_notice">Your SORA Nexus production address is ready to copy. The production network has not launched yet; balances, history and transfers will be available after launch.</string>
   <string name="nexus_send_not_available">Sending is currently unavailable for this account. You can view your balance, copy your address and receive testnet XOR.</string>
   <string name="nexus_history_load_more">Load older transfers</string>
   <string name="recovery_json_password_help">Enter the password you set when saving this backup. This is not your app PIN.</string>
   <string name="account_switching">Switching account…</string>
+  <string name="hide_zero_balances">Ẩn số dư bằng không</string>
+  <string name="show_zero_balances">Hiển thị số dư bằng không</string>
+  <string name="global_results">Kết quả</string>
 </resources>

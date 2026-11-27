@@ -392,7 +392,6 @@ class RemoveLiquidityViewModelTest {
             advanceUntilIdle()
             // The transaction page carries "waiting for confirmation" and follows the result.
             verify(assetsRouter).showTxResult(txHash, TransactionScreen.REMOVE_LIQUIDITY)
-            verify(router, never()).returnToHubFragment()
             assertEquals(null, viewModel.alertDialogLiveData.value)
         }
 
@@ -442,7 +441,6 @@ class RemoveLiquidityViewModelTest {
             )
             verify(assetsRouter, never()).showTxResult(any(), any())
             // The dialog is on this screen, so the screen stays and offers Confirm again.
-            verify(router, never()).returnToHubFragment()
             assertTrue(confirmButton().enabled)
             assertFalse(confirmButton().loading)
         }

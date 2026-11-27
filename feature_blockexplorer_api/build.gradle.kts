@@ -71,7 +71,6 @@ android {
 dependencies {
     implementation(project(":common"))
     implementation(project(":core_db"))
-    implementation(project(":network"))
 
     implementation(libs.appcompatDep)
     implementation(libs.materialDep)
@@ -84,7 +83,7 @@ dependencies {
     implementation(libs.coroutineDep)
     implementation(libs.viewmodelKtxDep)
 
-    implementation(libs.uiCoreDep)
+    implementation(project(":ui-core"))
     implementation(libs.soramitsu.android.foundation)
     implementation(libs.navigationComposeDep)
 

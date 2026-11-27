@@ -88,6 +88,9 @@ class AccountListViewModel @Inject constructor(
                     )
                 }
 
+                // The rebuilt rows are all unselected, so selection mode ends with them; keeping it
+                // would leave a "0 selected" title and a Backup action with nothing to back up.
+                toolbarActionModeEnabled = false
                 _accountListScreenState.value =
                     AccountListScreenState(toolbarActionModeEnabled, accountList)
                 setToolbarState(toolbarActionModeEnabled, 0)
@@ -181,7 +184,9 @@ class AccountListViewModel @Inject constructor(
                 _toolbarState.value = state.copy(
                     basic = state.basic.copy(
                         navIcon = R.drawable.ic_cross_red_16,
-                        title = count.toString(),
+                        title = R.plurals.backup_selected_count,
+                        titleArgs = arrayOf(count),
+                        titleQuantity = count,
                         actionLabel = R.string.common_backup,
                     ),
                 )
@@ -189,6 +194,8 @@ class AccountListViewModel @Inject constructor(
                 _toolbarState.value = state.copy(
                     basic = state.basic.copy(
                         title = R.string.settings_accounts,
+                        titleArgs = null,
+                        titleQuantity = null,
                         navIcon = R.drawable.ic_arrow_left,
                         actionLabel = null,
                     )

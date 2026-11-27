@@ -1,0 +1,11 @@
+<resources>
+    <string name="contacts_none">Tidak ada penerima terbaru</string>
+    <string name="pin_delete_last_digit">Hapus digit terakhir</string>
+    <string name="common_egyptian">Bahasa Mesir Pertengahan (Hieroglif)</string>
+    <plurals name="backup_selected_count">
+        <item quantity="other">%1$d dipilih</item>
+    </plurals>
+    <string name="contacts_lookup_unavailable">Pencarian alamat tidak tersedia</string>
+    <string name="portfolio_positive_amount">Masukkan jumlah di atas nol.</string>
+    <string name="portfolio_continue_wallet">Lanjutkan dengan %1$s</string>
+</resources>

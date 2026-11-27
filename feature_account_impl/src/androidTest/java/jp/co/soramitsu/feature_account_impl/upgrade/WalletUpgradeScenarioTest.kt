@@ -45,6 +45,7 @@ import jp.co.soramitsu.core_db.WalletSigningGate
 import jp.co.soramitsu.core_db.WalletUpgradeBackup
 import jp.co.soramitsu.core_db.model.SoraAccountLocal
 import jp.co.soramitsu.core_db.model.WalletMigrationIds
+import jp.co.soramitsu.feature_account_api.domain.PhoneScreenLock
 import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
 import jp.co.soramitsu.feature_account_api.domain.model.RepairPinLockedException
 import jp.co.soramitsu.feature_account_api.domain.model.RetainedWallet
@@ -517,8 +518,11 @@ class WalletUpgradeScenarioTest {
         }
     }
 
+    // Update rule of 2026-11-09: an interrupted verification is retried by itself on every
+    // start, however often it was interrupted before. It used to stop after three starts and wait
+    // for Try again on the recovery screen.
     @Test
-    fun repeatedInterruptionsStopAutoRetryButTryAgainStillWorks() = runBlocking {
+    fun repeatedInterruptionsNeverStopTheAutomaticRetry() = runBlocking {
         val wallet = phraseWallet(TWELVE_WORDS)
         release3863Wallet(wallet)
         room(73, wallet to "Main")
@@ -527,28 +531,27 @@ class WalletUpgradeScenarioTest {
             launch.database.openHelper.writableDatabase
         }
         writeJournal(state = "VERIFYING", accounts = listOf(wallet.address to "Main"), selected = wallet.address)
-        // Three starts of the app's screens are each interrupted before the retried
-        // verification finishes.
-        repeat(3) { attempt ->
+        // Five starts of the app's screens are each interrupted before the retried verification
+        // finishes; each one still retries by itself (the count is kept for support only).
+        repeat(5) { attempt ->
             candidate { launch ->
                 assertTrue(launch.prepare.isFailure)
+                assertNull(WalletUpgradeBackup.startupFailureToShow(context))
                 assertTrue(launch.startScreens())
                 assertEquals(attempt + 1, WalletUpgradeBackup.automaticMigrationRetriesUsedForTest(context))
             }
         }
         candidate { launch ->
             assertTrue(launch.prepare.isFailure)
-            assertFalse(launch.startScreens())
-            assertEquals(
-                "WALLET_MIGRATION_RECOVERY_REQUIRED",
-                WalletUpgradeBackup.blockingFailure()?.code,
-            )
-            val options = requireNotNull(WalletUpgradeBackup.recoveryOptions())
-            assertTrue(options.canRetry && options.canReadOnly && options.canShowPhraseAfterPin)
-            // Try again.
-            assertTrue(WalletUpgradeBackup.retry(context).isSuccess)
+            assertNull(WalletUpgradeBackup.startupFailureToShow(context))
+            assertTrue(launch.startScreens())
             assertEquals(MigrationOutcome.Verified, launch.verify())
             launch.assertUsable(listOf(wallet), selected = wallet)
+        }
+        candidate { launch ->
+            assertTrue(launch.prepare.isSuccess)
+            assertEquals(0, WalletUpgradeBackup.automaticMigrationRetriesUsedForTest(context))
+            assertEquals(MigrationOutcome.Verified, launch.verify())
         }
     }
 
@@ -1011,8 +1014,11 @@ class WalletUpgradeScenarioTest {
         }
     }
 
+    // Killed while verifying on a nearly full phone, so even the retry count cannot be saved.
+    // The count is for support only: the retry still runs by itself and the wallet opens. It
+    // used to show the recovery options at once and wait for Try again.
     @Test
-    fun interruptedVerificationWhoseRetryCannotBeSavedShowsRecoveryWithoutOpeningTheDatabase() =
+    fun interruptedVerificationWhoseRetryCountCannotBeSavedStillRetriesByItself() =
         runBlocking {
             val wallet = phraseWallet(TWELVE_WORDS)
             release3863Wallet(wallet)
@@ -1021,38 +1027,24 @@ class WalletUpgradeScenarioTest {
                 assertTrue(launch.prepare.isSuccess)
                 launch.database.openHelper.writableDatabase
             }
-            // Killed while verifying on a nearly full phone: the VERIFYING journal remains.
             writeJournal(
                 state = "VERIFYING",
                 accounts = listOf(wallet.address to "Main"),
                 selected = wallet.address,
             )
-            // The automatic retry's counter cannot be saved (as with no free space left).
+            // The retry counter cannot be saved (as with no free space left).
             val blocker = File(context.noBackupFilesDir, ".wallet-migration-auto-retry.tmp")
             assertTrue(blocker.mkdirs() && File(blocker, "occupied").createNewFile())
 
             candidate(newProcess = true) { launch ->
                 assertTrue(launch.prepare.isFailure)
-                // SplashActivity: the automatic retry is still expected...
-                assertNull(WalletUpgradeBackup.startupFailureToShow(context))
-                // ...SplashInteractor: it cannot be authorized.
-                assertFalse(launch.startScreens())
-                // The database stays closed to every reader.
-                assertTrue(runCatching { launch.verify() }.isFailure)
+                // Until the retry is authorized the database stays closed to every reader.
                 assertTrue(
                     runCatching { launch.database.walletIdentityDao().getWallets() }.isFailure
                 )
-                // The recovery screen's code is read without opening the database (this used to
-                // crash the app on every start), and the options are shown at once.
-                assertEquals("WALLET_MIGRATION_RECOVERY_REQUIRED", launch.failureCode())
-                assertEquals(
-                    "WALLET_MIGRATION_RECOVERY_REQUIRED",
-                    WalletUpgradeBackup.startupFailureToShow(context)?.code,
-                )
-                assertTrue(requireNotNull(WalletUpgradeBackup.recoveryOptions()).canRetry)
-
-                // Try again does not need the counter.
-                assertTrue(WalletUpgradeBackup.retry(context).isSuccess)
+                assertNull(WalletUpgradeBackup.startupFailureToShow(context))
+                assertTrue(launch.startScreens())
+                assertEquals(0, WalletUpgradeBackup.automaticMigrationRetriesUsedForTest(context))
                 assertEquals(MigrationOutcome.Verified, launch.verify())
                 launch.assertUsable(listOf(wallet), selected = wallet)
             }
@@ -1071,6 +1063,51 @@ class WalletUpgradeScenarioTest {
         candidate { launch ->
             assertTrue(launch.prepare.isSuccess)
             assertTrue(backups().any { it.name == "wallet-upgrade-backup-v58-to-77" })
+            assertEquals(MigrationOutcome.Verified, launch.verify())
+            launch.assertUsable(listOf(wallet), selected = wallet)
+            assertEquals("Main wallet", launch.userRepository.getCurSoraAccount().accountName)
+            launch.assertCiphertextsKept(legacy + copied)
+        }
+    }
+
+    // A 2.4.0 start killed after it copied the release-era keys under the address but before it
+    // saved the account (or its selection). The promotion used to refuse those copies on every
+    // start (LEGACY_ACCOUNT_SCOPED_CREDENTIAL_CONFLICT) and stop at the recovery screen; an
+    // update must finish it instead, writing no key.
+    @Test
+    fun release240MigrationKilledBeforeTheAccountRowFinishesOnTheUpdate() = runBlocking {
+        val wallet = phraseWallet(TWELVE_WORDS)
+        val legacy = release233 { install(wallet, name = "Main wallet") }
+        room(58)
+        val copied = release240 {
+            migrateKilledBefore(Release240MigrationManager.STOP_BEFORE_ACCOUNT_INSERT)
+        }
+        assertTrue(copied.keys.any { it.endsWith(wallet.address) })
+
+        candidate { launch ->
+            assertTrue(launch.prepare.isSuccess)
+            assertEquals(MigrationOutcome.Verified, launch.verify())
+            launch.assertUsable(listOf(wallet), selected = wallet)
+            launch.assertCiphertextsKept(legacy + copied)
+        }
+        candidate { launch ->
+            assertTrue(launch.prepare.isSuccess)
+            assertEquals(MigrationOutcome.Verified, launch.verify())
+            launch.assertUsable(listOf(wallet), selected = wallet)
+        }
+    }
+
+    @Test
+    fun release240MigrationKilledBeforeTheSelectionFinishesOnTheUpdate() = runBlocking {
+        val wallet = phraseWallet(TWELVE_WORDS)
+        val legacy = release233 { install(wallet, name = "Main wallet") }
+        room(58)
+        val copied = release240 {
+            migrateKilledBefore(Release240MigrationManager.STOP_BEFORE_SELECTION)
+        }
+
+        candidate { launch ->
+            assertTrue(launch.prepare.isSuccess)
             assertEquals(MigrationOutcome.Verified, launch.verify())
             launch.assertUsable(listOf(wallet), selected = wallet)
             assertEquals("Main wallet", launch.userRepository.getCurSoraAccount().accountName)
@@ -1201,6 +1238,47 @@ class WalletUpgradeScenarioTest {
             )
             launch.userRepository.adoptRetainedWallet(stale.address, "Old")
             launch.assertUsable(listOf(stale, second), selected = stale)
+        }
+    }
+
+    // Codex re-review 3: an account whose key is proven but whose backup could not be read yet
+    // (BACKUP_NOT_CHECKED, written by a first check with a busy Keystore) stays exactly as it is
+    // when another account is removed, and does not block that removal. Removing it itself waits
+    // until a later start judges its backup.
+    @Test
+    fun anAccountWhoseBackupIsNotCheckedYetNeverBlocksRemovingAnother() = runBlocking {
+        val unchecked = phraseWallet(TWELVE_WORDS)
+        val other = rawSeedWallet(RAW_SEED)
+        val before = release3863 {
+            created(unchecked)
+            importedSeed(other)
+            finishedAccount(unchecked)
+            finishedAccount(other)
+            select(unchecked)
+            registrationFinished()
+        }
+        room(73, unchecked to "Unchecked", other to "Other")
+
+        candidate { launch ->
+            assertTrue(launch.prepare.isSuccess)
+            assertEquals(MigrationOutcome.Verified, launch.verify())
+            launch.database.walletIdentityDao().upsertWallet(
+                launch.identity(unchecked).copy(secretSource = "BACKUP_NOT_CHECKED")
+            )
+            val uncheckedRow = launch.identity(unchecked)
+
+            launch.remove(other.address)
+
+            launch.assertUsable(listOf(unchecked), selected = unchecked)
+            assertEquals(uncheckedRow, launch.identity(unchecked))
+            launch.assertCiphertextsKept(before.filterKeys { it.endsWith(unchecked.address) })
+            assertNull(launch.userRepository.walletDeletionFailureCode())
+
+            val refused = runCatching { launch.remove(unchecked.address) }.exceptionOrNull()
+            assertEquals("WALLET_DELETION_SECRET_SOURCE_UNSUPPORTED", refused?.message)
+            launch.assertUsable(listOf(unchecked), selected = unchecked)
+            assertEquals(uncheckedRow, launch.identity(unchecked))
+            assertNull(launch.userRepository.walletDeletionFailureCode())
         }
     }
 
@@ -3137,6 +3215,11 @@ class WalletUpgradeScenarioTest {
             assertTrue(manager.start())
         }
 
+        /** The same start, with the process killed before [step] (see Release240MigrationManager). */
+        suspend fun migrateKilledBefore(step: String) {
+            assertTrue(manager.start(killedBefore = step))
+        }
+
         suspend fun snapshot(): Map<String, Any> =
             dataStore.data.first().asMap().mapKeys { it.key.name }
 
@@ -3430,6 +3513,7 @@ class WalletUpgradeScenarioTest {
                 LanguagesHolder(),
                 codec,
                 UserRepositorySr25519Crypto(),
+                PhoneScreenLock({ false }, { 0L }),
             )
         }
         private val migrationManager by lazy {

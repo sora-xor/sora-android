@@ -19,76 +19,76 @@ limitations under the License.
 
 package jp.co.soramitsu.feature_main_impl.presentation.profile.debugmenu
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.Divider
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import jp.co.soramitsu.common.R
+import jp.co.soramitsu.common.presentation.compose.neon.BleachedButton
 import jp.co.soramitsu.common.presentation.compose.neon.ContentCard
+import jp.co.soramitsu.ui_core.component.button.properties.Order
+import androidx.compose.ui.unit.dp
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
 
 @Composable
 internal fun DebugMenuScreen(
-    state: DebugMenuScreenState
+    state: DebugMenuScreenState,
+    display: String? = null,
+    onChangeAccount: (() -> Unit)? = null,
+    onResetRuntime: (() -> Unit)? = null,
 ) {
-    LazyColumn(
-        modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(vertical = Dimens.x1),
-        verticalArrangement = Arrangement.spacedBy(Dimens.x1),
+    Column(
+        modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(Dimens.x2),
+        verticalArrangement = Arrangement.spacedBy(Dimens.x2),
     ) {
-        items(
-            items = state.settings
-        ) { item ->
-            ContentCard(
-                modifier = Modifier.padding(
-                    horizontal = Dimens.x1
-                ).fillMaxSize(),
-                innerPadding = PaddingValues(Dimens.x1)
-            ) {
-                Column(
-                    modifier = Modifier.fillMaxWidth().wrapContentHeight(),
-                ) {
-                    Text(
-                        text = item.name,
-                        color = MaterialTheme.customColors.fgPrimary,
-                        style = MaterialTheme.customTypography.textXSBold,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                    Text(
-                        text = item.value,
-                        color = MaterialTheme.customColors.fgPrimary,
-                        style = MaterialTheme.customTypography.textM,
-                    )
+        if (onChangeAccount != null) {
+            BleachedButton(
+                modifier = Modifier.fillMaxWidth(), size = 48.dp, order = Order.SECONDARY,
+                text = stringResource(R.string.debug_google_account), onClick = onChangeAccount,
+            )
+        }
+        if (onResetRuntime != null) {
+            BleachedButton(
+                modifier = Modifier.fillMaxWidth(), size = 48.dp, order = Order.SECONDARY,
+                text = stringResource(R.string.debug_reset_runtime), onClick = onResetRuntime,
+            )
+        }
+        ContentCard(modifier = Modifier.fillMaxWidth(), innerPadding = PaddingValues(horizontal = Dimens.x2)) {
+            Column {
+                val rows = listOfNotNull(display?.let { SettingOption(R.string.debug_display, it) }) + state.settings
+                rows.forEachIndexed { index, item ->
+                    Column(Modifier.fillMaxWidth().padding(vertical = Dimens.x1_5)) {
+                        Text(stringResource(item.label), color = MaterialTheme.customColors.fgSecondary, style = MaterialTheme.customTypography.textXSBold)
+                        Text(item.value, color = MaterialTheme.customColors.fgPrimary, style = MaterialTheme.customTypography.textM)
+                    }
+                    if (index < rows.lastIndex) Divider(color = MaterialTheme.customColors.fgOutline)
                 }
             }
         }
     }
 }
 
-internal class SettingOption(
-    val name: String,
-    val value: String
-)
+internal data class SettingOption(@StringRes val label: Int, val value: String)
 
 @Preview(showBackground = true, backgroundColor = 16777215)
 @Composable
 private fun PreviewOptions() {
     val settingsList: List<SettingOption> = mutableListOf<SettingOption>().apply {
-        add(SettingOption(name = "User ID", value = "_ID"))
-        add(SettingOption(name = "Device Name", value = "Some Device Very Big Value Text More And More Letters"))
+        add(SettingOption(R.string.debug_app_id, "_ID"))
+        add(SettingOption(R.string.debug_model, "Example device"))
     }
 
     DebugMenuScreen(DebugMenuScreenState(settings = settingsList))

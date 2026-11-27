@@ -167,6 +167,41 @@ class TransferAmountViewModelTest {
     }
 
     @Test
+    fun `a held token Polkaswap does not list can still be sent from its page`() = runTest {
+        // ETH stands for a blacklisted token: the pickers leave it out, its own page sends it.
+        val held = TestAssets.ethAsset(BigDecimal("5"))
+        initViewModel(
+            BigDecimal.ONE,
+            firstTokenId = held.token.id,
+            notListed = flowOf(listOf(held)),
+        )
+        advanceUntilIdle()
+
+        assertEquals(held.token, transferAmountViewModel.sendState.value.input?.token)
+        assertEquals("5", transferAmountViewModel.sendState.value.input?.balance)
+    }
+
+    @Test
+    fun `a token without a fiat price shows its balance without empty parentheses`() = runTest {
+        // The test tokens have no fiat price, as every token has while the price feed is down.
+        initViewModel(BigDecimal("12"))
+        advanceUntilIdle()
+
+        assertEquals("12", transferAmountViewModel.sendState.value.input?.balance)
+    }
+
+    @Test
+    fun `a token with a fiat price shows its balance and fiat value`() = runTest {
+        val priced = TestAssets.xorAsset(BigDecimal("12")).let {
+            it.copy(token = it.token.copy(fiatPrice = 2.0, fiatSymbol = "$"))
+        }
+        initViewModel(BigDecimal.ZERO, assets = flowOf(listOf(priced)))
+        advanceUntilIdle()
+
+        assertEquals("12 ($24)", transferAmountViewModel.sendState.value.input?.balance)
+    }
+
+    @Test
     fun `XOR that no fee can be paid from is all named as locked`() = runTest {
         // free 100 with 30 reserved and 110 frozen: a transfer alone could move 20, but no
         // fee can be paid, so nothing can be sent and the whole free balance is locked.
@@ -419,7 +454,6 @@ class TransferAmountViewModelTest {
             R.string.common_error_general_title to R.string.common_error_general_message,
             transferAmountViewModel.errorFromResourceLiveData.value,
         )
-        verify(exactly = 0) { walletRouter.returnToHubFragment() }
         verify(exactly = 0) { assetsRouter.showTxResult(any(), any()) }
     }
 
@@ -985,8 +1019,10 @@ class TransferAmountViewModelTest {
                 TestAssets.pswapAsset(balance),
             )
         ),
+        notListed: Flow<List<Asset>> = flowOf(emptyList()),
     ) {
         every { assetsInteractor.subscribeAssetsActiveOfCurAccount() } returns assets
+        every { assetsInteractor.subscribeAssetsNotListedOfCurAccount() } returns notListed
         transferAmountViewModel = TransferAmountViewModel(
             interactor = assetsInteractor,
             walletRouter = walletRouter,

@@ -6,7 +6,6 @@ import androidx.activity.result.contract.ActivityResultContract
 import com.journeyapps.barcodescanner.ScanOptions
 import javax.inject.Inject
 import jp.co.soramitsu.feature_assets_api.presentation.QrScanPurpose
-import jp.co.soramitsu.common.util.ReleaseSurfacePolicy
 import jp.co.soramitsu.feature_assets_api.presentation.QrScannerContractFactory
 
 internal const val RECIPIENT_SCAN_EXTRA = "jp.co.soramitsu.sora.scan.RECIPIENT_ONLY"
@@ -32,9 +31,7 @@ internal fun shouldOpenScannedConnect(
     recipientOnly: Boolean,
     scheme: String?,
     host: String?,
-    irohaConnectEnabled: Boolean = ReleaseSurfacePolicy.irohaConnectAllowed,
 ): Boolean =
-    irohaConnectEnabled &&
-        !recipientOnly &&
+    !recipientOnly &&
         scheme?.lowercase() in setOf("iroha", "irohaconnect") &&
         host == "connect"

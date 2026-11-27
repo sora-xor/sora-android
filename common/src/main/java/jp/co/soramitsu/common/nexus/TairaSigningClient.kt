@@ -11,6 +11,9 @@ import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.*
 
+/** Torii answered with [status]. The message is the code the wallet's issue mapping reads. */
+class TairaHttpStatusException(val status: Int) : IllegalStateException("TAIRA_HTTP_$status")
+
 /** Public testnet confirmation trusts canonical HTTPS Torii, not a production consensus verifier. */
 class TairaSigningClient(
     private val transport: suspend (Request) -> ByteArray = { send(it) },
@@ -57,7 +60,26 @@ class TairaSigningClient(
         return decodeQuote(data, draft)
     }
 
+    /**
+     * The block the node has applied. The node's attested head comes first. For minutes after each
+     * block it cannot attest its tip (409 ConflictingState, 153 s after block 12472 on 2026-11-08)
+     * and its status can lag the tip (503). A transfer it already reports as applied must not wait
+     * for that, so the head of its block list answers instead: the same HTTPS node, and only ever
+     * compared with a height that node reported.
+     */
     suspend fun checkpoint(): Checkpoint {
+        val height = try {
+            attestedHeight()
+        } catch (error: TairaHttpStatusException) {
+            if (error.status !in ATTESTATION_UNAVAILABLE) throw error
+            return latestBlock()
+        }
+        val block = parse(transport(Request("/v1/explorer/blocks/$height")))
+        check(block.integer("height") == height) { "TAIRA_CHECKPOINT_INVALID" }
+        return Checkpoint(height, hashLiteral(block.string("hash")))
+    }
+
+    private suspend fun attestedHeight(): Long {
         val challenge = randomNonce() + randomNonce()
         val root = parse(transport(Request("/v1/bridge/finality/attestation/latest", headers = mapOf("X-Iroha-Finality-Challenge" to challenge), maximum = 8 * 1024 * 1024)))
         val body = root.getValue("body").jsonObject
@@ -68,12 +90,22 @@ class TairaSigningClient(
         val status = body.getValue("status").jsonObject
         val height = status.integer("applied_height")
         check(height > 0 && status.integer("committed_height") >= height) { "TAIRA_CHECKPOINT_INVALID" }
-        val block = parse(transport(Request("/v1/explorer/blocks/$height")))
-        check(block.integer("height") == height) { "TAIRA_CHECKPOINT_INVALID" }
+        return height
+    }
+
+    private suspend fun latestBlock(): Checkpoint {
+        val items = parse(transport(Request(LATEST_BLOCK_PATH))).getValue("items").jsonArray
+        check(items.size == 1) { "TAIRA_CHECKPOINT_INVALID" }
+        val block = items.single().jsonObject
+        val height = block.integer("height")
+        check(height > 0) { "TAIRA_CHECKPOINT_INVALID" }
         return Checkpoint(height, hashLiteral(block.string("hash")))
     }
 
     companion object {
+        private const val LATEST_BLOCK_PATH = "/v1/explorer/blocks?limit=1"
+        private val ATTESTATION_UNAVAILABLE = setOf(409, 503)
+
         fun authMessage(body: ByteArray, timestamp: Long, nonce: String): ByteArray =
             "iroha.app.request.network.v1\u0000".toByteArray() + TairaTransferCodec.unhex(TairaTestnetContract.NETWORK_HEX) +
                 "POST\n/v1/fees/quote\n\n${TairaTransferCodec.hex(MessageDigest.getInstance("SHA-256").digest(body))}\n$timestamp\n$nonce".toByteArray()
@@ -117,7 +149,7 @@ class TairaSigningClient(
             return checkNotNull(NexusTransactionHash.normalized(raw)) { "TAIRA_BLOCK_HASH_INVALID" }
         }
         private suspend fun send(request: Request): ByteArray = withContext(Dispatchers.IO) {
-            check(request.path in setOf("/v1/fees/quote", "/v1/bridge/finality/attestation/latest") || Regex("^/v1/explorer/blocks/[1-9][0-9]*$").matches(request.path))
+            check(request.path in setOf("/v1/fees/quote", "/v1/bridge/finality/attestation/latest", LATEST_BLOCK_PATH) || Regex("^/v1/explorer/blocks/[1-9][0-9]*$").matches(request.path))
             val connection = URL(TairaTestnetContract.TORII_ROOT + request.path).openConnection() as HttpURLConnection
             try {
                 connection.instanceFollowRedirects = false; connection.connectTimeout = 25_000; connection.readTimeout = 25_000
@@ -128,7 +160,7 @@ class TairaSigningClient(
                     connection.setRequestProperty("Content-Type", "application/json")
                     connection.setFixedLengthStreamingMode(body.size); connection.outputStream.use { it.write(body) }
                 }
-                check(connection.responseCode == 200) { "TAIRA_HTTP_${connection.responseCode}" }
+                if (connection.responseCode != 200) throw TairaHttpStatusException(connection.responseCode)
                 check(connection.contentType?.substringBefore(';')?.trim() == "application/json") { "TAIRA_CONTENT_TYPE_INVALID" }
                 check(connection.contentLengthLong <= request.maximum)
                 val output = java.io.ByteArrayOutputStream()

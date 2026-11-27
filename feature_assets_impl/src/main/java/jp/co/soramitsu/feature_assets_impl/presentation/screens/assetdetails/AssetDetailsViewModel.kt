@@ -34,12 +34,12 @@ import jp.co.soramitsu.androidfoundation.resource.ResourceManager
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.AssetHolder
-import jp.co.soramitsu.common.domain.formatFiatAmount
+import jp.co.soramitsu.common.domain.Token
+import jp.co.soramitsu.common.domain.calcFiat
 import jp.co.soramitsu.common.domain.formatFiatChange
 import jp.co.soramitsu.common.domain.formatFiatOrEmpty
 import jp.co.soramitsu.common.domain.iconUri
-import jp.co.soramitsu.common.domain.printFiat
-import jp.co.soramitsu.common.logger.FirebaseWrapper
+import jp.co.soramitsu.common.logger.WalletDiagnostics
 import jp.co.soramitsu.common.presentation.compose.components.initSmallTitle2
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.util.NumbersFormatter
@@ -48,6 +48,7 @@ import jp.co.soramitsu.common_wallet.data.XorAssetBalance
 import jp.co.soramitsu.common_wallet.domain.BalanceWrapper
 import jp.co.soramitsu.common_wallet.domain.model.fiatSymbol
 import jp.co.soramitsu.common_wallet.presentation.compose.states.mapPoolsData
+import jp.co.soramitsu.common_wallet.presentation.compose.util.AmountFormat
 import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
 import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
 import jp.co.soramitsu.feature_assets_impl.presentation.states.AssetCardState
@@ -56,6 +57,7 @@ import jp.co.soramitsu.feature_assets_impl.presentation.states.emptyAssetCardSta
 import jp.co.soramitsu.feature_blockexplorer_api.domain.TransactionHistoryHandler
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsInteractor
 import jp.co.soramitsu.feature_polkaswap_api.launcher.PolkaswapRouter
+import jp.co.soramitsu.feature_wallet_api.domain.interfaces.HashiBridgeAssets
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import kotlinx.coroutines.CancellationException
@@ -79,6 +81,7 @@ class AssetDetailsViewModel @AssistedInject constructor(
     private val transactionHistoryHandler: TransactionHistoryHandler,
     private val resourceManager: ResourceManager,
     private val coroutineManager: CoroutineManager,
+    private val hashiBridgeAssets: HashiBridgeAssets,
 ) : BaseViewModel() {
 
     @AssistedFactory
@@ -112,11 +115,8 @@ class AssetDetailsViewModel @AssistedInject constructor(
                     state = state.copy(
                         state = state.state.copy(
                             poolsState = mapped.first,
-                            poolsSum = formatFiatAmount(
-                                mapped.second,
-                                it.fiatSymbol,
-                                numbersFormatter
-                            ),
+                            // Pools none of which has a price show no total, never "$0".
+                            poolsSum = mapped.second?.let { sum -> AmountFormat.fiatAtLeastCent(sum, it.fiatSymbol, numbersFormatter) }.orEmpty(),
                         )
                     )
                 }
@@ -128,6 +128,13 @@ class AssetDetailsViewModel @AssistedInject constructor(
             .onEach { refreshActivities() }
             .launchIn(viewModelScope)
         onPullToRefresh()
+        if (hashiBridgeAssets.supported) {
+            viewModelScope.launch {
+                // This page is the SORA network's asset page; Nexus and Taira have their own.
+                val registered = hashiBridgeAssets.isRegistered(assetId)
+                state = state.copy(state = state.state.copy(bridgeAvailable = registered))
+            }
+        }
     }
 
     private fun getBalance() {
@@ -170,10 +177,8 @@ class AssetDetailsViewModel @AssistedInject constructor(
                             numbersFormatter,
                             AssetHolder.ROUNDING,
                         ),
-                        transferableBalanceFiat = asset.token.printFiat(
-                            transferable,
-                            numbersFormatter,
-                        ),
+                        // With no price there is no value: the amount stands alone, never over a "$0" it is not.
+                        transferableBalanceFiat = asset.token.valueOrEmpty(transferable),
                         frozenBalance = xorBalance?.let {
                             asset.token.printBalance(
                                 it.frozen,
@@ -181,9 +186,7 @@ class AssetDetailsViewModel @AssistedInject constructor(
                                 AssetHolder.ROUNDING
                             )
                         },
-                        frozenBalanceFiat = xorBalance?.let {
-                            asset.token.printFiat(it.frozen, numbersFormatter)
-                        },
+                        frozenBalanceFiat = xorBalance?.let { asset.token.valueOrEmpty(it.frozen) },
                         lockedNote = xorBalance?.locked
                             ?.takeIf { it > BigDecimal.ZERO }
                             ?.let { locked ->
@@ -215,7 +218,7 @@ class AssetDetailsViewModel @AssistedInject constructor(
         } catch (cancellation: CancellationException) {
             throw cancellation
         } catch (error: Throwable) {
-            FirebaseWrapper.recordException(error)
+            WalletDiagnostics.recordException(error)
             null
         }
         return live ?: BalanceWrapper.mapStoredXorBalance(asset.balance)
@@ -268,6 +271,10 @@ class AssetDetailsViewModel @AssistedInject constructor(
         walletRouter.openQrCodeFlow()
     }
 
+    fun bridgeClicked() {
+        walletRouter.openHashiBridge(assetId)
+    }
+
     fun onPoolClick(ids: StringPair) {
         polkaswapRouter.showPoolDetails(ids)
     }
@@ -287,37 +294,37 @@ class AssetDetailsViewModel @AssistedInject constructor(
                                     numbersFormatter,
                                     AssetHolder.ROUNDING,
                                 ),
-                                token.printFiat(xorBalance.frozen, numbersFormatter),
+                                token.valueOrEmpty(xorBalance.frozen),
                                 token.printBalance(
                                     xorBalance.bonded,
                                     numbersFormatter,
                                     AssetHolder.ROUNDING,
                                 ),
-                                token.printFiat(xorBalance.bonded, numbersFormatter),
+                                token.valueOrEmpty(xorBalance.bonded),
                                 token.printBalance(
                                     xorBalance.locked,
                                     numbersFormatter,
                                     AssetHolder.ROUNDING,
                                 ),
-                                token.printFiat(xorBalance.locked, numbersFormatter),
+                                token.valueOrEmpty(xorBalance.locked),
                                 token.printBalance(
                                     xorBalance.reserved,
                                     numbersFormatter,
                                     AssetHolder.ROUNDING,
                                 ),
-                                token.printFiat(xorBalance.reserved, numbersFormatter),
+                                token.valueOrEmpty(xorBalance.reserved),
                                 token.printBalance(
                                     xorBalance.redeemable,
                                     numbersFormatter,
                                     AssetHolder.ROUNDING,
                                 ),
-                                token.printFiat(xorBalance.redeemable, numbersFormatter),
+                                token.valueOrEmpty(xorBalance.redeemable),
                                 token.printBalance(
                                     xorBalance.unbonding,
                                     numbersFormatter,
                                     AssetHolder.ROUNDING,
                                 ),
-                                token.printFiat(xorBalance.unbonding, numbersFormatter),
+                                token.valueOrEmpty(xorBalance.unbonding),
                             )
                         )
                     )
@@ -331,4 +338,11 @@ class AssetDetailsViewModel @AssistedInject constructor(
             }
         }
     }
+
+    /**
+     * What [amount] of this token is worth, or nothing when the token has no price: an amount stands alone rather than
+     * over a "$0" it is not worth. A positive value under a cent is "<$0.01", never "$0".
+     */
+    private fun Token.valueOrEmpty(amount: BigDecimal): String =
+        calcFiat(amount)?.let { AmountFormat.fiatAtLeastCent(it, fiatSymbol.orEmpty(), numbersFormatter) }.orEmpty()
 }

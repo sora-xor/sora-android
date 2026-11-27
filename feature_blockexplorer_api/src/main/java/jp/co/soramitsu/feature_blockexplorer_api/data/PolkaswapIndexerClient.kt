@@ -35,7 +35,6 @@ import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.contentOrNull
-import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 
 @Serializable
@@ -677,167 +676,6 @@ class PolkaswapIndexerClient private constructor(
         everyRoleQuestionNotBeforeNanos = nowMonotonicNanos() + millis * 1_000_000L
     }
 
-    suspend fun getAllTransactionHistory(
-        address: String,
-        pageSize: Int = POLKAMARKT_PAGE_SIZE,
-        maxPages: Int = POLKAMARKT_MAX_PAGES,
-    ): List<IndexerHistoryElement> =
-        getAllTransactionHistoryQualified(address, pageSize, maxPages).value
-
-    /**
-     * Bounded generic account-history traversal. Cursor and item identities must advance on every
-     * page. The numbered-page compatibility adapter above also walks cursors from page one; no
-     * production history operation sends an offset to PI.
-     */
-    suspend fun getAllTransactionHistoryQualified(
-        address: String,
-        pageSize: Int = POLKAMARKT_PAGE_SIZE,
-        maxPages: Int = POLKAMARKT_MAX_PAGES,
-    ): PiQualifiedRead<List<IndexerHistoryElement>> {
-        val canonicalAddress = validatedIdentifier(address)
-        return getAllHistoryElementsQualified(
-            filter = accountHistoryFilter(canonicalAddress),
-            pageSize = pageSize,
-            maxPages = maxPages,
-            responseIdentityValidator = { page ->
-                PiHistoryResponseIdentityValidator.requireAccount(
-                    items = page.items,
-                    expectedAccount = canonicalAddress,
-                )
-            },
-        )
-    }
-
-    private suspend fun getAllHistoryElementsQualified(
-        filter: JsonElement?,
-        pageSize: Int,
-        maxPages: Int,
-        responseIdentityValidator: (IndexerHistoryPage) -> Unit = {},
-    ): PiQualifiedRead<List<IndexerHistoryElement>> {
-        require(pageSize in 1..MAX_HISTORY_PAGE_SIZE) { "PI_INDEXER_INVALID_PAGE_SIZE" }
-        require(maxPages in 1..MAX_CURSOR_PAGES) { "PI_INDEXER_INVALID_PAGE_LIMIT" }
-        val result = mutableListOf<IndexerHistoryElement>()
-        val seenPages = mutableSetOf<List<IndexerHistoryElement>>()
-        val seenCursors = mutableSetOf<String>()
-        val seenTransactionIds = mutableSetOf<String>()
-        var after: String? = null
-        var expectedTotalCount: Int? = null
-        var expectedHealth: PiIndexerHealth? = null
-        var expectedFromCache: Boolean? = null
-
-        repeat(maxPages) {
-            val qualifiedPage = getHistoryElementsQualified(
-                first = pageSize,
-                after = after,
-                filter = filter,
-                responseIdentityValidator = responseIdentityValidator,
-            )
-            val page = qualifiedPage.value
-            check(
-                expectedHealth == null ||
-                    isConsistentPageCheckpoint(
-                        previous = checkNotNull(expectedHealth),
-                        current = qualifiedPage.health,
-                        fromCache = qualifiedPage.fromCache,
-                    )
-            ) {
-                "PI_INDEXER_HISTORY_CHECKPOINT_CHANGED"
-            }
-            check(
-                expectedFromCache == null ||
-                    expectedFromCache == qualifiedPage.fromCache
-            ) { "PI_INDEXER_HISTORY_PROVENANCE_CHANGED" }
-            expectedHealth = qualifiedPage.health
-            expectedFromCache = qualifiedPage.fromCache
-            check(
-                page.items.size <= pageSize &&
-                    page.totalCount >= 0 &&
-                    (expectedTotalCount == null || expectedTotalCount == page.totalCount)
-            ) { "PI_INDEXER_INVALID_PAGE" }
-            expectedTotalCount = page.totalCount
-            if (page.items.isNotEmpty() && !seenPages.add(page.items.toList())) {
-                throw IllegalStateException("PI_INDEXER_REPEATED_PAGE")
-            }
-            check(page.items.all { seenTransactionIds.add(it.id) }) {
-                "PI_INDEXER_DUPLICATE_TRANSACTION"
-            }
-            check(result.size + page.items.size <= page.totalCount) {
-                "PI_INDEXER_INVALID_PAGE"
-            }
-            result += page.items
-            if (page.endReached) {
-                check(result.size == page.totalCount) { "PI_INDEXER_INVALID_PAGE" }
-                return PiQualifiedRead(
-                    value = result,
-                    health = checkNotNull(expectedHealth),
-                    fromCache = checkNotNull(expectedFromCache),
-                )
-            }
-            val next = page.endCursor?.takeIf { it.isValidCursor() }
-                ?: throw IllegalStateException("PI_INDEXER_MISSING_CURSOR")
-            if (!seenCursors.add(next) || next == after) {
-                throw IllegalStateException("PI_INDEXER_REPEATED_PAGE")
-            }
-            after = next
-        }
-
-        throw IllegalStateException("PI_INDEXER_PAGE_LIMIT_EXCEEDED")
-    }
-
-    /**
-     * Resolves only the bounded set of pending hashes for one exact account.
-     *
-     * Pending recovery must not require exhausting an account's lifetime
-     * history: active traders can legitimately have far more rows than the
-     * mobile pagination ceiling.
-     */
-    suspend fun getAccountTransactionsByHashesQualified(
-        address: String,
-        transactionHashes: Collection<String>,
-    ): PiQualifiedRead<List<IndexerHistoryElement>> {
-        require(transactionHashes.size in 1..MAX_PENDING_TRANSACTION_LOOKUP) {
-            "PI_INDEXER_PENDING_LOOKUP_LIMIT_INVALID"
-        }
-        val canonicalAddress = validatedIdentifier(address)
-        val canonicalHashes = transactionHashes
-            .map(::canonicalTransactionHash)
-        require(canonicalHashes.distinct().size == canonicalHashes.size) {
-            "PI_INDEXER_DUPLICATE_TRANSACTION"
-        }
-        val expectedHashes = canonicalHashes.toSet()
-        return getHistoryElementsQualified(
-            first = canonicalHashes.size,
-            filter = andFilter(
-                accountHistoryFilter(canonicalAddress),
-                fieldFilter("id", "in", canonicalHashes),
-            ),
-            responseIdentityValidator = { page ->
-                PiHistoryResponseIdentityValidator.requireAccount(
-                    items = page.items,
-                    expectedAccount = canonicalAddress,
-                )
-                PiHistoryResponseIdentityValidator.requireTransactionHashes(
-                    items = page.items,
-                    expectedHashes = expectedHashes,
-                )
-            },
-        ).map { page ->
-            check(
-                page.endReached &&
-                    page.totalCount == page.items.size &&
-                    page.items.all { item ->
-                        item.id in expectedHashes &&
-                            (
-                                item.address == canonicalAddress ||
-                                    item.dataFrom == canonicalAddress ||
-                                    item.dataTo == canonicalAddress
-                                )
-                    }
-            ) { "PI_INDEXER_PENDING_LOOKUP_IDENTITY_MISMATCH" }
-            page.items
-        }
-    }
-
     private fun <T, R> PiQualifiedRead<T>.map(
         transform: (T) -> R,
     ): PiQualifiedRead<R> = PiQualifiedRead(
@@ -1023,8 +861,6 @@ class PolkaswapIndexerClient private constructor(
             }
         }.value
 
-    suspend fun getHealth(): PiIndexerHealth = getHealthWithServerTime().first
-
     /** The health answer and the HTTP `Date` of the response that carried it, when it had one. */
     private suspend fun getHealthWithServerTime(): Pair<PiIndexerHealth, Long?> {
         val live = executeLive(
@@ -1106,18 +942,6 @@ class PolkaswapIndexerClient private constructor(
         return config
     }
 
-    /**
-     * Explicit fail-closed capability gate for the currently deployed PI schema. Schema v1 has
-     * only `account(id): JSON`; decoding balances from that untyped object would invent a wire
-     * contract and could silently bind a quantity to the wrong account or asset.
-     */
-    suspend fun requireTypedAccountBalancesCapability() {
-        val config = requireMobileConfig()
-        check(config.typedAccountBalancesAvailable) {
-            "PI_INDEXER_TYPED_ACCOUNT_BALANCES_UNAVAILABLE"
-        }
-    }
-
     suspend fun getMarket(id: String): PolkamarktMarket? =
         getMarketQualified(id).value
 
@@ -1192,13 +1016,6 @@ class PolkaswapIndexerClient private constructor(
         }
     }
 
-    suspend fun getMarketSnapshots(
-        marketId: Long,
-        pageSize: Int = POLKAMARKT_PAGE_SIZE,
-        maxPages: Int = POLKAMARKT_MAX_PAGES,
-    ): List<PolkamarktMarketSnapshot> =
-        getMarketSnapshotsQualified(marketId, pageSize, maxPages).value
-
     suspend fun getMarketSnapshotsQualified(
         marketId: Long,
         pageSize: Int = POLKAMARKT_PAGE_SIZE,
@@ -1254,13 +1071,6 @@ class PolkaswapIndexerClient private constructor(
         }
     }
 
-    suspend fun getAccountPositions(
-        account: String,
-        pageSize: Int = POLKAMARKT_PAGE_SIZE,
-        maxPages: Int = POLKAMARKT_MAX_PAGES,
-    ): List<PolkamarktAccountPosition> =
-        getAccountPositionsQualified(account, pageSize, maxPages).value
-
     suspend fun getAccountPositionsQualified(
         account: String,
         pageSize: Int = POLKAMARKT_PAGE_SIZE,
@@ -1301,13 +1111,6 @@ class PolkaswapIndexerClient private constructor(
             }
         }
     }
-
-    suspend fun getAccountTrades(
-        account: String,
-        pageSize: Int = POLKAMARKT_PAGE_SIZE,
-        maxPages: Int = POLKAMARKT_MAX_PAGES,
-    ): List<PolkamarktAccountTrade> =
-        getAccountTradesQualified(account, pageSize, maxPages).value
 
     suspend fun getAccountTradesQualified(
         account: String,
@@ -1351,9 +1154,6 @@ class PolkaswapIndexerClient private constructor(
             }
         }
     }
-
-    suspend fun getPolkamarktSignals(): PolkamarktSignals =
-        getPolkamarktSignalsQualified().value
 
     suspend fun getPolkamarktSignalsQualified(): PiQualifiedRead<PolkamarktSignals> =
         executeQualified(
@@ -3266,7 +3066,6 @@ class PolkaswapIndexerClient private constructor(
         const val MAXIMUM_LIVE_RESPONSE_BYTES = 8 * 1_024 * 1_024
         const val MAX_HISTORY_PAGE_SIZE = 100
         const val MAX_CURSOR_LENGTH = 2_048
-        const val MAX_PENDING_TRANSACTION_LOOKUP = 100
         const val MAX_PAGED_HISTORY_ACCOUNTS = 32
         const val HASH_HEX_LENGTH = 64
         const val MAX_INDEXER_IDENTIFIER_LENGTH = 256

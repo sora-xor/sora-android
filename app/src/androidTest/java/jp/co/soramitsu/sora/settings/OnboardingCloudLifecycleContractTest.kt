@@ -10,11 +10,9 @@ import androidx.navigation.NavController
 import io.mockk.*
 import jp.co.soramitsu.androidfoundation.coroutine.CoroutineManager
 import jp.co.soramitsu.androidfoundation.resource.ResourceManager
-import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.account.AccountAvatarGenerator
 import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.backup.CloudBackupProvider
-import jp.co.soramitsu.common.domain.InvitationHandler
 import jp.co.soramitsu.feature_account_api.domain.model.WalletDraft
 import jp.co.soramitsu.feature_main_api.launcher.MainStarter
 import jp.co.soramitsu.feature_multiaccount_impl.domain.MultiaccountInteractor
@@ -40,7 +38,9 @@ class OnboardingCloudLifecycleContractTest {
     private val resources = mockk<ResourceManager>(relaxed = true)
     private val starter = mockk<MainStarter>(relaxed = true)
     private val nav = mockk<NavController>(relaxed = true)
-    private val activity = mockk<Activity>()
+    // Only handed on to the starter. A plain Activity, not a mock: mocking one makes MockK rewrite
+    // Activity and Context for the rest of the shared test process, and later tests run far slower.
+    private val activity = plainActivity()
     private val store = ViewModelStore()
     private val account = SoraAccount("public-account", "Fixture wallet")
     private val password = "public-test-password"
@@ -76,8 +76,7 @@ class OnboardingCloudLifecycleContractTest {
     private fun cloudBackup() = DecryptedBackupAccount(name = account.accountName, address = account.substrateAddress,
         mnemonicPhrase = words.joinToString(" "), cryptoType = CryptoType.SR25519,
         backupAccountType = listOf(BackupAccountType.PASSPHRASE), seed = null, json = null)
-    private fun createViewModel(cloud: Boolean = true) = OnboardingViewModel(mockk<InvitationHandler>(relaxed = true),
-        interactor, starter, resources, CloudBackupProvider(cloud) { backup }, mockk<AccountAvatarGenerator>(relaxed = true), dispatcher)
+    private fun createViewModel(cloud: Boolean = true) = OnboardingViewModel(interactor, starter, resources, CloudBackupProvider(cloud) { backup }, mockk<AccountAvatarGenerator>(relaxed = true), dispatcher)
         .also { store.put("vm-${System.identityHashCode(it)}", it) }
     private fun prepare(vm: OnboardingViewModel) = act {
         vm.onAccountNameChanged(TextFieldValue(account.accountName)); vm.onCreateAccountContinueClicked(nav)
@@ -94,6 +93,11 @@ class OnboardingCloudLifecycleContractTest {
 
     private val instrumentation = InstrumentationRegistry.getInstrumentation()
     private fun act(block: () -> Unit) { instrumentation.runOnMainSync(block); instrumentation.waitForIdleSync() }
+    private fun plainActivity(): Activity {
+        lateinit var created: Activity
+        InstrumentationRegistry.getInstrumentation().runOnMainSync { created = Activity() }
+        return created
+    }
     private fun viewModel(): OnboardingViewModel { lateinit var value: OnboardingViewModel; act { value = createViewModel() }; return value }
     private fun consent() = mockk<AuthConsentException>(relaxed = true) { every { intent } returns Intent("fixture.consent") }
     @Test fun cloudLoginFailuresSettleLoadingAndPermitTheSameScreenToRetry() {

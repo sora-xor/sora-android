@@ -13,7 +13,7 @@
         app:layout_constraintBottom_toTopOf="@id/bottomNavigationView"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintTop_toBottomOf="@id/badConnectionView">
 
         <androidx.fragment.app.FragmentContainerView
             android:id="@+id/fragmentNavHostMain"
@@ -23,28 +23,45 @@
             app:defaultNavHost="true" />
     </FrameLayout>
 
+    <!-- Reconnecting is routine: the notice is ink on the page's own surface, not an alarm. -->
     <TextView
         android:id="@+id/badConnectionView"
         style="@style/TextAppearance.Soramitsu.Paragraph_3"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:gravity="center_horizontal"
+        android:background="@drawable/bg_lit_banner"
+        android:gravity="center"
+        android:minHeight="24dp"
+        android:accessibilityLiveRegion="polite"
+        android:paddingVertical="2dp"
         android:text="@string/common_connecting"
-        android:textColor="?attr/baseOnAccent"
+        android:textColor="?attr/contentPrimary"
         android:visibility="gone"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        tools:textColor="@color/grey_800"
         tools:visibility="visible" />
+
+    <!-- The bar is a sheet of milk glass standing above the page: its shadow falls up over the page behind. -->
+    <View
+        android:id="@+id/bottomBarShadow"
+        android:layout_width="0dp"
+        android:layout_height="12dp"
+        android:background="@drawable/bg_lit_bar_shadow"
+        android:importantForAccessibility="no"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@id/bottomNavigationView"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
 
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bottomNavigationView"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:background="@drawable/bg_neon_chrome_nav"
+        android:background="@drawable/bg_lit_bar"
         android:visibility="gone"
-        app:elevation="0dp"
+        app:elevation="2dp"
+        app:itemActiveIndicatorStyle="@style/SoraBottomNavSelection"
         app:itemIconTint="@drawable/bottom_navigation_icon_color_selector"
         app:itemTextAppearanceActive="@style/TextAppearance.Soramitsu.Neu.BottomNavigation"
         app:itemTextAppearanceInactive="@style/TextAppearance.Soramitsu.Neu.BottomNavigation"
@@ -57,29 +74,29 @@
         tools:background="@color/neu_color_100"
         tools:visibility="visible" />
 
-    <FrameLayout
+    <!-- The Polkaswap disc: cut red glass with the flower inlaid, and room round it for its shadow. -->
+    <jp.co.soramitsu.feature_main_impl.presentation.PressAwareFrameLayout
         android:id="@+id/fabMain"
-        android:layout_width="80dp"
-        android:layout_height="80dp"
-        android:layout_marginBottom="16dp"
-        android:background="@drawable/bg_neon_swap_glow"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintWidth_percent="0.20"
+        app:layout_constraintTop_toTopOf="@id/bottomNavigationView"
         android:clickable="true"
+        android:elevation="4dp"
         android:focusable="true"
+        android:outlineProvider="none"
         android:visibility="gone"
         android:contentDescription="@string/polkaswap_swap_title"
         app:layout_constraintBottom_toBottomOf="@id/bottomNavigationView"
         app:layout_constraintEnd_toEndOf="@id/bottomNavigationView"
         app:layout_constraintStart_toStartOf="@id/bottomNavigationView">
-        <ImageView
-            android:layout_width="56dp"
-            android:layout_height="56dp"
+        <androidx.compose.ui.platform.ComposeView
+            android:id="@+id/fabDome"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
             android:layout_gravity="center"
-            android:background="@drawable/bg_neon_swap_disc"
-            android:duplicateParentState="true"
-            android:padding="16dp"
-            android:src="@drawable/ic_polkaswap_40"
-            app:tint="@color/neon_on_accent"
+            android:elevation="4dp"
             android:importantForAccessibility="no" />
-    </FrameLayout>
+    </jp.co.soramitsu.feature_main_impl.presentation.PressAwareFrameLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

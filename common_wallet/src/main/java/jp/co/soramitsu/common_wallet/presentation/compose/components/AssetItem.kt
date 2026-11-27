@@ -34,28 +34,35 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import jp.co.soramitsu.common.R
+import jp.co.soramitsu.common.presentation.compose.TokenBadge
 import jp.co.soramitsu.common.util.testTagAsId
 import jp.co.soramitsu.common_wallet.presentation.compose.states.AssetItemCardState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.previewAssetItemCardStateList
 import jp.co.soramitsu.ui_core.component.asset.Asset
+import jp.co.soramitsu.ui_core.component.asset.AssetHolding
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
 
+/**
+ * A held asset: the liquid amount is the row's figure at the end, its value and change small under it. The line under
+ * the name is the symbol and the notes on the holding.
+ */
 @Composable
 fun AssetItem(
     assetState: AssetItemCardState,
     testTag: String,
     onClick: (String) -> Unit,
 ) {
-    Asset(
+    AssetHolding(
         modifier = Modifier
             .testTagAsId(testTag)
             .padding(horizontal = Dimens.x3),
         icon = assetState.tokenIcon.toUri(),
+        tokenBadge = { TokenBadge(assetState.tokenId, assetState.tokenSymbol, assetState.tokenIcon, Dimens.AssetIconSize) },
         name = assetState.tokenName,
-        balance = assetState.assetAmount,
-        symbol = frozenSuffix(assetState),
+        subtitle = holdingNotes(assetState),
+        amount = assetState.assetAmount,
         fiat = assetState.assetFiatAmount,
         change = assetState.fiatChange,
         onClick = { onClick.invoke(assetState.tokenId) },
@@ -63,14 +70,18 @@ fun AssetItem(
 }
 
 /**
- * The row shows the liquid amount. When the account holds more of the asset that it cannot send
- * now, the same line names it ("0 XOR · 110 XOR frozen"), so that locked funds do not look lost.
+ * The symbol, and the notes on the holding. When the account holds more of the asset than it can send now, the line
+ * names it ("XOR · 110 XOR frozen"), so that locked funds do not look lost. A token Polkaswap does not list says so on
+ * the same line ("ABC · Not listed by Polkaswap").
  */
 @Composable
-private fun frozenSuffix(assetState: AssetItemCardState): String =
-    assetState.frozenAmount?.let { stringResource(R.string.asset_frozen_amount_suffix, it) }
-        .orEmpty()
+private fun holdingNotes(assetState: AssetItemCardState): String = listOfNotNull(
+    assetState.tokenSymbol.takeIf(String::isNotBlank),
+    assetState.frozenAmount?.let { stringResource(R.string.asset_frozen_amount_suffix, it) },
+    stringResource(R.string.asset_not_listed_suffix).takeIf { assetState.notListed },
+).joinToString(" ")
 
+/** A numbered market row (Explore, all currencies): a price and its market figures, no amount held. */
 @Composable
 fun AssetItemEnumerated(
     modifier: Modifier = Modifier,
@@ -99,9 +110,10 @@ fun AssetItemEnumerated(
             modifier = Modifier
                 .testTagAsId(testTag),
             icon = assetState.tokenIcon.toUri(),
+            tokenBadge = { TokenBadge(assetState.tokenId, assetState.tokenSymbol, assetState.tokenIcon, Dimens.AssetIconSize) },
             name = assetState.tokenName,
             balance = assetState.assetAmount,
-            symbol = frozenSuffix(assetState),
+            symbol = "",
             fiat = assetState.assetFiatAmount,
             change = assetState.fiatChange,
             onClick = { onClick.invoke(assetState.tokenId) },

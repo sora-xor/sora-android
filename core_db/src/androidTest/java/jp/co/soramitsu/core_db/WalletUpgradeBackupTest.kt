@@ -391,6 +391,653 @@ class WalletUpgradeBackupTest {
     }
 
     @Test
+    fun coldStartRepairsMissingEmptyAndCorruptDatabaseFromMatchingBackup() {
+        listOf("missing", "empty", "currentEmpty", "corrupt").forEach { state ->
+            clearTestStorage()
+            createLegacyDatabase(withAccount = true)
+            putWalletMarker()
+            assertTrue(WalletUpgradeBackup.prepare(context).isSuccess)
+            val backup = context.noBackupFilesDir.listFiles().orEmpty().single { it.name.startsWith(BACKUP_PREFIX) }
+            val backupBefore = backup.walkTopDown().filter(File::isFile)
+                .associate { it.relativeTo(backup).path to it.readBytes() }
+            val preferences = File(context.applicationInfo.dataDir, "shared_prefs/$PREFERENCES_NAME.xml")
+            val originalPreferences = preferences.readBytes()
+            assertTrue(context.deleteDatabase(DATABASE_NAME))
+            when (state) {
+                "empty" -> createLegacyDatabase(withAccount = false)
+                "currentEmpty" -> {
+                    createLegacyDatabase(withAccount = false)
+                    SQLiteDatabase.openDatabase(context.getDatabasePath(DATABASE_NAME).path, null,
+                        SQLiteDatabase.OPEN_READWRITE).use { sqlite ->
+                        createExactCurrentModernizationSchema(sqlite)
+                        sqlite.execSQL("PRAGMA user_version = $CURRENT_VERSION")
+                    }
+                }
+                "corrupt" -> context.getDatabasePath(DATABASE_NAME).writeBytes(ByteArray(4096) { 0x55 })
+            }
+            val originalDatabase = context.getDatabasePath(DATABASE_NAME).takeIf(File::exists)?.readBytes()
+            WalletUpgradeBackup.simulateProcessStartForTest()
+            assertTrue("$state: ${WalletUpgradeBackup.blockingFailure()}", WalletUpgradeBackup.prepare(context).isSuccess)
+            assertEquals(1, legacyAccountCount())
+            assertArrayEquals(originalPreferences, preferences.readBytes())
+            backupBefore.forEach { (name, bytes) -> assertArrayEquals(bytes, File(backup, name).readBytes()) }
+            val repair = context.noBackupFilesDir.listFiles().orEmpty()
+                .single { it.name.startsWith("wallet-database-repair-") && it.isDirectory }
+            if (originalDatabase != null) {
+                assertArrayEquals(originalDatabase, File(repair, "original/databases/app.db").readBytes())
+            }
+            assertFalse(File(context.noBackupFilesDir, "wallet-database-repair.json").exists())
+            WalletUpgradeBackup.simulateProcessStartForTest()
+            assertTrue(WalletUpgradeBackup.prepare(context).isSuccess)
+            assertEquals(1, legacyAccountCount())
+        }
+    }
+
+    @Test
+    fun coldStartNeverRestoresBackupAgainstChangedWalletCredentials() {
+        createLegacyDatabase(withAccount = true)
+        putWalletMarker()
+        assertTrue(WalletUpgradeBackup.prepare(context).isSuccess)
+        assertTrue(context.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE).edit()
+            .putString("prefs_mnemonic$WALLET_ID", "new-encrypted-wallet").commit())
+        val database = context.getDatabasePath(DATABASE_NAME)
+        assertTrue(context.deleteDatabase(DATABASE_NAME))
+        val damaged = ByteArray(4096) { 0x55 }
+        database.writeBytes(damaged)
+        val preferences = File(context.applicationInfo.dataDir, "shared_prefs/$PREFERENCES_NAME.xml")
+        val before = preferences.readBytes()
+        WalletUpgradeBackup.simulateProcessStartForTest()
+        assertTrue(WalletUpgradeBackup.prepare(context).isFailure)
+        assertArrayEquals(damaged, database.readBytes())
+        assertArrayEquals(before, preferences.readBytes())
+        assertFalse(File(context.noBackupFilesDir, "wallet-database-repair.json").exists())
+    }
+
+    @Test
+    fun legacyRemovalWithoutDeletionJournalCannotResurrectItsSnapshot() {
+        createLegacyDatabase(withAccount = true)
+        putWalletMarker()
+        assertTrue(WalletUpgradeBackup.prepare(context).isSuccess)
+        // Old releases removed credential preferences before deleting the account row.
+        // They had no deletion journal; changed retained preferences are the evidence here.
+        assertTrue(context.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE).edit().clear().commit())
+        SQLiteDatabase.openDatabase(context.getDatabasePath(DATABASE_NAME).path, null,
+            SQLiteDatabase.OPEN_READWRITE).use { it.execSQL("DELETE FROM accounts") }
+        WalletUpgradeBackup.simulateProcessStartForTest()
+        assertTrue(WalletUpgradeBackup.prepare(context).isSuccess)
+        assertEquals(0, legacyAccountCount())
+        assertFalse(File(context.noBackupFilesDir, "wallet-database-repair.json").exists())
+    }
+
+    @Test
+    fun healthyCurrentDatabaseDoesNotRequireARepairPublicationLock() {
+        createCurrentDatabase(listOf(SoraAccountLocal(WALLET_ID, "Healthy")))
+        assertTrue(WalletUpgradeBackup.prepare(context).isSuccess)
+        val lock = File(context.noBackupFilesDir, ".wallet-upgrade-publication.lock")
+        assertTrue(lock.delete())
+        assertTrue(lock.mkdir())
+        try {
+            WalletUpgradeBackup.simulateProcessStartForTest()
+            assertTrue(WalletUpgradeBackup.prepare(context).isSuccess)
+            assertEquals(1, legacyAccountCount())
+            assertFalse(File(context.noBackupFilesDir, "wallet-database-repair.json").exists())
+        } finally {
+            assertTrue(lock.delete())
+        }
+    }
+
+    @Test
+    fun emptyAccountsWithPendingSora2SubmissionCannotRollBackToAnOlderSnapshot() {
+        createCurrentDatabase(listOf(SoraAccountLocal(WALLET_ID, "Existing")))
+        assertTrue(WalletUpgradeBackup.prepare(context).isSuccess)
+        val database = context.getDatabasePath(DATABASE_NAME)
+        SQLiteDatabase.openDatabase(database.path, null, SQLiteDatabase.OPEN_READWRITE).use { sqlite ->
+            sqlite.execSQL(sora2PendingSubmissionInsertSql("1".repeat(64)))
+            sqlite.execSQL("DELETE FROM networkAccounts")
+            sqlite.execSQL("DELETE FROM walletIdentities")
+            sqlite.execSQL("DELETE FROM accounts")
+        }
+        val before = database.readBytes()
+        WalletUpgradeBackup.simulateProcessStartForTest()
+        WalletUpgradeBackup.prepare(context)
+        assertEquals(0, legacyAccountCount())
+        assertArrayEquals(before, database.readBytes())
+        assertFalse(File(context.noBackupFilesDir, "wallet-database-repair.json").exists())
+    }
+
+    @Test
+    fun corruptAuxiliaryTableCannotRollBackReadableAccountInventory() {
+        for (expectedCount in listOf(0, 2)) {
+            clearTestStorage()
+            createCurrentDatabase(listOf(SoraAccountLocal(WALLET_ID, "Existing")))
+            assertTrue(WalletUpgradeBackup.prepare(context).isSuccess)
+            val database = context.getDatabasePath(DATABASE_NAME)
+            val offset = SQLiteDatabase.openDatabase(database.path, null, SQLiteDatabase.OPEN_READWRITE).use { sqlite ->
+                sqlite.execSQL(pendingNetworkTransactionInsertSql("after-snapshot", "1".repeat(64)))
+                if (expectedCount == 0) sqlite.execSQL("DELETE FROM accounts") else {
+                    sqlite.execSQL("INSERT INTO accounts(substrateAddress, accountName) VALUES (?, ?)",
+                        arrayOf(PARTIAL_WALLET_ID, "Added after snapshot"))
+                }
+                val rootPage = sqlite.rawQuery("SELECT rootpage FROM sqlite_master WHERE name = 'pendingNetworkTransactions'",
+                    null).use { rows -> assertTrue(rows.moveToFirst()); rows.getLong(0) }
+                val pageSize = sqlite.rawQuery("PRAGMA page_size", null).use { rows ->
+                    assertTrue(rows.moveToFirst()); rows.getLong(0)
+                }
+                (rootPage - 1) * pageSize
+            }
+            java.io.RandomAccessFile(database, "rw").use { file -> file.seek(offset); file.write(0x7f) }
+            val damaged = database.readBytes()
+            WalletUpgradeBackup.simulateProcessStartForTest()
+            assertTrue(WalletUpgradeBackup.prepare(context).isFailure)
+            assertArrayEquals(damaged, database.readBytes())
+            assertEquals(expectedCount, legacyAccountCount())
+            assertFalse(File(context.noBackupFilesDir, "wallet-database-repair.json").exists())
+        }
+    }
+
+    @Test
+    fun coldStartNeverRestoresAnAlteredBackup() {
+        createLegacyDatabase(withAccount = true)
+        putWalletMarker()
+        assertTrue(WalletUpgradeBackup.prepare(context).isSuccess)
+        val backup = context.noBackupFilesDir.listFiles().orEmpty().single { it.name.startsWith(BACKUP_PREFIX) }
+        File(backup, "databases/app.db").appendBytes(byteArrayOf(1))
+        assertTrue(context.deleteDatabase(DATABASE_NAME))
+        WalletUpgradeBackup.simulateProcessStartForTest()
+        assertTrue(WalletUpgradeBackup.prepare(context).isSuccess)
+        assertFalse(context.getDatabasePath(DATABASE_NAME).exists())
+        assertFalse(File(context.noBackupFilesDir, "wallet-database-repair.json").exists())
+    }
+
+    @Test
+    fun explicitDatabaseResetIsNotUndoneOnFollowingColdStarts() {
+        createLegacyDatabase(withAccount = true)
+        putWalletMarker()
+        assertTrue(WalletUpgradeBackup.prepare(context).isSuccess)
+        // DATABASE_ONLY preserves these exact keys; they must not cause the
+        // verified backup to reverse the user's explicit reset next launch.
+        File(context.noBackupFilesDir, "wallet-set-up-again-requested").writeText("DATABASE_ONLY")
+        repeat(2) {
+            WalletUpgradeBackup.simulateProcessStartForTest()
+            assertTrue(WalletUpgradeBackup.prepare(context).isSuccess)
+            assertFalse(context.getDatabasePath(DATABASE_NAME).exists())
+        }
+    }
+
+    @Test
+    fun coldStartResumesDatabaseRepairAfterEachRename() {
+        for (stopAfter in 1..2) {
+            clearTestStorage()
+            createLegacyDatabase(withAccount = true)
+            putWalletMarker()
+            assertTrue(WalletUpgradeBackup.prepare(context).isSuccess)
+            assertTrue(context.deleteDatabase(DATABASE_NAME))
+            val original = ByteArray(4096) { 0x55 }
+            context.getDatabasePath(DATABASE_NAME).writeBytes(original)
+            var moved = 0
+            WalletUpgradeBackup.afterSetAsideRenameForTest = { if (++moved == stopAfter) error("simulated process death") }
+            try {
+                WalletUpgradeBackup.simulateProcessStartForTest()
+                assertTrue(WalletUpgradeBackup.prepare(context).isFailure)
+                assertTrue(File(context.noBackupFilesDir, "wallet-database-repair.json").exists())
+            } finally {
+                WalletUpgradeBackup.afterSetAsideRenameForTest = null
+            }
+            WalletUpgradeBackup.simulateProcessStartForTest()
+            assertTrue(WalletUpgradeBackup.prepare(context).isSuccess)
+            assertEquals(1, legacyAccountCount())
+            val repair = context.noBackupFilesDir.listFiles().orEmpty()
+                .single { it.name.startsWith("wallet-database-repair-") && it.isDirectory }
+            assertArrayEquals(original, File(repair, "original/databases/app.db").readBytes())
+        }
+    }
+
+    @Test
+    fun explicitResetAfterInterruptedAutomaticRepairCannotResurrectTheWallet() {
+        createLegacyDatabase(withAccount = true)
+        putWalletMarker()
+        assertTrue(WalletUpgradeBackup.prepare(context).isSuccess)
+        assertTrue(context.deleteDatabase(DATABASE_NAME))
+        context.getDatabasePath(DATABASE_NAME).writeBytes(ByteArray(4096) { 0x55 })
+        WalletUpgradeBackup.afterSetAsideRenameForTest = { error("simulated process death") }
+        try {
+            WalletUpgradeBackup.simulateProcessStartForTest()
+            assertTrue(WalletUpgradeBackup.prepare(context).isFailure)
+        } finally {
+            WalletUpgradeBackup.afterSetAsideRenameForTest = null
+        }
+        File(context.noBackupFilesDir, "wallet-set-up-again-requested").writeText("DATABASE_ONLY")
+        repeat(2) {
+            WalletUpgradeBackup.simulateProcessStartForTest()
+            assertTrue(WalletUpgradeBackup.prepare(context).isSuccess)
+            assertFalse(context.getDatabasePath(DATABASE_NAME).exists())
+            assertFalse(File(context.noBackupFilesDir, "wallet-database-repair.json").exists())
+        }
+    }
+
+    @Test
+    fun coldStartRestoresEveryWatchOnlyWalletAndKeepsSelection() {
+        val accounts = listOf(SoraAccountLocal(WALLET_ID, "First"), SoraAccountLocal(PARTIAL_WALLET_ID, "Second"))
+        createCurrentDatabase(accounts, secretSource = "WATCH_ONLY")
+        assertTrue(WalletUpgradeBackup.prepare(context).isSuccess)
+        val preferences = context.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE).all
+        assertTrue(context.deleteDatabase(DATABASE_NAME))
+        WalletUpgradeBackup.simulateProcessStartForTest()
+        assertTrue(WalletUpgradeBackup.prepare(context).isSuccess)
+        assertEquals(2, legacyAccountCount())
+        assertEquals(preferences, context.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE).all)
+        SQLiteDatabase.openDatabase(context.getDatabasePath(DATABASE_NAME).path, null,
+            SQLiteDatabase.OPEN_READONLY).use { sqlite ->
+            sqlite.rawQuery("SELECT secretSource FROM walletIdentities", null).use { rows ->
+                assertEquals(2, rows.count)
+                while (rows.moveToNext()) assertEquals("WATCH_ONLY", rows.getString(0))
+            }
+        }
+    }
+
+    @Test
+    fun coldStartDoesNotUndoDeleteAllWhileItsPreferencesStillMatchTheBackup() {
+        createCurrentDatabase(listOf(SoraAccountLocal(WALLET_ID, "Retained")))
+        assertTrue(WalletUpgradeBackup.prepare(context).isSuccess)
+        SQLiteDatabase.openDatabase(context.getDatabasePath(DATABASE_NAME).path, null,
+            SQLiteDatabase.OPEN_READWRITE).use { sqlite ->
+            sqlite.execSQL("DELETE FROM networkAccounts")
+            sqlite.execSQL("DELETE FROM walletIdentities")
+            sqlite.execSQL("DELETE FROM accounts")
+        }
+        insertDeletionOperation(phase = WalletDeletionContract.PHASE_DATABASE_COMMITTED,
+            expectedWalletCount = 1, targetIds = setOf(WALLET_ID), selectedBefore = WALLET_ID,
+            selectedAfter = "", removeLegacyUnsuffixed = false)
+        WalletUpgradeBackup.simulateProcessStartForTest()
+        assertTrue(WalletUpgradeBackup.prepare(context).isSuccess)
+        assertEquals(0, legacyAccountCount())
+        assertFalse(File(context.noBackupFilesDir, "wallet-database-repair.json").exists())
+        assertEquals("encrypted-$WALLET_ID", context.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE)
+            .getString("prefs_mnemonic$WALLET_ID", null))
+    }
+
+    @Test
+    fun failedRepairCopyNeverAccumulatesStagingOrChangesOriginalFiles() {
+        createLegacyDatabase(withAccount = true)
+        putWalletMarker()
+        assertTrue(WalletUpgradeBackup.prepare(context).isSuccess)
+        val backup = context.noBackupFilesDir.listFiles().orEmpty().single { it.name.startsWith(BACKUP_PREFIX) }
+        val backupBefore = File(backup, "databases/app.db").readBytes()
+        assertTrue(context.deleteDatabase(DATABASE_NAME))
+        val original = ByteArray(4096) { 0x55 }
+        context.getDatabasePath(DATABASE_NAME).writeBytes(original)
+        WalletUpgradeBackup.afterDatabaseRepairCopyForTest = { error("simulated copy failure") }
+        try {
+            repeat(3) {
+                WalletUpgradeBackup.simulateProcessStartForTest()
+                assertTrue(WalletUpgradeBackup.prepare(context).isFailure)
+                assertArrayEquals(original, context.getDatabasePath(DATABASE_NAME).readBytes())
+                assertArrayEquals(backupBefore, File(backup, "databases/app.db").readBytes())
+                assertTrue(context.noBackupFilesDir.listFiles().orEmpty()
+                    .none { it.name.startsWith("wallet-database-repair-") && it.isDirectory })
+                assertFalse(File(context.noBackupFilesDir, "wallet-database-repair.json").exists())
+            }
+        } finally {
+            WalletUpgradeBackup.afterDatabaseRepairCopyForTest = null
+        }
+        WalletUpgradeBackup.simulateProcessStartForTest()
+        assertTrue(WalletUpgradeBackup.prepare(context).isSuccess)
+        assertEquals(1, legacyAccountCount())
+    }
+
+    // Update rule of 2026-11-09: Try again in the same process runs the same repair a new app
+    // start runs. It used to re-check only, so a repair that failed once on a busy disk kept the
+    // wallet behind the recovery screen until the app was restarted.
+    @Test
+    fun tryAgainInTheSameProcessRepairsAfterARepairCopyFailed() {
+        createLegacyDatabase(withAccount = true)
+        putWalletMarker()
+        assertTrue(WalletUpgradeBackup.prepare(context).isSuccess)
+        val preferences = File(context.applicationInfo.dataDir, "shared_prefs/$PREFERENCES_NAME.xml")
+        val originalPreferences = preferences.readBytes()
+        assertTrue(context.deleteDatabase(DATABASE_NAME))
+        val original = ByteArray(4096) { 0x55 }
+        context.getDatabasePath(DATABASE_NAME).writeBytes(original)
+        WalletUpgradeBackup.afterDatabaseRepairCopyForTest = { error("simulated copy failure") }
+        try {
+            WalletUpgradeBackup.simulateProcessStartForTest()
+            assertTrue(WalletUpgradeBackup.prepare(context).isFailure)
+        } finally {
+            WalletUpgradeBackup.afterDatabaseRepairCopyForTest = null
+        }
+        assertArrayEquals(original, context.getDatabasePath(DATABASE_NAME).readBytes())
+
+        assertTrue(
+            "${WalletUpgradeBackup.blockingFailure()}",
+            WalletUpgradeBackup.retry(context).isSuccess,
+        )
+        assertEquals(null, WalletUpgradeBackup.blockingFailure())
+        assertEquals(1, legacyAccountCount())
+        assertArrayEquals(originalPreferences, preferences.readBytes())
+        val repair = context.noBackupFilesDir.listFiles().orEmpty()
+            .single { it.name.startsWith("wallet-database-repair-") && it.isDirectory }
+        assertArrayEquals(original, File(repair, "original/databases/app.db").readBytes())
+    }
+
+    // Audit item 9, update rule of 2026-11-09: before the storage screen asks the person for
+    // space, what the app holds only as a cache is given back and the check runs once more.
+    private fun cacheFile(path: String, bytes: Long): File =
+        File(context.cacheDir, path).also { file ->
+            file.parentFile!!.mkdirs()
+            java.io.RandomAccessFile(file, "rw").use { it.setLength(bytes) }
+        }
+
+    private fun emptyCacheFolder() {
+        // Links first and as links: deleteRecursively would walk into what one points to.
+        context.cacheDir.listFiles().orEmpty().forEach { entry ->
+            if (java.nio.file.Files.isSymbolicLink(entry.toPath())) entry.delete() else entry.deleteRecursively()
+        }
+    }
+
+    @Test
+    fun lowStorageGivesBackTheAppCacheAndGoesOnWithoutTheStorageScreen() {
+        emptyCacheFolder()
+        createLegacyDatabase(withAccount = true)
+        putWalletMarker()
+        val database = context.getDatabasePath(DATABASE_NAME)
+        // What this upgrade needs when nothing is free, as the storage screen would show it.
+        assertTrue(WalletUpgradeBackup.prepareWithAvailableBackupBytesForTest(context, 0L).isFailure)
+        assertEquals("INSUFFICIENT_BACKUP_STORAGE", WalletUpgradeBackup.blockingFailure()?.code)
+        val required = requireNotNull(WalletUpgradeBackup.blockingFailure()?.requiredBytes)
+        val images = cacheFile("image_cache/a1b2c3.0", required)
+        val icon = cacheFile("0x0200000000000000000000000000000000000000000000000000000000000000.svg", 4_096)
+        val staleCopy = cacheFile("wallet-journal-replay-00000000-0000-0000-0000-000000000000/app.db", 8_192)
+        val export = cacheFile("wallet-recovery-exports/sora-recovery.zip", 2_048)
+        // A link in the cache folder is removed as a link; what it points to is not followed.
+        val link = File(context.cacheDir, "link-to-wallet-database")
+        Os.symlink(database.path, link.path)
+        val databaseBefore = database.readBytes()
+        val preferencesBefore = context.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE).all
+
+        val result = WalletUpgradeBackup.prepareAfterReclaimingCacheForTest(context, 0L)
+
+        assertTrue("${WalletUpgradeBackup.blockingFailure()}", result.isSuccess)
+        assertEquals(null, WalletUpgradeBackup.blockingFailure())
+        assertFalse(images.exists()); assertFalse(icon.exists())
+        // Folders stay for whoever made them; the upgrade's own stale working copy goes entirely.
+        assertTrue(images.parentFile!!.isDirectory)
+        assertFalse(staleCopy.parentFile!!.exists())
+        assertFalse(java.nio.file.Files.exists(link.toPath(), java.nio.file.LinkOption.NOFOLLOW_LINKS))
+        // A recovery file the person made for support is not a cache.
+        assertEquals(2_048L, export.length())
+        // No wallet file was given up for space: the database, the preferences, and the backup
+        // the upgrade made with the room it got.
+        assertArrayEquals(databaseBefore, database.readBytes())
+        assertEquals(1, legacyAccountCount())
+        assertEquals(preferencesBefore, context.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE).all)
+        assertTrue(
+            context.noBackupFilesDir.listFiles().orEmpty()
+                .any { it.name.startsWith(BACKUP_PREFIX) && it.isDirectory }
+        )
+    }
+
+    @Test
+    fun lowStorageThatTheCacheCannotCoverStillAsksForSpaceAndChangesNoWalletFile() {
+        emptyCacheFolder()
+        createLegacyDatabase(withAccount = true)
+        putWalletMarker()
+        val database = context.getDatabasePath(DATABASE_NAME)
+        val databaseBefore = database.readBytes()
+        val preferencesBefore = context.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE).all
+        val small = cacheFile("image_cache/a1b2c3.0", 1_024)
+
+        val result = WalletUpgradeBackup.prepareAfterReclaimingCacheForTest(context, 0L)
+
+        assertTrue(result.isFailure)
+        val failure = requireNotNull(WalletUpgradeBackup.blockingFailure())
+        assertEquals("INSUFFICIENT_BACKUP_STORAGE", failure.code)
+        // The second check saw exactly what the cache gave back, and it was too little.
+        assertFalse(small.exists())
+        assertEquals(1_024L, failure.availableBytes)
+        assertTrue(requireNotNull(failure.requiredBytes) > 1_024L)
+        assertArrayEquals(databaseBefore, database.readBytes())
+        assertEquals(preferencesBefore, context.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE).all)
+        assertTrue(
+            context.noBackupFilesDir.listFiles().orEmpty()
+                .none { it.name.startsWith(BACKUP_PREFIX) || it.name.contains("staging") }
+        )
+    }
+
+    @Test
+    fun givingBackTheCacheNeverReachesWalletFilesBackupsOrFilesSetAside() {
+        emptyCacheFolder()
+        createLegacyDatabase(withAccount = true)
+        putWalletMarker()
+        assertTrue(WalletUpgradeBackup.prepare(context).isSuccess)
+        val dataDirectory = File(context.applicationInfo.dataDir)
+        fun walletTree() = listOf(context.noBackupFilesDir, context.filesDir, File(dataDirectory, "shared_prefs"),
+            context.getDatabasePath(DATABASE_NAME).parentFile!!)
+            .flatMap { root -> root.walkTopDown().filter(File::isFile).map { it.path to it.length() }.toList() }
+            .toMap()
+        val before = walletTree()
+        assertTrue(before.keys.any { BACKUP_PREFIX in it })
+        val wallet = listOf(context.noBackupFilesDir, context.filesDir, context.getDatabasePath(DATABASE_NAME).parentFile!!)
+
+        // The app's data folder is not a cache: with wallet folders inside it nothing is deleted.
+        assertEquals(0L, DisposableStorage.reclaimCache(dataDirectory, wallet))
+        // Nor is a wallet folder itself, or a link that stands where the cache folder should be.
+        assertEquals(0L, DisposableStorage.reclaimCache(context.noBackupFilesDir, wallet))
+        val linked = File(context.cacheDir, "linked-cache")
+        Os.symlink(context.noBackupFilesDir.path, linked.path)
+        assertEquals(0L, DisposableStorage.reclaimCache(linked, emptyList()))
+        // The real cache folder, with a link into the backups: only the link goes.
+        cacheFile("lottie_network_cache/animation.json", 512)
+        assertEquals(512L, DisposableStorage.reclaimCache(context.cacheDir, wallet))
+
+        assertEquals(before, walletTree())
+        assertFalse(java.nio.file.Files.exists(linked.toPath(), java.nio.file.LinkOption.NOFOLLOW_LINKS))
+    }
+
+    @Test
+    fun askingAndroidForSpaceAnswersWithoutThrowing() {
+        emptyCacheFolder()
+        // Plenty is free on the test device: a small request is granted at once.
+        assertTrue(DisposableStorage.askSystemFor(context, context.noBackupFilesDir, 1_024L * 1_024L))
+        // More than the volume holds cannot be freed: the answer is no, never an exception.
+        assertFalse(DisposableStorage.askSystemFor(context, context.noBackupFilesDir, Long.MAX_VALUE / 4))
+        assertFalse(DisposableStorage.askSystemFor(context, context.noBackupFilesDir, 0L))
+    }
+
+    // Codex review 4: the app start prepares on the main thread, so a repair short of space stops
+    // there with the database closed and the cache untouched; the storage step (Try again's
+    // retry, on a worker) gives back the cache and finishes the repair in the same process.
+    @Test
+    fun aRepairThatRanOutOfSpaceAtTheStartIsFinishedByTheStorageStepAfterGivingBackTheCache() {
+        emptyCacheFolder()
+        createLegacyDatabase(withAccount = true)
+        putWalletMarker()
+        assertTrue(WalletUpgradeBackup.prepare(context).isSuccess)
+        assertTrue(context.deleteDatabase(DATABASE_NAME))
+        val original = ByteArray(4096) { 0x55 }
+        context.getDatabasePath(DATABASE_NAME).writeBytes(original)
+        // Real bytes, so giving them back really frees space on the volume.
+        File(context.cacheDir, "image_cache").mkdirs()
+        val big = File(context.cacheDir, "image_cache/big.0")
+        big.outputStream().use { out ->
+            val block = ByteArray(1_024 * 1_024) { 0x33 }
+            repeat(48) { out.write(block) }
+            out.fd.sync()
+        }
+        var failures = 0
+        WalletUpgradeBackup.afterDatabaseRepairCopyForTest = {
+            // The copy hits a full disk at the start and once more in the storage step, until
+            // the cache is given back.
+            if (failures++ < 2) throw ErrnoException("write", OsConstants.ENOSPC)
+        }
+        try {
+            WalletUpgradeBackup.simulateProcessStartForTest()
+            // The start: short of space, nothing given back, the database stays closed.
+            assertTrue(WalletUpgradeBackup.prepare(context).isFailure)
+            assertEquals(WalletRecoveryOptions.STORAGE_FULL, WalletUpgradeBackup.blockingFailure()?.code)
+            assertTrue(big.exists())
+            // The storage step, on a worker (this test thread): gives back the cache, repairs.
+            val result = WalletUpgradeBackup.retry(context)
+            assertTrue("${WalletUpgradeBackup.blockingFailure()}", result.isSuccess)
+        } finally {
+            WalletUpgradeBackup.afterDatabaseRepairCopyForTest = null
+        }
+        assertEquals(null, WalletUpgradeBackup.blockingFailure())
+        assertEquals(1, legacyAccountCount())
+        assertFalse(big.exists())
+        val repair = context.noBackupFilesDir.listFiles().orEmpty()
+            .single { it.name.startsWith("wallet-database-repair-") && it.isDirectory }
+        assertArrayEquals(original, File(repair, "original/databases/app.db").readBytes())
+    }
+
+    // Codex review 4: walking the cache and asking Android for space never run on the main
+    // thread, whoever calls; there the shortage is answered as it is.
+    @Test
+    fun theCacheIsNeverGivenBackOnTheMainThread() {
+        emptyCacheFolder()
+        createLegacyDatabase(withAccount = true)
+        putWalletMarker()
+        assertTrue(WalletUpgradeBackup.prepareWithAvailableBackupBytesForTest(context, 0L).isFailure)
+        val required = requireNotNull(WalletUpgradeBackup.blockingFailure()?.requiredBytes)
+        val images = cacheFile("image_cache/a1b2c3.0", required + 65_536)
+
+        var onMain: Result<Unit>? = null
+        InstrumentationRegistry.getInstrumentation().runOnMainSync {
+            onMain = WalletUpgradeBackup.prepareAfterReclaimingCacheForTest(context, 0L)
+        }
+
+        assertTrue(requireNotNull(onMain).isFailure)
+        assertEquals("INSUFFICIENT_BACKUP_STORAGE", WalletUpgradeBackup.blockingFailure()?.code)
+        assertTrue(images.exists())
+        // Off the main thread, where the storage step runs, the same call gives it back.
+        assertTrue(WalletUpgradeBackup.prepareAfterReclaimingCacheForTest(context, 0L).isSuccess)
+        assertFalse(images.exists())
+    }
+
+    // Codex re-review 2: the storage step gives back cache with this object's lock held (that
+    // keeps it apart from a recovery export being written). What the screens read on the main
+    // thread must answer meanwhile, without that lock.
+    @Test
+    fun nothingTheScreensReadWaitsWhileTheStorageStepGivesBackCache() {
+        emptyCacheFolder()
+        createLegacyDatabase(withAccount = true)
+        putWalletMarker()
+        assertTrue(WalletUpgradeBackup.prepareWithAvailableBackupBytesForTest(context, 0L).isFailure)
+        val required = requireNotNull(WalletUpgradeBackup.blockingFailure()?.requiredBytes)
+        val images = cacheFile("image_cache/a1b2c3.0", required + 65_536)
+        val parked = java.util.concurrent.CountDownLatch(1)
+        val release = java.util.concurrent.CountDownLatch(1)
+        WalletUpgradeBackup.whileReclaimingCacheForTest = {
+            parked.countDown()
+            release.await(60, java.util.concurrent.TimeUnit.SECONDS)
+        }
+        var stepResult: Result<Unit>? = null
+        val storageStep = kotlin.concurrent.thread(name = "storage-step") {
+            stepResult = WalletUpgradeBackup.prepareAfterReclaimingCacheForTest(context, 0L)
+        }
+        try {
+            assertTrue(parked.await(30, java.util.concurrent.TimeUnit.SECONDS))
+            // The step really holds the lock while it is parked.
+            val probe = kotlin.concurrent.thread(name = "lock-probe") { synchronized(WalletUpgradeBackup) {} }
+            val deadline = SystemClock.elapsedRealtime() + 5_000
+            while (probe.state != Thread.State.BLOCKED && SystemClock.elapsedRealtime() < deadline) Thread.sleep(10)
+            assertEquals(Thread.State.BLOCKED, probe.state)
+
+            val answered = java.util.concurrent.CountDownLatch(1)
+            val reads = kotlin.concurrent.thread(name = "screen-reads") {
+                WalletUpgradeBackup.startupFailureToShow(context)
+                WalletUpgradeBackup.isAutomaticMigrationRetryAvailable(context)
+                WalletUpgradeBackup.recoveryOptions()
+                WalletUpgradeBackup.blockingFailure()
+                WalletUpgradeBackup.recoveryFacts()
+                answered.countDown()
+            }
+            assertTrue(
+                "a screen read waited for the storage step",
+                answered.await(5, java.util.concurrent.TimeUnit.SECONDS),
+            )
+            reads.join(1_000)
+            assertTrue(images.exists())
+        } finally {
+            release.countDown()
+            storageStep.join(60_000)
+            WalletUpgradeBackup.whileReclaimingCacheForTest = null
+        }
+        // Released, the step gives back the cache and goes on.
+        assertTrue("${WalletUpgradeBackup.blockingFailure()}", requireNotNull(stepResult).isSuccess)
+        assertFalse(images.exists())
+    }
+
+    // Codex review 5: Android's own clearing of cached files does not know to keep a recovery
+    // file the person made; while one is in the cache folder, Android is not asked.
+    @Test
+    fun androidIsNotAskedForSpaceWhileARecoveryFileIsInTheCache() {
+        emptyCacheFolder()
+        assertFalse(DisposableStorage.holdsRecoveryExport(context.cacheDir))
+        val export = cacheFile("wallet-recovery-exports/sora-wallet-recovery-1-fixture.zip", 2_048)
+        assertTrue(DisposableStorage.holdsRecoveryExport(context.cacheDir))
+
+        assertFalse(DisposableStorage.askSystemFor(context, context.noBackupFilesDir, 1_024L * 1_024L))
+
+        assertEquals(2_048L, export.length())
+        // Only a lock or other working file there: Android may be asked again.
+        assertTrue(export.delete())
+        cacheFile("wallet-recovery-exports/.recovery-publication.lock", 0)
+        assertFalse(DisposableStorage.holdsRecoveryExport(context.cacheDir))
+        assertTrue(DisposableStorage.askSystemFor(context, context.noBackupFilesDir, 1_024L * 1_024L))
+    }
+
+    @Test
+    fun tryAgainInTheSameProcessFinishesAnInterruptedRepairInsteadOfAnEmptyWallet() {
+        createLegacyDatabase(withAccount = true)
+        putWalletMarker()
+        assertTrue(WalletUpgradeBackup.prepare(context).isSuccess)
+        assertTrue(context.deleteDatabase(DATABASE_NAME))
+        val original = ByteArray(4096) { 0x55 }
+        context.getDatabasePath(DATABASE_NAME).writeBytes(original)
+        // The first rename (the damaged database moved aside) succeeds, then the step fails:
+        // the database path is empty while the saved plan waits for its replacement.
+        WalletUpgradeBackup.afterSetAsideRenameForTest = { error("simulated I/O failure") }
+        try {
+            WalletUpgradeBackup.simulateProcessStartForTest()
+            assertTrue(WalletUpgradeBackup.prepare(context).isFailure)
+        } finally {
+            WalletUpgradeBackup.afterSetAsideRenameForTest = null
+        }
+        assertTrue(File(context.noBackupFilesDir, "wallet-database-repair.json").exists())
+        assertFalse(context.getDatabasePath(DATABASE_NAME).exists())
+
+        assertTrue(WalletUpgradeBackup.retry(context).isSuccess)
+        assertEquals(1, legacyAccountCount())
+        assertFalse(File(context.noBackupFilesDir, "wallet-database-repair.json").exists())
+    }
+
+    @Test
+    fun aSavedRepairPlanIsNeverAdmittedAsAnEmptyInstallation() {
+        createLegacyDatabase(withAccount = true)
+        putWalletMarker()
+        assertTrue(WalletUpgradeBackup.prepare(context).isSuccess)
+        assertTrue(context.deleteDatabase(DATABASE_NAME))
+        context.getDatabasePath(DATABASE_NAME).writeBytes(ByteArray(4096) { 0x55 })
+        WalletUpgradeBackup.afterSetAsideRenameForTest = { error("simulated I/O failure") }
+        try {
+            WalletUpgradeBackup.simulateProcessStartForTest()
+            assertTrue(WalletUpgradeBackup.prepare(context).isFailure)
+        } finally {
+            WalletUpgradeBackup.afterSetAsideRenameForTest = null
+        }
+        // Any later preparation in this process (a database admission check, for example) must
+        // not find "no database" and let Room create an empty one over the plan.
+        val again = WalletUpgradeBackup.prepare(context)
+        assertTrue(again.isFailure)
+        assertEquals(
+            "DATABASE_REPAIR_INCOMPLETE",
+            (again.exceptionOrNull() as? WalletUpgradeBackupException)?.code,
+        )
+        assertFalse(context.getDatabasePath(DATABASE_NAME).exists())
+        assertTrue(File(context.noBackupFilesDir, "wallet-database-repair.json").exists())
+    }
+
+    @Test
     fun walSidecarsWithoutTheirDatabaseAreRenamedAsideNotDeleted() {
         putWalletMarker()
         val database = context.getDatabasePath(DATABASE_NAME)
@@ -2509,8 +3156,11 @@ class WalletUpgradeBackupTest {
         assertTrue(WalletUpgradeBackup.canAuthorizeMigrationRetry())
     }
 
+    // Update rule of 2026-11-09: every start of the app's screens retries an interrupted
+    // verification by itself; the count is kept for support and never stops the retry (it used
+    // to stop after three and wait for Try again).
     @Test
-    fun interruptedVerificationIsRetriedAutomaticallyAtMostThreeTimes() {
+    fun interruptedVerificationIsRetriedAutomaticallyOnEveryStart() {
         val account = SoraAccountLocal(WALLET_ID, "Retained")
         createCurrentDatabase(listOf(account))
         updateCurrentDatabase(
@@ -2525,7 +3175,7 @@ class WalletUpgradeBackupTest {
             )
             """.trimIndent()
         )
-        repeat(3) { attempt ->
+        repeat(5) { attempt ->
             // A background start (worker, receiver, boot) only prepares and never runs the
             // verification, so it never uses the automatic retry budget.
             repeat(2) {
@@ -2548,15 +3198,11 @@ class WalletUpgradeBackupTest {
                 WalletUpgradeBackup.automaticMigrationRetriesUsedForTest(context),
             )
         }
-        // The fourth interrupted start shows the options; Try again still works.
+        // A sixth interrupted start still retries by itself, and Try again works as well.
         assertTrue(WalletUpgradeBackup.prepare(context).isFailure)
-        assertFalse(WalletUpgradeBackup.authorizeAutomaticMigrationRetry(context))
-        assertEquals(
-            "WALLET_MIGRATION_RECOVERY_REQUIRED",
-            WalletUpgradeBackup.startupFailureToShow(context)?.code,
-        )
-        val options = requireNotNull(WalletUpgradeBackup.recoveryOptions())
-        assertTrue(options.canRetry && options.canReadOnly && options.canSetUpAgain)
+        assertEquals(null, WalletUpgradeBackup.startupFailureToShow(context))
+        assertTrue(WalletUpgradeBackup.isAutomaticMigrationRetryAvailable(context))
+        assertTrue(WalletUpgradeBackup.prepare(context).isFailure)
         assertTrue(WalletUpgradeBackup.retry(context).isSuccess)
         assertEquals(
             WalletRecoveryCapabilityGate.Mode.MIGRATION_RETRY_AUTHORIZED,
@@ -2936,7 +3582,7 @@ class WalletUpgradeBackupTest {
     }
 
     @Test
-    fun automaticRetryThatCannotBeSavedShowsTheRecoveryOptionsAtOnce() {
+    fun automaticRetryWhoseCountCannotBeSavedStillRuns() {
         val account = SoraAccountLocal(WALLET_ID, "Retained")
         createCurrentDatabase(listOf(account))
         updateCurrentDatabase(
@@ -2957,24 +3603,12 @@ class WalletUpgradeBackupTest {
         try {
             WalletUpgradeBackup.simulateProcessStartForTest()
             assertTrue(WalletUpgradeBackup.prepare(context).isFailure)
-            // The budget is unused, so the first screen waits for the automatic retry...
+            // The count is for support only (update rule of 2026-11-09): the first screen waits
+            // for the automatic retry, and the retry runs although its count cannot be saved.
             assertEquals(null, WalletUpgradeBackup.startupFailureToShow(context))
-            assertFalse(WalletUpgradeBackup.authorizeAutomaticMigrationRetry(context))
+            assertTrue(WalletUpgradeBackup.authorizeAutomaticMigrationRetry(context))
             assertEquals(0, WalletUpgradeBackup.automaticMigrationRetriesUsedForTest(context))
-            // ...which could not happen, so the options are shown now, not after a crash.
-            assertEquals(
-                "WALLET_MIGRATION_RECOVERY_REQUIRED",
-                WalletUpgradeBackup.startupFailureToShow(context)?.code,
-            )
-            assertFalse(WalletUpgradeBackup.isAutomaticMigrationRetryAvailable(context))
-            assertEquals(
-                WalletRecoveryCapabilityGate.Mode.BLOCKED,
-                WalletRecoveryCapabilityGate.mode(),
-            )
-            val options = requireNotNull(WalletUpgradeBackup.recoveryOptions())
-            assertTrue(options.canRetry && options.canReadOnly)
-            // Try again does not need the counter.
-            assertTrue(WalletUpgradeBackup.retry(context).isSuccess)
+            assertEquals(null, WalletUpgradeBackup.blockingFailure())
             assertEquals(
                 WalletRecoveryCapabilityGate.Mode.MIGRATION_RETRY_AUTHORIZED,
                 WalletRecoveryCapabilityGate.mode(),
@@ -3776,6 +4410,10 @@ class WalletUpgradeBackupTest {
             scenario.onActivity { activity -> assertTrue(activity.window.attributes.flags and android.view.WindowManager.LayoutParams.FLAG_SECURE != 0) }
             androidx.test.espresso.Espresso.onView(androidx.test.espresso.matcher.ViewMatchers.withText(android.R.string.cancel))
                 .perform(androidx.test.espresso.action.ViewActions.click())
+            val deadline = SystemClock.uptimeMillis() + 5000
+            while (scenario.state != androidx.lifecycle.Lifecycle.State.DESTROYED && SystemClock.uptimeMillis() < deadline) {
+                SystemClock.sleep(25)
+            }
             assertEquals(androidx.lifecycle.Lifecycle.State.DESTROYED, scenario.state)
         }
         assertTrue(WalletUpgradeBackup.preservedGenerations(context).isEmpty())
@@ -4778,6 +5416,10 @@ class WalletUpgradeBackupTest {
     }
 
     /** The manual recovery paths are reached after the three automatic retries are used up. */
+    /**
+     * Writes the retry count an older build stopped at. Since the update rule of 2026-11-09 the
+     * count is for support only and never stops a retry; the tests that set it keep proving that.
+     */
     private fun exhaustAutomaticRetries() {
         File(context.noBackupFilesDir, "wallet-migration-auto-retry").writeText("3")
     }
@@ -4827,6 +5469,8 @@ class WalletUpgradeBackupTest {
                     it.name.startsWith("wallet-backup-quarantine-") ||
                     it.name.startsWith("wallet-quarantine-") ||
                     it.name.startsWith("wallet-corrupt-quarantine-") ||
+                    it.name.startsWith("wallet-database-repair") ||
+                    it.name == ".wallet-database-repair.json.tmp" ||
                     it.name == "wallet-migration-auto-retry" ||
                     it.name == ".wallet-migration-auto-retry.tmp" ||
                     it.name == "wallet-key-observation" ||

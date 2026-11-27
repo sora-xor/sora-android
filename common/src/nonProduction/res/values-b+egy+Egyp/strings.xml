@@ -35,7 +35,6 @@
   <string name="asset_details_asset_id">𓇋𓐍𓏏 𓂋𓈖</string>
   <string name="asset_details_liquid_balance">𓈙𓅓 𓎛𓋴𓃀𓐍𓏏</string>
   <string name="asset_details_recent_activity">𓅓𓄿𓅱 𓇋𓂋𓅱𓏏</string>
-  <string name="asset_details_token_price">𓇋𓐍𓏏 𓇋𓋴𓅱</string>
   <string name="asset_details_your_pools">𓈖𓎡 %s 𓈙𓅱</string>
   <string name="asset_to_send">𓇋𓐍𓏏 𓂋 𓉔𓄿𓃀</string>
   <string name="backup_not_enough_space_error">𓋴𓈙𓋴𓈖𓈖𓅱 𓈖𓐍𓊪𓂋. 𓈖 𓂝𓈙𓄿 𓋴𓏏 𓅓 𓈖𓎡 Google Drive. 𓈖𓈖𓇋𓋴𓅱 𓐍𓏏 𓋴𓏏 𓎛𓈖𓂝 𓇋𓂋 𓅓𓅓𓄿𓅱.</string>
@@ -66,7 +65,6 @@
   <string name="common_back">𓂋𓎛𓄿</string>
   <string name="common_backup">𓋴𓈙𓋴𓈖𓈖𓅱</string>
   <string name="common_balance">𓎛𓋴𓃀𓐍𓏏</string>
-  <string name="common_bashkir">𓂋𓄿𓈖𓃀𓈙𓈎𓂋</string>
   <string name="common_bridged">𓋴𓅱𓄿𓅓𓂝𓂋𓅱𓏏</string>
   <string name="common_cancel">𓐍𓄿𓂝</string>
   <string name="common_chinese">𓂋𓄿𓈖𓍿𓇋𓈖</string>
@@ -76,12 +74,10 @@
   <string name="common_close">𓐍𓏏𓅓</string>
   <string name="tx_details_view_on_explorer">𓅓𓄿𓄿 𓅓 𓅓𓄿𓄿𓋴𓈙𓅱</string>
   <string name="common_confirm">𓋴𓅓𓈖</string>
-  <string name="common_connected">𓂧𓅓𓆓</string>
   <string name="common_connecting">𓎛𓂋𓂧𓅓𓆓…</string>
   <string name="common_continue">𓈙𓅓</string>
   <string name="common_copied">𓋴𓈙𓅓𓇋𓏏𓏏 𓂋 𓈙𓂝𓏏𓆓𓂋𓏏</string>
   <string name="common_create_qr_request">𓇋𓂋 QR-𓂧𓃀𓎛</string>
-  <string name="common_croatian">𓂋𓄿𓈖𓐍𓂋𓅱𓄿𓏏</string>
   <string name="common_currencies">𓎛𓆓𓅱𓈖𓏏𓄿𓅱</string>
   <string name="common_delete">𓂧𓂋</string>
   <string name="common_disabled">𓈖𓇋𓂋</string>
@@ -95,8 +91,6 @@
   <string name="common_error_fee_rate_not_available">𓈖𓂋𓐍 𓆓𓂧𓈖 𓇋𓈖𓇋𓅓 𓂋𓂧𓇋𓅱. 𓅓𓎛𓏏𓊪, 𓇋𓂋 𓅓𓅓𓄿𓅱 𓅓𓐍𓏏.</string>
   <string name="common_error_general_message">𓇋𓈖𓈖 𓎛𓂋𓇋𓂋𓏏 𓈖𓐍𓏏 𓂋 𓂧𓂋 𓇋𓋴𓆑𓏏. 𓅓𓎛𓏏𓊪, 𓇋𓂋 𓅓𓅓𓄿𓅱 𓅓𓐍𓏏.</string>
   <string name="common_error_general_title">𓇋𓋴𓆑𓏏</string>
-  <string name="common_error_internal_error_title">𓅓𓄡𓈖𓅱 𓇋𓋴𓆑𓏏</string>
-  <string name="common_error_invalid_parameters">𓈖𓅓𓄿𓂝 𓅱𓆓𓅱𓈖𓇋𓂋𓏏</string>
   <string name="common_error_invalid_parameters_body">𓅓𓎛𓏏𓊪, 𓋴𓅓𓈖 𓇋𓄿𓂧𓏏𓈖𓅓𓂧𓅱 𓂧𓅓𓆓𓏏 𓎛𓈖𓂝 𓇋𓂋 𓅓𓅓𓄿𓅱 𓅓𓐍𓏏.</string>
   <string name="common_error_invalid_query_format">𓈖𓎡 𓊪𓏏𓂋 𓈖𓅓𓄿𓂝. 𓅓𓎛𓏏𓊪 𓇋𓂋 𓅓𓅓𓄿𓅱.</string>
   <string name="common_error_invitation_accepting_window_closed">𓇋𓄿𓋴𓏏 𓈙𓋴𓊪 𓏏𓂋 𓐍𓏏𓅓</string>
@@ -108,7 +102,6 @@
   <string name="common_error_network">𓅓𓎛𓏏𓊪, 𓋴𓅓𓈖 𓇋𓄿𓂧𓏏𓈖𓅓𓂧𓅱 𓂧𓅓𓆓𓏏 𓎛𓈖𓂝 𓇋𓂋 𓅓𓅓𓄿𓅱 𓅓𓐍𓏏.</string>
   <string name="common_error_no_browser_error">𓅓𓎛𓏏𓊪 𓂋𓂧𓇋 𓊪𓂋𓅓𓄿𓄿 𓂋 𓅱𓈖 𓅱𓄿𓏏</string>
   <string name="common_error_not_enough_invitations">𓅓𓎛𓏏𓊪, 𓇋𓋴 𓈖𓏏𓎡 𓈖 𓈖𓃀 𓇋𓄿𓋴𓅱𓏏 𓂋 𓊪𓋴𓈙</string>
-  <string name="common_error_not_found_title">𓐍𓏏 𓈖𓅱𓈖</string>
   <string name="common_error_phone_already_exists">𓅓𓎛𓏏𓊪, 𓊪𓈖 𓐍𓏏𓆓𓂧𓅓𓅱𓄿𓅱 𓎛𓋴𓃀 𓅓𓎛𓄿𓏏 𓅓 𓇋𓂋𓅓. 𓅓𓎛𓏏𓊪, 𓇋𓂋 𓎡𓇌 𓅱𓂝.</string>
   <string name="common_error_phone_already_registered">𓐍𓏏𓆓𓂧𓅓𓅱𓄿𓅱 𓎛𓋴𓃀 𓅓𓎛𓄿𓏏 𓇋𓂋𓅓 𓅓𓏏𓂋 𓂋𓂧𓇋𓏏𓂋𓈖 𓎛𓈖𓂝 𓊪𓈖 𓂋𓊪𓅱 𓎡𓇌 𓇋𓂋𓇋𓅱</string>
   <string name="common_error_pincode_check_error">𓂋𓂧𓇋𓅓𓄡𓈖𓅱 𓐍𓏏𓅓 𓈖𓅓𓄿𓂝</string>
@@ -117,22 +110,18 @@
   <string name="common_error_seed_is_not_valid">𓋴𓅓𓈖𓂋𓂧𓇋𓏏64𓏏𓇋𓏏𓅱𓈖𓎛𓋴𓃀𓐍𓏏𓅓𓅱</string>
   <string name="common_error_seed_is_not_valid_title">𓊪𓂋𓏏 𓈖𓅓𓄿𓂝</string>
   <string name="common_error_self_invitation">𓈖𓏏𓎡 𓈖𓂋𓐍 𓇋𓂋𓅓 𓈖𓎡 𓇋𓄿𓋴𓏏 𓐍𓏏𓅓 𓈖 𓆓𓋴𓎡</string>
-  <string name="common_error_unauthorized_body">𓅓𓎛𓏏𓊪, 𓋴𓅓𓈖 𓇋𓄿𓂧𓏏𓈖𓅓𓂧𓅱 𓂧𓅓𓆓𓏏 𓎛𓈖𓂝 𓇋𓂋 𓅓𓅓𓄿𓅱 𓅓𓐍𓏏.</string>
-  <string name="common_error_unauthorized_title">𓋴𓅓𓈖𓂋𓈖 𓈖𓐍𓊪𓂋</string>
   <string name="common_error_user_not_found">𓈖𓎡 𓅓𓂧𓅱𓋴𓐍𓄿 𓈖𓅓𓄿𓂝. 𓅓𓎛𓏏𓊪, 𓇋𓂋 𓎡𓇌 𓅱𓂝.</string>
   <string name="common_error_user_values_not_found">𓈖𓂋𓐍 𓈙𓅓 𓇋𓂋𓏏 𓈖𓈖𓏏𓏏 𓇋𓂋𓇋𓅱 𓇋𓋴𓅱𓅱 𓋴𓈙𓅱 𓈖 𓎼𓅓</string>
   <string name="common_error_votes_invalid_format">𓅓𓎛𓏏𓊪, 𓇋𓋴 𓈖𓎡 𓂝𓈙𓄿𓏏 𓈖 𓂋𓂧𓇋𓅱𓏏𓇋𓃀 𓈖𓂋𓐍 𓂋𓐍. 𓅓𓎛𓏏𓊪, 𓇋𓂋 𓂋 𓂋𓂧𓇋𓇋𓃀 𓅓𓅓𓄿𓅱.</string>
   <string name="common_error_votes_not_enough">𓅓𓎛𓏏𓊪, 𓇋𓋴 𓈖𓏏𓎡 𓈖 𓂝𓈙𓄿 𓎛𓋴𓃀𓅱 𓂋 𓂋𓂧𓇋𓇋𓃀.</string>
   <string name="common_error_voting_is_not_allowed">𓅓𓎛𓏏𓊪, 𓇋𓋴 𓎡𓄿𓏏 𓈖𓂋𓐍 𓈙𓋴𓊪 𓂋𓂧𓇋𓅱𓏏𓇋𓃀 𓎼𓂋𓉔.</string>
   <string name="common_error_wrong_user_status">𓈖𓂋𓐍 𓈙𓅓 𓇋𓂋𓏏 𓈖𓈖𓏏𓏏 𓇋𓂋𓇋𓅱 𓅱𓈖𓈖 𓈖𓅓𓄿𓂝</string>
-  <string name="common_estonian">𓂋𓄿𓈖𓇋𓋴𓏏𓅱𓈖</string>
   <string name="common_expand">𓋴𓅱𓋴𓐍</string>
   <string name="common_explore">𓎛𓎛</string>
   <string name="common_failed">𓈖𓐍𓊪𓂋</string>
   <string name="common_farming">𓋴𓎡𓄿𓐍𓏏</string>
   <string name="common_farms">𓋴𓐍𓅱𓏏</string>
   <string name="common_fee">𓃀𓄿𓎡𓅱</string>
-  <string name="common_filipino">𓂋𓄿𓈖𓆑𓇋𓂋𓇋𓊪𓇋𓈖</string>
   <string name="common_finnish">𓂋𓄿𓈖𓆑𓇋𓈖</string>
   <string name="common_french">𓂋𓄿𓈖𓆑𓂋𓈖𓋴</string>
   <string name="common_german">𓂋𓄿𓈖𓎼𓂋𓅓𓈖</string>
@@ -140,16 +129,9 @@
   <string name="common_google_backup_decryption_failed_2">𓐍𓊪𓂋𓏏 𓅓𓂧𓅱𓋴𓈙𓏏𓄿 𓈖𓏏𓎡 𓂋𓂧𓇋𓅓𓄡𓈖𓅱 𓈖𓅓𓄿𓂝.</string>
   <string name="common_hebrew">𓂋𓄿𓈖𓂝𓃀𓂋</string>
   <string name="common_hindi">𓂋𓄿𓈖𓉔𓈖𓂧</string>
-  <plurals name="common_hour">
-    <item quantity="one">𓅱𓈖𓅱𓏏</item>
-    <item quantity="other">𓅱𓈖𓅱𓏏</item>
-  </plurals>
   <string name="common_indonesian">𓂋𓄿𓈖𓇋𓈖𓂧𓅱𓈖𓋴</string>
   <string name="common_insufficient_balance">𓈖𓂝𓈙𓄿 𓎛𓋴𓃀𓐍𓏏</string>
-  <string name="common_italian">𓂋𓄿𓈖𓇋𓏏𓄿𓂋𓇋</string>
   <string name="common_japanese">𓂋𓄿𓈖𓇋𓊪𓅱𓈖</string>
-  <string name="common_khmer">𓂋𓄿𓈖𓐍𓅓𓂋</string>
-  <string name="common_korean">𓂋𓄿𓈖𓎡𓅱𓂋𓇋</string>
   <string name="common_malay">𓂋𓄿𓈖𓅓𓂋𓄿𓇋</string>
   <string name="common_max">𓅱𓂋</string>
   <string name="common_min">𓈖𓆓𓋴</string>
@@ -171,7 +153,6 @@
   <string name="common_remove">𓂧𓂋</string>
   <string name="common_request">𓂧𓃀𓎛</string>
   <string name="common_russian">𓂋𓄿𓈖𓂋𓅱𓋴𓇋</string>
-  <string name="common_scan">𓈙𓂧𓏏𓇋𓏏</string>
   <string name="common_scan_qr">𓈙𓂧𓏏𓇋𓏏 QR</string>
   <string name="common_search_pools">𓎛𓎛 𓈙𓅱</string>
   <string name="common_sec">𓄿𓏏𓈖𓆓𓋴𓏏</string>
@@ -187,15 +168,11 @@
   <string name="common_sms_code_expired">𓋴𓅓𓈖 𓐍𓏏𓅓 𓏏𓅓𓏏𓂋. 𓅓𓎛𓏏𓊪 𓇋𓂋 𓎡𓇌 𓅱𓂝.</string>
   <string name="common_sms_code_not_correct">𓋴𓅓𓈖 𓐍𓏏𓅓 𓈖𓅓𓄿𓂝</string>
   <string name="common_spanish">𓂋𓄿𓈖𓋴𓊪𓄿𓈖𓇋</string>
-  <string name="common_spanish_colombia">𓂋𓄿𓈖𓋴𓊪𓄿𓈖𓇋 (𓂋𓄿𓈖𓎡𓅱𓂋𓅱𓅓𓃀𓇋)</string>
   <string name="common_supply">𓂋𓂧𓇋</string>
   <string name="common_supply_liquidity_title">𓂋𓂧𓇋 𓐍𓏏𓅱𓈙𓅓𓅱</string>
-  <string name="common_swedish">𓋴𓅱𓇋𓂧</string>
   <string name="common_terms_title">𓅓𓂧𓅱 𓎛𓈖𓂝 𓅱𓆓𓅱</string>
-  <string name="common_thai">𓂋𓄿𓈖𓏏𓄿𓇋</string>
   <string name="common_today">𓉔𓂋𓅱𓊪𓈖</string>
   <string name="common_turkish">𓂋𓄿𓈖𓏏𓂋𓎡</string>
-  <string name="common_ukrainian">𓂋𓄿𓈖𓅱𓎡𓂋𓄿𓇋𓈖</string>
   <string name="common_update">𓋴𓅓𓄿𓅱</string>
   <string name="common_upload_from_library">𓉔𓄿𓃀𓋴𓈙 𓅓 𓊪𓂋𓋴𓈙𓅱</string>
   <string name="common_vietnamese">𓂋𓄿𓈖𓅱𓇋𓏏𓈖𓄿𓅓</string>
@@ -232,10 +209,7 @@
   <string name="eth_tx_address">Ethereum 𓎛𓋴𓃀 𓋴𓏏𓈖𓎛𓋴𓃀</string>
   <string name="eth_tx_hash">Ethereum 𓇋𓂋𓏏𓋴𓅱𓈖𓏏 𓐍𓏏𓅓</string>
   <string name="explore_create_pool">𓇋𓂋 𓈙</string>
-  <string name="explore_demeter_subtitle">𓍿𓋴𓐍𓏏 𓈖𓎡 𓈙 𓊪𓋴𓈙 𓎛𓈖𓂝 𓈙𓋴𓊪 𓎛𓂋𓇋 𓆑𓎡𓄿𓅱</string>
   <string name="explore_demeter_title">Demeter 𓋴𓎡𓄿𓐍𓏏</string>
-  <string name="explore_provide_and_earn">𓂋𓂧𓇋 𓐍𓏏𓅱𓈙𓅓𓅱 𓎛𓈖𓂝 𓈙𓋴𓊪 𓆑𓎡𓄿𓅱</string>
-  <string name="explore_swap_tokens_on_sora">𓋴𓅱𓈖𓏏 𓇋𓐍𓏏 𓅓 SORA 𓇋𓄿𓂧𓏏𓈖𓏏𓅱𓄿𓅱𓏏</string>
   <string name="export_account_details_backup_description">𓇋𓂋 𓈖𓏏𓎡 𓐍𓄿𓂝 𓅱𓄿𓏏 𓂋 𓊪𓈖 𓐍𓏏𓈖𓇋𓂋𓏏, 𓈖𓎡 𓐍𓏏𓅱 𓂋 𓐍𓄿𓂝, 𓈖𓇋𓂋 𓈖𓏏𓎡 𓂋𓎛𓄿 𓎛𓂋!</string>
   <string name="export_account_details_backup_options">𓋴𓈙𓋴𓈖𓈖𓅱 𓋴𓏏𓊪𓅱</string>
   <string name="export_account_details_show_passphrase">𓋴𓐍𓂝 𓅓𓂧𓅱𓋴𓐍𓄿</string>
@@ -270,10 +244,6 @@
   <string name="import_account_not_backed_up_alert_description">𓇋𓂋 𓈖𓎡 𓐍𓏏𓈖𓇋𓂋𓏏 𓐍𓊪𓂋 𓐍𓄿𓂝 𓂋𓊪𓅱 𓇋𓍿𓄿, 𓈖𓏏𓎡 𓂋 𓐍𓄿𓂝 𓈖𓎡 𓊪𓂋𓎛𓆓 𓎛𓈖𓂝 𓈖𓃀 𓈖𓎡 𓐍𓏏𓅱 𓂋𓈖𓎛𓎛.</string>
   <string name="import_more_title">𓇋𓈖𓇋𓅓𓄡𓈖𓅱 𓂝𓈙𓄿</string>
   <string name="imported_account_title">𓎛𓋴𓃀 𓇋𓈖𓇋𓅓𓄡𓈖𓅱</string>
-  <string name="invite_code_applied_body">𓐍𓏏𓅓 𓇋𓂋 𓈖𓆑𓂋</string>
-  <string name="invite_code_applied_title">𓎛𓋴𓇋!</string>
-  <string name="invite_enter_error_already_applied">𓈖𓏏𓎡 𓅓𓎛𓄿𓏏 𓇋𓂋 𓎡𓇌 𓇋𓄿𓋴𓏏 𓐍𓏏𓅓</string>
-  <string name="invite_enter_error_time_is_up">𓏏𓂋 𓂋 𓇋𓂋 𓇋𓄿𓋴𓏏 𓐍𓏏𓅓 𓎛𓂋</string>
   <string name="invoice_scan_error_match">𓈖𓏏𓎡 𓈖𓂋𓐍 𓉔𓄿𓃀 𓇋𓐍𓏏 𓂋 𓅓𓇋𓏏𓏏 𓎛𓋴𓃀 𓈖𓏏𓎡 𓅓𓏏𓂋𓊪𓈖 𓂧𓅓𓆓 𓂋</string>
   <string name="invoice_scan_error_no_info">QR 𓈖𓂋𓐍 𓅱𓈖𓐍𓏏𓅓</string>
   <string name="invoice_scan_error_user_not_found">𓈖𓂋𓐍 𓎼𓅓 𓇋𓂋𓇋𓅱 𓅓 QR</string>
@@ -353,26 +323,7 @@
   <string name="pool_share_title_1">𓈖𓎡 𓈙 𓊪𓋴𓈙</string>
   <string name="pooled_assets">𓅓𓈙 𓇋𓐍𓏏</string>
   <string name="profile_biometry_title">𓐍𓄿𓇋𓈖𓄡𓏏 𓋴𓅓𓈖𓂋𓈖</string>
-  <plurals name="project_date_day_plurals">
-    <item quantity="one">%s 𓉔𓂋𓅱 𓋴𓊪</item>
-    <item quantity="other">%s 𓉔𓂋𓅱𓅱 𓋴𓊪</item>
-  </plurals>
-  <plurals name="project_date_hour_plurals">
-    <item quantity="one">%s 𓅱𓈖𓅱𓏏 𓋴𓊪</item>
-    <item quantity="other">%s 𓅱𓈖𓅱𓏏 𓋴𓊪</item>
-  </plurals>
-  <plurals name="project_date_minute_plurals">
-    <item quantity="one">%s 𓄿𓏏 𓋴𓊪</item>
-    <item quantity="other">%s 𓄿𓅱𓏏 𓋴𓊪</item>
-  </plurals>
-  <plurals name="project_date_second_plurals">
-    <item quantity="one">%s 𓄿𓏏𓈖𓆓𓋴𓏏 𓋴𓊪</item>
-    <item quantity="other">%s 𓄿𓅱𓏏𓈖𓆓𓋴𓏏 𓋴𓊪</item>
-  </plurals>
-  <string name="project_ended_template">𓏏𓅓 %s</string>
-  <string name="protect_loss_access_funds">𓋴𓄿𓅱 𓆓𓋴𓎡 𓅓 𓐍𓄿𓂝 𓅱𓄿𓏏 𓂋 𓈖𓎡 𓐍𓏏𓅱</string>
   <string name="qr_code">QR 𓐍𓏏𓅓</string>
-  <string name="qr_upload">𓅓 𓊪𓂋𓏏𓇋𓏏𓅱</string>
   <string name="receive_tokens">𓈙𓋴𓊪 𓇋𓐍𓏏</string>
   <string name="received_from_adar">𓈙𓋴𓊪 𓅓 ADAR</string>
   <string name="recent_recipients">𓅓𓄿𓅱 𓈙𓋴𓊪𓅱</string>
@@ -419,7 +370,6 @@
   <string name="remove_pool_confirmation_description">𓊪𓂋𓏏 𓐍𓄿𓇋. 𓇋𓂋 𓇋𓋴𓅱 𓎡𓇌 𓂝𓈙𓄿 𓂋 %s%% 𓈖𓎡 𓇋𓂋𓏏𓋴𓅱𓈖𓏏 𓂋 𓅱𓎛𓅓𓂋𓎛𓄿.</string>
   <string name="remove_pool_confirmation_title">𓋴𓅓𓈖 𓂧𓂋</string>
   <string name="request_supply_liquidity">𓈖𓏏𓎡 𓐍𓂋 𓂋 𓂋𓂧𓇋 𓐍𓏏𓅱𓈙𓅓𓅱 𓂋 𓅓𓇋𓏏𓏏 𓈙 𓋴𓈖𓅱 𓂋 𓈙𓂝 𓍿𓋴𓐍𓏏 𓋴𓏏 𓈖 𓎛𓂋𓇋 𓆑𓎡𓄿𓅱:</string>
-  <string name="restart_required">𓅱𓎛𓅓𓂝𓎛𓂝 𓅱𓆓</string>
   <string name="review">𓅓𓄿𓄿𓅓𓅓𓄿𓅱</string>
   <string name="route">𓅱𓄿𓏏</string>
   <string name="scan_qr_show_my_qr">𓋴𓐍𓂝 𓈖𓇋 QR 𓐍𓏏𓅓</string>
@@ -427,8 +377,6 @@
   <string name="search_token_placeholder">𓎛𓎛 𓇋𓈖 𓇋𓐍𓏏 𓂋𓈖, 𓂋𓈖 𓂋𓊪𓅱 𓏏𓇋𓏏𓂋𓈖𓈖𓆓𓋴 𓏏𓇋𓏏</string>
   <string name="select_account_address_1">𓎛𓎛 𓂋𓊪𓅱 𓅱𓄿𓎛 𓅓𓄿𓅱 𓋴𓏏𓈖𓎛𓋴𓃀</string>
   <string name="select_account_import">𓋴𓏏𓊪 𓎛𓋴𓃀 𓂋 𓇋𓈖𓇋𓅓𓄡𓈖𓅱</string>
-  <string name="select_asset_receive">𓋴𓏏𓊪 𓇋𓐍𓏏 𓂋 𓈙𓋴𓊪</string>
-  <string name="select_asset_send">𓋴𓏏𓊪 𓇋𓐍𓏏 𓂋 𓉔𓄿𓃀</string>
   <string name="select_node_add_custom_node">𓅱𓄿𓎛 𓈖𓅓𓂋𓂋𓏏 𓋴𓃀𓄿𓈖𓇋𓄿𓂧𓏏</string>
   <string name="select_node_custom_node_edit_node">𓎡𓆓𓅓𓅓𓄿𓅱 𓋴𓃀𓄿𓈖𓇋𓄿𓂧𓏏</string>
   <string name="select_node_custom_nodes">𓈖𓅓𓂋𓂋𓏏 𓋴𓃀𓄿𓅱𓈖𓇋𓄿𓂧𓏏</string>
@@ -445,20 +393,14 @@
   <string name="select_pool_share">𓋴𓏏𓊪 𓈖𓎡 𓈙 𓊪𓋴𓈙 𓂋 𓍿𓋴𓐍𓏏</string>
   <string name="select_recipient">𓋴𓏏𓊪 𓈙𓋴𓊪𓅱 𓋴𓏏𓈖𓎛𓋴𓃀</string>
   <string name="settings_accounts">𓎛𓋴𓃀𓅱</string>
-  <string name="settings_accounts_subtitle">𓋴𓈙𓅓 𓎛𓋴𓃀𓅱, 𓋴𓈙𓋴𓈖𓈖𓅱 𓅓𓂧𓅱𓋴𓐍𓄿</string>
-  <string name="settings_app_subtitle">𓂋𓄿, 𓈎𓂧</string>
   <string name="settings_crypto_accounts">𓋴𓈙𓏏𓄿 𓎛𓋴𓃀𓅱</string>
   <string name="settings_header_app">𓋴𓈙𓂝𓈖𓐍 𓋴𓏏𓊪𓅱</string>
-  <string name="settings_information_subtitle">𓅓𓂧𓅱𓈖𓐍𓋴𓆑, 𓊪𓏏𓂋𓅱𓎛𓈖𓂝𓅱𓈙𓃀𓅱, 𓂋 𓋴𓈙𓂝𓈖𓐍</string>
   <string name="settings_information_title">𓂋𓐍𓏏</string>
-  <string name="settings_invite_subtitle">𓊪𓋴𓈙 𓇋𓄿𓋴 𓅱𓄿𓏏</string>
   <string name="settings_invite_title">𓇋𓄿𓋴 𓐍𓈖𓅓𓅱 𓎛𓈖𓂝 𓈙𓋴𓊪</string>
-  <string name="settings_login_subtitle">PIN 𓎛𓈖𓂝 𓐍𓄿𓇋𓈖𓄡𓏏 𓋴𓅓𓈖𓂋𓈖</string>
   <string name="settings_login_title">𓂝𓈎𓂋𓈖 𓎛𓈖𓂝 𓋴𓄿𓅱</string>
   <string name="settings_nodes">𓋴𓃀𓄿𓅱𓈖𓇋𓄿𓂧𓏏</string>
   <string name="show_more">𓋴𓐍𓂝 𓂝𓈙𓄿</string>
   <string name="slippage">𓈙𓅓𓏏𓇋𓋴𓅱</string>
-  <string name="something_went_wrong">𓐍𓏏 𓐍𓊪𓂋 𓈖𓅓𓄿𓂝</string>
   <string name="start_staking">𓈙𓂝 𓍿𓋴𓐍𓏏</string>
   <string name="status_error">𓇋𓋴𓆑𓏏</string>
   <string name="status_pending">𓎛𓂋𓅱𓄿𓎛</string>
@@ -469,13 +411,9 @@
   <string name="transaction_date_1">𓉔𓂋𓅱 𓎛𓈖𓂝 𓏏𓂋</string>
   <string name="transaction_id">𓇋𓂋𓏏𓂋𓂋𓅱𓏏𓇌 𓐍𓏏𓅓</string>
   <string name="tutorial_many_world">𓏏𓄿𓅱𓂝𓈙𓄿𓅱.\n𓎛𓋴𓃀𓐍𓏏𓅱𓂝.</string>
-  <string name="tutorial_many_world_desc">𓋴𓄿𓅱, 𓉔𓄿𓃀, 𓈙𓋴𓊪, 𓎛𓈖𓂝 𓋴𓅱𓈖𓏏 𓈖𓎡 SORA 𓇋𓐍𓏏. 𓋴𓏏𓊪 𓅓𓇋 𓈖𓏏𓎡 𓅓𓂋𓂋 𓂋 𓇋𓂋 𓂋𓊪𓅱 𓈖𓎛𓅓 𓈖𓎡 𓊪𓂋𓎛𓆓.</string>
   <string name="tutorial_privacy_policy">𓋴𓈙𓏏𓄿 𓉔𓊪</string>
   <string name="tutorial_terms_and_conditions_3">𓅓𓂧𓅱 𓎛𓈖𓂝 𓅱𓆓𓅱</string>
   <string name="tutorial_terms_and_conditions_template_1">𓇋𓈖 𓈙𓅓 𓈖𓏏𓎡 𓂋𓂧𓇋𓇋𓃀 𓎛𓈖𓂝</string>
-  <string name="unexpected_error">𓈖𓐍𓅓𓏏 𓇋𓋴𓆑𓏏 𓐍𓊪𓂋.\n\n𓈖𓏏𓎡 𓂋𓐍 𓂧𓂋𓇋𓋴𓆑𓏏 𓊪𓈖 𓇋𓋴𓆑𓏏 𓅓 SORA 𓈖𓇋𓅱𓏏 𓅓 @sora_happy Telegram 𓆓𓂧𓅱𓏏.</string>
-  <string name="update_downloaded">𓋴𓅓𓄿𓅱 𓈖 SORA 𓋴𓈙𓂝𓈖𓐍 𓇋𓈖𓇋𓋴𓈙 𓎛𓈖𓂝 𓎼𓂋𓎼 𓂋 𓂋𓂧𓇋.\n\n𓋴𓏏 𓂝𓄿 𓂋 𓇋𓂋𓅓 𓅓𓄿𓅱 𓈎𓂧 𓈖 𓋴𓈙𓂝𓈖𓐍.\n\n𓅓 𓋴𓐍𓂋 𓂋 𓋴𓅓𓄿𓅱 𓋴𓈙𓂝𓈖𓐍, 𓅱𓎛𓅓𓂝𓎛𓂝 𓅱𓆓.</string>
-  <string name="update_install_now">𓂋 𓈖𓏏𓎡 𓅓𓂋𓇌 𓂋 𓂋𓂧𓇋 𓋴𓅓𓄿𓅱 𓅓𓈖𓅱?</string>
   <string name="wallet_backup">𓊪𓂋𓎛𓆓 𓋴𓈙𓋴𓈖𓈖𓅱</string>
   <string name="wallet_balance_locked">𓐍𓏏𓅓</string>
   <string name="wallet_balance_reserved">𓋴𓄿𓅱</string>
@@ -512,7 +450,6 @@
   <string name="network_badge_mainnet">𓇋𓄿𓂧𓏏𓂝𓄿</string>
   <string name="network_badge_testnet">𓇋𓄿𓂧𓏏𓈖𓋴𓅓𓈖</string>
   <string name="balance_unavailable">𓎛𓋴𓃀𓐍𓏏 𓈖𓅱𓈖</string>
-  <string name="copy_receive_address">𓋴𓈙𓅓𓇋𓏏𓏏 𓈙𓋴𓊪 𓋴𓏏𓈖𓎛𓋴𓃀</string>
   <string name="test_networks">𓋴𓅓𓈖 𓇋𓄿𓂧𓏏𓈖𓏏𓅱𓄿𓅱𓏏</string>
   <string name="test_networks_description">𓋴𓐍𓂝 Taira 𓇋𓄿𓂧𓏏𓈖𓋴𓅓𓈖 𓎛𓋴𓃀𓅱𓐍𓏏 𓎛𓈖𓂝 𓇋𓂋𓅱𓏏𓋴𓅱𓈖𓏏. 𓇋𓄿𓂧𓏏𓈖𓋴𓅓𓈖 𓇋𓐍𓏏 𓈖𓈖 𓈖𓎛𓆓 𓇋𓋴𓅱.</string>
   <string name="your_pooled">𓈖𓎡 %s 𓅓𓈙</string>
@@ -530,23 +467,14 @@
   <string name="wallet_check_again">𓋴𓅓𓈖 𓅓𓅓𓄿𓅱</string>
   <string name="wallet_technical_details">𓈖𓇋𓂋𓏏 𓅓𓂧𓅱𓈖𓃀</string>
   <string name="wallet_hide_details">𓇋𓅓𓈖 𓈖𓇋𓂋𓏏 𓅓𓂧𓅱𓈖𓃀</string>
-  <string name="wallet_network_activity">𓇋𓂋𓅱𓏏</string>
-  <string name="wallet_network_details">𓇋𓄿𓂧𓏏𓈖𓏏𓅱𓄿𓅱𓏏 𓅓𓂧𓅱𓈖𓃀</string>
   <string name="wallet_receive_notice">𓅱𓂝 𓉔𓄿𓃀 𓇋𓐍𓏏 𓅓 %1$s 𓂋 𓊪𓈖 𓋴𓏏𓈖𓎛𓋴𓃀.</string>
-  <string name="wallet_copied">𓋴𓏏𓈖𓎛𓋴𓃀 𓋴𓈙𓅓𓇋𓏏𓏏</string>
-  <string name="wallet_paste_address">𓂋𓂧𓇋𓅓𓄡𓈖𓅱 𓋴𓏏𓈖𓎛𓋴𓃀</string>
   <string name="wallet_available_xor">𓅱𓈖: %1$s XOR</string>
-  <string name="wallet_review_transfer">𓅓𓄿𓄿𓅓𓅓𓄿𓅱 𓉔𓄿𓃀𓐍𓏏</string>
   <string name="wallet_send_xor">𓉔𓄿𓃀 XOR</string>
-  <string name="wallet_edit_transfer">𓎡𓆓𓅓𓅓𓄿𓅱 𓉔𓄿𓃀𓐍𓏏</string>
   <string name="wallet_total_xor">𓂧𓅓𓆓: %1$s XOR</string>
   <string name="wallet_review_network">𓋴𓅓𓈖 𓈙𓋴𓊪𓅱 𓎛𓈖𓂝 𓇋𓄿𓂧𓏏𓈖𓏏𓅱𓄿𓅱𓏏 𓅓𓎛𓄿𓏏 𓉔𓄿𓃀.</string>
   <string name="wallet_submission_uncertain">𓇋𓄿𓂧𓏏𓈖𓏏𓅱𓄿𓅱𓏏 𓈖 𓋴𓅓𓈖 𓊪𓂋𓏏. 𓋴𓅓𓈖 𓇋𓂋𓅱𓏏 𓅓𓎛𓄿𓏏 𓉔𓄿𓃀 𓅓𓅓𓄿𓅱 𓂋 𓐍𓋴𓆑 𓋴𓈖𓅱𓅓𓇋𓏏𓏏 𓉔𓄿𓃀𓐍𓏏.</string>
   <string name="wallet_pending_notice">𓈖𓎡 𓉔𓄿𓃀𓐍𓏏 𓂋𓂧𓇋. 𓈖𓋴𓏏 𓅱𓈖𓈖 𓂋 𓋴𓅓𓄿𓅱 𓅓 𓇋𓂋𓅱𓏏. 𓇋𓂋 𓈖 𓉔𓄿𓃀 𓋴𓏏 𓅓𓅓𓄿𓅱 𓅓𓏏𓂋 𓋴𓅓𓈖 𓎛𓂋𓅱𓄿𓎛.</string>
   <string name="wallet_submission_failed">𓉔𓄿𓃀𓐍𓏏 𓈖 𓏏𓅓. 𓋴𓅓𓈖 𓇋𓂋𓅱𓏏 𓅓𓎛𓄿𓏏 𓎛𓂋𓇋𓂋 𓅓𓅓𓄿𓅱.</string>
-  <string name="wallet_xor_amount">𓂝𓈙𓄿𓏏 𓅓 XOR</string>
-  <string name="wallet_confirm_send">𓋴𓅓𓈖 𓉔𓄿𓃀𓐍𓏏</string>
-  <string name="wallet_no_activity">𓈖𓈖 𓉔𓄿𓃀𓅱𓐍𓏏 𓋴𓊪</string>
   <string name="wallet_google_explanation">𓈖𓎛𓅓 𓋴𓈙𓏏𓄿 𓋴𓈙𓋴𓈖𓈖𓅱 𓅓 Google Drive, 𓂋𓊪𓅱 𓇋𓂋 𓊪𓂋𓎛𓆓 𓎛𓈖𓂝 𓅓𓂧𓅱𓋴𓈙𓏏𓄿-𓋴𓄿𓅱 Google Drive 𓋴𓈙𓋴𓈖𓈖𓅱.</string>
   <string name="wallet_create_explanation">𓇋𓂋 𓊪𓂋𓎛𓆓 𓎛𓈖𓂝 𓋴𓄿𓅱 𓈖𓋴𓏏 𓈖𓎛𓅓 𓅓𓂧𓅱 𓆓𓋴𓎡.</string>
   <string name="wallet_import_explanation">𓈖𓎛𓅓 𓅱𓈖 𓊪𓂋𓎛𓆓 𓇋𓂋𓅓 𓈖𓋴𓏏 𓈖𓎛𓅓 𓅓𓂧𓅱, 𓐍𓏏𓅓𓋴𓈙𓏏𓄿, 𓂋𓊪𓅱 𓋴𓈙𓋴𓈖𓈖𓅱 𓈙𓂝𓏏.</string>
@@ -563,7 +491,6 @@
   <string name="wallet_scan_qr">𓈙𓂧𓏏𓇋𓏏 QR 𓐍𓏏𓅓</string>
   <string name="wallet_collapsed">𓐍𓏏𓅓</string>
   <string name="wallet_expanded">𓋴𓅱𓋴𓐍</string>
-  <string name="wallet_back_to_wallet">𓂋𓎛𓄿 𓂋 𓊪𓂋𓎛𓆓 · 𓋴𓅓𓈖 𓇋𓂋𓅱𓏏</string>
     <string name="wallet_cloud_backup_unavailable">Google 𓋴𓈙𓋴𓈖𓈖𓅱 𓈖𓅱𓈖 𓅓 𓊪𓈖 𓋴𓈙𓂝𓈖𓐍 𓈎𓂧. 𓈖𓏏𓎡 𓂋𓐍 𓇋𓂋 𓊪𓂋𓎛𓆓 𓎛𓈖𓂝 𓈖𓎛𓅓 𓅓𓂧𓅱 𓂋𓊪𓅱 𓇋𓈖𓇋𓅓𓄡𓈖𓅱 𓅱𓈖 𓊪𓂋𓎛𓆓.</string>
     <string name="wallet_cloud_backup_failed">Google 𓋴𓈙𓋴𓈖𓈖𓅱 𓂋𓐍 𓈖 𓂧𓅓𓆓. 𓇋𓂋 𓅓𓅓𓄿𓅱, 𓂋𓊪𓅱 𓇋𓂋𓅓 𓈖𓎡 𓈖𓎛𓅓 𓅓𓂧𓅱.</string>
     <string name="wallet_transfer_complete">𓈖𓎡 𓉔𓄿𓃀𓐍𓏏 𓏏𓅓.</string>
@@ -624,7 +551,6 @@
     <string name="wallet_connect_sign_declined">𓐍𓏏𓅓 𓂧𓃀𓎛 𓐍𓋴𓆑</string>
     <string name="wallet_connect_session_closed">IrohaConnect 𓏏𓂋𓈖𓂧𓅓𓆓 𓐍𓏏𓅓</string>
     <string name="wallet_connect_background_closed">𓏏𓂋𓈖𓂧𓅓𓆓 𓐍𓏏𓅓 𓏏𓂋 𓊪𓂋𓎛𓆓 𓋴𓊪 𓅓𓅓𓄿𓄿</string>
-    <string name="wallet_connect_lock_required">𓋴𓅓𓈖 𓐍𓏏𓈖𓇋𓂋𓏏 𓅓𓄿𓄿𓏏 𓐍𓏏𓅓 𓂋𓊪𓅱 𓋴𓅓𓈖 𓈖𓐍𓏏 𓐍𓄿𓇋𓈖𓄡𓏏 𓅓𓎛𓄿𓏏 𓎛𓂋𓂋𓂧𓇋𓇋𓃀 IrohaConnect 𓂧𓃀𓎛𓅱</string>
     <string name="wallet_connect_relay_ready">𓋴𓈙𓏏𓄿 𓅱𓄿𓏏𓈖𓅓𓂧𓅱 𓎼𓂋𓎼. 𓎛𓂋𓅱𓄿𓎛 𓈖 𓋴𓈙𓂝𓈖𓐍 𓂋𓈖𓈖𓆓𓏏…</string>
     <string name="wallet_connect_invalid_message">𓋴𓈙𓂝𓈖𓐍 𓉔𓄿𓃀 𓈖𓅓𓄿𓂝 𓂋𓊪𓅱 𓅱𓎛𓅓𓇋𓂋 IrohaConnect 𓅓𓂧𓅱</string>
     <string name="wallet_connect_app_closed">𓋴𓈙𓂝𓈖𓐍 𓐍𓏏𓅓 𓋴𓈙𓏏𓄿 𓏏𓂋𓈖𓂧𓅓𓆓</string>
@@ -659,7 +585,6 @@
     <string name="wallet_market_activity">%1$d 𓂝𓈖𓐍 · %2$d 𓇋𓂋𓇋𓅱𓋴𓅱𓈖𓏏</string>
     <string name="wallet_send_network_notice">𓇋𓂋𓅓 𓈙𓋴𓊪𓅱 𓋴𓏏𓈖𓎛𓋴𓃀 𓅓 %1$s.</string>
   <string name="wallet_assets_unavailable">𓇋𓐍𓏏 𓈖𓅱𓈖</string>
-  <string name="wallet_assets_unavailable_details">𓇋𓐍𓏏 𓂋𓐍 𓈖 𓇋𓈖𓇋. 𓋴𓅓𓈖 𓈖𓎡 𓂧𓅓𓆓𓏏, 𓅓𓐍𓏏 𓅱𓎛𓅓𓅱𓈖 𓋴𓅱𓈖𓏏.</string>
   <!-- ak1-signing-compat: signing is decided by the stored key; repair in place; truthful backup and upgrade text -->
   <!-- ak2-readonly-ux: read-only accounts are labelled, explained and repairable; removal shows the matching backup first -->
   <!-- at1-submit-status: truthful transaction status on every screen (audit A5) -->

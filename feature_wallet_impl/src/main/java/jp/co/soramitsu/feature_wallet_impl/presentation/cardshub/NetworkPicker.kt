@@ -1,5 +1,7 @@
 package jp.co.soramitsu.feature_wallet_impl.presentation.cardshub
 
+import jp.co.soramitsu.common.presentation.compose.theme.neon.neon
+import androidx.compose.foundation.border
 import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -11,10 +13,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Divider
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -28,9 +32,11 @@ import jp.co.soramitsu.common.nexus.WalletNetworkDirectory
 import jp.co.soramitsu.common.nexus.WalletNetworkId
 import jp.co.soramitsu.common.nexus.WalletNetworkTag
 import jp.co.soramitsu.common.nexus.WalletNetworkUnavailable
-import jp.co.soramitsu.common.presentation.compose.TokenIcon
+import jp.co.soramitsu.common.domain.AssetHolder
+import jp.co.soramitsu.common.presentation.compose.TokenBadge
 import jp.co.soramitsu.common.presentation.compose.components.WalletSheet
 import jp.co.soramitsu.common.presentation.compose.neon.ContentCard
+import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.feature_wallet_impl.data.nexus.NexusPortfolioBalance
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
@@ -58,23 +64,26 @@ internal fun networkLabel(id: WalletNetworkId): String {
 internal fun NetworkTagChip(tag: WalletNetworkTag, modifier: Modifier = Modifier) {
     val color = when (tag) {
         WalletNetworkTag.MAIN -> MaterialTheme.customColors.accentPrimary
-        WalletNetworkTag.TESTNET -> MaterialTheme.customColors.statusWarning
+        WalletNetworkTag.TESTNET -> MaterialTheme.neon.redText
         WalletNetworkTag.COMING_SOON -> MaterialTheme.customColors.fgSecondary
     }
+    val fill = MaterialTheme.neon.glassSolid
     Text(
         text = stringResource(tag.label),
         style = MaterialTheme.customTypography.textXSBold,
         color = color,
         maxLines = 1,
         modifier = modifier
-            .background(color.copy(alpha = 0.14f), RoundedCornerShape(10.dp))
+            .background(fill, RoundedCornerShape(10.dp))
+            .border(1.dp, MaterialTheme.neon.hairline, RoundedCornerShape(10.dp))
             .padding(horizontal = 8.dp, vertical = 3.dp),
     )
 }
 
 /**
  * The one question the wallet asks about networks: which network to receive or send on. The
- * main network is first; each row shows its tag, XOR balance and address.
+ * main network is first. The networks are listed as the SORA2 asset list lists tokens: in a card,
+ * each with XOR's icon, its balance and address, and its tag.
  */
 @Composable
 internal fun NetworkPickerSheet(
@@ -82,6 +91,7 @@ internal fun NetworkPickerSheet(
     choices: List<WalletNetworkChoice>,
     onPick: (WalletNetworkChoice) -> Unit,
     onClose: () -> Unit,
+    xorIcon: String? = null,
 ) {
     WalletSheet(
         title = stringResource(
@@ -89,10 +99,12 @@ internal fun NetworkPickerSheet(
         ),
         onClose = onClose,
     ) {
-        Column(Modifier.fillMaxWidth()) {
-            choices.forEachIndexed { index, choice ->
-                NetworkChoiceRow(choice, onClick = { onPick(choice) })
-                if (index < choices.lastIndex) Divider(color = MaterialTheme.customColors.fgOutline)
+        ContentCard(modifier = Modifier.fillMaxWidth()) {
+            Column(Modifier.padding(vertical = Dimens.x3)) {
+                choices.forEachIndexed { index, choice ->
+                    NetworkChoiceRow(choice, icon = xorIcon, onClick = { onPick(choice) })
+                    if (index < choices.lastIndex) Spacer(Modifier.size(Dimens.x2))
+                }
             }
         }
         Text(
@@ -106,8 +118,9 @@ internal fun NetworkPickerSheet(
     }
 }
 
+/** A network as a row of the SORA2 asset list: icon, name, balance, then address and tag. */
 @Composable
-private fun NetworkChoiceRow(choice: WalletNetworkChoice, onClick: () -> Unit) {
+private fun NetworkChoiceRow(choice: WalletNetworkChoice, icon: String?, onClick: () -> Unit) {
     val name = choice.network.name
     val amount = if (!choice.network.isLive) stringResource(R.string.network_address_ready)
     else choice.balance?.let { "$it XOR" }
@@ -120,15 +133,23 @@ private fun NetworkChoiceRow(choice: WalletNetworkChoice, onClick: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .clickable(enabled = choice.isAvailable, role = Role.Button, onClick = onClick)
-            .padding(vertical = 14.dp)
+            .padding(horizontal = Dimens.x3)
             .testTag("NetworkChoice${choice.id.wireId}"),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        TokenBadge(AssetHolder.XOR_ASSET_ID, "XOR", icon, 40.dp)
+        Column(
+            Modifier
+                .weight(1f)
+                .padding(horizontal = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
             val content = if (choice.isAvailable) MaterialTheme.customColors.fgPrimary
             else MaterialTheme.customColors.fgSecondary
-            Text(name, style = MaterialTheme.customTypography.headline3, color = content)
-            amount?.let { Text(it, style = MaterialTheme.customTypography.textS, color = content) }
+            Text(name, style = MaterialTheme.customTypography.textM, color = content)
+            amount?.let {
+                Text(it, style = MaterialTheme.customTypography.textXSBold, color = MaterialTheme.customColors.fgSecondary)
+            }
             Text(
                 shortAddress(choice.address),
                 style = MaterialTheme.customTypography.textXS,
@@ -138,7 +159,7 @@ private fun NetworkChoiceRow(choice: WalletNetworkChoice, onClick: () -> Unit) {
                 Text(it, style = MaterialTheme.customTypography.textXS, color = MaterialTheme.customColors.fgSecondary)
             }
         }
-        choice.tag?.let { NetworkTagChip(it, Modifier.padding(start = 12.dp)) }
+        choice.tag?.let { NetworkTagChip(it) }
     }
 }
 
@@ -179,9 +200,10 @@ private fun NetworkAssetRow(
     onClick: () -> Unit,
 ) {
     val pending = balance.pendingTransactions.size + balance.recoveryPendingTransactions.size
+    val numbers = remember { NumbersFormatter() }
     val amount = when {
         !balance.networkLive -> stringResource(R.string.network_address_ready)
-        balance.xorQuantity != null -> "${balance.xorQuantity} XOR"
+        balance.xorQuantity != null -> numbers.nexusXor(balance.xorQuantity)
         balance.errorCode != null -> stringResource(R.string.balance_unavailable)
         else -> "…"
     } + if (pending > 0) " · $pending ${stringResource(R.string.wallet_status_checking)}" else ""
@@ -193,7 +215,7 @@ private fun NetworkAssetRow(
             .testTag("NetworkRow${balance.networkId.wireId}"),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        TokenIcon(uri = icon, size = 40.dp)
+        TokenBadge(AssetHolder.XOR_ASSET_ID, "XOR", icon, 40.dp)
         Column(
             Modifier
                 .weight(1f)
@@ -217,22 +239,9 @@ internal fun OtherNetworksCard(
     xorIcon: String?,
     xorName: String?,
     isNexusBalanceCurrent: (NexusPortfolioBalance) -> Boolean,
-    onSend: (NexusPortfolioBalance) -> Unit,
-    onRecovery: () -> Unit,
-    onRefresh: () -> Unit,
-    onLoadMore: (NexusPortfolioBalance) -> Unit,
-    walletId: String?,
+    onOpen: (NexusPortfolioBalance) -> Unit,
+    walletName: String? = null,
 ) {
-    val sheets = rememberNetworkSheetsState(walletId)
-    NetworkSheets(
-        state = sheets,
-        balances = balances,
-        isNexusBalanceCurrent = isNexusBalanceCurrent,
-        onSend = onSend,
-        onRecovery = onRecovery,
-        onRefresh = onRefresh,
-        onLoadMore = onLoadMore,
-    )
     ContentCard(modifier = Modifier.fillMaxWidth()) {
         Column(Modifier.padding(top = Dimens.x3, bottom = Dimens.x3)) {
             Text(
@@ -241,11 +250,20 @@ internal fun OtherNetworksCard(
                 color = MaterialTheme.customColors.fgPrimary,
                 modifier = Modifier.padding(horizontal = Dimens.x3),
             )
+            // With every wallet on screen above it, this card says whose rows these are.
+            walletName?.let {
+                Text(
+                    text = it,
+                    style = MaterialTheme.customTypography.textXSBold,
+                    color = MaterialTheme.customColors.fgSecondary,
+                    modifier = Modifier.padding(horizontal = Dimens.x3),
+                )
+            }
             NetworkAssetRows(
                 balances = balances.filter(isNexusBalanceCurrent),
                 xorIcon = xorIcon,
                 xorName = xorName,
-                onOpen = sheets::openActivity,
+                onOpen = onOpen,
             )
         }
     }

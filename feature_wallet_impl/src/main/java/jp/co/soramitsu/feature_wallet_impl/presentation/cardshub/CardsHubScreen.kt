@@ -22,8 +22,6 @@ package jp.co.soramitsu.feature_wallet_impl.presentation.cardshub
 import androidx.annotation.StringRes
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
@@ -31,7 +29,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
@@ -41,15 +38,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import jp.co.soramitsu.common.R
-import jp.co.soramitsu.common.presentation.compose.neon.ContentCard
 import jp.co.soramitsu.common.presentation.compose.neon.TextButton
+import jp.co.soramitsu.ui_core.lit.NameAndFigures
+import jp.co.soramitsu.ui_core.component.text.FittedText
+import androidx.compose.ui.text.AnnotatedString
 import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.component.button.properties.Size
+import jp.co.soramitsu.common.presentation.compose.neon.ContentCard
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
@@ -64,48 +64,46 @@ fun CommonHubCard(
     content: @Composable (ColumnScope) -> Unit
 ) {
     val collapseLabel = stringResource(if (collapseState) R.string.wallet_collapsed else R.string.wallet_expanded)
-    val cardContent: @Composable BoxScope.() -> Unit = {
+    val cardContent: @Composable androidx.compose.foundation.layout.BoxScope.() -> Unit = {
         Column(
             modifier = Modifier
                 .padding(top = Dimens.x3, bottom = Dimens.x4)
                 .animateContentSize(),
         ) {
-            Row(
+            // The title and the card's total: the total is never cut, and goes under the title where both do not fit
+            // on one line (a 320 dp screen, larger text, a large total).
+            NameAndFigures(
                 modifier = Modifier
                     .padding(horizontal = Dimens.x3)
-                    .fillMaxWidth()
-                    .wrapContentHeight(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Row(
-                    modifier = Modifier
-                        .wrapContentHeight(),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(
-                        modifier = Modifier
-                            .semantics { stateDescription = collapseLabel }
-                            .clickable(onClick = onCollapseClick),
-                        text = stringResource(id = title),
-                        style = MaterialTheme.customTypography.headline2,
-                        color = MaterialTheme.customColors.fgPrimary,
+                    .fillMaxWidth(),
+                name = {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            modifier = Modifier
+                                .semantics { stateDescription = collapseLabel }
+                                .clickable(onClick = onCollapseClick),
+                            text = stringResource(id = title),
+                            style = MaterialTheme.customTypography.headline2,
+                            color = MaterialTheme.customColors.fgPrimary,
+                        )
+                        Icon(
+                            painter = painterResource(if (collapseState) R.drawable.ic_chevron_down_rounded_16 else R.drawable.ic_chevron_up_rounded_16),
+                            tint = MaterialTheme.customColors.fgPrimary,
+                            contentDescription = null
+                        )
+                    }
+                },
+                figures = {
+                    // Wider than even its own line: set smaller, then ended with an ellipsis, never cut silently.
+                    FittedText(
+                        text = AnnotatedString(amount),
+                        style = MaterialTheme.customTypography.headline2.copy(
+                            color = MaterialTheme.customColors.fgPrimary,
+                            textAlign = TextAlign.End,
+                        ),
                     )
-                    Icon(
-                        painter = painterResource(if (collapseState) R.drawable.ic_chevron_down_rounded_16 else R.drawable.ic_chevron_up_rounded_16),
-                        tint = MaterialTheme.customColors.fgPrimary,
-                        contentDescription = null
-                    )
-                }
-                Text(
-                    text = amount,
-                    textAlign = TextAlign.End,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    style = MaterialTheme.customTypography.headline2,
-                    color = MaterialTheme.customColors.fgPrimary,
-                )
-            }
+                },
+            )
             if (!collapseState) {
                 Spacer(modifier = Modifier.size(size = Dimens.x2))
                 content.invoke(this)

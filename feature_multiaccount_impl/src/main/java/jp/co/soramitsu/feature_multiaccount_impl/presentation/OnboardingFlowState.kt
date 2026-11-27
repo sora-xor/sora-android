@@ -46,10 +46,6 @@ enum class RecoveryType {
     JSON,
 }
 
-data class RecoveryAccountNameState(
-    val accountNameInputState: InputTextState = InputTextState()
-)
-
 data class TutorialScreenState(
     val isGoogleSigninLoading: Boolean = false,
     val isGoogleBackupAvailable: Boolean = true,

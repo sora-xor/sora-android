@@ -24,7 +24,7 @@ import java.util.Base64
 import javax.inject.Inject
 import javax.inject.Singleton
 import jp.co.soramitsu.common.io.FileManager
-import jp.co.soramitsu.common.logger.FirebaseWrapper
+import jp.co.soramitsu.common.logger.WalletDiagnostics
 import jp.co.soramitsu.xnetworking.lib.engines.rest.api.RestClient
 import jp.co.soramitsu.xnetworking.lib.engines.utils.JsonGetRequest
 import jp.co.soramitsu.xnetworking.lib.engines.utils.fieldOrNull
@@ -37,6 +37,9 @@ import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.jsonArray
 
 @Serializable
 private data class TokenDto(
@@ -52,34 +55,76 @@ class WhitelistTokensManager @Inject constructor(
 
     companion object {
         private const val WHITELIST_FILE_NAME = "whitelist_tokens.json"
+        private const val BLACKLIST_FILE_NAME = "blacklist_tokens.json"
+        private const val BLACKLIST_URL = "https://whitelist.polkaswap2.io/blacklist.json"
         private val ASSET_ID = Regex("0x[0-9a-fA-F]{64}")
+
+        /**
+         * A blacklist entry: "0x" and 64 lower-case hex digits, ASCII only. A regex class, not
+         * Char.isDigit or Character.digit, which also accept digits of other scripts.
+         */
+        private val BLACKLIST_ID = Regex("0x[0-9a-f]{64}")
         private val ICON_TYPES = setOf("", "svg", "png")
+
+        // Data URI parameters, compared in lower case. The live list sends XOR's and
+        // PSWAP's SVGs as "charset=utf8"; rejecting it hid both tokens from the app.
+        private val ICON_PARAMETERS = setOf("base64", "utf8", "charset=utf8", "charset=utf-8")
+
+        /**
+         * Polkaswap's blacklist as published on 2026-11-17. It applies until a list has been
+         * cached or fetched, so a first start without network hides these tokens as well.
+         */
+        val BUNDLED_BLACKLIST: Set<String> = setOf(
+            "0x00b3e666ba302d608b659994fab741ba78904161e158f1421db05318588fe017",
+            "0x00dadad1a20270d9246dd7ccc92730f32565baa4265cf30a23ebd15c9235e818",
+        )
     }
 
-    var whitelistIds: List<String> = emptyList()
+    /**
+     * Asset ids that Polkaswap's blacklist hides. The blacklist wins over the whitelist and over
+     * the built-in tokens: [whitelistIds] never holds one of them.
+     */
+    @Volatile var blacklistIds: Set<String> = BUNDLED_BLACKLIST
         private set
+
+    val whitelistIds: List<String>
+        get() = curWhitelist.map { it.id }.filterNot { it in blacklistIds }
 
     private var curWhitelist: List<TokenDto> = emptyList()
 
     private fun updateWhitelist(list: List<TokenDto>) {
         curWhitelist = list.distinctBy { it.id }
-        whitelistIds = curWhitelist.map { it.id }
     }
 
     init {
         updateWhitelist(AssetHolder.getIds().map { TokenDto(it, "") })
+        readCache(WHITELIST_FILE_NAME) { cached ->
+            val ids = Json.decodeFromString(ListSerializer(TokenDto.serializer()), cached)
+            require(ids.all { ASSET_ID.matches(it.id) && it.type in ICON_TYPES })
+            updateWhitelist(ids)
+        }
+        readCache(BLACKLIST_FILE_NAME) { cached -> blacklistIds = blacklistOf(Json.parseToJsonElement(cached)) }
+    }
+
+    private inline fun readCache(fileName: String, use: (String) -> Unit) {
         try {
-            fileManager.readInternalFile(WHITELIST_FILE_NAME)?.let { cached ->
-                val ids = Json.decodeFromString(ListSerializer(TokenDto.serializer()), cached)
-                require(ids.all { ASSET_ID.matches(it.id) && it.type in ICON_TYPES })
-                updateWhitelist(ids)
-            }
+            fileManager.readInternalFile(fileName)?.let(use)
         } catch (cancelled: CancellationException) {
             throw cancelled
         } catch (error: Exception) {
-            // This is a rebuildable catalog cache; a damaged entry must not block startup.
-            FirebaseWrapper.recordException(error)
+            // These are rebuildable catalog caches; a damaged entry must not block startup.
+            WalletDiagnostics.recordException(error)
         }
+    }
+
+    /**
+     * The ids of a blacklist. Anything but a JSON array of asset ids ([BLACKLIST_ID]) rejects the
+     * whole list, so a list without one valid id never replaces the last good one; `[]` is valid.
+     */
+    private fun blacklistOf(list: JsonElement): Set<String> = list.jsonArray.mapTo(mutableSetOf()) { entry ->
+        val id = (entry as? JsonPrimitive)?.takeIf { it.isString }?.content.orEmpty()
+        require(BLACKLIST_ID.matches(id)) { "Polkaswap blacklist entry rejected: $entry" }
+        id
     }
 
     fun getTokenIconUri(tokenId: String): String {
@@ -106,10 +151,10 @@ class WhitelistTokensManager @Inject constructor(
                 val address = dto.fieldOrNull("address") ?: return@forEach
                 if (!ASSET_ID.matches(address)) return@forEach
                 val iconField = dto.fieldOrNull("icon") ?: return@forEach
-                val metadata = iconField.substringBefore(",").split(";")
+                val metadata = iconField.substringBefore(",").split(";").map { it.trim().lowercase() }
                 val iconRaw = iconField.substringAfter(",", "")
                 if (iconRaw.isEmpty()) return@forEach
-                if (metadata.drop(1).any { it !in setOf("base64", "utf8", "charset=utf-8") }) return@forEach
+                if (metadata.drop(1).any { it !in ICON_PARAMETERS }) return@forEach
                 val base64 = "base64" in metadata
                 val type = when (metadata.first()) {
                     "data:image/svg+xml" -> "svg"
@@ -121,7 +166,7 @@ class WhitelistTokensManager @Inject constructor(
                 val content = try {
                     if (base64) Base64.getDecoder().decode(iconRaw) else iconRaw.decodeURLPart().toByteArray()
                 } catch (error: IllegalArgumentException) {
-                    FirebaseWrapper.recordException(error)
+                    WalletDiagnostics.recordException(error)
                     return@forEach
                 }
                 currentCoroutineContext().ensureActive()
@@ -139,7 +184,28 @@ class WhitelistTokensManager @Inject constructor(
         } catch (cancelled: CancellationException) {
             throw cancelled
         } catch (error: Exception) {
-            FirebaseWrapper.recordException(error)
+            WalletDiagnostics.recordException(error)
+        }
+        updateBlacklistStorage()
+    }
+
+    /**
+     * The same rules as the whitelist: a failed, malformed or unsaved answer keeps the last usable
+     * list. An empty array is a valid answer and clears the list.
+     */
+    private suspend fun updateBlacklistStorage() {
+        try {
+            currentCoroutineContext().ensureActive()
+            val ids = blacklistOf(
+                restClient.get(JsonGetRequest(url = BLACKLIST_URL, responseDeserializer = JsonArray.serializer()))
+            )
+            currentCoroutineContext().ensureActive()
+            fileManager.writeInternalFile(BLACKLIST_FILE_NAME, JsonArray(ids.map { JsonPrimitive(it) }).toString())
+            blacklistIds = ids
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (error: Exception) {
+            WalletDiagnostics.recordException(error)
         }
     }
 }

@@ -1,31 +1,22 @@
 package jp.co.soramitsu.sora.platform
 
 import android.content.ActivityNotFoundException
-import android.content.Context
 import android.content.ContextWrapper
 import android.content.Intent
-import android.graphics.Color
 import android.os.VibrationEffect
 import android.os.Vibrator
-import android.text.TextPaint
-import android.view.View
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.lifecycle.*
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.mockk.*
-import jp.co.soramitsu.common.inappupdate.InAppUpdateManager
 import jp.co.soramitsu.common.util.AppStoreListing
-import jp.co.soramitsu.common.util.DeviceParamsProvider
-import jp.co.soramitsu.common.util.SoraClickableSpan
 import jp.co.soramitsu.common.util.ext.*
 import jp.co.soramitsu.common.util.ext.map as mapWalletValue
 import jp.co.soramitsu.common.vibration.DeviceVibrator
-import kotlinx.coroutines.runBlocking
 import org.junit.*
 import org.junit.Assert.*
 import org.junit.runner.RunWith
-import java.util.TimeZone
 
 @RunWith(AndroidJUnit4::class)
 class PlatformDataFlowContractTest {
@@ -79,45 +70,9 @@ class PlatformDataFlowContractTest {
             } finally { mapped.removeObserver(observer) }
         }
     }
-    @Test fun clickableSpanChangesOnlyUnderliningAndRoutesOneTap() {
-        compose.runOnUiThread {
-            var clicks = 0
-            val span = SoraClickableSpan { clicks++ }
-            val paint = TextPaint().apply { color = Color.MAGENTA; isUnderlineText = true; textSize = 24f }
-            span.updateDrawState(paint)
-            assertFalse(paint.isUnderlineText); assertEquals(Color.MAGENTA, paint.color); assertEquals(24f, paint.textSize)
-            span.onClick(View(compose.activity)); assertEquals(1, clicks)
-        }
-    }
     @Test fun hapticRequestIsOneBoundedPulseWithoutTouchingTheDeviceMotor() {
         val vibrator = mockk<Vibrator>(relaxed = true)
         DeviceVibrator(vibrator).makeShortVibration()
         verify(exactly = 1) { vibrator.vibrate(VibrationEffect.createOneShot(200L, VibrationEffect.DEFAULT_AMPLITUDE)) }
-    }
-    @Test fun updateListenerDetachesWhenTheHostStops() {
-        compose.runOnUiThread {
-            val owner = object : InAppUpdateManager.UpdateManagerListener {
-                val registry = LifecycleRegistry(this)
-                override val lifecycle: Lifecycle get() = registry
-                override fun readyToShowFlexible(): Int? = error("No update request in this fixture")
-                override fun askUserToInstall() = error("No installation authorized")
-            }
-            owner.registry.handleLifecycleEvent(Lifecycle.Event.ON_CREATE)
-            owner.registry.handleLifecycleEvent(Lifecycle.Event.ON_START)
-            val manager = InAppUpdateManager(compose.activity, mockk())
-            runBlocking { manager.start(owner) }
-            assertEquals(1, owner.registry.observerCount)
-            owner.registry.handleLifecycleEvent(Lifecycle.Event.ON_STOP)
-            assertEquals(0, owner.registry.observerCount)
-            owner.registry.handleLifecycleEvent(Lifecycle.Event.ON_DESTROY)
-        }
-    }
-    @Test fun deviceParametersKeepTheirLocaleAndReportCurrentTimeWithoutRounding() {
-        val zone = TimeZone.getTimeZone("Asia/Tokyo")
-        val parameters = DeviceParamsProvider(1080, 1920, "Fixture model", "14", "ja", "JP", zone)
-        val before = System.currentTimeMillis(); val observed = parameters.getCurrentTimeMillis(); val after = System.currentTimeMillis()
-        assertTrue(observed in before..after); assertEquals("ja", parameters.language); assertEquals("JP", parameters.country)
-        assertEquals(zone, parameters.timezone); assertEquals(1080, parameters.screenWidth); assertEquals(1920, parameters.screenHeight)
-        assertEquals("Fixture model", parameters.model); assertEquals("14", parameters.osVersion)
     }
 }

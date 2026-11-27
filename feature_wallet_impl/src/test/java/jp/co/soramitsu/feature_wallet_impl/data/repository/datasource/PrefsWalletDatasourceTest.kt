@@ -26,6 +26,8 @@ import jp.co.soramitsu.common.data.SoraPreferences
 import jp.co.soramitsu.feature_wallet_api.domain.model.MigrationStatus
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Before
@@ -64,13 +66,32 @@ class PrefsWalletDatasourceTest {
 
     @Test
     fun `observe migration`() = runTest {
-        prefsWalletDatasource.saveMigrationStatus(MigrationStatus.SUCCESS)
+        prefsWalletDatasource.saveMigrationStatus("walletA", MigrationStatus.SUCCESS)
         verify(soraPreferences).putString(
             "key_migration_status",
             MigrationStatus.SUCCESS.toString()
         )
-        val first = prefsWalletDatasource.observeMigrationStatus().first()
+        val first = prefsWalletDatasource.observeMigrationStatus("walletA").first()
         assertEquals(MigrationStatus.SUCCESS, first)
+    }
+
+    // Codex re-review 5: one account's claim result is not another's.
+    @Test
+    fun `a claim result belongs to its account only`() = runTest {
+        val seenByB = mutableListOf<MigrationStatus>()
+        val listening = backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            prefsWalletDatasource.observeMigrationStatus("walletB").collect { seenByB += it }
+        }
+        prefsWalletDatasource.saveMigrationStatus("walletA", MigrationStatus.SUCCESS)
+        prefsWalletDatasource.saveMigrationStatus("walletA", MigrationStatus.FAILED)
+        assertEquals(emptyList<MigrationStatus>(), seenByB)
+
+        prefsWalletDatasource.saveMigrationStatus("walletB", MigrationStatus.FAILED)
+        // Another account's later result does not repeat B's.
+        prefsWalletDatasource.saveMigrationStatus("walletA", MigrationStatus.SUCCESS)
+        assertEquals(listOf(MigrationStatus.FAILED), seenByB)
+        assertEquals(MigrationStatus.SUCCESS, prefsWalletDatasource.observeMigrationStatus("walletA").first())
+        listening.cancel()
     }
 
     @Test

@@ -3,7 +3,6 @@ package jp.co.soramitsu.sora.accessibility
 import android.content.res.Configuration
 import android.graphics.Rect
 import android.graphics.drawable.AdaptiveIconDrawable
-import android.graphics.drawable.BitmapDrawable
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -18,14 +17,12 @@ import java.util.Locale
 import kotlin.math.roundToInt
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.xmlpull.v1.XmlPullParser
 import jp.co.soramitsu.common.R as CommonR
-import jp.co.soramitsu.common.util.Notification as WalletNotification
 import jp.co.soramitsu.feature_assets_impl.R as AssetsR
 import jp.co.soramitsu.feature_polkaswap_impl.R as PoolsR
 
@@ -64,17 +61,6 @@ class ResourceCompatibilityTest {
         assertTrue("The installed manifest must declare a round icon", roundIcon != 0)
         val icon = target.getDrawable(roundIcon)
         assertTrue("Round-icon launchers must receive the adaptive icon too", icon is AdaptiveIconDrawable)
-    }
-
-    @Test fun notificationBuildsWithABitmapLargeIconAndValidSmallIcon() {
-        val notification = WalletNotification.getBuilder(target).build()
-        val largeIcon = requireNotNull(notification.getLargeIcon())
-        val drawable = largeIcon.loadDrawable(target)
-        assertTrue("Notification large icons remain bitmap-backed", drawable is BitmapDrawable)
-        val bitmap = (drawable as BitmapDrawable).bitmap
-        assertFalse(bitmap.isRecycled)
-        assertTrue(bitmap.width > 0 && bitmap.height > 0)
-        assertNotNull(requireNotNull(notification.smallIcon).loadDrawable(target))
     }
 
     private fun checkRtlRow(

@@ -34,7 +34,7 @@ import jp.co.soramitsu.common.domain.NetworkFeeUnavailable
 import jp.co.soramitsu.common.domain.TransactionChainFailure
 import jp.co.soramitsu.common.domain.TransactionNodeRefusal
 import jp.co.soramitsu.common.domain.TransactionOutcome
-import jp.co.soramitsu.common.logger.FirebaseWrapper
+import jp.co.soramitsu.common.logger.WalletDiagnostics
 import jp.co.soramitsu.common.presentation.transaction.TransactionResultBadge
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common_wallet.domain.model.LiquidityData
@@ -140,7 +140,7 @@ class AddLiquidityViewModelTest {
     @OptIn(ExperimentalStdlibApi::class)
     @Before
     fun setUp() = runTest {
-        mockkObject(FirebaseWrapper)
+        mockkObject(WalletDiagnostics)
         given(
             assetsInteractor.isNotEnoughXorLeftAfterTransaction(
                 networkFeeInXor = any(),
@@ -192,7 +192,7 @@ class AddLiquidityViewModelTest {
     @After
     fun tearDown() {
         io.mockk.verify(exactly = expectedReportedErrors) {
-            FirebaseWrapper.recordException(any())
+            WalletDiagnostics.recordException(any())
         }
     }
 
@@ -201,6 +201,43 @@ class AddLiquidityViewModelTest {
         setUpViewModel(null)
         advanceUntilIdle()
         assertEquals("Choose tokens", viewModel.addState.value.btnState.text)
+    }
+
+    @Test
+    fun `empty catalog and missing base recover in place before choosing a pool`() = runTest {
+        given(assetsInteractor.subscribeAssetsActiveOfCurAccount()).willReturn(flowOf(emptyList()))
+        setUpViewModel(secondTokenId = null, firstTokenId = "missing")
+        advanceUntilIdle()
+
+        assertTrue(viewModel.addState.value.assetCatalogUnavailable)
+        assertFalse(viewModel.addState.value.btnState.enabled)
+        assertEquals(null, viewModel.errorFromResourceLiveData.value)
+        assertEquals(null, viewModel.alertDialogLiveData.value)
+
+        val catalog = kotlinx.coroutines.flow.MutableStateFlow(listOf(XOR_ASSET, VAL_ASSET))
+        given(assetsInteractor.subscribeAssetsActiveOfCurAccount()).willReturn(catalog)
+        viewModel.retryAssets()
+        advanceUntilIdle()
+
+        kVerify(assetsInteractor).updateBalanceVisibleAssets()
+        assertFalse(viewModel.addState.value.assetCatalogUnavailable)
+        assertEquals(null, viewModel.addState.value.assetState1)
+        viewModel.onToken1Change(XOR_ASSET.token.id)
+        viewModel.onAmount1Change(BigDecimal.ONE)
+        advanceUntilIdle()
+        assertEquals(XOR_ASSET.token.id, viewModel.addState.value.assetState1?.token?.id)
+        assertEquals(BigDecimal.ONE, viewModel.addState.value.assetState1?.amount)
+        assertFalse(viewModel.addState.value.btnState.enabled)
+
+        catalog.value = emptyList()
+        advanceUntilIdle()
+        assertTrue(viewModel.addState.value.assetCatalogUnavailable)
+        assertEquals(null, viewModel.addState.value.assetState1)
+        assertFalse(viewModel.addState.value.confirm.btnState.enabled)
+        assertEquals("", viewModel.addState.value.prices.fee)
+        viewModel.onToken1Change("stale")
+        viewModel.onToken2Change("stale")
+        assertEquals(null, viewModel.addState.value.assetState2)
     }
 
     @Test
@@ -941,7 +978,6 @@ class AddLiquidityViewModelTest {
             advanceUntilIdle()
             // The transaction page carries "waiting for confirmation" and follows the result.
             kVerify(assetsRouter).showTxResult(txHash, TransactionScreen.ADD_LIQUIDITY)
-            kVerify(router, never()).returnToHubFragment()
             assertEquals(null, viewModel.alertDialogLiveData.value)
         }
 
@@ -991,7 +1027,6 @@ class AddLiquidityViewModelTest {
             )
             kVerify(assetsRouter, never()).showTxResult(any(), any())
             // The dialog is on this screen, so the screen stays and offers Confirm again.
-            kVerify(router, never()).returnToHubFragment()
             assertTrue(confirmButton().enabled)
             assertFalse(confirmButton().loading)
         }
@@ -1207,7 +1242,8 @@ class AddLiquidityViewModelTest {
         setUpViewModel(null); advanceUntilIdle()
         viewModel.onToken1Change(XSTXAU_ASSET.token.id); advanceUntilIdle()
         assertEquals(XSTXAU_ASSET.token.id, viewModel.addState.value.assetState1!!.token.id)
-        assertTrue(viewModel.addState.value.assetState1!!.balance.startsWith("1 ("))
+        // XSTXAU has no fiat price here, so no empty "()" follows the balance.
+        assertEquals("1", viewModel.addState.value.assetState1!!.balance)
         viewModel.onToken1Change(XSTXAU_ASSET.token.id)
         assertEquals("Choose tokens", viewModel.addState.value.btnState.text)
     }

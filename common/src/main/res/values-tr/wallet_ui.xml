@@ -1,0 +1,5 @@
+<resources>
+    <string name="portfolio_exclusions">Dahil edilmeyen varlıklar</string>
+    <string name="portfolio_row_expanded">Genişletildi</string>
+    <string name="portfolio_row_collapsed">Daraltıldı</string>
+</resources>

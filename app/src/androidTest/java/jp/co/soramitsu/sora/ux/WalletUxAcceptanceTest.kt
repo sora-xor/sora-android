@@ -6,9 +6,6 @@ import jp.co.soramitsu.sora.testutil.NativeDisplayCapture
 
 import android.app.Activity
 import android.app.Instrumentation
-import android.content.ClipData
-import android.content.ClipboardManager
-import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Color
@@ -16,6 +13,7 @@ import android.graphics.HardwareRenderer
 import android.graphics.Rect
 import android.net.Uri
 import android.os.Bundle
+import android.os.Build
 import android.view.accessibility.AccessibilityNodeInfo
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.*
@@ -33,7 +31,6 @@ import io.mockk.mockkClass
 import jp.co.soramitsu.common.nexus.*
 import jp.co.soramitsu.common.presentation.compose.theme.SoraAppTheme
 import jp.co.soramitsu.common.util.QrCodeDecoder
-import jp.co.soramitsu.common_wallet.presentation.compose.states.CardsState
 import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
 import jp.co.soramitsu.feature_assets_impl.presentation.screens.scan.QRCodeScannerActivity
 import jp.co.soramitsu.feature_assets_impl.presentation.screens.scan.QrCodeScannerViewModel
@@ -41,7 +38,6 @@ import jp.co.soramitsu.feature_multiaccount_impl.presentation.OnboardingActivity
 import jp.co.soramitsu.feature_wallet_impl.data.nexus.*
 import jp.co.soramitsu.feature_wallet_impl.domain.CardsHubInteractorImpl
 import jp.co.soramitsu.feature_wallet_impl.presentation.cardshub.*
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.runBlocking
@@ -50,7 +46,6 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import java.io.File
-import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
 
 /**
@@ -65,6 +60,7 @@ import java.util.concurrent.atomic.AtomicReference
 class WalletUxAcceptanceTest {
     private val instrumentation = InstrumentationRegistry.getInstrumentation()
     private val context get() = instrumentation.targetContext
+    private val choosePhoto get() = context.getString(jp.co.soramitsu.common.R.string.common_upload_from_library)
     private val screenshotDirectory get() = File(context.getExternalFilesDir(null), "ux-acceptance").apply { mkdirs() }
     private val sampleRecipient = "SampleRecipientForUxOnly1234567890123456789012345678901234567890"
 
@@ -91,29 +87,34 @@ class WalletUxAcceptanceTest {
         photo.delete(); invalid.delete()
     }
 
-    @Test fun narrowSendPasteKeyboardAndExactReview() {
+    @Test fun narrowSendKeyboardAndExactReview() {
         ActivityScenario.launch(OnboardingActivity::class.java).use { scenario ->
             val state = mutableStateOf(NexusSendUiState(visible = true, network = sampleNetwork()))
             var confirmed = false
             scenario.onActivity { activity ->
-                (activity.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager)
-                    .setPrimaryClip(ClipData.newPlainText("sample recipient", sampleRecipient))
                 activity.setContent {
                     SoraAppTheme {
-                        NexusSendDialog(state.value, { state.value = state.value.copy(visible = false) },
-                            { state.value = state.value.copy(recipient = it) },
-                            { state.value = state.value.copy(amount = it) },
-                            { state.value = state.value.copy(prepared = prepared(state.value.recipient, state.value.amount)) },
-                            { confirmed = true }, { state.value = state.value.copy(prepared = null) }, {}, {})
+                        NexusSendScreen(
+                            state = state.value, xorIcon = null, xorName = "SORA",
+                            scrollState = androidx.compose.foundation.rememberScrollState(),
+                            recipientAvatar = { null }, dateTime = { "" },
+                            onRecipient = { state.value = state.value.copy(recipient = it.trim()) },
+                            onAmount = { state.value = state.value.copy(amount = it) },
+                            onScan = {},
+                            onReview = { state.value = state.value.copy(prepared = prepared(state.value.recipient, state.value.amount)) },
+                            onConfirm = { confirmed = true }, onClose = {}, onCopy = {}, onOpenExplorer = {}, onRecovery = {},
+                        )
                     }
                 }
             }
-            waitUntil { findText("Paste address") != null }
-            clickText("Paste address")
+            waitUntil { editableNodes().size >= 2 }
+            // The recipient field of SORA2's recipient screen takes a pasted or typed address.
+            assertTrue("Recipient input rejected ACTION_SET_TEXT", editableNodes().first().performAction(
+                AccessibilityNodeInfo.ACTION_SET_TEXT, Bundle().apply {
+                    putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, sampleRecipient)
+                }))
             waitUntil { state.value.recipient == sampleRecipient }
-            revealText("Amount in XOR")
-            val input = findText("Amount in XOR") ?: error("Amount input missing")
-            val editable = findEditable(input) ?: editableNodes().lastOrNull() ?: error("Amount input not editable")
+            val editable = editableNodes().last()
             editable.performAction(AccessibilityNodeInfo.ACTION_CLICK)
             assertTrue("Amount input rejected ACTION_SET_TEXT", editable.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, Bundle().apply {
                 putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, "12.5")
@@ -132,9 +133,10 @@ class WalletUxAcceptanceTest {
                 }
                 visible.get()
             } else android.util.Log.w("WalletUxAcceptanceTest", "No input method on this device; keyboard overlap not checked")
-            val titleBounds = Rect().also { requireNotNull(findText("Send XOR")).getBoundsInScreen(it) }
-            assertTrue("Keyboard must keep send header on screen", titleBounds.top >= 0 && titleBounds.bottom > 0)
-            capture("send-paste-keyboard")
+            val recipientBounds = Rect().also { requireNotNull(findText(sampleRecipient)).getBoundsInScreen(it) }
+            assertTrue("Keyboard must keep the recipient on screen", recipientBounds.top >= 0 && recipientBounds.bottom > 0)
+            capture("send-keyboard")
+            revealText("Review")
             clickText("Review")
             waitUntil { state.value.prepared != null }
             capture("send-review-top")
@@ -143,8 +145,9 @@ class WalletUxAcceptanceTest {
             assertEquals(sampleRecipient, state.value.recipient)
             capture("send-exact-review")
             assertFalse(confirmed)
-            clickText("Edit transfer")
-            waitUntil { state.value.prepared == null }
+            // Back from the review is the view model's edit; the draft stays.
+            instrumentation.runOnMainSync { state.value = state.value.copy(prepared = null) }
+            waitUntil { findText("Total: 12.51 XOR") == null }
             assertEquals(sampleRecipient, state.value.recipient)
             assertEquals("12.5", state.value.amount)
         }
@@ -162,8 +165,8 @@ class WalletUxAcceptanceTest {
             Instrumentation.ActivityResult(Activity.RESULT_OK, Intent().setData(androidx.core.content.FileProvider.getUriForFile(context, "${context.packageName}.soraFileProvider", photo))), true)
         try {
             ActivityScenario.launchActivityForResult<QRCodeScannerActivity>(intent).use { scenario ->
-                waitUntil { findText("Upload from library") != null }
-                clickText("Upload from library")
+                waitUntil { findText(choosePhoto) != null }
+                clickText(choosePhoto)
                 waitUntil { scenario.state == Lifecycle.State.DESTROYED }
                 assertEquals(1, monitor.hits)
                 assertEquals(sampleRecipient, contract.parseResult(scenario.result.resultCode, scenario.result.resultData))
@@ -175,8 +178,8 @@ class WalletUxAcceptanceTest {
             Instrumentation.ActivityResult(Activity.RESULT_CANCELED, null), true)
         try {
             ActivityScenario.launchActivityForResult<QRCodeScannerActivity>(intent).use { scenario ->
-                waitUntil { findText("Upload from library") != null }
-                clickText("Upload from library")
+                waitUntil { findText(choosePhoto) != null }
+                clickText(choosePhoto)
                 instrumentation.waitForIdleSync()
                 assertEquals(Lifecycle.State.RESUMED, scenario.state)
                 assertEquals(1, cancelled.hits)
@@ -201,8 +204,8 @@ class WalletUxAcceptanceTest {
         }, Instrumentation.ActivityResult(Activity.RESULT_OK, Intent().setData(uri)), true)
         try {
             ActivityScenario.launchActivityForResult<QRCodeScannerActivity>(contract.createIntent(context, Unit)).use { scenario ->
-                waitUntil { findText("Upload from library") != null }
-                clickText("Upload from library")
+                waitUntil { findText(choosePhoto) != null }
+                clickText(choosePhoto)
                 val failed = java.util.concurrent.atomic.AtomicBoolean(false)
                 waitUntil {
                     scenario.onActivity { activity ->
@@ -215,7 +218,7 @@ class WalletUxAcceptanceTest {
                 }
                 assertEquals(1, monitor.hits)
                 assertEquals(Lifecycle.State.RESUMED, scenario.state)
-                assertNotNull(findText("Upload from library"))
+                assertNotNull(findText(choosePhoto))
                 capture("scanner-invalid-photo-recovery")
                 scenario.onActivity { it.finish() }
                 assertNull(contract.parseResult(scenario.result.resultCode, scenario.result.resultData))
@@ -314,13 +317,18 @@ class WalletUxAcceptanceTest {
                     activity.setContent {
                         val state by vm.nexusSend.collectAsState()
                         SoraAppTheme {
-                            NexusSendDialog(state, {}, vm::setNexusRecipient, vm::setNexusAmount,
-                                {}, {}, {}, {}, {})
+                            NexusSendScreen(
+                                state = state, xorIcon = null, xorName = null,
+                                scrollState = androidx.compose.foundation.rememberScrollState(),
+                                recipientAvatar = { null }, dateTime = { "" },
+                                onRecipient = vm::setNexusRecipient, onAmount = vm::setNexusAmount,
+                                onScan = {}, onReview = {}, onConfirm = {}, onClose = {}, onCopy = {}, onOpenExplorer = {}, onRecovery = {},
+                            )
                         }
                     }
                 }
                 waitUntil { findText("Camera access is unavailable") != null }
-                assertNotNull(findText("Paste address"))
+                assertNotNull(findText(sampleRecipient))
                 capture("send-denied-preserved-draft")
                 // Changing wallet while a result is queued must not apply the previous wallet's scan.
                 scenario.onActivity {
@@ -340,43 +348,50 @@ class WalletUxAcceptanceTest {
         }
     }
 
-    @Test fun networkPortfolioRoutesActivityReceiveAndSendForSelectedWallet() {
+    @Test fun networkPortfolioCardOpensTheSelectedWalletsXorPage() {
         val network = sampleNetwork()
-        val send = mutableStateOf(NexusSendUiState())
+        val opened = mutableListOf<NexusPortfolioBalance>()
+        val page = mutableStateOf<NexusPortfolioBalance?>(null)
+        val actions = mutableListOf<String>()
         ActivityScenario.launch(OnboardingActivity::class.java).use { scenario ->
             scenario.onActivity { activity ->
                 activity.setContent {
                     SoraAppTheme {
-                        OtherNetworksCard(
-                            balances = listOf(network), xorIcon = null, xorName = null,
-                            isNexusBalanceCurrent = { it.walletId == network.walletId },
-                            onSend = { selected -> send.value = NexusSendUiState(visible = true, network = selected) },
-                            onRecovery = {}, onRefresh = {}, onLoadMore = {}, walletId = network.walletId,
-                        )
-                        NexusSendDialog(send.value, { send.value = NexusSendUiState() }, {}, {}, {}, {}, {}, {}, {})
+                        val shown = page.value
+                        if (shown == null) {
+                            OtherNetworksCard(
+                                balances = listOf(network, network.copy(walletId = "other-wallet", address = "OtherWalletAddressForLayoutOnly")),
+                                xorIcon = null, xorName = null,
+                                isNexusBalanceCurrent = { it.walletId == network.walletId },
+                                onOpen = { selected -> opened += selected; page.value = selected },
+                            )
+                        } else {
+                            NexusAssetScreen(
+                                balance = shown, xorIcon = null, xorName = "SORA",
+                                scrollState = androidx.compose.foundation.rememberScrollState(),
+                                onRefresh = {}, onSend = { actions += "send" }, onReceive = { actions += "receive" },
+                                onLoadMore = {}, onTransferClick = {}, onAddressClick = {}, onOpenExplorer = {}, onRecovery = {},
+                            )
+                        }
                     }
                 }
             }
             waitUntil { findText("Taira") != null }
+            assertNull(findText("OtherWalletAddressForLayoutOnly"))
             clickText("Taira")
-            waitUntil { findText(context.getString(jp.co.soramitsu.common.R.string.wallet_no_activity)) != null }
-            capture("network-empty-activity")
+            waitUntil { findText(context.getString(jp.co.soramitsu.common.R.string.asset_details_liquid_balance)) != null }
+            assertEquals(listOf(network), opened)
+            capture("network-xor-page")
             clickText("Receive")
-            waitUntil { findText("Receive XOR") != null }
-            assertNotNull(findText(network.address))
-            capture("network-receive")
-            clickText("Close")
-            waitUntil { findText(context.getString(jp.co.soramitsu.common.R.string.wallet_no_activity)) != null }
             clickText("Send")
-            waitUntil { findText("Send XOR") != null }
-            assertEquals(network, send.value.network)
-            capture("network-to-send")
+            instrumentation.waitForIdleSync()
+            assertEquals(listOf("receive", "send"), actions)
         }
     }
 
-    @Test fun sendAndReceiveAskWhichNetworkOnlyWhenThereIsAChoice() {
+    @Test fun networkPickerListsEveryNetworkAndOpensThePickedOne() {
         val taira = sampleNetwork()
-        val opened = mutableListOf<Pair<WalletNetworkAction, WalletNetworkId>>()
+        val picked = mutableListOf<WalletNetworkChoice>()
         val directory = WalletNetworkDirectory.current
         fun choices(action: WalletNetworkAction, withTaira: Boolean) = WalletNetworkChoices.make(
             action = action,
@@ -386,171 +401,142 @@ class WalletUxAcceptanceTest {
             canSend = { it != WalletNetworkId.MINAMOTO },
             directory = directory,
         )
-        // The home's own decision (networkStart), with the question drawn by its real sheet.
-        val sheet = mutableStateOf<Pair<WalletNetworkAction, List<WalletNetworkChoice>>?>(null)
-        fun start(action: WalletNetworkAction, withTaira: Boolean) {
-            when (val start = networkStart(choices(action, withTaira))) {
-                NetworkStart.Dashboard -> opened += action to WalletNetworkId.SORA2
-                is NetworkStart.Open -> opened += action to start.choice.id
-                is NetworkStart.Ask -> sheet.value = action to start.choices
-            }
-        }
+        val asking = mutableStateOf<WalletNetworkAction?>(WalletNetworkAction.RECEIVE)
         ActivityScenario.launch(OnboardingActivity::class.java).use { scenario ->
             scenario.onActivity { activity ->
                 activity.setContent {
                     SoraAppTheme {
-                        sheet.value?.let { (action, list) ->
+                        asking.value?.let { action ->
                             NetworkPickerSheet(
                                 action = action,
-                                choices = list,
-                                onPick = { choice ->
-                                    sheet.value = null
-                                    opened += action to choice.id
-                                },
-                                onClose = { sheet.value = null },
+                                choices = choices(action, withTaira = true),
+                                onPick = { choice -> picked += choice; asking.value = null },
+                                onClose = { asking.value = null },
                             )
                         }
                     }
                 }
             }
-            instrumentation.runOnMainSync { start(WalletNetworkAction.RECEIVE, withTaira = true) }
             waitUntil { findText("Receive on") != null }
             assertNotNull(findText("Main"))
             assertNotNull(findText("Coming soon"))
             assertNotNull(findText("Testnet"))
             capture("network-choice-receive")
             clickText("Taira")
-            waitUntil { opened.isNotEmpty() }
-            assertEquals(WalletNetworkAction.RECEIVE to WalletNetworkId.TAIRA, opened.last())
+            waitUntil { picked.isNotEmpty() }
+            assertEquals(WalletNetworkId.TAIRA, picked.last().id)
             waitUntil { findText("Receive on") == null }
-            instrumentation.runOnMainSync { start(WalletNetworkAction.SEND, withTaira = true) }
+            instrumentation.runOnMainSync { asking.value = WalletNetworkAction.SEND }
             waitUntil { findText("Send on") != null }
             assertNotNull(findText("Sending on SORA Nexus starts when the network launches."))
             capture("network-choice-send")
             clickText("Close")
             waitUntil { findText("Send on") == null }
-            // Without Taira only SORA2 is live: Send is the dashboard's own, with no question.
-            instrumentation.runOnMainSync { start(WalletNetworkAction.SEND, withTaira = false) }
-            instrumentation.waitForIdleSync()
-            assertEquals(WalletNetworkAction.SEND to WalletNetworkId.SORA2, opened.last())
-            assertNull(findText("Send on"))
-        }
-    }
-
-    @Test fun portfolioEditingStaysReachableWithEveryOptionalCardHidden() {
-        val edits = AtomicInteger()
-        ActivityScenario.launch(OnboardingActivity::class.java).use { scenario ->
-            scenario.onActivity { activity ->
-                activity.setContent {
-                    SoraAppTheme {
-                        PortfolioSecondaryCards(
-                            state = CardsState(accountAddress = "sample-wallet"),
-                            sora2Portfolio = null,
-                            nexusPortfolio = emptyList(),
-                            onPoolClick = {},
-                            onOpenFullCardClick = {},
-                            onReferralClick = {},
-                            onReferralClose = {},
-                            onBackupBannerClick = {},
-                            onEdit = { edits.incrementAndGet() },
-                            onNexusSend = {},
-                            onNexusRefresh = {},
-                            onNexusLoadMore = {},
-                            isNexusBalanceCurrent = { false },
-                        )
-                    }
-                }
-            }
-            val edit = context.getString(jp.co.soramitsu.common.R.string.edit_view)
-            waitUntil { findText(edit) != null }
-            clickText(edit)
-            waitUntil { edits.get() == 1 }
+            assertEquals(1, picked.size)
+            // Without Taira only SORA2 is live: there is nothing to ask, Send opens it straight away.
+            assertEquals(
+                WalletNetworkId.SORA2,
+                WalletNetworkChoices.onlyChoice(choices(WalletNetworkAction.SEND, withTaira = false))?.id,
+            )
         }
     }
 
     @Test fun normalLocalSampleWalletReachesHomeAndCenteredPolkaswap() {
         // A disposable local account is created through the production onboarding model.
         // No phrase is read/exported, and no transport or signing action is invoked.
-        ActivityScenario.launch(OnboardingActivity::class.java).use { scenario ->
-            waitUntil { findText("Create account") != null }
-            clickText("Create account")
-            scenario.onActivity { activity ->
-                activity.viewModel.onAccountNameChanged(androidx.compose.ui.text.input.TextFieldValue("UX sample wallet"))
-                val nav = OnboardingActivity::class.java.getDeclaredField("navController").apply { isAccessible = true }
-                    .get(activity) as androidx.navigation.NavController
-                activity.viewModel.onCreateAccountContinueClicked(nav)
-            }
-            // The new wallet is an in-memory draft until the flow finishes; the backup screen state
-            // is published once that draft exists. Only its presence is checked, never the words.
-            val generated = java.util.concurrent.atomic.AtomicBoolean(false)
-            waitUntil {
+        // Other device suites can already have accepted the Polkaswap notice.
+        // Scope this first-run preference and restore its exact presence afterward.
+        val preferences = jp.co.soramitsu.common.data.SoraPreferences(context)
+        val disclaimerKey = "key_disclaimer_visibility"
+        val previousDisclaimer = runBlocking { preferences.getBooleanSnapshot(setOf(disclaimerKey))[disclaimerKey] }
+        runBlocking { preferences.putBoolean(disclaimerKey, true) }
+        var createdMain: jp.co.soramitsu.feature_main_impl.presentation.MainActivity? = null
+        // Onboarding is opened here directly; in the app the startup screen opens it and gives
+        // this process its pass then, so the main screen that follows opens in place.
+        val passBefore = jp.co.soramitsu.common.account.WalletStartupPass.isGranted()
+        jp.co.soramitsu.common.account.WalletStartupPass.grant()
+        try {
+            ActivityScenario.launch(OnboardingActivity::class.java).use { scenario ->
+                waitUntil { findText("Create account") != null }
+                clickText("Create account")
                 scenario.onActivity { activity ->
-                    generated.set(activity.viewModel.passphraseCardState.value?.isCreatingFlow == true)
+                    activity.viewModel.onAccountNameChanged(androidx.compose.ui.text.input.TextFieldValue("UX sample wallet"))
+                    val nav = OnboardingActivity::class.java.getDeclaredField("navController").apply { isAccessible = true }
+                        .get(activity) as androidx.navigation.NavController
+                    activity.viewModel.onCreateAccountContinueClicked(nav)
                 }
-                generated.get()
-            }
-            scenario.onActivity { it.viewModel.skipDialogConfirm(it) }
-            lateinit var main: jp.co.soramitsu.feature_main_impl.presentation.MainActivity
-            waitUntil {
-                var found = false
-                instrumentation.runOnMainSync {
-                    val resumed = androidx.test.runner.lifecycle.ActivityLifecycleMonitorRegistry.getInstance()
-                        .getActivitiesInStage(androidx.test.runner.lifecycle.Stage.RESUMED)
-                    val candidate = resumed.filterIsInstance<jp.co.soramitsu.feature_main_impl.presentation.MainActivity>().firstOrNull()
-                    if (candidate != null) { main = candidate; found = true }
-                }
-                found
-            }
-            lateinit var pin: jp.co.soramitsu.feature_main_impl.presentation.pincode.PincodeFragment
-            waitUntil {
-                var found = false
-                instrumentation.runOnMainSync {
-                    fun visit(fragments: List<androidx.fragment.app.Fragment>) {
-                        fragments.forEach { fragment ->
-                            if (fragment is jp.co.soramitsu.feature_main_impl.presentation.pincode.PincodeFragment) {
-                                pin = fragment; found = true
-                            } else visit(fragment.childFragmentManager.fragments)
-                        }
+                // The new wallet is an in-memory draft until the flow finishes; the backup screen state
+                // is published once that draft exists. Only its presence is checked, never the words.
+                val generated = java.util.concurrent.atomic.AtomicBoolean(false)
+                waitUntil {
+                    scenario.onActivity { activity ->
+                        generated.set(activity.viewModel.passphraseCardState.value?.isCreatingFlow == true)
                     }
-                    visit(main.supportFragmentManager.fragments)
+                    generated.get()
                 }
-                found
-            }
-            // The device may not reach the selected RPC. Supply only the connection
-            // observation to the actual PIN model; its local migration admission still runs.
-            instrumentation.runOnMainSync {
-                val delegate = pin.viewModel.javaClass.getDeclaredField("state\$delegate")
-                    .apply { isAccessible = true }.get(pin.viewModel) as MutableState<jp.co.soramitsu.feature_main_impl.presentation.pincode.PinCodeScreenState>
-                delegate.value = delegate.value.copy(isConnected = true)
-            }
-            repeat(2) {
+                scenario.onActivity { it.viewModel.skipDialogConfirm(it) }
+                lateinit var main: jp.co.soramitsu.feature_main_impl.presentation.MainActivity
+                waitUntil {
+                    var found = false
+                    instrumentation.runOnMainSync {
+                        val resumed = androidx.test.runner.lifecycle.ActivityLifecycleMonitorRegistry.getInstance()
+                            .getActivitiesInStage(androidx.test.runner.lifecycle.Stage.RESUMED)
+                        val candidate = resumed.filterIsInstance<jp.co.soramitsu.feature_main_impl.presentation.MainActivity>().firstOrNull()
+                        if (candidate != null) { main = candidate; createdMain = candidate; found = true }
+                    }
+                    found
+                }
+                lateinit var pin: jp.co.soramitsu.feature_main_impl.presentation.pincode.PincodeFragment
+                waitUntil {
+                    var found = false
+                    instrumentation.runOnMainSync {
+                        fun visit(fragments: List<androidx.fragment.app.Fragment>) {
+                            fragments.forEach { fragment ->
+                                if (fragment is jp.co.soramitsu.feature_main_impl.presentation.pincode.PincodeFragment) {
+                                    pin = fragment; found = true
+                                } else visit(fragment.childFragmentManager.fragments)
+                            }
+                        }
+                        visit(main.supportFragmentManager.fragments)
+                    }
+                    found
+                }
+                repeat(2) {
+                    instrumentation.runOnMainSync {
+                        repeat(pin.viewModel.state.maxDotsCount) { pin.viewModel.pinCodeNumberClicked("1") }
+                    }
+                    instrumentation.waitForIdleSync()
+                }
+                // The PIN's local account check and the first home render can take over 10 seconds in the
+                // fully instrumented suite on a busy host; it took 28 s for the whole class alone.
+                waitUntil(timeoutMillis = 60_000) { findText("Wallet") != null }
+                capture("normal-sample-wallet-home")
                 instrumentation.runOnMainSync {
-                    repeat(pin.viewModel.state.maxDotsCount) { pin.viewModel.pinCodeNumberClicked("1") }
+                    val fab = main.findViewById<android.view.View>(jp.co.soramitsu.feature_main_impl.R.id.fabMain)
+                    val location = IntArray(2); fab.getLocationOnScreen(location)
+                    val displayWidth = main.resources.displayMetrics.widthPixels
+                    assertTrue(kotlin.math.abs(location[0] + fab.width / 2 - displayWidth / 2) <= 2)
+                    assertTrue(fab.performClick())
                 }
-                instrumentation.waitForIdleSync()
+                // The fully instrumented suite can spend over 15 seconds rendering this
+                // first navigation. Wait for the actual notice, with a bounded deadline.
+                waitUntil(timeoutMillis = 60_000) { findText("Disclaimer") != null }
+                capture("normal-polkaswap-disclaimer")
+                revealText("Close")
+                clickText("Close")
+                // Swap shows the account's assets when the device reaches the node, otherwise it says they
+                // could not be loaded. The reverse-tokens control is on the Swap screen in both cases.
+                waitUntil(timeoutMillis = 60_000) { findText("Disclaimer") == null && findText(context.getString(jp.co.soramitsu.common.R.string.wallet_swap_direction)) != null }
+                capture("normal-centered-polkaswap")
             }
-            waitUntil { findText("Wallet") != null }
-            capture("normal-sample-wallet-home")
-            // A wallet set up on this version never gets the one-time upgrade-complete sheet.
-            assertNull(findText(context.getString(jp.co.soramitsu.common.R.string.safe_mode_whats_new_title)))
-            instrumentation.runOnMainSync {
-                val fab = main.findViewById<android.view.View>(jp.co.soramitsu.feature_main_impl.R.id.fabMain)
-                val location = IntArray(2); fab.getLocationOnScreen(location)
-                val displayWidth = main.resources.displayMetrics.widthPixels
-                assertTrue(kotlin.math.abs(location[0] + fab.width / 2 - displayWidth / 2) <= 2)
-                assertTrue(fab.performClick())
+        } finally {
+            instrumentation.runOnMainSync { createdMain?.finish() }
+            if (!passBefore) jp.co.soramitsu.common.account.WalletStartupPass.revokeForTest()
+            runBlocking {
+                if (previousDisclaimer == null) preferences.clear(disclaimerKey)
+                else preferences.putBoolean(disclaimerKey, previousDisclaimer)
+                assertEquals(previousDisclaimer, preferences.getBooleanSnapshot(setOf(disclaimerKey))[disclaimerKey])
             }
-            // This walkthrough starts after pm clear, so wait for the delayed first-run
-            // disclaimer before checking the final route (avoid capturing during navigation).
-            waitUntil { findText("Disclaimer") != null }
-            capture("normal-polkaswap-disclaimer")
-            revealText("Close")
-            clickText("Close")
-            // Swap shows the account's assets when the device reaches the node, otherwise it says they
-            // could not be loaded. The reverse-tokens control is on the Swap screen in both cases.
-            waitUntil { findText("Disclaimer") == null && findText(context.getString(jp.co.soramitsu.common.R.string.wallet_swap_direction)) != null }
-            capture("normal-centered-polkaswap")
-            instrumentation.runOnMainSync { main.finish() }
         }
     }
 
@@ -607,8 +593,8 @@ class WalletUxAcceptanceTest {
             recipient, amount, "xor", "0.01", "125.25", "fixture", request, quote)
     }
 
-    private fun waitUntil(predicate: () -> Boolean) {
-        val deadline = System.nanoTime() + 10_000_000_000L
+    private fun waitUntil(timeoutMillis: Long = 10_000, predicate: () -> Boolean) {
+        val deadline = System.nanoTime() + timeoutMillis * 1_000_000L
         while (!predicate()) {
             if (System.nanoTime() >= deadline) {
                 capture("failure")
@@ -619,13 +605,20 @@ class WalletUxAcceptanceTest {
         instrumentation.waitForIdleSync()
     }
 
+    private fun accessibilityRoot(): AccessibilityNodeInfo? {
+        // Compose can replace a dialog's semantic tree while UiAutomation still
+        // caches the previous one. Read the current window for every assertion.
+        if (Build.VERSION.SDK_INT >= 33) instrumentation.uiAutomation.clearCache()
+        return instrumentation.uiAutomation.rootInActiveWindow?.also { it.refresh() }
+    }
+
     private fun findText(text: String): AccessibilityNodeInfo? {
         fun visit(node: AccessibilityNodeInfo): AccessibilityNodeInfo? {
             if (node.text?.toString()?.contains(text) == true || node.contentDescription?.toString()?.contains(text) == true) return node
             for (index in 0 until node.childCount) node.getChild(index)?.let { visit(it)?.let { match -> return match } }
             return null
         }
-        return instrumentation.uiAutomation.rootInActiveWindow?.let(::visit)
+        return accessibilityRoot()?.let(::visit)
     }
 
     private fun findEditable(node: AccessibilityNodeInfo): AccessibilityNodeInfo? {
@@ -640,7 +633,7 @@ class WalletUxAcceptanceTest {
             if (node.isEditable || node.actionList.any { it.id == AccessibilityNodeInfo.ACTION_SET_TEXT }) result += node
             for (i in 0 until node.childCount) node.getChild(i)?.let(::visit)
         }
-        instrumentation.uiAutomation.rootInActiveWindow?.let(::visit)
+        accessibilityRoot()?.let(::visit)
         return result
     }
 
@@ -657,7 +650,7 @@ class WalletUxAcceptanceTest {
                 for (i in 0 until node.childCount) node.getChild(i)?.let { if (scroll(it)) return true }
                 return false
             }
-            instrumentation.uiAutomation.rootInActiveWindow?.let(::scroll)
+            accessibilityRoot()?.let(::scroll)
             instrumentation.waitForIdleSync(); Thread.sleep(250)
         }
         capture("failure-reveal")
@@ -687,7 +680,7 @@ class WalletUxAcceptanceTest {
                 .append(" bounds=").append(Rect().also { node.getBoundsInScreen(it) }).append("\n")
             for (index in 0 until node.childCount) node.getChild(index)?.let { describe(it, depth + 1) }
         }
-        instrumentation.uiAutomation.rootInActiveWindow?.let { describe(it, 0) }
+        accessibilityRoot()?.let { describe(it, 0) }
         File(screenshotDirectory, "$name-$suffix.txt").writeText(tree.toString())
         val bitmap = NativeDisplayCapture.capture()
         try {

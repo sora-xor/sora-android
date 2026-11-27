@@ -5,19 +5,21 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <com.airbnb.lottie.LottieAnimationView
-        android:id="@+id/animation_view"
+    <!--
+      The launch scene (TenmonFlight): the mark comes down onto the light launch page and rings of
+      mother of pearl spread under it. It fills the window, under everything else on this screen.
+    -->
+    <FrameLayout
+        android:id="@+id/launchScene"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:scaleType="centerCrop"
+        android:importantForAccessibility="noHideDescendants"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:lottie_autoPlay="false"
-        app:lottie_rawRes="@raw/splash_animation" />
+        app:layout_constraintTop_toTopOf="parent" />
 
-    <!-- Slow start (design spec 8.1): text.secondary on the canvas, then a thin cyan line. -->
+    <!-- Slow start (design spec 8.1): ink on the light launch page, then a thin red line. -->
     <TextView
         android:id="@+id/loadingDisclaimerTextView"
         android:layout_width="wrap_content"
@@ -27,7 +29,7 @@
         android:fontFamily="@font/inter_regular"
         android:gravity="center"
         android:textSize="14sp"
-        android:textColor="?attr/contentSecondary"
+        android:textColor="@color/launch_ink"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -42,7 +44,7 @@
         android:layout_height="4dp"
         android:layout_marginTop="@dimen/x2"
         android:indeterminate="true"
-        android:indeterminateTint="@color/neon_cyan"
+        android:indeterminateTint="@color/launch_red"
         android:visibility="gone"
         app:layout_constraintEnd_toEndOf="@+id/loadingDisclaimerTextView"
         app:layout_constraintStart_toStartOf="@+id/loadingDisclaimerTextView"

@@ -19,6 +19,8 @@ limitations under the License.
 
 package jp.co.soramitsu.feature_assets_impl.presentation.components.compose.receiverequest
 
+import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.layout.widthIn
 import android.graphics.Bitmap
 import android.graphics.drawable.Drawable
 import androidx.compose.foundation.Image
@@ -146,7 +148,9 @@ fun RequestTokenConfirmScreen(
         verticalArrangement = Arrangement.spacedBy(Dimens.x2)
     ) {
         LoadableContentCard(
+            // As on Receive: the code is no larger than on the largest phones, also on a tablet.
             modifier = Modifier
+                .widthIn(max = 400.dp)
                 .fillMaxWidth()
                 .aspectRatio(1f),
             innerPadding = PaddingValues(
@@ -179,6 +183,7 @@ fun RequestTokenConfirmScreen(
                     image = state.userAddressAvatar,
                     bodyText = state.userAddressBody
                 ),
+                copyAddress = true,
                 onClick = onUserAddressClick
             )
         }

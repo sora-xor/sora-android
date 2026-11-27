@@ -35,8 +35,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
-import jp.co.soramitsu.common.domain.DEFAULT_ICON_URI
-import jp.co.soramitsu.common.presentation.compose.TokenIcon
+import jp.co.soramitsu.common.presentation.compose.TokenBadge
+import jp.co.soramitsu.common.domain.AssetAmountInputState
+import jp.co.soramitsu.common.presentation.compose.components.previewAssetAmountInputState
 import jp.co.soramitsu.ui_core.component.button.properties.Size
 import jp.co.soramitsu.common.presentation.compose.neon.ContentCard
 import jp.co.soramitsu.ui_core.resources.Dimens
@@ -46,9 +47,7 @@ import jp.co.soramitsu.ui_core.theme.customTypography
 @Composable
 internal fun SwapAmountSquare(
     modifier: Modifier,
-    icon: String,
-    amount: String,
-    amountFiat: String,
+    state: AssetAmountInputState?,
 ) {
     ContentCard(
         modifier = modifier,
@@ -59,27 +58,24 @@ internal fun SwapAmountSquare(
                 .wrapContentHeight(),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            TokenIcon(
-                uri = icon,
-                size = Size.Small,
-            )
+            state?.let {
+                TokenBadge(it.token.id, it.token.symbol, it.token.iconFile, Size.Small)
+            }
             Text(
                 modifier = Modifier
                     .padding(vertical = Dimens.x1)
                     .fillMaxWidth()
                     .wrapContentHeight()
                     .padding(horizontal = Dimens.x1),
-                text = amount,
+                text = state?.let { listOfNotNull(it.amount?.toPlainString(), it.token.symbol).joinToString(" ") }.orEmpty(),
                 textAlign = TextAlign.Center,
-                maxLines = 1,
                 color = MaterialTheme.customColors.fgPrimary,
                 style = MaterialTheme.customTypography.displayS,
             )
             Text(
                 modifier = Modifier
                     .wrapContentSize(),
-                text = amountFiat,
-                maxLines = 1,
+                text = state?.amountFiat.orEmpty(),
                 style = MaterialTheme.customTypography.textXSBold,
                 color = MaterialTheme.customColors.fgSecondary,
             )
@@ -93,16 +89,12 @@ private fun Preview() {
     Row {
         SwapAmountSquare(
             modifier = Modifier.weight(1f),
-            icon = DEFAULT_ICON_URI,
-            amount = "123.144 XOR",
-            amountFiat = "$234.34",
+            state = previewAssetAmountInputState.copy(amount = "123.144".toBigDecimal(), amountFiat = "$234.34"),
         )
         Spacer(modifier = Modifier.size(Dimens.x2))
         SwapAmountSquare(
             modifier = Modifier.weight(1f),
-            icon = DEFAULT_ICON_URI,
-            amount = "123.144 XOR",
-            amountFiat = "$234.34",
+            state = previewAssetAmountInputState.copy(amount = "123.144".toBigDecimal(), amountFiat = "$234.34"),
         )
     }
 }

@@ -28,7 +28,7 @@ import jp.co.soramitsu.androidfoundation.testing.MainCoroutineRule
 import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.account.Sora2AddressCodec
 import jp.co.soramitsu.common.account.WalletRecoveryCapabilityGate
-import jp.co.soramitsu.common.logger.FirebaseWrapper
+import jp.co.soramitsu.common.logger.WalletDiagnostics
 import jp.co.soramitsu.common.util.CryptoAssistant
 import jp.co.soramitsu.common.util.KeyMaterialUnavailableException
 import jp.co.soramitsu.common.util.WalletDecryptionException
@@ -100,7 +100,7 @@ class CredentialsRepositoryTest {
     fun setup() {
         mockkObject(MnemonicCreator)
         mockkObject(SubstrateKeypairFactory)
-        mockkObject(FirebaseWrapper)
+        mockkObject(WalletDiagnostics)
         mockkObject(SubstrateSeedFactory)
         every {
             SubstrateSeedFactory.deriveSeed(
@@ -113,7 +113,7 @@ class CredentialsRepositoryTest {
         )
         every { SubstrateKeypairFactory.generate(any(), any()) } returns keypair
         every { SubstrateKeypairFactory.generate(any(), any(), any()) } returns keypair
-        every { FirebaseWrapper.log(FirebaseWrapper.Breadcrumb.KEYS_CREATED) } just runs
+        every { WalletDiagnostics.log(WalletDiagnostics.Breadcrumb.KEYS_CREATED) } just runs
 
         // The stored-secret rules themselves are covered with fakes instead of mocks in
         // CredentialsRepositoryStoredSecretsTest.
@@ -129,7 +129,7 @@ class CredentialsRepositoryTest {
     @After
     fun releaseStaticMocks() {
         // Static mocks would otherwise leak into every test class run later in the same JVM.
-        unmockkObject(MnemonicCreator, SubstrateKeypairFactory, FirebaseWrapper, SubstrateSeedFactory)
+        unmockkObject(MnemonicCreator, SubstrateKeypairFactory, WalletDiagnostics, SubstrateSeedFactory)
     }
 
     @Test

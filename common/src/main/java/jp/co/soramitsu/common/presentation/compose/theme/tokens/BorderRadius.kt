@@ -22,17 +22,18 @@ package jp.co.soramitsu.common.presentation.compose.theme.tokens
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
+/** Corners are small: a control's is 12, a sheet of glass's 18. */
 object BorderRadius {
 
     val S: Dp
-        get() = 16.dp
+        get() = 12.dp
 
     val M: Dp
-        get() = 24.dp
+        get() = 16.dp
 
     val ML: Dp
-        get() = 28.dp
+        get() = 18.dp
 
     val L: Dp
-        get() = 32.dp
+        get() = 18.dp
 }

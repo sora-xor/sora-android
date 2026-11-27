@@ -7,7 +7,6 @@ import io.mockk.every
 import io.mockk.mockk
 import java.net.UnknownHostException
 import jp.co.soramitsu.common.data.SoraPreferences
-import jp.co.soramitsu.common.util.ReleaseSurfacePolicy
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
@@ -19,15 +18,7 @@ class ProductionFeatureManagerTest {
     private val preferences = mockk<SoraPreferences>(relaxed = true)
     private val indexer = mockk<PolkaswapIndexerClient>()
 
-    private fun manager(
-        productionFlavor: Boolean = false,
-        productionHidesSurfaces: Boolean = ReleaseSurfacePolicy.PRODUCTION_HIDES_SURFACES,
-    ) =
-        ProductionFeatureManager(
-            preferences,
-            indexer,
-            ReleaseSurfacePolicy.surfaces(productionFlavor, productionHidesSurfaces),
-        )
+    private fun manager() = ProductionFeatureManager(preferences, indexer)
 
     private fun config(enabled: Boolean) = PiMobileConfig(
         blockExplorerUrl = "https://sorametrics.org/sorav2?tab=extrinsics&q={transaction}",
@@ -119,22 +110,12 @@ class ProductionFeatureManagerTest {
         coEvery { preferences.getBooleanSnapshot(any()) } returns emptyMap()
         coEvery { indexer.requireMobileConfig() } throws UnknownHostException("offline")
 
-        for (productionFlavor in listOf(false, true)) {
-            val state = manager(productionFlavor = productionFlavor).getState()
-            assertThat(state.nexusAvailable).isTrue()
-            assertThat(state.polkamarktVisible).isTrue()
-            assertThat(state.tairaVisible).isTrue()
-            assertThat(state.nexusSendsAvailable).isFalse()
-            assertThat(state.polkamarktMutationsAvailable).isFalse()
-        }
-    }
-
-    @Test
-    fun `the store policy keeps the never-cached tester defaults out of production`() = runTest {
-        coEvery { preferences.getBooleanSnapshot(any()) } returns emptyMap()
-        coEvery { indexer.requireMobileConfig() } throws UnknownHostException("offline")
-
-        manager(productionFlavor = true, productionHidesSurfaces = true).getState().assertAllOff()
+        val state = manager().getState()
+        assertThat(state.nexusAvailable).isTrue()
+        assertThat(state.polkamarktVisible).isTrue()
+        assertThat(state.tairaVisible).isTrue()
+        assertThat(state.nexusSendsAvailable).isFalse()
+        assertThat(state.polkamarktMutationsAvailable).isFalse()
     }
 
     @Test
@@ -155,71 +136,40 @@ class ProductionFeatureManagerTest {
     }
 
     @Test
-    fun `the store policy keeps test networks Nexus and Polkamarkt off in production even when the indexer enables them`() =
+    fun `every build follows the indexer and the indexer cannot turn on sends or mutations`() =
         runTest {
             coEvery { preferences.getBooleanSnapshot(any()) } returns mapOf(
                 "network_taira_visible" to true,
             )
             coEvery { indexer.requireMobileConfig() } returns config(enabled = true)
+                .copy(nexusSendsAvailable = true, polkamarktMutationsAvailable = true)
             every { preferences.getBooleanSnapshotFlow(any()) } returns flowOf(
                 mapOf(
                     "pi_mobile_flags_cached_v1" to true,
                     "pi_nexus_available" to true,
-                    "pi_taira_default_visible" to true,
-                    "network_taira_visible" to true,
-                )
-            )
-
-            val production = manager(productionFlavor = true, productionHidesSurfaces = true)
-            val productionState = production.getState()
-            productionState.assertAllOff()
-            assertThat(productionState.tairaAvailable).isFalse()
-            assertThat(production.observeTairaVisible().first()).isFalse()
-            val observedProductionState = production.observeState().first()
-            observedProductionState.assertAllOff()
-            assertThat(observedProductionState.tairaAvailable).isFalse()
-
-            // Develop and Soralution builds follow the indexer.
-            val testBuild = manager(productionFlavor = false, productionHidesSurfaces = true)
-            val testState = testBuild.getState()
-            assertThat(testState.nexusAvailable).isTrue()
-            assertThat(testState.polkamarktVisible).isTrue()
-            assertThat(testState.tairaAvailable).isTrue()
-            assertThat(testState.tairaVisible).isTrue()
-            assertThat(testBuild.observeTairaVisible().first()).isTrue()
-        }
-
-    @Test
-    fun `on the SORA Nexus line production follows the indexer like the test builds`() =
-        runTest {
-            assertThat(ReleaseSurfacePolicy.PRODUCTION_HIDES_SURFACES).isFalse()
-            coEvery { preferences.getBooleanSnapshot(any()) } returns mapOf(
-                "network_taira_visible" to true,
-            )
-            coEvery { indexer.requireMobileConfig() } returns config(enabled = true)
-            every { preferences.getBooleanSnapshotFlow(any()) } returns flowOf(
-                mapOf(
-                    "pi_mobile_flags_cached_v1" to true,
-                    "pi_nexus_available" to true,
+                    "pi_nexus_sends_available" to true,
                     "pi_polkamarkt_visible" to true,
+                    "pi_polkamarkt_mutations_available" to true,
                     "pi_taira_default_visible" to true,
                     "network_taira_visible" to true,
                 )
             )
 
-            for (productionFlavor in listOf(true, false)) {
-                val build = manager(productionFlavor = productionFlavor)
-                val state = build.getState()
-                assertThat(state.nexusAvailable).isTrue()
-                assertThat(state.polkamarktVisible).isTrue()
-                assertThat(state.tairaAvailable).isTrue()
-                assertThat(state.tairaVisible).isTrue()
-                assertThat(build.observeTairaVisible().first()).isTrue()
-                val observed = build.observeState().first()
-                assertThat(observed.nexusAvailable).isTrue()
-                assertThat(observed.polkamarktVisible).isTrue()
-                assertThat(observed.tairaVisible).isTrue()
-            }
+            val build = manager()
+            val state = build.getState()
+            assertThat(state.nexusAvailable).isTrue()
+            assertThat(state.polkamarktVisible).isTrue()
+            assertThat(state.tairaAvailable).isTrue()
+            assertThat(state.tairaVisible).isTrue()
+            // The local qualification gates still deny what the indexer offers.
+            assertThat(state.nexusSendsAvailable).isFalse()
+            assertThat(state.polkamarktMutationsAvailable).isFalse()
+            val observed = build.observeState().first()
+            assertThat(observed.nexusAvailable).isTrue()
+            assertThat(observed.polkamarktVisible).isTrue()
+            assertThat(observed.tairaVisible).isTrue()
+            assertThat(observed.nexusSendsAvailable).isFalse()
+            assertThat(observed.polkamarktMutationsAvailable).isFalse()
         }
 
     @Test

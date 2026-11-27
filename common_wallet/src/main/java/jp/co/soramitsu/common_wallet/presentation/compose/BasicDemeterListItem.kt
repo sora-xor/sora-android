@@ -25,7 +25,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
@@ -76,18 +76,6 @@ data class BasicUserFarmListItemState(
     val text2: String,
     val text3: String,
     val text4: String
-)
-
-val basicDemeterListItemStateEmpty = BasicFarmListItemState(
-    ids = Triple("", "", ""),
-    number = "",
-    token1Icon = DEFAULT_ICON_URI,
-    token2Icon = DEFAULT_ICON_URI,
-    rewardTokenIcon = DEFAULT_ICON_URI,
-    rewardTokenSymbol = "",
-    text1 = "",
-    text2 = "",
-    text3 = "",
 )
 
 val previewBasicFarmListItemState = listOf(
@@ -175,7 +163,7 @@ fun BasicFarmListItem(
         }
         Column(
             modifier = Modifier
-                .height(40.dp)
+                .heightIn(min = 40.dp)
                 .weight(1f)
                 .padding(start = Dimens.x1, end = Dimens.x1),
             verticalArrangement = Arrangement.SpaceBetween,
@@ -258,7 +246,7 @@ fun BasicUserFarmListItem(
         }
         Column(
             modifier = Modifier
-                .height(40.dp)
+                .heightIn(min = 40.dp)
                 .weight(1f)
                 .padding(start = Dimens.x1, end = Dimens.x1),
             verticalArrangement = Arrangement.SpaceBetween,
@@ -282,7 +270,7 @@ fun BasicUserFarmListItem(
         }
         Column(
             modifier = Modifier
-                .height(40.dp)
+                .heightIn(min = 40.dp)
                 .padding(start = Dimens.x1, end = Dimens.x1),
             verticalArrangement = Arrangement.SpaceBetween,
             horizontalAlignment = Alignment.End

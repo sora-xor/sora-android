@@ -6,10 +6,6 @@
     app:startDestination="@id/wallet_nav_graph">
 
     <fragment
-        android:id="@+id/updateFlexibleFragment"
-        android:name="jp.co.soramitsu.feature_main_impl.presentation.inappupdate.FlexibleUpdateDialog" />
-
-    <fragment
         android:id="@+id/pincodeFragment"
         android:name="jp.co.soramitsu.feature_main_impl.presentation.pincode.PincodeFragment" />
 
@@ -20,6 +16,14 @@
     <fragment
         android:id="@+id/polkamarktFragment"
         android:name="jp.co.soramitsu.feature_polkaswap_impl.presentation.screens.polkamarkt.PolkamarktFragment" />
+
+    <fragment
+        android:id="@+id/hashiBridgeFragment"
+        android:name="jp.co.soramitsu.feature_wallet_impl.presentation.bridge.HashiBridgeFragment" />
+
+    <fragment
+        android:id="@+id/hashiTransferFragment"
+        android:name="jp.co.soramitsu.feature_wallet_impl.presentation.bridge.HashiTransferFragment" />
 
     <fragment
         android:id="@+id/claimFragment"

@@ -2,13 +2,15 @@ package jp.co.soramitsu.sora.settings
 
 import android.app.Activity
 import android.app.Application
-import android.os.Build
 import android.os.Bundle
 import android.app.Instrumentation
 import android.content.Intent
 import android.content.IntentFilter
+import android.graphics.drawable.ColorDrawable
+import android.graphics.drawable.InsetDrawable
 import android.provider.Settings
 import android.view.View
+import android.view.ViewGroup
 import android.view.WindowManager
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.MutableLiveData
@@ -19,6 +21,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import io.mockk.*
 import jp.co.soramitsu.androidfoundation.fragment.SingleLiveEvent
 import jp.co.soramitsu.common.account.WalletRecoveryCapabilityGate
+import jp.co.soramitsu.common.account.WalletStartupPass
 import jp.co.soramitsu.common.presentation.compose.neon.safemode.WalletUpgradeRetry
 import jp.co.soramitsu.core_db.*
 import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
@@ -28,6 +31,7 @@ import jp.co.soramitsu.feature_select_node_api.NodeManager
 import jp.co.soramitsu.sora.R
 import jp.co.soramitsu.sora.splash.presentation.*
 import jp.co.soramitsu.sora.splash.presentation.recovery.*
+import jp.co.soramitsu.ui_core.sacred.TenmonFlight
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -42,6 +46,7 @@ class SplashActivityFlowTest {
     private val application = ApplicationProvider.getApplicationContext<Application>()
     private val splashModel = mockk<SplashViewModel>(relaxed = true)
     private val safeModel = mockk<SafeModeViewModel>(relaxed = true)
+    private var afterActivityCreated: ((SplashActivity) -> Unit)? = null
     private val lifecycle = object : Application.ActivityLifecycleCallbacks {
         override fun onActivityPreCreated(activity: Activity, savedInstanceState: Bundle?) {
             if (activity !is SplashActivity) return
@@ -50,7 +55,9 @@ class SplashActivityFlowTest {
             SplashActivity::class.java.getDeclaredField("safeModeViewModel\$delegate").apply { isAccessible = true }
                 .set(activity, lazyOf(safeModel))
         }
-        override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) = Unit
+        override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {
+            if (activity is SplashActivity) afterActivityCreated?.invoke(activity)
+        }
         override fun onActivityStarted(activity: Activity) = Unit
         override fun onActivityResumed(activity: Activity) = Unit
         override fun onActivityPaused(activity: Activity) = Unit
@@ -62,7 +69,6 @@ class SplashActivityFlowTest {
     private val loading = SingleLiveEvent<Unit>()
     private val main = SingleLiveEvent<Unit>()
     private val onboarding = SingleLiveEvent<OnboardingState>()
-    private val invitation = SingleLiveEvent<Unit>()
     private val recovery = SingleLiveEvent<WalletMigrationRecoveryUiState>()
     private val safe = MutableStateFlow(SafeModeUiState())
     private val events = Channel<SafeModeEvent>(Channel.UNLIMITED)
@@ -74,6 +80,9 @@ class SplashActivityFlowTest {
     @Before fun setup() {
         WalletRecoveryCapabilityGate.enterNormal()
         mockkObject(WalletUpgradeBackup)
+        // The view models are put in before onCreate, which only Android 10 and later announce. (After the mock, so
+        // the cleanup undoes exactly what was done.)
+        Assume.assumeTrue(android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q)
         every { WalletUpgradeBackup.startupFailureToShow(any()) } returns null
         every { WalletUpgradeBackup.blockingFailure() } returns null
         every { WalletUpgradeBackup.recoveryOptions() } returns null
@@ -82,7 +91,6 @@ class SplashActivityFlowTest {
         every { splashModel.loadingTextVisiblity } returns loading
         every { splashModel.showMainScreen } returns main
         every { splashModel.showOnBoardingScreen } returns onboarding
-        every { splashModel.showMainScreenFromInviteLink } returns invitation
         every { splashModel.showMigrationRecovery } returns recovery
         every { splashModel.start() } just Runs
         every { splashModel.nextScreen() } just Runs
@@ -91,7 +99,7 @@ class SplashActivityFlowTest {
         every { safeModel.state } returns safe
         every { safeModel.events } returns events.receiveAsFlow()
         every { safeModel.technicalDetails() } returns listOf("code" to "FIXTURE_RECOVERY")
-        every { safeModel.showPanel(any(), any(), any()) } just Runs
+        every { safeModel.showPanel(any(), any(), any(), any()) } just Runs
         every { safeModel.startRetryFromHome() } just Runs
         every { safeModel.onVerificationRouted() } just Runs
         every { safeModel.markProgressFinished() } returns false
@@ -143,23 +151,139 @@ class SplashActivityFlowTest {
             if (action == Intent.ACTION_SENDTO) addDataScheme("mailto")
         }, Instrumentation.ActivityResult(Activity.RESULT_CANCELED, null), true)
             .also { monitors += it }
+    /**
+     * The screens [monitor] caught, once the event has had its turn: the first start of a cold test process on a
+     * loaded device can take its event a moment after the main queue was drained. Never more than one is counted.
+     */
+    private fun hitsOf(monitor: Instrumentation.ActivityMonitor): Int {
+        val deadline = android.os.SystemClock.uptimeMillis() + 5_000
+        while (monitor.hits == 0 && android.os.SystemClock.uptimeMillis() < deadline) {
+            android.os.SystemClock.sleep(50)
+            drainMainQueue()
+        }
+        drainMainQueue()
+        return monitor.hits
+    }
     private fun panel() = RecoveryPanels.model(WalletRecoveryOptions.forState("FIXTURE_RECOVERY", false,
         RecoveryFacts(hasWalletFiles = true)), false, false)
 
-    @Test fun systemSplashDoesNotPlayASecondAnimationOrWaitForItsRenderer() {
-        Assume.assumeTrue(Build.VERSION.SDK_INT >= Build.VERSION_CODES.S)
-        launch().onMainActivity { activity ->
-            val animation = activity.findViewById<com.airbnb.lottie.LottieAnimationView>(R.id.animation_view)
-            assertEquals(View.GONE, animation.visibility)
-            assertFalse(animation.isAnimating)
+    /** The colour of the window's own background (Android may inset it for the bars). */
+    private fun windowPage(activity: Activity): Int {
+        val background = activity.window.decorView.background
+        return (((background as? InsetDrawable)?.drawable ?: background) as ColorDrawable).color
+    }
+
+    @Test fun startupShowsTheLaunchSceneAndNeverWaitsForIt() {
+        // Readiness is observed before the main loop is yielded: the checks go on the moment the
+        // wallet is ready, whatever the launch scene has or has not drawn by then.
+        afterActivityCreated = {
+            verify(exactly = 0) { splashModel.nextScreen() }
+            runtimeReady.value = true
         }
+        launch().onMainActivity { activity ->
+            val scene = activity.findViewById<ViewGroup>(R.id.launchScene)
+            assertEquals(View.VISIBLE, scene.visibility)
+            assertEquals("the launch scene fills its host", 1, scene.childCount)
+            assertEquals("the launch page is the window's own", TenmonFlight.PAGE, windowPage(activity))
+            assertNull("and nothing is painted over it", activity.findViewById<View>(R.id.splashContainer).background)
+        }
+        verify(exactly = 1) { splashModel.nextScreen() }
+        instrumentation.runOnMainSync { runtimeReady.value = true }
+        drainMainQueue()
+        verify(exactly = 1) { splashModel.nextScreen() }
+    }
+
+    // The launch scene never holds the start, so every ordinary start asks once for the early route; the question
+    // it hands over says no while a recovery state is known.
+    @Test fun anOrdinaryStartAsksForTheEarlyRouteAndRefusesItOverRecovery() {
+        val mayOpen = slot<() -> Boolean>()
+        every { splashModel.routeEarly(capture(mayOpen)) } just Runs
+        launch()
+        verify(exactly = 1) { splashModel.routeEarly(any()) }
+        assertTrue(mayOpen.captured())
+        every { WalletUpgradeBackup.blockingFailure() } returns WalletUpgradeBackup.Failure("FIXTURE_BLOCKED")
+        assertFalse(mayOpen.captured())
+        every { WalletUpgradeBackup.blockingFailure() } returns null
+        assertTrue(mayOpen.captured())
+        instrumentation.runOnMainSync { safe.value = SafeModeUiState(visible = true, panel = panel()) }
+        assertFalse(mayOpen.captured())
+    }
+    @Test fun theEarlyRouteIsAskedForWhileTheLaunchSceneShows() {
+        launch().onMainActivity { activity ->
+            assertEquals("the launch scene is up when the early route is asked for", 1, activity.findViewById<ViewGroup>(R.id.launchScene).childCount)
+        }
+        verify(exactly = 1) { splashModel.routeEarly(any()) }
+    }
+    @Test fun retryFromHomeNeverAsksForTheEarlyRoute() {
+        every { WalletUpgradeBackup.recoveryOptions() } returns WalletRecoveryOptions.forState("FIXTURE_RECOVERY", false, RecoveryFacts()); launch(retry = true)
+        verify(exactly = 0) { splashModel.routeEarly(any()) }
+    }
+    @Test fun aStartHeldAtRecoveryNeverAsksForTheEarlyRoute() {
+        every { WalletUpgradeBackup.startupFailureToShow(any()) } returns WalletUpgradeBackup.Failure("INSUFFICIENT_BACKUP_STORAGE")
+        launch()
+        verify(exactly = 0) { splashModel.routeEarly(any()) }
+    }
+    // A wallet opened before the usual moment is final: the usual moment neither routes again nor starts the
+    // progress screen's timer.
+    // The route is emitted before the screen starts (delivered at onStart), before the usual moment.
+    @Test fun aWalletOpenedEarlyIsNotRoutedAgainAndShowsNoProgressScreen() {
+        afterActivityCreated = { activity ->
+            activity.mainStarter = mainStarter
+            activity.nodeManager = dagger.Lazy { node }
+            main.value = Unit
+        }
+        launch()
+        instrumentation.runOnMainSync { runtimeReady.value = true }; drainMainQueue()
+        verify(exactly = 1) { mainStarter.start(any()) }
         verify(exactly = 0) { splashModel.nextScreen() }
-        instrumentation.runOnMainSync { runtimeReady.value = true }
-        drainMainQueue()
-        verify(exactly = 1) { splashModel.nextScreen() }
-        instrumentation.runOnMainSync { runtimeReady.value = true }
-        drainMainQueue()
-        verify(exactly = 1) { splashModel.nextScreen() }
+        Thread.sleep(SafeModeViewModel.SILENT_UPGRADE_MILLIS + 500)
+        verify(exactly = 0) { safeModel.showStartupProgress() }
+    }
+    @Test fun onboardingOpenedEarlyIsNotRoutedAgain() {
+        afterActivityCreated = { activity ->
+            activity.multiaccStarter = onboardingStarter
+            onboarding.value = OnboardingState.INITIAL
+        }
+        launch()
+        instrumentation.runOnMainSync { runtimeReady.value = true }; drainMainQueue()
+        verify(exactly = 1) { onboardingStarter.startOnboardingFlow(any()) }
+        verify(exactly = 0) { splashModel.nextScreen() }
+    }
+    // A screen recreated after the early route decided the start neither routes nor starts the progress timer.
+    @Test fun aStartAlreadyDecidedEarlyIsNotRoutedAgainByARecreatedScreen() {
+        every { splashModel.isStartDecided } returns true
+        afterActivityCreated = { runtimeReady.value = true }
+        launch()
+        verify(exactly = 0) { splashModel.nextScreen() }
+        Thread.sleep(SafeModeViewModel.SILENT_UPGRADE_MILLIS + 500)
+        verify(exactly = 0) { safeModel.showStartupProgress() }
+    }
+    // The wallet is routed while the screen is in the background: on return it opens once, with no progress screen.
+    @Test fun aRouteDecidedWhileStoppedOpensOnReturnWithoutTheProgressScreen() {
+        var nextScreenCalls = 0
+        every { splashModel.nextScreen() } answers { nextScreenCalls += 1 }
+        launch(); scenario!!.moveToState(Lifecycle.State.CREATED); drainMainQueue()
+        assertEquals("the usual moment has not come: nothing routed yet", 0, nextScreenCalls)
+        // As the early route does: the start is decided, then the route is emitted.
+        every { splashModel.isStartDecided } returns true
+        instrumentation.runOnMainSync { main.value = Unit; runtimeReady.value = true }; drainMainQueue()
+        verify(exactly = 0) { mainStarter.start(any()) }
+        scenario!!.moveToState(Lifecycle.State.RESUMED); drainMainQueue()
+        verify(exactly = 1) { mainStarter.start(any()) }
+        Thread.sleep(SafeModeViewModel.SILENT_UPGRADE_MILLIS + 500)
+        verify(exactly = 0) { safeModel.showStartupProgress() }
+        assertEquals(0, nextScreenCalls)
+    }
+    @Test fun slowStartNoteShowsOverTheLaunchSceneAtRest() {
+        launch()
+        instrumentation.runOnMainSync { loading.value = Unit }
+        drainMainQueue(); scenario!!.onMainActivity { activity ->
+            assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.loadingDisclaimerTextView).visibility)
+            assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.loadingProgressBar).visibility)
+            assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.launchScene).visibility)
+            assertFalse("the scene at rest no longer plays", TenmonFlight.isPlaying)
+            assertTrue("the first screen carries the still picture until it is ready", TenmonFlight.carriesOn)
+        }
     }
 
     @Test fun publishedLauncherAliasStillStartsWalletVerification() {
@@ -200,7 +324,16 @@ class SplashActivityFlowTest {
         launch(); instrumentation.runOnMainSync { safe.value = SafeModeUiState(visible = true, panel = panel()) }
         drainMainQueue(); scenario!!.onMainActivity { activity ->
             assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.walletRecoveryCompose).visibility)
-            assertEquals(View.GONE, activity.findViewById<View>(R.id.animation_view).visibility)
+            val scene = activity.findViewById<ViewGroup>(R.id.launchScene)
+            assertEquals(View.GONE, scene.visibility)
+            assertEquals("the launch scene is taken out", 0, scene.childCount)
+            val themed = activity.obtainStyledAttributes(intArrayOf(android.R.attr.windowBackground))
+            val themePage = themed.getColor(0, 0)
+            themed.recycle()
+            assertEquals("the theme's own page shows under the panel", themePage, windowPage(activity))
+            assertNull(activity.findViewById<View>(R.id.splashContainer).background)
+            assertFalse(TenmonFlight.isPlaying)
+            assertTrue("the first screen after the panel still keeps itself covered until it is ready", TenmonFlight.carriesOn)
             assertEquals(View.GONE, activity.findViewById<View>(R.id.loadingProgressBar).visibility)
         }
     }
@@ -233,13 +366,14 @@ class SplashActivityFlowTest {
         launch(); every { WalletUpgradeBackup.blockingFailure() } returns WalletUpgradeBackup.Failure("FIXTURE_BLOCKED")
         instrumentation.runOnMainSync { main.value = Unit }; drainMainQueue()
         verify(exactly = 0) { mainStarter.start(any()); node.ensureStarted() }
-        verify { safeModel.showPanel("FIXTURE_BLOCKED", any(), any()) }
+        // A start nobody asked anything in: the panel may open the wallet read-only by itself.
+        verify { safeModel.showPanel("FIXTURE_BLOCKED", any(), any(), unattended = true) }
     }
     @Test fun migrationFailurePassesAccountReadOnlyAvailabilityToPanel() {
         launch(); val options = WalletRecoveryOptions.forState("FIXTURE_VERIFY", false, RecoveryFacts())
         instrumentation.runOnMainSync { recovery.value = WalletMigrationRecoveryUiState("FIXTURE_VERIFY", false, options) }
         drainMainQueue()
-        verify { safeModel.showPanel("FIXTURE_VERIFY", options, false) }
+        verify { safeModel.showPanel("FIXTURE_VERIFY", options, false, unattended = true) }
     }
     @Test fun retryReadyRebindsVerificationWithoutStartingNormalMigration() {
         every { WalletUpgradeBackup.recoveryOptions() } returns WalletRecoveryOptions.forState("FIXTURE_RECOVERY", false, RecoveryFacts()); launch(retry = true); emit(SafeModeEvent.RetryReady)
@@ -257,11 +391,11 @@ class SplashActivityFlowTest {
     }
     @Test fun storageSettingsEventUsesStorageScreenIntent() {
         launch(); val monitor = monitor(Settings.ACTION_INTERNAL_STORAGE_SETTINGS); emit(SafeModeEvent.OpenStorageSettings)
-        assertEquals(1, monitor.hits)
+        assertEquals(1, hitsOf(monitor))
     }
     @Test fun supportEmailIsDeliveredAsMailtoWithoutSendingAnything() {
         launch(); val monitor = monitor(Intent.ACTION_SENDTO); emit(SafeModeEvent.Email("Fixture subject", "Fixture body"))
-        assertEquals(1, monitor.hits)
+        assertEquals(1, hitsOf(monitor))
     }
     @Test fun pauseAndStopNotifyRecoveryLifecycle() {
         launch(); scenario!!.moveToState(Lifecycle.State.CREATED); drainMainQueue()
@@ -274,6 +408,82 @@ class SplashActivityFlowTest {
         launch(retry = true); scenario!!.recreate(); drainMainQueue()
         verify(exactly = 1) { safeModel.startRetryFromHome() }
         verify(exactly = 0) { splashModel.start() }
+    }
+    // Codex re-review 2: the storage step gives back cache on a worker while it holds the backup's
+    // lock. Recreating the startup screen (rotation) meanwhile must not wait for that lock on the
+    // main thread. The real WalletUpgradeBackup answers here; the test holds its lock as a parked
+    // storage step does (core_db's WalletUpgradeBackupTest parks the real one).
+    @Test fun recreatingTheStartupScreenNeverWaitsForAStorageStepHoldingTheBackupLock() {
+        unmockkObject(WalletUpgradeBackup)
+        try {
+            launch()
+            val held = java.util.concurrent.CountDownLatch(1)
+            val release = java.util.concurrent.CountDownLatch(1)
+            val storageStep = kotlin.concurrent.thread(name = "parked-storage-step") {
+                synchronized(WalletUpgradeBackup) {
+                    held.countDown()
+                    release.await(60, java.util.concurrent.TimeUnit.SECONDS)
+                }
+            }
+            try {
+                assertTrue(held.await(10, java.util.concurrent.TimeUnit.SECONDS))
+                val recreation = kotlin.concurrent.thread(name = "recreate") { scenario!!.recreate() }
+                recreation.join(15_000)
+                assertFalse("the startup screen waited for the storage step's lock", recreation.isAlive)
+                assertEquals(Lifecycle.State.RESUMED, scenario!!.state)
+            } finally {
+                release.countDown()
+                storageStep.join(15_000)
+            }
+        } finally {
+            mockkObject(WalletUpgradeBackup)
+        }
+    }
+    // Codex re-review 2: recreated while the recovery screen shows (here: the storage step runs
+    // behind its progress screen), the activity decides nothing again: no second panel, which
+    // would drop the progress screen of a step still running.
+    @Test fun recreationWhileTheRecoveryScreenShowsDecidesNothingAgain() {
+        every { WalletUpgradeBackup.startupFailureToShow(any()) } returns
+            WalletUpgradeBackup.Failure("INSUFFICIENT_BACKUP_STORAGE")
+        launch()
+        verify(exactly = 1) { safeModel.showPanel("INSUFFICIENT_BACKUP_STORAGE", any(), any(), unattended = true) }
+        safe.value = SafeModeUiState(visible = true)
+
+        scenario!!.recreate(); drainMainQueue()
+
+        verify(exactly = 1) { safeModel.showPanel(any(), any(), any(), any()) }
+        verify(exactly = 1) { WalletUpgradeBackup.startupFailureToShow(any()) }
+        assertEquals(Lifecycle.State.RESUMED, scenario!!.state)
+    }
+    // Audit item 13: "Try upgrade again" from the read-only home gets its answer on the panel;
+    // only a start nobody asked anything in may open the wallet read-only by itself.
+    @Test fun retryFromHomeThatFailsShowsItsPanelAsAnAnswerNotAsAnUnattendedStart() {
+        every { WalletUpgradeBackup.recoveryOptions() } returns WalletRecoveryOptions.forState("FIXTURE_RECOVERY", false, RecoveryFacts())
+        launch(retry = true)
+        emit(SafeModeEvent.RetryReady)
+        val options = WalletRecoveryOptions.forState("FIXTURE_VERIFY", false, RecoveryFacts())
+        instrumentation.runOnMainSync { recovery.value = WalletMigrationRecoveryUiState("FIXTURE_VERIFY", true, options) }; drainMainQueue()
+        verify { safeModel.showPanel("FIXTURE_VERIFY", options, true, unattended = false) }
+        verify(exactly = 0) { safeModel.showPanel(any(), any(), any(), unattended = true) }
+    }
+    // The wallet's main screen opens only in a process that came through this screen
+    // (WalletStartupPass); the pass is given at the moment the wallet or onboarding opens.
+    @Test fun thePassIsGivenWhenTheWalletOpensAndNotWhileAStartIsHeldAtRecovery() {
+        WalletStartupPass.revokeForTest()
+        launch(); assertFalse(WalletStartupPass.isGranted())
+        every { WalletUpgradeBackup.blockingFailure() } returns WalletUpgradeBackup.Failure("FIXTURE_BLOCKED")
+        instrumentation.runOnMainSync { main.value = Unit }; drainMainQueue()
+        instrumentation.runOnMainSync { recovery.value = WalletMigrationRecoveryUiState("FIXTURE_VERIFY", false) }; drainMainQueue()
+        assertFalse(WalletStartupPass.isGranted())
+        every { WalletUpgradeBackup.blockingFailure() } returns null
+        instrumentation.runOnMainSync { main.value = Unit }; drainMainQueue()
+        assertTrue(WalletStartupPass.isGranted())
+        verify(exactly = 1) { mainStarter.start(any()) }
+    }
+    @Test fun thePassIsGivenWhenOnboardingOpens() {
+        WalletStartupPass.revokeForTest()
+        launch(); instrumentation.runOnMainSync { onboarding.value = OnboardingState.INITIAL }; drainMainQueue()
+        assertTrue(WalletStartupPass.isGranted())
     }
     @Test fun completedProgressTickDefersMainNavigationBriefly() {
         launch(); every { safeModel.markProgressFinished() } returns true

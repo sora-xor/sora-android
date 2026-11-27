@@ -36,11 +36,11 @@ import jp.co.soramitsu.common.domain.DEFAULT_ICON_URI
 import jp.co.soramitsu.common.util.StringPair
 import jp.co.soramitsu.common_wallet.presentation.compose.states.PoolsListItemState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.PoolsListState
-import jp.co.soramitsu.feature_assets_impl.presentation.components.compose.assetdetails.AssetDetailsBalanceCard
+import jp.co.soramitsu.common_wallet.presentation.compose.assetdetails.AssetDetailsBalanceCard
 import jp.co.soramitsu.feature_assets_impl.presentation.components.compose.assetdetails.AssetDetailsPooledCard
-import jp.co.soramitsu.feature_assets_impl.presentation.components.compose.assetdetails.AssetDetailsRecentActivityCard
-import jp.co.soramitsu.feature_assets_impl.presentation.components.compose.assetdetails.AssetDetailsTokenPriceCard
-import jp.co.soramitsu.feature_assets_impl.presentation.components.compose.assetdetails.AssetIdCard
+import jp.co.soramitsu.common_wallet.presentation.compose.assetdetails.AssetDetailsRecentActivityCard
+import jp.co.soramitsu.common_wallet.presentation.compose.assetdetails.AssetDetailsTokenPriceCard
+import jp.co.soramitsu.common_wallet.presentation.compose.assetdetails.AssetIdCard
 import jp.co.soramitsu.feature_assets_impl.presentation.states.AssetCardStateData
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.EventUiModel
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionStatus
@@ -58,6 +58,7 @@ internal fun AssetDetailsScreen(
     onRecentClick: () -> Unit,
     onHistoryItemClick: (String) -> Unit,
     onAssetIdClick: () -> Unit,
+    onBridgeClick: () -> Unit = {},
 ) {
     if (stateData.xorBalance != null) {
         XorBalancesDialog(
@@ -76,6 +77,7 @@ internal fun AssetDetailsScreen(
             tokenPrice = stateData.price,
             tokenPriceChange = stateData.priceChange,
             iconUri = stateData.tokenIcon,
+            assetId = stateData.tokenId,
         )
         Spacer(modifier = Modifier.size(Dimens.x2))
         AssetDetailsBalanceCard(
@@ -89,6 +91,7 @@ internal fun AssetDetailsScreen(
             onReceiveClick = onReceiveClick,
             onSwapClick = onSwapClick,
             onBalanceClick = onBalanceClick,
+            onBridgeClick = if (stateData.bridgeAvailable) onBridgeClick else null,
         )
         if (stateData.poolsState.pools.isNotEmpty()) {
             Spacer(modifier = Modifier.size(Dimens.x2))

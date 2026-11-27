@@ -50,6 +50,12 @@ class CardsHubInteractorImpl @Inject constructor(
         return total to (total - readOnly).coerceAtLeast(0)
     }
 
+    /**
+     * True while a claim of an older SORA balance is known on this phone for the selected
+     * account. The wallet home then shows its "Claim" entry.
+     */
+    fun flowClaimPending(): Flow<Boolean> = userRepository.flowClaimPending()
+
     fun subscribeVisibleCardsHubList(): Flow<Pair<SoraAccount, List<CardHub>>> {
         // The shared current-account stream emits identity changes only. Resolve display
         // metadata separately so renaming the selected wallet refreshes its existing header.
@@ -79,6 +85,7 @@ class CardsHubInteractorImpl @Inject constructor(
                     visible = visible,
                 )
             }
+            CardHubType.ASSETS.hubName,
             CardHubType.POOLS.hubName -> {
                 walletRepository.updateCardVisibilityOnCardsHub(
                     cardId = cardId,

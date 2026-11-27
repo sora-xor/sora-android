@@ -1,0 +1,15 @@
+<resources>
+    <string name="swap_pay_label">לתשלום</string>
+    <string name="swap_receive_label">לקבלה</string>
+    <string name="asset_balance_value">יתרה %1$s</string>
+    <string name="asset_catalog_retry">נסה שוב</string>
+    <string name="swap_market_missing_pair">יש לבחור שני טוקנים כדי לראות שווקים.</string>
+    <string name="swap_market_empty">אין שווקים לזוג הזה</string>
+    <string name="swap_about_market">אודות %1$s</string>
+    <string name="swap_show_terms">קריאת התנאים</string>
+    <string name="swap_hide_terms">הסתרת התנאים</string>
+    <string name="swap_terms_summary">יש לעיין בתנאים לפני ההחלפה.</string>
+    <string name="asset_picker_empty">אין טוקנים זמינים</string>
+    <string name="liquidity_base_token">טוקן בסיס</string>
+    <string name="liquidity_pair_token">טוקן הזוג</string>
+</resources>

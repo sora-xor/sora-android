@@ -19,6 +19,7 @@ limitations under the License.
 
 package jp.co.soramitsu.feature_ecosystem_impl.presentation.alldemeter
 
+import jp.co.soramitsu.common.presentation.compose.components.LoadingRows
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -27,9 +28,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material.CircularProgressIndicator
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
@@ -44,8 +42,6 @@ import jp.co.soramitsu.common_wallet.presentation.compose.previewBasicFarmListIt
 import jp.co.soramitsu.feature_ecosystem_impl.R
 import jp.co.soramitsu.common.presentation.compose.neon.ContentCardEndless
 import jp.co.soramitsu.ui_core.resources.Dimens
-import jp.co.soramitsu.ui_core.theme.customColors
-import jp.co.soramitsu.ui_core.theme.customTypography
 
 @Composable
 internal fun AllDemeterScreen(
@@ -78,40 +74,9 @@ private fun AllDemeterInternal(
         ),
     ) {
         if (state.loading) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator(
-                    modifier = Modifier
-                        .size(Dimens.x6)
-                        .padding(Dimens.x1),
-                    color = MaterialTheme.customColors.accentPrimary
-                )
-            }
+            LoadingRows(stringResource(R.string.common_loading))
         } else {
             Column {
-                Text(
-                    modifier = Modifier.padding(
-                        start = Dimens.x3,
-                        end = Dimens.x1
-                    ),
-                    text = stringResource(id = R.string.explore_demeter_title),
-                    style = MaterialTheme.customTypography.headline2,
-                    color = MaterialTheme.customColors.fgPrimary
-                )
-
-                Text(
-                    modifier = Modifier.padding(
-                        start = Dimens.x3,
-                        end = Dimens.x1,
-                        bottom = Dimens.x1
-                    ),
-                    text = stringResource(id = R.string.explore_demeter_subtitle),
-                    style = MaterialTheme.customTypography.textXSBold,
-                    color = MaterialTheme.customColors.fgSecondary
-                )
-
                 if (state.pools.isEmpty()) {
                     Box(
                         modifier = Modifier.fillMaxSize(),

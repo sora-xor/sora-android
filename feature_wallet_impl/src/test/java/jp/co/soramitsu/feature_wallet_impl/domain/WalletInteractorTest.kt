@@ -188,6 +188,50 @@ class WalletInteractorTest {
         assertEquals(true, kp.nonce.all { it == 0.toByte() })
     }
 
+    // Codex review 6: a confirmed claim is no longer pending for the account that sent it, so the
+    // wallet home's Claim entry goes, even when another account was selected meanwhile.
+    @Test
+    fun `a confirmed claim clears the pending claim of the account that sent it`() = runTest {
+        val other = SoraAccount("other", "other")
+        var selected = soraAccount
+        given(userRepository.getCurSoraAccount()).willAnswer { selected }
+        given(credentialsRepository.getIrohaData(soraAccount)).willReturn(irohaData)
+        given(walletRepository.needsMigration(irohaData.address)).willReturn(true)
+        given(credentialsRepository.retrieveKeyPair(soraAccount)).willReturn(
+            Sr25519Keypair(ByteArray(32) { 1 }, ByteArray(32) { 2 }, ByteArray(32) { 3 })
+        )
+        given(walletRepository.migrate(anyString(), anyString(), anyString(), any(), anyString())).willAnswer {
+            // The person switched accounts while the claim was on its way.
+            selected = other
+            ExtrinsicSubmitStatus(true, "", "")
+        }
+
+        assertEquals(TransactionOutcome.Confirmed("", ""), interactor.migrate())
+
+        verify(userRepository).markClaimConfirmed(soraAccount)
+        verify(userRepository, never()).markClaimConfirmed(other)
+    }
+
+    @Test
+    fun `a claim that is still waiting stays pending`() = runTest {
+        given(walletRepository.checkSubmittedClaim("address", "0xhash"))
+            .willReturn(TransactionOutcome.Waiting(txHash = "0xhash", acceptedByNode = true))
+
+        interactor.checkSubmittedClaim("0xhash")
+
+        verify(userRepository, never()).markClaimConfirmed(any())
+    }
+
+    @Test
+    fun `a claim the network confirmed later clears the pending claim of its account`() = runTest {
+        given(walletRepository.checkSubmittedClaim("address", "0xhash"))
+            .willReturn(TransactionOutcome.Confirmed(txHash = "0xhash", blockHash = "0xblock"))
+
+        interactor.checkSubmittedClaim("0xhash")
+
+        verify(userRepository).markClaimConfirmed(soraAccount)
+    }
+
     @Test
     fun `migrate rechecks authoritative account state before loading the signing key`() = runTest {
         given(credentialsRepository.getIrohaData(soraAccount)).willReturn(irohaData)
@@ -196,7 +240,7 @@ class WalletInteractorTest {
         // Nothing to send: the network already has the claim.
         assertEquals(null, interactor.migrate())
 
-        verify(userRepository).saveNeedsMigration(false, soraAccount)
+        verify(userRepository).markClaimConfirmed(soraAccount)
         verify(credentialsRepository, never()).retrieveKeyPair(soraAccount)
         verify(walletRepository, never()).migrate(
             anyString(),

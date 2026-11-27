@@ -7,9 +7,6 @@
     <color name="pressedSecondaryColor">#f1b3bb</color>
     <color name="focusedSecondaryColor">#ec9aa4</color>
 
-    <!--  theme independent colors  -->
-    <color name="grey_800">#2e2e36</color>
-
     <!--  brand colors. in progress....  -->
 
     <color name="neu_color_black">#000000</color>

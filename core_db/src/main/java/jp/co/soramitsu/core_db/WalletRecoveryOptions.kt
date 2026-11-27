@@ -166,7 +166,10 @@ data class WalletRecoveryOptions(
     val code: String,
     val kind: WalletRecoveryKind,
     val canRetry: Boolean,
-    /** Retry without user action (with backoff): transient states, and storage on resume. */
+    /**
+     * Retry without user action (with backoff): transient states without limit, resumable
+     * verification or repair states a few times per app start, and storage on resume.
+     */
     val retryAutomatically: Boolean,
     val canRestoreFromPhrase: Boolean,
     val canRestoreFromDrive: Boolean,
@@ -255,6 +258,13 @@ data class WalletRecoveryOptions(
             "SET_UP_AGAIN_INCOMPLETE",
         )
 
+        /**
+         * Work that a saved plan or journal lets the app resume by itself: the same step a new
+         * app start runs. The recovery screen retries these a few times per start before it
+         * shows its options (MIGRATION states are resumable as well).
+         */
+        private val resumableCodes = setOf("DATABASE_REPAIR_INCOMPLETE")
+
         fun kindOf(code: String, inMemoryOnly: Boolean = false): WalletRecoveryKind = when {
             code == "INSUFFICIENT_BACKUP_STORAGE" || code == STORAGE_FULL ->
                 WalletRecoveryKind.STORAGE
@@ -292,7 +302,9 @@ data class WalletRecoveryOptions(
                 kind = kind,
                 canRetry = true,
                 retryAutomatically = kind == WalletRecoveryKind.TRANSIENT ||
-                    kind == WalletRecoveryKind.STORAGE,
+                    kind == WalletRecoveryKind.STORAGE ||
+                    kind == WalletRecoveryKind.MIGRATION ||
+                    code in resumableCodes,
                 // Writes are disabled in every recovery state, so a restore runs after "Set up
                 // this device again" (which keeps the old files aside) and a restart.
                 canRestoreFromPhrase = canSetUpAgain,

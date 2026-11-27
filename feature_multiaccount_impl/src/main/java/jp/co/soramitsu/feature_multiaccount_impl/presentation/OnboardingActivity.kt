@@ -78,7 +78,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
-import jp.co.soramitsu.common.presentation.compose.neon.safemode.UpgradeWelcome
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.domain.ResponseCode
 import jp.co.soramitsu.common.domain.SoraException
@@ -101,6 +100,7 @@ import jp.co.soramitsu.feature_multiaccount_impl.presentation.tutorial.TutorialS
 import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.component.button.properties.Size
 import jp.co.soramitsu.ui_core.resources.Dimens
+import jp.co.soramitsu.ui_core.sacred.TenmonFlight
 import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
 
@@ -108,8 +108,6 @@ import jp.co.soramitsu.ui_core.theme.customTypography
 class OnboardingActivity : SoraBaseActivity<OnboardingViewModel>() {
 
     companion object {
-
-        const val ACTION_INVITE = "jp.co.soramitsu.feature_onboarding_impl.ACTION_INVITE"
 
         /** File managers label an exported backup in different ways, so any type can be picked. */
         private const val ANY_FILE_TYPE = "*/*"
@@ -136,10 +134,12 @@ class OnboardingActivity : SoraBaseActivity<OnboardingViewModel>() {
                 }
                 putExtra(EXTRA_ENTRY, entry.name)
             }
+            // At the end of a launch this screen carries the launch scene on from its first frame: nothing fades between.
+            val carriesLaunchScene = TenmonFlight.carriesOn
             val options = ActivityOptions.makeCustomAnimation(
                 context,
-                android.R.anim.fade_in,
-                android.R.anim.fade_out
+                if (carriesLaunchScene) 0 else android.R.anim.fade_in,
+                if (carriesLaunchScene) 0 else android.R.anim.fade_out
             )
             context.startActivity(intent, options.toBundle())
         }
@@ -283,10 +283,8 @@ class OnboardingActivity : SoraBaseActivity<OnboardingViewModel>() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // Setting up a wallet on this version (first start, after "set up this device again", or
-        // adding an account after the first unlock) never needs the upgrade-complete sheet.
-        UpgradeWelcome.markDone(applicationContext)
-
+        // The launch scene the startup screen began carries on over the welcome, and uncovers it.
+        if (savedInstanceState == null) TenmonFlight.carryOn(this)
         viewModel.consentExceptionHandler.observe(this) {
             consentHandlerLauncher.launch(it)
         }
@@ -303,10 +301,6 @@ class OnboardingActivity : SoraBaseActivity<OnboardingViewModel>() {
         }
     }
 
-    @Composable
-    override fun useSafeAurora(): Boolean =
-        viewModel.toolbarState.observeAsState().value?.basic?.visibility == true
-
     @OptIn(
         ExperimentalAnimationApi::class, ExperimentalUnitApi::class,
     )
@@ -317,6 +311,8 @@ class OnboardingActivity : SoraBaseActivity<OnboardingViewModel>() {
             navController.addOnDestinationChangedListener { _, destination, _ ->
                 viewModel.onDestinationChanged(destination.route ?: "")
             }
+            // This screen shows no mark for the launch scene's to set down on: it gives way with its rings.
+            TenmonFlight.firstScreenShown(null)
         }
 
         viewModel.skipDialogState.observeAsState().value?.let {
@@ -440,10 +436,13 @@ class OnboardingActivity : SoraBaseActivity<OnboardingViewModel>() {
                             )
                         },
                         buttons = {
+                            // On a short window (a phone on its side, a split screen) the sources scroll rather than
+                            // the last of them being cut off.
                             Column(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .wrapContentHeight()
+                                    .verticalScroll(rememberScrollState())
                                     .padding(Dimens.x1),
                                 verticalArrangement = Arrangement.spacedBy(Dimens.x1),
                                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -751,7 +750,7 @@ class OnboardingActivity : SoraBaseActivity<OnboardingViewModel>() {
  * when the stored PIN cannot be read; Cancel leaves everything as it is.
  */
 @Composable
-private fun RepairAccountDialog(
+internal fun RepairAccountDialog(
     prompt: OnboardingViewModel.RepairPrompt,
     screenLockAvailable: Boolean,
     onConfirm: (String) -> Unit,

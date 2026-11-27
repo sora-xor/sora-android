@@ -5,6 +5,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.system.Os
+import androidx.core.content.FileProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import jp.co.soramitsu.common.io.FileManagerImpl
@@ -25,21 +26,25 @@ class FileManagerPlatformContractTest {
         override fun getExternalCacheDir(): File? = if (external) File(cacheDir, "external").apply { mkdirs() } else null
         override fun getExternalMediaDirs(): Array<File> = if (media) arrayOf(File(root, "media").apply { mkdirs() }) else emptyArray()
     }
+    @Before fun initializeProviderWithTheApplicationStorageRoots() {
+        // FileProvider caches roots by authority for the entire instrumentation process.
+        // Seed that cache from the actual app context before exercising redirected storage.
+        FileProvider.getUriForFile(context, context.packageName + ".soraFileProvider", root)
+    }
     @After fun cleanFixture() { root.deleteRecursively() }
     @Test fun cacheAndPrivateFilesPreserveBytesAndDistinguishEmptyFromMissing() {
         val manager = FileManagerImpl(isolated())
-        assertNull(manager.readInternalCacheFile("absent")); assertNull(manager.readInternalCacheFileAsByteArray("absent"))
+        assertNull(manager.readInternalCacheFile("absent"))
         manager.writeInternalCacheFile("empty", "")
-        assertNull(manager.readInternalCacheFile("empty")); assertNull(manager.readInternalCacheFileAsByteArray("empty"))
+        assertNull(manager.readInternalCacheFile("empty"))
         assertEquals("", manager.readInternalCacheFile("empty", 1))
         val text = "wallet fixture á界😀"
         manager.writeInternalCacheFile("utf8", text)
         assertEquals(text, manager.readInternalCacheFile("utf8"))
         assertEquals(text, manager.readInternalCacheFile("utf8", text.toByteArray().size))
         manager.writeInternalCacheFile("binary", byteArrayOf(0, 1, -1))
-        assertArrayEquals(byteArrayOf(0, 1, -1), manager.readInternalCacheFileAsByteArray("binary"))
-        assertFalse(manager.existsInternalFile("private")); manager.writeInternalFile("private", text)
-        assertTrue(manager.existsInternalFile("private")); assertEquals(text, manager.readInternalFile("private"))
+        manager.writeInternalFile("private", text)
+        assertEquals(text, manager.readInternalFile("private"))
         val asset = context.assets.open("default_types.json").bufferedReader().use { it.readText() }
         assertEquals(asset, manager.readAssetFile("default_types.json"))
         assertThrows(IOException::class.java) { manager.readAssetFile("default_types.json", 1) }

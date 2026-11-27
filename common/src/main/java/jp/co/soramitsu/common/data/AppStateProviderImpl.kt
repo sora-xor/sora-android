@@ -38,8 +38,6 @@ class AppStateProviderImpl : AppStateProvider, LifecycleEventObserver {
 
     override val isForeground: Boolean
         get() = ProcessLifecycleOwner.get().lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)
-    override val isBackground: Boolean
-        get() = !isForeground
 
     override fun observeState(): Flow<AppStateProvider.AppEvent> = subject.asStateFlow()
 

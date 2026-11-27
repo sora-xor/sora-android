@@ -33,7 +33,6 @@ class AssetAndPoolSettingsDestinationTest {
         fragment.javaClass.getDeclaredField("viewModel\$delegate").apply { isAccessible = true }.set(fragment, lazyOf(vm))
         every { fragment.viewLifecycleOwner } returns compose.activity
         compose.setContent { SoraAppTheme {
-            fragment.backgroundColorComposable()
             val nav = rememberNavController(); val scroll = rememberScrollState()
             NavHost(nav, startDestination = theOnlyRoute) { with(fragment) { content(scroll, nav) } }
         } }
@@ -53,6 +52,7 @@ class AssetAndPoolSettingsDestinationTest {
         val rows = MutableLiveData<List<AssetSettingsState>>(); val empty = MutableStateFlow(true); val sum = MutableStateFlow("$25.00")
         val dragging = MutableLiveData(true)
         val vm = mockk<FullAssetSettingsViewModel>(relaxed = true) {
+            every { toolbarState } returns MutableLiveData()
             every { settingsState } returns rows; every { settingsStateEmpty } returns empty
             every { fiatSum } returns sum; every { dragList } returns dragging
         }
@@ -70,7 +70,7 @@ class AssetAndPoolSettingsDestinationTest {
             rows.value = emptyList(); empty.value = true; sum.value = ""; dragging.value = false
         }
         awaitRows(0)
-        compose.onNodeWithText(compose.activity.getString(R.string.search_empty_state)).assertIsDisplayed()
+        compose.onNodeWithText(compose.activity.getString(R.string.asset_picker_empty)).assertIsDisplayed()
     }
     @Test fun poolDestinationReflectsReplacementReorderingAndFavoriteActions() {
         val pool = PoolSettingsState("a" to "b", "", "", "Alpha-Beta", "ALP-BET", "1 - 2", false, 3.0)

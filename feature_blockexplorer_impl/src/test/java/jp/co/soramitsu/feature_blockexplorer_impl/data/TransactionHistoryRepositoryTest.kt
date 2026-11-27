@@ -34,7 +34,7 @@ import java.net.UnknownHostException
 import jp.co.soramitsu.androidfoundation.testing.MainCoroutineRule
 import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.domain.TransactionNodeRefusal
-import jp.co.soramitsu.common.logger.FirebaseWrapper
+import jp.co.soramitsu.common.logger.WalletDiagnostics
 import jp.co.soramitsu.core_db.AppDatabase
 import jp.co.soramitsu.core_db.dao.WalletIdentityDao
 import jp.co.soramitsu.core_db.model.Sora2PendingSubmissionLocal
@@ -124,9 +124,9 @@ class TransactionHistoryRepositoryTest {
         health = mockk()
         validatedHistoryCache = mockk(relaxed = true)
         mockkStatic(Uri::parse)
-        mockkObject(FirebaseWrapper)
+        mockkObject(WalletDiagnostics)
         every { Uri.parse(any()) } returns mockedUri
-        every { FirebaseWrapper.recordErrorClass(any()) } returns Unit
+        every { WalletDiagnostics.recordErrorClass(any()) } returns Unit
         every { database.walletIdentityDao() } returns walletIdentityDao
         coEvery { detailsStore.list(any()) } returns emptyList()
         coEvery { detailsStore.retainOnly(any(), any(), any()) } returns Unit
@@ -250,8 +250,8 @@ class TransactionHistoryRepositoryTest {
 
         assertEquals(emptyList<Transaction>(), result)
         verify {
-            FirebaseWrapper.recordErrorClass(
-                FirebaseWrapper.PrivacySafeErrorClass.PI_TRANSACTION_HISTORY
+            WalletDiagnostics.recordErrorClass(
+                WalletDiagnostics.PrivacySafeErrorClass.PI_TRANSACTION_HISTORY
             )
         }
     }
@@ -266,8 +266,8 @@ class TransactionHistoryRepositoryTest {
 
         assertEquals(emptySet<String>(), result)
         verify {
-            FirebaseWrapper.recordErrorClass(
-                FirebaseWrapper.PrivacySafeErrorClass.PI_TRANSACTION_PEERS
+            WalletDiagnostics.recordErrorClass(
+                WalletDiagnostics.PrivacySafeErrorClass.PI_TRANSACTION_PEERS
             )
         }
     }
@@ -295,8 +295,8 @@ class TransactionHistoryRepositoryTest {
         assertEquals(1, result.size)
         assertEquals(TestTransactions.sendSuccessfulTx.base.txHash, result.single().base.txHash)
         verify {
-            FirebaseWrapper.recordErrorClass(
-                FirebaseWrapper.PrivacySafeErrorClass.PI_TRANSACTION_HISTORY
+            WalletDiagnostics.recordErrorClass(
+                WalletDiagnostics.PrivacySafeErrorClass.PI_TRANSACTION_HISTORY
             )
         }
     }
@@ -662,8 +662,8 @@ class TransactionHistoryRepositoryTest {
 
         assertEquals(TestTransactions.sendSuccessfulTx.base.txHash, result?.base?.txHash)
         verify {
-            FirebaseWrapper.recordErrorClass(
-                FirebaseWrapper.PrivacySafeErrorClass.PI_TRANSACTION_DETAIL
+            WalletDiagnostics.recordErrorClass(
+                WalletDiagnostics.PrivacySafeErrorClass.PI_TRANSACTION_DETAIL
             )
         }
     }
@@ -693,8 +693,8 @@ class TransactionHistoryRepositoryTest {
         assertEquals("history unavailable", result.errorMessage)
         assertEquals(TestTransactions.sendSuccessfulTx.base.txHash, result.transactions.single().base.txHash)
         verify {
-            FirebaseWrapper.recordErrorClass(
-                FirebaseWrapper.PrivacySafeErrorClass.PI_TRANSACTION_HISTORY
+            WalletDiagnostics.recordErrorClass(
+                WalletDiagnostics.PrivacySafeErrorClass.PI_TRANSACTION_HISTORY
             )
         }
     }

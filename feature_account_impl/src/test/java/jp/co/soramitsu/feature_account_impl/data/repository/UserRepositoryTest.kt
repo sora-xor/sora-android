@@ -59,6 +59,8 @@ import jp.co.soramitsu.common.data.WalletPreferenceKeys
 import jp.co.soramitsu.core_db.WalletQuarantine
 import jp.co.soramitsu.core_db.WalletUpgradeBackup
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialField
+import jp.co.soramitsu.feature_account_api.domain.PhoneScreenLock
+import jp.co.soramitsu.feature_account_api.domain.ScreenLockConfirmationRequiredException
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsDatasource
 import jp.co.soramitsu.feature_account_api.domain.interfaces.StoredCredential
 import jp.co.soramitsu.feature_account_api.domain.model.RetainedWallet
@@ -231,8 +233,17 @@ class UserRepositoryTest {
             languagesHolder,
             runtimeManager,
             userRepositorySr25519Crypto,
+            phoneScreenLock,
         )
     }
+
+    /** The phone's screen lock as the repository sees it; off unless a test turns it on. */
+    private var phoneHasScreenLock = false
+    private var elapsedMillis = 1_000_000L
+    private val phoneScreenLock = PhoneScreenLock(
+        deviceSecure = { phoneHasScreenLock },
+        elapsedMillis = { elapsedMillis },
+    )
 
     @Test
     fun `get Selected Language`() = runTest {
@@ -272,6 +283,41 @@ class UserRepositoryTest {
         userRepository.setCurSoraAccount(soraAccount)
 
         coVerify { userDatasource.setCurAccountAddress(soraAccount.substrateAddress) }
+    }
+
+    @Test
+    fun `the claim entry follows the saved answer of the selected account`() = runTest {
+        val own = MutableStateFlow(false)
+        val other = MutableStateFlow(true)
+        every { userDatasource.flowNeedsMigration("accountAddress") } returns own
+        every { userDatasource.flowNeedsMigration(soraAccount.substrateAddress) } returns other
+        coEvery { userDatasource.setCurAccountAddress(any()) } returns Unit
+        coEvery { accountDao.getAccount(soraAccount.substrateAddress) } returns SoraAccountLocal(
+            soraAccount.substrateAddress,
+            soraAccount.accountName,
+        )
+        userRepository.getCurSoraAccount()
+        val seen = mutableListOf<Boolean>()
+        val job = launch(UnconfinedTestDispatcher(testScheduler)) {
+            userRepository.flowClaimPending().collect { seen += it }
+        }
+
+        assertEquals(listOf(false), seen)
+        // The check after the PIN found a claim for this account.
+        own.value = true
+        assertEquals(listOf(false, true), seen)
+        // The claim was completed.
+        own.value = false
+        assertEquals(listOf(false, true, false), seen)
+        // Another account is selected: its own saved answer counts from now on.
+        userRepository.setCurSoraAccount(soraAccount)
+        assertEquals(listOf(false, true, false, true), seen)
+        own.value = true
+        assertEquals(listOf(false, true, false, true), seen)
+
+        job.cancel()
+        // Watching the claim never runs the account stream's own side work.
+        coVerify(exactly = 0) { referralsDao.clearTable() }
     }
 
     @Test
@@ -684,6 +730,209 @@ class UserRepositoryTest {
     }
 
     @Test
+    fun `a new PIN over an unreadable one with accounts needs the phone's screen lock`() = runTest {
+        phoneHasScreenLock = true
+        coEvery { userDatasource.retrievePin() } throws WalletDecryptionException("PIN_UNREADABLE")
+        coEvery { userDatasource.savePin(any()) } returns Unit
+
+        assertTrue(userRepository.newPinNeedsScreenLock())
+        // Whatever the screen did: without the system prompt's confirmation nothing is saved.
+        val refused = runCatching { userRepository.savePin("123456") }.exceptionOrNull()
+
+        assertTrue(refused is ScreenLockConfirmationRequiredException)
+        coVerify(exactly = 0) { userDatasource.savePin(any()) }
+        coVerify(exactly = 0) { credentialsDatasource.markKeySetsNeedingPhrase(any()) }
+    }
+
+    @Test
+    fun `the screen lock just passed lets the owner set a new PIN over an unreadable one once`() = runTest {
+        phoneHasScreenLock = true
+        coEvery { userDatasource.retrievePin() } throws WalletDecryptionException("PIN_UNREADABLE")
+        coEvery { userDatasource.savePin(any()) } returns Unit
+        val confirmation = phoneScreenLock.confirmed()
+
+        userRepository.savePin("123456", confirmation)
+
+        coVerify(exactly = 1) { userDatasource.savePin("123456") }
+        // Damaged data, not a hand-over: the owner's accounts and key sets are not marked.
+        coVerify(exactly = 0) { credentialsDatasource.markKeySetsNeedingPhrase(any()) }
+        // The confirmation did its one job.
+        val again = runCatching { userRepository.savePin("654321", confirmation) }.exceptionOrNull()
+        assertTrue(again is ScreenLockConfirmationRequiredException)
+        coVerify(exactly = 0) { userDatasource.savePin("654321") }
+    }
+
+    @Test
+    fun `a screen lock confirmation that is old or not the latest saves no PIN`() = runTest {
+        phoneHasScreenLock = true
+        coEvery { userDatasource.retrievePin() } throws WalletDecryptionException("PIN_UNREADABLE")
+        coEvery { userDatasource.savePin(any()) } returns Unit
+
+        val old = phoneScreenLock.confirmed()
+        elapsedMillis += PhoneScreenLock.VALID_MILLIS + 1
+        assertTrue(
+            runCatching { userRepository.savePin("123456", old) }.exceptionOrNull()
+                is ScreenLockConfirmationRequiredException
+        )
+
+        val superseded = phoneScreenLock.confirmed()
+        val latest = phoneScreenLock.confirmed()
+        assertTrue(
+            runCatching { userRepository.savePin("123456", superseded) }.exceptionOrNull()
+                is ScreenLockConfirmationRequiredException
+        )
+        // One made by another phone-lock object (not this app's) is nothing either.
+        val foreign = PhoneScreenLock({ true }, { elapsedMillis }).confirmed()
+        assertTrue(
+            runCatching { userRepository.savePin("123456", foreign) }.exceptionOrNull()
+                is ScreenLockConfirmationRequiredException
+        )
+        coVerify(exactly = 0) { userDatasource.savePin(any()) }
+
+        userRepository.savePin("123456", latest)
+        coVerify(exactly = 1) { userDatasource.savePin("123456") }
+    }
+
+    // Codex re-review 4: the claim check at unlock (PinCodeInteractor.needsMigration) reads the
+    // network for a pending claim. If the claim is confirmed while that read is under way, its
+    // late "still pending" must not bring the Claim entry back.
+    @Test
+    fun `a claim confirmed while an older claim check reads the network stays done`() = runTest {
+        val account = SoraAccount("accountAddress", "accountName")
+        val needs = mutableMapOf<String, Boolean>()
+        val fetched = mutableMapOf<String, Boolean>()
+        coEvery { userDatasource.saveNeedsMigration(any(), any()) } answers { needs[secondArg()] = firstArg() }
+        coEvery { userDatasource.needsMigration(any()) } answers { needs[firstArg()] ?: false }
+        coEvery { userDatasource.saveIsMigrationFetched(any(), any()) } answers { fetched[secondArg()] = firstArg() }
+        coEvery { userDatasource.isMigrationStatusFetched(any()) } answers { fetched[firstArg()] ?: false }
+        // A claim this phone knows is pending.
+        needs[account.substrateAddress] = true
+        fetched[account.substrateAddress] = true
+        val network = kotlinx.coroutines.CompletableDeferred<Boolean>()
+
+        val olderCheck = launch(UnconfinedTestDispatcher(testScheduler)) {
+            // A pending claim counts as not fetched, so the check asks the network ...
+            assertFalse(userRepository.isMigrationFetched(account))
+            val stillPending = network.await()
+            userRepository.saveNeedsMigration(stillPending, account)
+            userRepository.saveIsMigrationFetched(true, account)
+        }
+        // ... the claim is confirmed meanwhile, and the network's older answer comes after.
+        userRepository.markClaimConfirmed(account)
+        network.complete(true)
+        olderCheck.join()
+
+        assertFalse(userRepository.needsMigration(account))
+        // Checked and done: a later check reads this answer instead of the network.
+        assertTrue(userRepository.isMigrationFetched(account))
+        // Another account's pending claim is still saved as it is found.
+        val other = SoraAccount("otherAddress", "other")
+        userRepository.saveNeedsMigration(true, other)
+        assertTrue(userRepository.needsMigration(other))
+    }
+
+    // Codex review 3: the confirmation is taken before anything is written, so a second save
+    // that brings it while the first one is still writing is refused, and only one PIN is set.
+    @Test
+    fun `one screen lock confirmation replaces the PIN once even while the first save is writing`() = runTest {
+        phoneHasScreenLock = true
+        coEvery { userDatasource.retrievePin() } throws WalletDecryptionException("PIN_UNREADABLE")
+        val writing = kotlinx.coroutines.CompletableDeferred<Unit>()
+        coEvery { userDatasource.savePin("123456") } coAnswers { writing.await() }
+        coEvery { userDatasource.savePin("654321") } returns Unit
+        val confirmation = phoneScreenLock.confirmed()
+
+        val first = launch(UnconfinedTestDispatcher(testScheduler)) {
+            userRepository.savePin("123456", confirmation)
+        }
+        // The first save is suspended inside its write.
+        coVerify(exactly = 1) { userDatasource.savePin("123456") }
+        val second = runCatching { userRepository.savePin("654321", confirmation) }.exceptionOrNull()
+
+        assertTrue(second is ScreenLockConfirmationRequiredException)
+        writing.complete(Unit)
+        first.join()
+        coVerify(exactly = 0) { userDatasource.savePin("654321") }
+        // Done: it does not count for a later save either.
+        assertTrue(
+            runCatching { userRepository.savePin("654321", confirmation) }.exceptionOrNull()
+                is ScreenLockConfirmationRequiredException
+        )
+        coVerify(exactly = 0) { userDatasource.savePin("654321") }
+    }
+
+    @Test
+    fun `a PIN save that fails keeps the screen lock confirmation for the next try`() = runTest {
+        phoneHasScreenLock = true
+        coEvery { userDatasource.retrievePin() } throws WalletDecryptionException("PIN_UNREADABLE")
+        coEvery { userDatasource.savePin("123456") } throws java.io.IOException("disk full") andThen Unit
+        val confirmation = phoneScreenLock.confirmed()
+
+        assertTrue(
+            runCatching { userRepository.savePin("123456", confirmation) }.exceptionOrNull()
+                is java.io.IOException
+        )
+        userRepository.savePin("123456", confirmation)
+
+        coVerify(exactly = 2) { userDatasource.savePin("123456") }
+    }
+
+    @Test
+    fun `without accounts an unreadable PIN guards nothing and a new one is saved`() = runTest {
+        phoneHasScreenLock = true
+        coEvery { accountDao.getAccounts() } returns emptyList()
+        coEvery { userDatasource.retrievePin() } throws WalletDecryptionException("PIN_UNREADABLE")
+        coEvery { userDatasource.savePin("123456") } returns Unit
+
+        assertFalse(userRepository.newPinNeedsScreenLock())
+        userRepository.savePin("123456")
+
+        coVerify(exactly = 1) { userDatasource.savePin("123456") }
+    }
+
+    @Test
+    fun `a phone without a screen lock sets a new PIN over an unreadable one as before`() = runTest {
+        phoneHasScreenLock = false
+        coEvery { userDatasource.retrievePin() } throws WalletDecryptionException("PIN_UNREADABLE")
+        coEvery { userDatasource.savePin("123456") } returns Unit
+
+        assertFalse(userRepository.newPinNeedsScreenLock())
+        userRepository.savePin("123456")
+
+        coVerify(exactly = 1) { userDatasource.savePin("123456") }
+    }
+
+    @Test
+    fun `a readable or missing PIN never asks for the screen lock`() = runTest {
+        phoneHasScreenLock = true
+        coEvery { userDatasource.savePin(any()) } returns Unit
+        coEvery { credentialsDatasource.getAddress() } returns ""
+        coEvery { credentialsDatasource.markKeySetsNeedingPhrase(any()) } returns Unit
+
+        coEvery { userDatasource.retrievePin() } returns "0000"
+        assertFalse(userRepository.newPinNeedsScreenLock())
+        userRepository.savePin("123456")
+
+        coEvery { userDatasource.retrievePin() } returns ""
+        assertFalse(userRepository.newPinNeedsScreenLock())
+        userRepository.savePin("654321")
+
+        coVerify(exactly = 1) { userDatasource.savePin("123456") }
+        coVerify(exactly = 1) { userDatasource.savePin("654321") }
+    }
+
+    @Test
+    fun `whether the screen lock is needed is not guessed while the PIN cannot be looked at`() = runTest {
+        phoneHasScreenLock = true
+        coEvery { userDatasource.retrievePin() } throws
+            KeyMaterialUnavailableException("KEYSTORE_UNAVAILABLE", transient = true)
+
+        val error = runCatching { userRepository.newPinNeedsScreenLock() }.exceptionOrNull()
+
+        assertTrue(error is KeyMaterialUnavailableException)
+    }
+
+    @Test
     fun `when the stored PIN cannot be looked at right now no PIN is saved`() = runTest {
         coEvery { userDatasource.retrievePin() } throws
             KeyMaterialUnavailableException("KEYSTORE_UNAVAILABLE", transient = true)
@@ -897,6 +1146,65 @@ class UserRepositoryTest {
         }
     }
 
+    // Codex re-review 3: a retained account whose backup is not judged yet (BACKUP_NOT_CHECKED)
+    // does not veto removing another account; its signing key is still proven live, and removing
+    // it itself stays refused until its backup is judged.
+    @Test
+    fun `an account whose backup is not checked yet does not block removing another`() = runTest {
+        val kept = "accountAddress"
+        val removed = "removedWallet"
+        val removedSeed = ByteArray(32) { 0x42 }
+        fun removedKeys() = testSr25519Keypair(removedSeed.copyOf())
+        val removedPublic = removedKeys().publicKey
+        coEvery { accountDao.getAccounts() } returns listOf(
+            SoraAccountLocal(kept, "Kept"),
+            SoraAccountLocal(removed, "Removed"),
+        )
+        coEvery { walletIdentityDao.getWallets() } returns listOf(
+            WalletIdentityLocal(
+                walletId = kept,
+                displayName = "Kept",
+                secretSource = "BACKUP_NOT_CHECKED",
+                migrationState = "VERIFIED",
+                derivationVersion = 1,
+            ),
+            WalletIdentityLocal(
+                walletId = removed,
+                displayName = "Removed",
+                secretSource = "LEGACY_SECRET",
+                migrationState = "VERIFIED",
+                derivationVersion = 1,
+            ),
+        )
+        coEvery { walletIdentityDao.getAllNetworkAccounts() } returns emptyList()
+        coEvery { walletIdentityDao.countUnresolvedTransactionsForJournal(any()) } returns 0
+        coEvery { credentialsDatasource.getAddress() } returns ""
+        coEvery { credentialsDatasource.retrieveKeys(kept) } answers { retainedFifteenWordKeyPair() }
+        coEvery { credentialsDatasource.retrieveKeys(removed) } answers { removedKeys() }
+        every { runtimeManager.soraPublicKeyOrNull(removed) } returns removedPublic
+        every { runtimeManager.toSoraAddressOrNull(any()) } answers {
+            if (firstArg<ByteArray>().contentEquals(removedPublic)) removed else kept
+        }
+
+        val preview = userRepository.createWalletDeletionPreview(listOf(removed))
+
+        assertEquals(WalletDeletionScope.SINGLE, preview.scope)
+        assertEquals(listOf(WalletDeletionTarget(removed, "Removed")), preview.targets)
+        assertEquals(kept, preview.selectedAfter)
+        // Removing the unchecked account itself waits until its backup is judged.
+        assertEquals(
+            "WALLET_DELETION_SECRET_SOURCE_UNSUPPORTED",
+            runCatching { userRepository.createWalletDeletionPreview(listOf(kept)) }.exceptionOrNull()?.message,
+        )
+        // The account that stays still has its signing key proven live.
+        coEvery { credentialsDatasource.retrieveKeys(kept) } returns null
+        assertEquals(
+            "WALLET_DELETION_SIGNING_KEY_MISSING",
+            runCatching { userRepository.createWalletDeletionPreview(listOf(removed)) }.exceptionOrNull()?.message,
+        )
+        coVerify(exactly = 0) { walletIdentityDao.beginDeletionOperation(any(), any()) }
+    }
+
     @Test
     fun `deletion preview verifies keypair only legacy secret without deleting it`() =
         runTest {
@@ -1073,8 +1381,7 @@ class UserRepositoryTest {
         val languages = mutableListOf(
             Language("ru", R.string.common_russian, R.string.common_russian_native),
             Language("en", R.string.common_english, R.string.common_english_native),
-            Language("es", R.string.common_spanish, R.string.common_spanish_native),
-            Language("ba", R.string.common_bashkir, R.string.common_bashkir_native)
+            Language("es", R.string.common_spanish, R.string.common_spanish_native)
         )
         every { languagesHolder.getLanguages() } returns (languages to 1)
         assertEquals(languages to 1, userRepository.getAvailableLanguages())

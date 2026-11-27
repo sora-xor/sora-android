@@ -1,0 +1,5 @@
+<resources>
+    <string name="portfolio_exclusions">Pois jätetyt omaisuuserät</string>
+    <string name="portfolio_row_expanded">Laajennettu</string>
+    <string name="portfolio_row_collapsed">Tiivistetty</string>
+</resources>

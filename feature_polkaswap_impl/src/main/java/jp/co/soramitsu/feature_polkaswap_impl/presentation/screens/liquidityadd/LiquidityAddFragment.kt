@@ -23,16 +23,20 @@ import android.os.Bundle
 import android.view.View
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ScrollState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.AlertDialog
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.material.TextButton
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import jp.co.soramitsu.common.presentation.compose.theme.neon.neon
 import androidx.compose.ui.res.stringResource
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -43,10 +47,10 @@ import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import jp.co.soramitsu.androidfoundation.fragment.CustomViewModelFactory
 import jp.co.soramitsu.common.R
+import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.common.base.SoraBaseFragment
 import jp.co.soramitsu.common.domain.BottomBarController
 import jp.co.soramitsu.common.presentation.compose.components.PercentContainer
-import jp.co.soramitsu.common.util.ext.getColorFromAttrs
 import jp.co.soramitsu.feature_assets_api.presentation.selectsearchtoken.SelectSearchTokenScreen
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.components.compose.LiquidityAddConfirmScreen
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.components.compose.LiquidityAddScreen
@@ -84,18 +88,11 @@ class LiquidityAddFragment : SoraBaseFragment<LiquidityAddViewModel>() {
     override val viewModel: LiquidityAddViewModel by viewModels {
         CustomViewModelFactory {
             vmf.create(
-                requireArguments().getString(ARG_TOKEN_1)!!,
-                requireArguments().getString(ARG_TOKEN_2),
+                arguments?.getString(ARG_TOKEN_1).orEmpty(),
+                arguments?.getString(ARG_TOKEN_2),
             )
         }
     }
-
-    @Composable
-    override fun backgroundColorComposable() = Color(
-        color = requireContext().getColorFromAttrs(
-            R.attr.polkaswapBackground
-        ).data
-    )
 
     override fun backgroundColor(): Int = R.attr.polkaswapBackground
 
@@ -115,6 +112,11 @@ class LiquidityAddFragment : SoraBaseFragment<LiquidityAddViewModel>() {
             }
             val type =
                 requireNotNull(entry.arguments?.getString(LiquidityAddRoutes.selectTokenParamName))
+            val catalog = viewModel.addState.collectAsStateWithLifecycle().value
+            if (catalog.assetCatalogUnavailable) {
+                LaunchedEffect(Unit) { navController.popBackStack() }
+                return@composable
+            }
             val state = viewModel.searchTokenFilter.collectAsStateWithLifecycle()
             SelectSearchTokenScreen(
                 scrollState = scrollState,
@@ -127,18 +129,28 @@ class LiquidityAddFragment : SoraBaseFragment<LiquidityAddViewModel>() {
                 viewModel.slippageChanged(f)
                 navController.popBackStack()
             }
-            SwapSlippageScreen(
-                value = viewModel.stateSlippage.collectAsStateWithLifecycle().value,
-                onDone = onSlippageEntered,
-            )
+            Box(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(bottom = Dimens.x2)) {
+                SwapSlippageScreen(
+                    value = viewModel.stateSlippage.collectAsStateWithLifecycle().value,
+                    onDone = onSlippageEntered,
+                )
+            }
         }
         composable(LiquidityAddRoutes.confirm) {
             val state = viewModel.addState.collectAsStateWithLifecycle()
-            LiquidityAddConfirmScreen(
-                state = state.value,
-                slippage = viewModel.stateSlippage.collectAsStateWithLifecycle().value,
-                onConfirmClick = viewModel::onConfirmClick,
-            )
+            if ((state.value.assetState1 == null || state.value.assetState2 == null) &&
+                state.value.confirm.confirmResult == null && !state.value.confirm.btnState.loading
+            ) {
+                LaunchedEffect(Unit) { navController.popBackStack() }
+                return@composable
+            }
+            Box(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(bottom = Dimens.x2)) {
+                LiquidityAddConfirmScreen(
+                    state = state.value,
+                    slippage = viewModel.stateSlippage.collectAsStateWithLifecycle().value,
+                    onConfirmClick = viewModel::onConfirmClick,
+                )
+            }
         }
         composable(
             route = LiquidityAddRoutes.start,
@@ -182,7 +194,7 @@ class LiquidityAddFragment : SoraBaseFragment<LiquidityAddViewModel>() {
                             ) {
                                 Text(
                                     text = stringResource(id = R.string.common_ok),
-                                    color = Color.Red,
+                                    color = MaterialTheme.neon.redText,
                                 )
                             }
                         },
@@ -225,6 +237,7 @@ class LiquidityAddFragment : SoraBaseFragment<LiquidityAddViewModel>() {
                     onSelect1 = onToken1Click,
                     onSelect2 = onToken2Click,
                     onRetryEstimate = viewModel::onRetryEstimate,
+                    onRetryAssets = viewModel::retryAssets,
                 )
             }
         }

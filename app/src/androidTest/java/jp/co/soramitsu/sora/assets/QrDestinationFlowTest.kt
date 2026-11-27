@@ -17,6 +17,7 @@ import jp.co.soramitsu.common.presentation.compose.theme.SoraAppTheme
 import jp.co.soramitsu.common.presentation.compose.uikit.tokens.ScreenStatus
 import jp.co.soramitsu.feature_assets_api.presentation.selectsearchtoken.emptySearchTokenFilter
 import jp.co.soramitsu.feature_assets_impl.presentation.components.compose.receiverequest.*
+import jp.co.soramitsu.common_wallet.presentation.compose.receive.*
 import jp.co.soramitsu.feature_assets_impl.presentation.screens.receiverequest.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.*

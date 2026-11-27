@@ -26,21 +26,13 @@ class SafeModePreviewContractTest(private val preview: SafeModePreviewState, pri
         } else {
             compose.onAllNodesWithText(SafeModePreviewData.samplePhrase.first()).assertCountEquals(0)
         }
-        if (preview == SafeModePreviewState.U11_UPGRADE_COMPLETE) {
-            compose.onNodeWithText(compose.activity.getString(CommonR.string.safe_mode_back_up_now)).assertExists()
-        } else if (preview == SafeModePreviewState.U11_UPGRADE_COMPLETE_BACKED_UP) {
-            compose.onNodeWithText(compose.activity.getString(CommonR.string.safe_mode_back_up_now)).assertDoesNotExist()
-        }
     }
     companion object {
         @JvmStatic @Parameterized.Parameters(name = "{0}") fun cases() = listOf(
-            arrayOf<Any>(SafeModePreviewState.U1_PIN_CHECK, CommonR.string.safe_mode_checking_title),
             arrayOf<Any>(SafeModePreviewState.U5_FINISHING, CommonR.string.safe_mode_finishing_title),
             arrayOf<Any>(SafeModePreviewState.U9_READ_ONLY_HOME, CommonR.string.safe_mode_read_only_title),
             arrayOf<Any>(SafeModePreviewState.U9_LEARN_MORE, CommonR.string.safe_mode_read_only_details),
             arrayOf<Any>(SafeModePreviewState.U10_NEW_PIN, CommonR.string.safe_mode_new_pin_title),
-            arrayOf<Any>(SafeModePreviewState.U11_UPGRADE_COMPLETE, CommonR.string.safe_mode_whats_new_title),
-            arrayOf<Any>(SafeModePreviewState.U11_UPGRADE_COMPLETE_BACKED_UP, CommonR.string.safe_mode_whats_new_title),
             arrayOf<Any>(SafeModePreviewState.U12_DEVICE_TRANSFER, CommonR.string.safe_mode_device_transfer),
             arrayOf<Any>(SafeModePreviewState.U13_PENDING_CHECK, CommonR.string.safe_mode_pending_check),
             arrayOf<Any>(SafeModePreviewState.U6_REVEAL_PIN, R.string.recovery_auth_title),

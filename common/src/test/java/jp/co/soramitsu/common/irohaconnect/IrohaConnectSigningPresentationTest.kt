@@ -4,6 +4,19 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class IrohaConnectSigningPresentationTest {
+    @Test fun `digest length messages are never eligible for raw signing`() {
+        // Printable text can still be the bytes of a transaction signing digest.
+        listOf(ByteArray(32) { 65 }, "é".repeat(16).toByteArray()).forEach {
+            assertEquals(32, it.size)
+            assertNull(IrohaConnectSigningPresentation.readableMessage(IrohaConnectSigningKind.RAW, it))
+        }
+        listOf(31, 33).forEach {
+            assertEquals(it, IrohaConnectSigningPresentation.readableMessage(
+                IrohaConnectSigningKind.RAW, ByteArray(it) { 65 },
+            )?.length)
+        }
+    }
+
     @Test fun `complete multilingual message is preserved exactly`() {
         val message = "Authorize account access\nアカウント\t1 XOR"
         assertEquals(message, IrohaConnectSigningPresentation.readableMessage(IrohaConnectSigningKind.RAW, message.toByteArray()))

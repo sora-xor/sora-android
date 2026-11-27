@@ -43,10 +43,16 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import jp.co.soramitsu.common.presentation.compose.components.LoadingRows
+import jp.co.soramitsu.common.presentation.compose.components.NothingFoundText
+import jp.co.soramitsu.common.presentation.compose.neon.FilledButton
+import jp.co.soramitsu.ui_core.component.button.properties.Order
+import jp.co.soramitsu.ui_core.component.button.properties.Size
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.presentation.compose.components.AccountWithIcon
 import jp.co.soramitsu.common.presentation.compose.neon.InputText
@@ -98,7 +104,11 @@ internal fun ContactsScreen(
         } else {
             onScanClick
         },
-        keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
+        keyboardOptions = KeyboardOptions(
+            keyboardType = KeyboardType.Ascii,
+            autoCorrectEnabled = false,
+            imeAction = ImeAction.Done,
+        ),
     )
     AnimatedVisibility(visible = isMyAddress) {
         Text(
@@ -125,15 +135,30 @@ internal fun ContactsScreen(
                 .wrapContentHeight()
                 .verticalScroll(scroll)
         ) {
-            Text(
-                modifier = Modifier
-                    .wrapContentHeight()
-                    .fillMaxWidth(),
-                text = stringResource(id = hint).uppercase(),
-                style = MaterialTheme.customTypography.headline4,
-                color = MaterialTheme.customColors.fgSecondary,
-            )
-            Divider(thickness = Dimens.x2, color = Color.Transparent)
+            if (hint == R.string.common_loading) {
+                LoadingRows(stringResource(R.string.common_loading), count = 2)
+            } else if (hint == R.string.contacts_lookup_unavailable) {
+                NothingFoundText(stringResource(hint))
+                FilledButton(
+                    modifier = Modifier.fillMaxWidth(),
+                    text = stringResource(R.string.asset_catalog_retry),
+                    order = Order.PRIMARY,
+                    size = Size.Large,
+                    onClick = { onValueChanged(inputTextState.value) },
+                )
+            } else if (accounts.isEmpty()) {
+                NothingFoundText(stringResource(if (isSearchEntered) R.string.search_empty_state else R.string.contacts_none))
+            } else {
+                Text(
+                    modifier = Modifier
+                        .wrapContentHeight()
+                        .fillMaxWidth(),
+                    text = stringResource(id = hint).uppercase(),
+                    style = MaterialTheme.customTypography.headline4,
+                    color = MaterialTheme.customColors.fgSecondary,
+                )
+                Divider(thickness = Dimens.x2, color = Color.Transparent)
+            }
             accounts.forEachIndexed { index, item ->
                 AccountWithIcon(
                     modifier = Modifier

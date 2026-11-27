@@ -903,7 +903,12 @@ class Release240MigrationManager(
     private val credentialsRepository: Release240CredentialsRepository,
 ) {
 
-    suspend fun start(): Boolean {
+    /**
+     * HARNESS: [killedBefore] stops where a process kill between the release's own steps would:
+     * after the address-suffixed copies, before the account row ([STOP_BEFORE_ACCOUNT_INSERT]) or
+     * before the selection ([STOP_BEFORE_SELECTION]).
+     */
+    suspend fun start(killedBefore: String? = null): Boolean {
         if (userRepository.getRegistrationState() == "REGISTRATION_FINISHED") {
             if (userRepository.getSoraAccountsCount() == 0) {
                 val emptySoraAccount = "" to ""
@@ -918,11 +923,18 @@ class Release240MigrationManager(
                 credentialsRepository.saveMnemonic(mnemonic, soraAccount)
                 val soraKeys = credentialsRepository.retrieveKeyPair(emptySoraAccount)
                 credentialsRepository.saveKeyPair(soraKeys, soraAccount)
+                if (killedBefore == STOP_BEFORE_ACCOUNT_INSERT) return true
                 userRepository.insertSoraAccount(soraAccount)
+                if (killedBefore == STOP_BEFORE_SELECTION) return true
                 userRepository.setCurSoraAccount(soraAccount)
             }
         }
         return true
+    }
+
+    companion object {
+        const val STOP_BEFORE_ACCOUNT_INSERT = "account-insert"
+        const val STOP_BEFORE_SELECTION = "selection"
     }
 }
 

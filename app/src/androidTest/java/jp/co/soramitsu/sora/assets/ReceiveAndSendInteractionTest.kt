@@ -2,7 +2,6 @@
 package jp.co.soramitsu.sora.assets
 
 import android.graphics.Bitmap
-import android.graphics.Color
 import android.graphics.drawable.BitmapDrawable
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -22,9 +21,9 @@ import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.presentation.compose.neon.safemode.LocalSelectedAccountReadOnly
 import jp.co.soramitsu.common.presentation.compose.theme.SoraAppTheme
 import jp.co.soramitsu.common.presentation.compose.uikit.tokens.ScreenStatus
-import jp.co.soramitsu.feature_assets_impl.presentation.components.compose.receive.ReceiveScreen
 import jp.co.soramitsu.feature_assets_impl.presentation.components.compose.receiverequest.*
-import jp.co.soramitsu.feature_assets_impl.presentation.components.compose.send.SendConfirmScreen
+import jp.co.soramitsu.common_wallet.presentation.compose.receive.*
+import jp.co.soramitsu.common_wallet.presentation.compose.send.SendConfirmScreen
 import org.junit.*
 import org.junit.Assert.*
 import org.junit.runner.RunWith
@@ -84,7 +83,7 @@ class ReceiveAndSendInteractionTest {
     }
     @Test fun receiveErrorCanRetryWithoutSharingStaleQr() {
         showReceive(mutableStateOf(receive().copy(screenStatus = ScreenStatus.ERROR)))
-        compose.onAllNodesWithText(compose.activity.getString(R.string.common_error_general_title))[0].performClick()
+        compose.onAllNodesWithText(compose.activity.getString(R.string.common_try_again))[0].performClick()
         node(R.string.common_share).performScrollTo().assertIsNotEnabled()
         compose.runOnIdle { assertEquals(listOf("retry"), events) }
     }
@@ -103,6 +102,12 @@ class ReceiveAndSendInteractionTest {
         compose.onNodeWithText("Receiving wallet").assertDoesNotExist()
         compose.onNodeWithText("another-address").performScrollTo().assertIsDisplayed()
     }
+    @Test fun requestWithNoTokenOffersSelectionBeforeFocusingAnAmount() {
+        showRequest(mutableStateOf(request().copy(assetAmountInputState = null)))
+        node(R.string.choose_token).performClick()
+        compose.onAllNodes(hasSetTextAction()).assertCountEquals(0)
+        compose.runOnIdle { assertEquals(listOf("token"), events) }
+    }
     @Test fun requestForwardsExactDecimalAndTokenSelectionBeforeCreation() {
         showRequest(mutableStateOf(request()))
         compose.onNode(hasSetTextAction()).performTextReplacement("2.000000000000000001")
@@ -114,7 +119,7 @@ class ReceiveAndSendInteractionTest {
         val state = mutableStateOf(request()); showRequest(state)
         compose.runOnIdle { state.value = state.value.copy(screenStatus = ScreenStatus.ERROR) }
         node(R.string.common_create_qr_request).performScrollTo().assertIsNotEnabled()
-        node(R.string.common_error_general_title).performScrollTo().performClick()
+        node(R.string.common_try_again).performScrollTo().performClick()
         compose.runOnIdle { assertEquals(listOf("retry"), events) }
     }
     @Test fun requestWithoutAnAccountCannotCreateQr() {
@@ -146,7 +151,7 @@ class ReceiveAndSendInteractionTest {
         node(R.string.common_share).performScrollTo().assertIsNotEnabled()
         compose.runOnIdle { state.value = state.value.copy(screenStatus = ScreenStatus.ERROR) }
         node(R.string.common_share).assertIsNotEnabled()
-        compose.onAllNodesWithText(compose.activity.getString(R.string.common_error_general_title))[0].performScrollTo().performClick()
+        compose.onAllNodesWithText(compose.activity.getString(R.string.common_try_again))[0].performScrollTo().performClick()
         compose.runOnIdle { assertEquals(listOf("retry"), events) }
     }
     @Test fun receiveRequestTabsRouteOnlyTheVisibleAction() {
@@ -160,20 +165,6 @@ class ReceiveAndSendInteractionTest {
         node(R.string.common_receive).performClick()
         node(R.string.commom_scan_qr).performScrollTo().performClick()
         compose.runOnIdle { assertEquals(listOf("receive-share", "create", "scan"), events) }
-    }
-    @Test fun basicReceiveKeepsCopyAndShareIndependent() {
-        show { Column(Modifier.verticalScroll(rememberScrollState())) { ReceiveScreen(qr, avatar, "Basic wallet", address, { events += "share" }, { events += "copy" }) } }
-        compose.onNodeWithText("Basic wallet").performScrollTo().performClick()
-        compose.onNodeWithText(address).performScrollTo().performClick()
-        node(R.string.copy_receive_address).performScrollTo().performClick()
-        node(R.string.common_share).performScrollTo().performClick()
-        compose.runOnIdle { assertEquals(listOf("copy", "copy", "copy", "share"), events) }
-    }
-    @Test fun basicReceivePlaceholderStillAllowsCopyingTheAddress() {
-        show { Column(Modifier.verticalScroll(rememberScrollState())) { ReceiveScreen(null, avatar, "Basic wallet", address, {}, { events += "copy" }) } }
-        compose.onNodeWithContentDescription(compose.activity.getString(R.string.wallet_receive_xor)).assertDoesNotExist()
-        node(R.string.copy_receive_address).performScrollTo().performClick()
-        compose.runOnIdle { assertEquals(listOf("copy"), events) }
     }
     @Test fun sendConfirmationShowsRecipientAmountAndFeeBeforeSubmit() {
         showSend()

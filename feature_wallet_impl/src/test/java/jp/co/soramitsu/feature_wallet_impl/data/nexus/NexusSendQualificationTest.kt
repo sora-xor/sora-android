@@ -6,7 +6,6 @@ import io.mockk.mockk
 import jp.co.soramitsu.common.nexus.NexusNetworks
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class NexusSendQualificationTest {
@@ -69,16 +68,4 @@ class NexusSendQualificationTest {
         }
     }
 
-    @Test
-    fun `unavailable production adapters never advertise send support`() {
-        val capabilities = DefaultNexusSendQualification(
-            UnavailableNexusTransactionSigner(),
-            UnavailableNexusFinalityReader(),
-        ).capabilitiesFor(TEST_TAIRA_NETWORK)
-
-        assertEquals(NexusCapabilityStatus.UNAVAILABLE, capabilities.signing)
-        assertEquals(NexusCapabilityStatus.UNAVAILABLE, capabilities.finality)
-        assertFalse(capabilities.supportsSend)
-        assertTrue(NexusSendCapabilities.unavailable() == capabilities)
-    }
 }

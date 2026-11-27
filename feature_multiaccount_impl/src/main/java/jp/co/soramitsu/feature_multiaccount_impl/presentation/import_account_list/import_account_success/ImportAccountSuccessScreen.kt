@@ -19,7 +19,6 @@ limitations under the License.
 
 package jp.co.soramitsu.feature_multiaccount_impl.presentation.import_account_list.import_account_success
 
-import android.graphics.drawable.ColorDrawable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -32,6 +31,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.core.graphics.drawable.toDrawable
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.BackupAccountMetaWithIcon
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.ImportAccountPasswordState
@@ -128,7 +128,7 @@ fun PreviewEnterPassphraseScreen() {
     ImportAccountSuccessScreen(
         ImportAccountPasswordState(
             selectedAccount = BackupAccountMetaWithIcon(
-                BackupAccountMeta("aa", "add"), ColorDrawable(android.graphics.Color.TRANSPARENT)
+                BackupAccountMeta("aa", "add"), android.graphics.Color.TRANSPARENT.toDrawable()
             )
         ),
         {},

@@ -123,7 +123,7 @@ class WalletNetworkDirectoryTest {
             listOf(null, WalletNetworkUnavailable.NOT_LIVE, WalletNetworkUnavailable.PAUSED),
             paused.map { it.unavailable },
         )
-        assertEquals(WalletNetworkId.SORA2, WalletNetworkChoices.onlyChoice(paused)?.id)
+        assertNull("A paused Taira read must not redirect Send to SORA2", WalletNetworkChoices.onlyChoice(paused))
 
         val open = WalletNetworkChoices.make(
             action = WalletNetworkAction.SEND,
@@ -134,6 +134,21 @@ class WalletNetworkDirectoryTest {
         )
         assertEquals(listOf(true, false, true), open.map { it.isAvailable })
         assertNull(WalletNetworkChoices.onlyChoice(open))
+    }
+
+    @Test
+    fun `send only skips the picker for one available live network`() {
+        val choices = WalletNetworkChoices.make(
+            action = WalletNetworkAction.SEND,
+            addresses = addresses - WalletNetworkId.TAIRA,
+            balances = emptyMap(),
+            canSend = { it == WalletNetworkId.SORA2 },
+            directory = today,
+        )
+        assertEquals(WalletNetworkId.SORA2, WalletNetworkChoices.onlyChoice(choices)?.id)
+        assertNull(WalletNetworkChoices.onlyChoice(choices.map {
+            it.copy(unavailable = WalletNetworkUnavailable.PAUSED)
+        }))
     }
 
     @Test

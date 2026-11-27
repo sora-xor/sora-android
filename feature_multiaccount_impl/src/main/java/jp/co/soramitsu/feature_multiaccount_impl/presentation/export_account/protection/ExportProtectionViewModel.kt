@@ -149,7 +149,7 @@ class ExportProtectionViewModel @AssistedInject constructor(
             } catch (error: kotlinx.coroutines.CancellationException) {
                 throw error
             } catch (error: Throwable) {
-                jp.co.soramitsu.common.logger.FirebaseWrapper.recordException(error)
+                jp.co.soramitsu.common.logger.WalletDiagnostics.recordException(error)
                 return@launch
             }
             if (words > 0) {
@@ -195,9 +195,5 @@ class ExportProtectionViewModel @AssistedInject constructor(
                 router.showPinForBackup(action = PinCodeAction.OPEN_JSON, addresses)
             }
         }
-    }
-
-    fun backButtonPressed() {
-        router.popBackStack()
     }
 }

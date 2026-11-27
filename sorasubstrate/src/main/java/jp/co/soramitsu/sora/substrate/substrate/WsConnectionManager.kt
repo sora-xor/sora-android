@@ -113,9 +113,6 @@ class WsConnectionManager(
     override val networkState: StateFlow<SocketStateMachine.State> =
         socketState.asStateFlow()
 
-    override val isStarted: Boolean
-        get() = socket.started()
-
     override fun switchUrl(url: String) {
         mutationTransport.requestSwitch(url)?.let(socket::switchUrl)
     }

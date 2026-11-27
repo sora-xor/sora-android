@@ -75,7 +75,6 @@ dependencies {
     implementation(project(":feature_blockexplorer_api"))
     implementation(project(":core_db"))
     implementation(project(":sorasubstrate"))
-    implementation(project(":network"))
 
     implementation(libs.appcompatDep)
     implementation(libs.materialDep)
@@ -90,13 +89,13 @@ dependencies {
     implementation(libs.navigationFragmentDep)
     implementation(libs.navigationUiDep)
 
-    implementation(libs.xsubstrateDep)
+    implementation(project(":xsubstrate"))
     implementation(libs.soramitsu.android.foundation)
 
     implementation(libs.roomDep)
     implementation(libs.roomKtxDep)
 
-    implementation(libs.uiCoreDep)
+    implementation(project(":ui-core"))
 
     implementation(platform(libs.compose.bom))
     implementation(libs.composeUiDep)

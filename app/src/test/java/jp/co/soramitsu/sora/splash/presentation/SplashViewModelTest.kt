@@ -25,7 +25,7 @@ import io.mockk.mockkObject
 import jp.co.soramitsu.androidfoundation.coroutine.CoroutineManager
 import jp.co.soramitsu.androidfoundation.testing.MainCoroutineRule
 import jp.co.soramitsu.androidfoundation.testing.getOrAwaitValue
-import jp.co.soramitsu.common.logger.FirebaseWrapper
+import jp.co.soramitsu.common.logger.WalletDiagnostics
 import jp.co.soramitsu.core_db.RecoveryFacts
 import jp.co.soramitsu.core_db.SetUpAgainScope
 import jp.co.soramitsu.core_db.WalletRecoveryKind
@@ -37,6 +37,7 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Before
@@ -47,6 +48,7 @@ import org.junit.runner.RunWith
 import org.mockito.BDDMockito.given
 import org.mockito.Mock
 import org.mockito.junit.MockitoJUnitRunner
+import org.mockito.kotlin.doSuspendableAnswer
 import org.mockito.kotlin.never
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
@@ -77,8 +79,8 @@ class SplashViewModelTest {
     @OptIn(ExperimentalStdlibApi::class)
     @Before
     fun setUp() = runTest {
-        mockkObject(FirebaseWrapper)
-        every { FirebaseWrapper.log(any()) } returns Unit
+        mockkObject(WalletDiagnostics)
+        every { WalletDiagnostics.log(any()) } returns Unit
         whenever(coroutineManager.io).thenReturn(this.coroutineContext[CoroutineDispatcher]!!)
         splashViewModel = SplashViewModel(
             interactor,
@@ -325,6 +327,44 @@ class SplashViewModelTest {
         }
 
     @Test
+    fun `a busy disk while routing a verified wallet is read again and the wallet opens`() =
+        runTest {
+            given(interactor.getMigrationDoneAsync()).willReturn(CompletableDeferred(true))
+            given(interactor.getRegistrationState())
+                .willThrow(java.io.UncheckedIOException(java.io.IOException("busy")))
+                .willReturn(OnboardingState.REGISTRATION_FINISHED)
+            given(interactor.hasExistingWallet()).willReturn(true)
+
+            splashViewModel.nextScreen()
+            advanceUntilIdle()
+
+            assertEquals(Unit, splashViewModel.showMainScreen.getOrAwaitValue())
+            assertEquals(null, splashViewModel.showMigrationRecovery.value)
+            verify(interactor, never()).recoveryOptions(org.mockito.kotlin.any())
+        }
+
+    @Test
+    fun `routing that stays busy hands a transient code to the screen that retries by itself`() =
+        runTest {
+            given(interactor.getMigrationDoneAsync()).willReturn(CompletableDeferred(true))
+            given(interactor.getRegistrationState()).willReturn(OnboardingState.REGISTRATION_FINISHED)
+            given(interactor.hasExistingWallet()).willThrow(
+                jp.co.soramitsu.common.util.KeyMaterialUnavailableException("busy", transient = true)
+            )
+            given(interactor.recoveryOptions("KEYSTORE_UNAVAILABLE"))
+                .willReturn(options("KEYSTORE_UNAVAILABLE"))
+
+            splashViewModel.nextScreen()
+            advanceUntilIdle()
+
+            val recovery = splashViewModel.showMigrationRecovery.getOrAwaitValue()
+            assertEquals("KEYSTORE_UNAVAILABLE", recovery.code)
+            assertEquals(true, recovery.options?.retryAutomatically)
+            // The first read and three more after short pauses.
+            verify(interactor, times(4)).hasExistingWallet()
+        }
+
+    @Test
     fun `failed explicit retry remains recovery and preserves legacy option`() = runTest {
         given(interactor.retryMigration()).willReturn(false)
         given(interactor.getMigrationFailureCode()).willReturn("KEY_UNAVAILABLE")
@@ -431,6 +471,231 @@ class SplashViewModelTest {
         // A readable database with a usable key: read-only works.
         assertEquals(true, options("STORAGE_IO").canReadOnly)
         assertEquals(true, options("WALLET_MIGRATION_RECOVERY_REQUIRED").canReadOnly)
+    }
+
+    @Test
+    fun `with nothing to play a verified wallet opens as soon as the checks answer`() = runTest {
+        given(interactor.getMigrationDoneAsync()).willReturn(CompletableDeferred(true))
+        given(interactor.getRegistrationState()).willReturn(OnboardingState.REGISTRATION_FINISHED)
+        given(interactor.hasExistingWallet()).willReturn(true)
+
+        assertEquals(false, splashViewModel.isStartDecided)
+        splashViewModel.routeEarly(mayOpen = { true })
+        advanceUntilIdle()
+
+        assertEquals(Unit, splashViewModel.showMainScreen.value)
+        assertEquals(true, splashViewModel.isStartDecided)
+        verify(pendingRecoveryStartupScheduler, times(1)).scheduleAfterWalletMigration()
+        // The usual route that follows later does not decide the start a second time.
+        splashViewModel.nextScreen()
+        advanceUntilIdle()
+        verify(interactor, times(1)).getRegistrationState()
+        verify(pendingRecoveryStartupScheduler, times(1)).scheduleAfterWalletMigration()
+    }
+
+    @Test
+    fun `the early route opens onboarding for a phone without an account`() = runTest {
+        given(interactor.getMigrationDoneAsync()).willReturn(CompletableDeferred(true))
+        given(interactor.getRegistrationState()).willReturn(OnboardingState.REGISTRATION_FINISHED)
+        given(interactor.hasExistingWallet()).willReturn(false)
+
+        splashViewModel.routeEarly(mayOpen = { true })
+        advanceUntilIdle()
+
+        assertEquals(OnboardingState.INITIAL, splashViewModel.showOnBoardingScreen.value)
+        assertEquals(null, splashViewModel.showMainScreen.value)
+    }
+
+    @Test
+    fun `the early route never opens before the verification answers and gives way to the usual one`() = runTest {
+        val verification = CompletableDeferred<Boolean>()
+        given(interactor.getMigrationDoneAsync()).willReturn(verification)
+        given(interactor.getRegistrationState()).willReturn(OnboardingState.REGISTRATION_FINISHED)
+        given(interactor.hasExistingWallet()).willReturn(true)
+
+        splashViewModel.routeEarly(mayOpen = { true })
+        advanceUntilIdle()
+        verify(interactor, never()).getRegistrationState()
+        assertEquals(null, splashViewModel.showMainScreen.value)
+
+        // The usual moment comes first: from here the start is exactly the usual one, routed once.
+        splashViewModel.nextScreen()
+        verification.complete(true)
+        advanceUntilIdle()
+
+        assertEquals(Unit, splashViewModel.showMainScreen.getOrAwaitValue())
+        verify(interactor, times(1)).getRegistrationState()
+        verify(pendingRecoveryStartupScheduler, times(1)).scheduleAfterWalletMigration()
+    }
+
+    @Test
+    fun `a failed verification is not routed early and keeps its usual recovery screen`() = runTest {
+        given(interactor.getMigrationDoneAsync()).willReturn(CompletableDeferred(false))
+        given(interactor.getMigrationFailureCode()).willReturn("INSUFFICIENT_BACKUP_STORAGE")
+        given(interactor.canContinueLegacyWallet()).willReturn(false)
+        given(interactor.recoveryOptions("INSUFFICIENT_BACKUP_STORAGE"))
+            .willReturn(options("INSUFFICIENT_BACKUP_STORAGE"))
+
+        splashViewModel.routeEarly(mayOpen = { true })
+        advanceUntilIdle()
+        // Nothing is shown before the usual moment: no recovery sooner than before.
+        assertEquals(null, splashViewModel.showMigrationRecovery.value)
+        assertEquals(null, splashViewModel.showMainScreen.value)
+        verify(interactor, never()).getMigrationFailureCode()
+        verify(pendingRecoveryStartupScheduler, never()).scheduleAfterWalletMigration()
+
+        splashViewModel.nextScreen()
+        advanceUntilIdle()
+        assertEquals("INSUFFICIENT_BACKUP_STORAGE", splashViewModel.showMigrationRecovery.getOrAwaitValue().code)
+        verify(pendingRecoveryStartupScheduler, never()).scheduleAfterWalletMigration()
+    }
+
+    @Test
+    fun `a busy first read is not routed early and keeps the usual retries`() = runTest {
+        given(interactor.getMigrationDoneAsync()).willReturn(CompletableDeferred(true))
+        given(interactor.getRegistrationState())
+            .willThrow(java.io.UncheckedIOException(java.io.IOException("busy")))
+            .willThrow(java.io.UncheckedIOException(java.io.IOException("busy")))
+            .willReturn(OnboardingState.REGISTRATION_FINISHED)
+        given(interactor.hasExistingWallet()).willReturn(true)
+
+        splashViewModel.routeEarly(mayOpen = { true })
+        advanceUntilIdle()
+        assertEquals(null, splashViewModel.showMainScreen.value)
+        verify(pendingRecoveryStartupScheduler, never()).scheduleAfterWalletMigration()
+
+        // The usual route reads again with its own pauses (one busy answer left) and opens the wallet.
+        splashViewModel.nextScreen()
+        advanceUntilIdle()
+        assertEquals(Unit, splashViewModel.showMainScreen.getOrAwaitValue())
+        assertEquals(null, splashViewModel.showMigrationRecovery.value)
+        verify(interactor, times(3)).getRegistrationState()
+    }
+
+    @Test
+    fun `an unexpected error is not routed early and still shows the usual recovery options`() = runTest {
+        given(interactor.getMigrationDoneAsync()).willReturn(CompletableDeferred(true))
+        given(interactor.getRegistrationState()).willThrow(IllegalStateException("DATASTORE_UNREADABLE"))
+        given(interactor.currentRecoveryCode()).willReturn(null)
+        given(interactor.canContinueLegacyWallet()).willReturn(false)
+        given(interactor.recoveryOptions("WALLET_VERIFICATION_FAILED"))
+            .willReturn(options("WALLET_VERIFICATION_FAILED"))
+
+        splashViewModel.routeEarly(mayOpen = { true })
+        advanceUntilIdle()
+        assertEquals(null, splashViewModel.showMigrationRecovery.value)
+
+        splashViewModel.nextScreen()
+        advanceUntilIdle()
+        assertEquals("WALLET_VERIFICATION_FAILED", splashViewModel.showMigrationRecovery.getOrAwaitValue().code)
+    }
+
+    @Test
+    fun `a screen that may not open now leaves the start to the usual route`() = runTest {
+        given(interactor.getMigrationDoneAsync()).willReturn(CompletableDeferred(true))
+        given(interactor.getRegistrationState()).willReturn(OnboardingState.REGISTRATION_FINISHED)
+        given(interactor.hasExistingWallet()).willReturn(true)
+
+        splashViewModel.routeEarly(mayOpen = { false })
+        advanceUntilIdle()
+        assertEquals(null, splashViewModel.showMainScreen.value)
+        assertEquals(false, splashViewModel.isStartDecided)
+        verify(pendingRecoveryStartupScheduler, never()).scheduleAfterWalletMigration()
+
+        splashViewModel.nextScreen()
+        advanceUntilIdle()
+        assertEquals(Unit, splashViewModel.showMainScreen.getOrAwaitValue())
+        verify(pendingRecoveryStartupScheduler, times(1)).scheduleAfterWalletMigration()
+    }
+
+    @Test
+    fun `the early route runs once per view model, also for a recreated screen`() = runTest {
+        given(interactor.getMigrationDoneAsync()).willReturn(CompletableDeferred(true))
+        given(interactor.getRegistrationState()).willReturn(OnboardingState.REGISTRATION_FINISHED)
+        given(interactor.hasExistingWallet()).willReturn(true)
+
+        splashViewModel.routeEarly(mayOpen = { true })
+        splashViewModel.routeEarly(mayOpen = { true })
+        advanceUntilIdle()
+
+        verify(interactor, times(1)).getRegistrationState()
+        verify(pendingRecoveryStartupScheduler, times(1)).scheduleAfterWalletMigration()
+    }
+
+    @Test
+    fun `an error while the early route opens the wallet shows the recovery options instead of crashing`() = runTest {
+        given(interactor.getMigrationDoneAsync()).willReturn(CompletableDeferred(true))
+        given(interactor.getRegistrationState()).willReturn(OnboardingState.REGISTRATION_FINISHED)
+        given(interactor.hasExistingWallet()).willReturn(true)
+        given(pendingRecoveryStartupScheduler.scheduleAfterWalletMigration())
+            .willThrow(IllegalStateException("WORK_MANAGER_UNAVAILABLE"))
+        given(interactor.currentRecoveryCode()).willReturn(null)
+        given(interactor.canContinueLegacyWallet()).willReturn(false)
+        given(interactor.recoveryOptions("WALLET_VERIFICATION_FAILED"))
+            .willReturn(options("WALLET_VERIFICATION_FAILED"))
+        // Made here, so its usual moment (500 ms) is still ahead on this test's clock.
+        val viewModel = SplashViewModel(interactor, coroutineManager, pendingRecoveryStartupScheduler)
+
+        viewModel.routeEarly(mayOpen = { true })
+        runCurrent()
+        // Not before the usual moment: the recovery options never come sooner than nextScreen could show them.
+        verify(pendingRecoveryStartupScheduler, times(1)).scheduleAfterWalletMigration()
+        assertEquals(null, viewModel.runtimeInitiated.value)
+        assertEquals(null, viewModel.showMigrationRecovery.value)
+        advanceUntilIdle()
+
+        assertEquals(true, viewModel.runtimeInitiated.value)
+        assertEquals("WALLET_VERIFICATION_FAILED", viewModel.showMigrationRecovery.getOrAwaitValue().code)
+        assertEquals(null, viewModel.showMainScreen.value)
+        assertEquals(true, viewModel.isStartDecided)
+        // The start is decided: the usual route that follows does not decide it again.
+        viewModel.nextScreen()
+        advanceUntilIdle()
+        verify(interactor, times(1)).getRegistrationState()
+    }
+
+    @Test
+    fun `an early route that has not answered is cancelled by the usual one and routes nothing itself`() = runTest {
+        val verification = CompletableDeferred<Boolean>()
+        given(interactor.getMigrationDoneAsync()).willReturn(verification)
+        given(interactor.getMigrationFailureCode()).willReturn("INSUFFICIENT_BACKUP_STORAGE")
+        given(interactor.canContinueLegacyWallet()).willReturn(false)
+        given(interactor.recoveryOptions("INSUFFICIENT_BACKUP_STORAGE"))
+            .willReturn(options("INSUFFICIENT_BACKUP_STORAGE"))
+
+        splashViewModel.routeEarly(mayOpen = { true })
+        splashViewModel.nextScreen()
+        // Asking again after the usual route began starts nothing.
+        splashViewModel.routeEarly(mayOpen = { true })
+        verification.complete(false)
+        advanceUntilIdle()
+
+        assertEquals("INSUFFICIENT_BACKUP_STORAGE", splashViewModel.showMigrationRecovery.getOrAwaitValue().code)
+        assertEquals(null, splashViewModel.showMainScreen.value)
+        verify(interactor, never()).getRegistrationState()
+        verify(pendingRecoveryStartupScheduler, never()).scheduleAfterWalletMigration()
+    }
+
+    @Test
+    fun `the usual route lets an early read it overtakes run to its end and opens the wallet once`() = runTest {
+        val accountsRead = CompletableDeferred<Boolean>()
+        given(interactor.getMigrationDoneAsync()).willReturn(CompletableDeferred(true))
+        given(interactor.getRegistrationState()).willReturn(OnboardingState.REGISTRATION_FINISHED)
+        whenever(interactor.hasExistingWallet()).doSuspendableAnswer { accountsRead.await() }
+
+        splashViewModel.routeEarly(mayOpen = { true })
+        runCurrent()
+        // The usual moment comes while the early route is inside its accounts read.
+        splashViewModel.nextScreen()
+        runCurrent()
+        accountsRead.complete(true)
+        advanceUntilIdle()
+
+        assertEquals(Unit, splashViewModel.showMainScreen.getOrAwaitValue())
+        assertEquals(false, splashViewModel.isStartDecided)
+        // Both reads ran to their end; only the usual route opened the wallet.
+        verify(interactor, times(2)).hasExistingWallet()
+        verify(pendingRecoveryStartupScheduler, times(1)).scheduleAfterWalletMigration()
     }
 
     @Test

@@ -1,0 +1,15 @@
+<resources>
+    <string name="swap_pay_label">आप देंगे</string>
+    <string name="swap_receive_label">आप पाएँगे</string>
+    <string name="asset_balance_value">शेष राशि %1$s</string>
+    <string name="asset_catalog_retry">फिर से कोशिश करें</string>
+    <string name="swap_market_missing_pair">बाज़ार देखने के लिए दो टोकन चुनें।</string>
+    <string name="swap_market_empty">इस जोड़ी के लिए कोई बाज़ार नहीं</string>
+    <string name="swap_about_market">%1$s के बारे में</string>
+    <string name="swap_show_terms">शर्तें पढ़ें</string>
+    <string name="swap_hide_terms">शर्तें छिपाएँ</string>
+    <string name="swap_terms_summary">स्वैप से पहले शर्तें देखें।</string>
+    <string name="asset_picker_empty">कोई टोकन उपलब्ध नहीं</string>
+    <string name="liquidity_base_token">आधार टोकन</string>
+    <string name="liquidity_pair_token">जोड़ी टोकन</string>
+</resources>

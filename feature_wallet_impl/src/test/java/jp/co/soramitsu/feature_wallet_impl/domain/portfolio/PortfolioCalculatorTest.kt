@@ -17,6 +17,7 @@ import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.PortfolioFixtures.va
 import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.PortfolioFixtures.xor
 import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.PortfolioFixtures.xstusd
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -31,6 +32,15 @@ class PortfolioCalculatorTest {
         holding(MAIN, xor, "500", network = WalletNetworkId.TAIRA),
         holding(MAIN, xor, "250", network = WalletNetworkId.MINAMOTO),
     )
+    @Test
+    fun `prices are old only after ten minutes without a new one`() {
+        val now = 1_000_000_000L
+        assertFalse(PortfolioFreshness.pricesAreOld(null, now))
+        assertFalse(PortfolioFreshness.pricesAreOld(now, now))
+        assertFalse(PortfolioFreshness.pricesAreOld(now - PortfolioFreshness.PRICES_OLD_AFTER_MS, now))
+        assertTrue(PortfolioFreshness.pricesAreOld(now - PortfolioFreshness.PRICES_OLD_AFTER_MS - 1, now))
+    }
+
 
     @Test
     fun `counts only visible priced mainnet holdings and names the rest`() {
@@ -52,6 +62,15 @@ class PortfolioCalculatorTest {
         assertNull(PortfolioCalculator.countedFiat(holding(MAIN, kxor, "10")))
         assertNull(PortfolioCalculator.countedFiat(holding(MAIN, xor, "10", network = WalletNetworkId.TAIRA)))
         assertEquals(0.04, PortfolioCalculator.countedFiat(holding(MAIN, xor, "10"))!!, 1e-12)
+    }
+
+    @Test
+    fun `a row's value prices exactly the amount it shows`() {
+        val partly = holding(MAIN, xor, "100", transferable = "20")
+        assertEquals(0.4, PortfolioCalculator.countedFiat(partly)!!, 1e-12)
+        assertEquals(0.08, PortfolioCalculator.countedFiat(partly, partly.transferable)!!, 1e-12)
+        assertNull(PortfolioCalculator.countedFiat(holding(MAIN, kxor, "100", transferable = "20"), BigDecimal("20")))
+        assertNull(PortfolioCalculator.countedFiat(holding(MAIN, xor, "100", network = WalletNetworkId.TAIRA), BigDecimal("20")))
     }
 
     @Test
@@ -93,11 +112,6 @@ class PortfolioCalculatorTest {
         assertEquals(PortfolioScope.SELECTED, PortfolioCalculator.effectiveScope(PortfolioScope.ALL, 1))
         assertEquals(PortfolioScope.ALL, PortfolioCalculator.effectiveScope(null, 2))
         assertEquals(PortfolioScope.SELECTED, PortfolioCalculator.effectiveScope(PortfolioScope.SELECTED, 3))
-        assertEquals(listOf(PortfolioLens.TOKENS, PortfolioLens.NETWORKS), PortfolioCalculator.availableLenses(PortfolioScope.SELECTED))
-        assertEquals(PortfolioLens.entries.toList(), PortfolioCalculator.availableLenses(PortfolioScope.ALL))
-        assertEquals(PortfolioLens.TOKENS, PortfolioCalculator.effectiveLens(PortfolioLens.WALLETS, PortfolioScope.SELECTED))
-        assertEquals(PortfolioLens.TOKENS, PortfolioCalculator.effectiveLens(null, PortfolioScope.ALL))
-        assertEquals(PortfolioLens.WALLETS, PortfolioCalculator.effectiveLens(PortfolioLens.WALLETS, PortfolioScope.ALL))
         val snap = snapshot(emptyList(), selected = SAVINGS)
         assertEquals(listOf(SAVINGS), PortfolioCalculator.scopeWalletIds(snap, PortfolioScope.SELECTED))
         assertEquals(listOf(MAIN, SAVINGS, TRADING), PortfolioCalculator.scopeWalletIds(snap, PortfolioScope.ALL))
@@ -234,6 +248,33 @@ class PortfolioCalculatorTest {
     }
 
     @Test
+    fun `while the node does not answer nothing is live, however recent`() {
+        val now = 10_000_000L
+        val reconnecting = snapshot(
+            emptyList(),
+            sync = mapOf(
+                MAIN to WalletSync(refreshedAtMillis = now - 5_000, live = true),
+                SAVINGS to WalletSync(refreshedAtMillis = now - 40_000),
+            ),
+        ).copy(nodeUp = false)
+        for (id in listOf(MAIN, SAVINGS)) {
+            val freshness = PortfolioFreshness.of(reconnecting.sync[id], reconnecting.connected, now, reconnecting.nodeUp)
+            assertEquals(FreshnessKind.SAVED, freshness.kind)
+        }
+        // The chip still says how old the saved numbers are.
+        val worst = PortfolioCalculator.worstFreshness(reconnecting, listOf(MAIN, SAVINGS), now)!!
+        assertEquals(FreshnessKind.SAVED, worst.kind)
+        assertEquals(now - 40_000, worst.updatedAtMillis)
+        // A wallet never read on this phone is still being read, and a failed network is still named.
+        assertEquals(FreshnessKind.READING, PortfolioFreshness.of(WalletSync(null, unread = true), true, now, nodeUp = false).kind)
+        assertEquals(
+            FreshnessKind.PARTIAL,
+            PortfolioFreshness.of(WalletSync(now, setOf(WalletNetworkId.MINAMOTO)), true, now, nodeUp = false).kind,
+        )
+        assertEquals(FreshnessKind.OFFLINE, PortfolioFreshness.of(reconnecting.sync[MAIN], false, now, nodeUp = false).kind)
+    }
+
+    @Test
     fun `a read stamped just after the dashboard's clock ticked is live, one from the clock's future is not`() {
         val now = 10_000_000L
         val justAfter = WalletSync(refreshedAtMillis = now + 400)
@@ -284,5 +325,57 @@ class PortfolioCalculatorTest {
         assertEquals(2000.0, summaries[0].totals.fiat, 1e-9)
         assertEquals(listOf(WalletNetworkId.MINAMOTO), summaries[1].networks)
         assertEquals(FreshnessKind.SAVED, summaries[2].freshness!!.kind)
+    }
+
+    @Test
+    fun `a total counts priced holdings only, and is unknown while none is priced`() {
+        val noPrices = PortfolioFixtures.snapshot(
+            listOf(holding(PortfolioFixtures.MAIN, kxor, "5"), holding(PortfolioFixtures.SAVINGS, kxor, "6")),
+        )
+        val totals = PortfolioCalculator.scopeTotals(noPrices, noPrices.wallets.map { it.id })
+        assertFalse(totals.known)
+        assertEquals(2, totals.unpriced)
+        val mixed = PortfolioFixtures.snapshot(
+            listOf(holding(PortfolioFixtures.MAIN, kxor, "5"), holding(PortfolioFixtures.SAVINGS, dai, "6")),
+        )
+        val some = PortfolioCalculator.scopeTotals(mixed, mixed.wallets.map { it.id })
+        assertTrue(some.known)
+        assertEquals(6.0, some.fiat, 1e-9)
+        assertEquals(1, some.unpriced)
+        assertEquals(1, some.priced)
+    }
+
+    @Test
+    fun `an unread wallet is named in the totals and reads as reading, not as zero`() {
+        val snapshot = PortfolioFixtures.snapshot(
+            emptyList(),
+            wallets = listOf(PortfolioFixtures.MAIN, PortfolioFixtures.SAVINGS),
+            sync = mapOf(
+                PortfolioFixtures.MAIN to WalletSync(1_000L, live = true),
+                PortfolioFixtures.SAVINGS to WalletSync(null, unread = true),
+            ),
+        )
+        val totals = PortfolioCalculator.scopeTotals(snapshot, snapshot.wallets.map { it.id })
+        assertFalse(totals.known)
+        assertEquals(1, totals.unread)
+        assertEquals(1, totals.excluded)
+        assertEquals(FreshnessKind.READING, PortfolioFreshness.of(snapshot.sync[PortfolioFixtures.SAVINGS], true, 2_000L).kind)
+        assertEquals(FreshnessKind.READING, PortfolioCalculator.worstFreshness(snapshot, snapshot.wallets.map { it.id }, 2_000L)?.kind)
+        assertEquals(FreshnessKind.OFFLINE, PortfolioFreshness.of(snapshot.sync[PortfolioFixtures.SAVINGS], false, 2_000L).kind)
+        assertEquals(1, PortfolioCalculator.walletSummaries(snapshot, 2_000L).last().totals.unread)
+    }
+
+    @Test
+    fun `without prices the known tokens keep the app's order`() {
+        val noPrice = { token: PortfolioToken -> token.copy(price = null) }
+        val snapshot = PortfolioFixtures.snapshot(
+            listOf(
+                holding(PortfolioFixtures.MAIN, noPrice(kxor), "5"),
+                holding(PortfolioFixtures.MAIN, noPrice(valToken), "5"),
+                holding(PortfolioFixtures.MAIN, noPrice(xor), "5"),
+            ),
+        )
+        val order = PortfolioCalculator.groups(snapshot, listOf(PortfolioFixtures.MAIN), PortfolioLens.TOKENS).map { it.holdings.first().token.symbol }
+        assertEquals(listOf("XOR", "VAL", "KXOR"), order)
     }
 }

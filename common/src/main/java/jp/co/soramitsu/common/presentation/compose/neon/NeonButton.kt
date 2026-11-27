@@ -22,7 +22,6 @@ package jp.co.soramitsu.common.presentation.compose.neon
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
@@ -54,8 +53,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
@@ -66,14 +63,19 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
+import jp.co.soramitsu.ui_core.lit.Lit
+import jp.co.soramitsu.ui_core.lit.litCutGlass
+import jp.co.soramitsu.ui_core.lit.litPad
+import jp.co.soramitsu.ui_core.lit.litPress
 import androidx.compose.ui.unit.dp
 import jp.co.soramitsu.common.R
-import jp.co.soramitsu.common.presentation.compose.theme.neon.GlowSpec
 import jp.co.soramitsu.common.presentation.compose.theme.neon.LocalFx
 import jp.co.soramitsu.common.presentation.compose.theme.neon.NeonTokens
 import jp.co.soramitsu.common.presentation.compose.theme.neon.neon
+import jp.co.soramitsu.ui_core.component.button.ButtonLabel
+import jp.co.soramitsu.ui_core.component.button.TrailingIconReserve
+import jp.co.soramitsu.ui_core.component.button.buttonLabelEnds
 import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customTypography
@@ -82,63 +84,57 @@ import jp.co.soramitsu.ui_core.theme.customTypography
 enum class NeonVariant { Primary, Secondary, Tertiary, Swap, Safe, Destructive }
 
 /**
- * A pill. Not `CircleShape`: that one means "round icon button" (minimum width = height), as in
- * ui-core.
+ * The default shape: a slab with small corners. `CircleShape` means "round icon button" (minimum width = height),
+ * as in ui-core.
  */
-val NeonPillShape: Shape = RoundedCornerShape(999.dp)
+val NeonPillShape: Shape = RoundedCornerShape(Lit.ControlRadius)
 
 @Immutable
 private data class NeonButtonStyle(
+    /** Filled: cut glass of this colour when enabled, this flat colour when not. */
     val fill: Brush?,
     val pressedFill: Brush?,
     val label: Color,
     val edge: Brush?,
-    val glow: GlowSpec?,
-    val pressedOverlay: Color?,
 )
 
 private fun styleFor(variant: NeonVariant, n: NeonTokens, enabled: Boolean): NeonButtonStyle {
-    val ink = if (n.isDark) n.onAccent.copy(alpha = .08f) else Color(0xFF0B0C14).copy(alpha = .10f)
-    fun filled(fill: Brush, glow: GlowSpec) = if (enabled) {
-        NeonButtonStyle(fill, null, n.onAccent, n.borderCtaSheen, glow, ink)
+    fun filled(fill: Brush) = if (enabled) {
+        NeonButtonStyle(fill, null, n.onAccent, null)
     } else {
-        NeonButtonStyle(SolidColor(n.ctaDisabled), null, n.textDisabled, null, null, null)
+        NeonButtonStyle(SolidColor(n.ctaDisabled), null, n.textDisabled, null)
     }
     return when (variant) {
-        NeonVariant.Primary -> filled(n.ctaPrimary, n.glowPrimary)
-        NeonVariant.Swap -> filled(n.ctaSwap, n.glowSwap)
-        NeonVariant.Safe -> filled(n.ctaSafe, n.glowSafe)
+        NeonVariant.Primary -> filled(n.ctaPrimary)
+        NeonVariant.Swap -> filled(n.ctaSwap)
+        NeonVariant.Safe -> filled(n.ctaSafe)
+        // A soft raised pad stands behind it; pressed, the pad is let into the surface.
         NeonVariant.Secondary -> NeonButtonStyle(
-            fill = SolidColor(n.glassFill),
-            pressedFill = SolidColor(n.glassFillPressed),
+            fill = null,
+            pressedFill = null,
             label = if (enabled) n.textPrimary else n.textDisabled,
-            edge = if (enabled) n.borderGlass else null,
-            glow = null,
-            pressedOverlay = null,
+            edge = null,
         )
         NeonVariant.Tertiary -> NeonButtonStyle(
             fill = null,
             pressedFill = SolidColor(n.cyan.copy(alpha = .10f)),
             label = if (enabled) n.link else n.textDisabled,
             edge = null,
-            glow = null,
-            pressedOverlay = null,
         )
         NeonVariant.Destructive -> NeonButtonStyle(
-            fill = SolidColor(n.glassFill),
-            pressedFill = SolidColor(n.errorContainer),
+            fill = null,
+            pressedFill = null,
             label = if (enabled) n.error else n.textDisabled,
             edge = if (enabled) SolidColor(n.error.copy(alpha = .60f)) else null,
-            glow = null,
-            pressedOverlay = null,
         )
     }
 }
 
 /**
- * SORA Neon button (design spec 7.1). Heights: [jp.co.soramitsu.ui_core.component.button.properties.Size]
- * Large 56, Small 40, ExtraSmall 32. Disabled buttons need a reason (in the label or in a line
- * below). [pulse] is only for the two whitelisted CTAs of design spec 4.7.2.
+ * The app's button (design spec 7.1). Heights: [jp.co.soramitsu.ui_core.component.button.properties.Size]
+ * Large 56, Small 40, ExtraSmall 32. Primary, Swap and Safe are slabs of cut glass, set down on the surface when
+ * pressed; Secondary and Destructive are soft raised pads; Tertiary is its label alone. Disabled buttons need a
+ * reason (in the label or in a line below).
  */
 @Composable
 fun NeonButton(
@@ -151,36 +147,36 @@ fun NeonButton(
     rightIcon: Painter? = null,
     maxLines: Int = 1,
     loading: Boolean = false,
-    pulse: Boolean = false,
     shape: Shape = NeonPillShape,
     onClick: () -> Unit,
 ) {
     val n = MaterialTheme.neon
     val fx = LocalFx.current
     val interaction = remember { MutableInteractionSource() }
-    val pressed by interaction.collectIsPressedAsState()
+    val held by interaction.collectIsPressedAsState()
     val focused by interaction.collectIsFocusedAsState()
     val style = styleFor(variant, n, enabled)
-    val scale by animateFloatAsState(
-        targetValue = if (pressed && enabled && !loading && !fx.reduceMotion) .98f else 1f,
-        animationSpec = tween(if (fx.reduceMotion) 0 else NeonMotion.PRESS),
-        label = "neonButtonScale",
-    )
-    val pulseAlpha = rememberCtaPulse(
-        enabled = enabled && !loading,
-        whitelisted = pulse && variant == NeonVariant.Primary,
-        rest = style.glow?.rest ?: 0f,
-        peak = style.glow?.peak ?: 0f,
-    )
+    val pressed = held && enabled && !loading
     val loadingLabel = stringResource(R.string.common_loading)
-    val sizeModifier = if (shape == CircleShape) {
+    val round = shape == CircleShape
+    val radius = if (round) size else Lit.ControlRadius
+    val glass = (style.fill as? SolidColor)?.value?.takeIf { enabled }
+    val padded = variant == NeonVariant.Secondary || variant == NeonVariant.Destructive
+    val material = when {
+        glass != null -> Modifier.litPress(pressed, scale = .985f, motion = !fx.reduceMotion).litCutGlass(glass, pressed, radius)
+        padded && enabled -> Modifier.litPress(pressed, motion = !fx.reduceMotion).litPad(radius, elevation = 8.dp, pressed = pressed)
+        style.fill != null -> Modifier.background(style.fill, shape)
+        pressed && style.pressedFill != null -> Modifier.background(style.pressedFill, shape)
+        else -> Modifier
+    }
+    val sizeModifier = if (round) {
         Modifier.requiredSizeIn(minWidth = size, minHeight = size)
     } else {
         Modifier.requiredHeightIn(min = size)
     }
     Box(
-        // The touch target (and the layout) is at least 48 x 48 dp even when the pill is Small
-        // (40) or ExtraSmall (32), as with the ui-core Material buttons (design spec 6, 10.1).
+        // The touch target (and the layout) is at least 48 x 48 dp even when the button is Small
+        // (40) or ExtraSmall (32), as with the ui-core buttons (design spec 6, 10.1).
         // clickable comes before minimumInteractiveComponentSize, so it covers the whole 48 dp.
         modifier = modifier
             .clickable(
@@ -196,39 +192,8 @@ fun NeonButton(
         contentAlignment = Alignment.Center,
         propagateMinConstraints = true,
     ) {
-        val glow = style.glow
-        if (glow != null) {
-            NeonGlow(
-                spec = glow,
-                shape = shape,
-                modifier = Modifier.matchParentSize(),
-                alpha = {
-                    when {
-                        loading -> .35f
-                        pressed -> glow.pressed
-                        else -> pulseAlpha()
-                    }
-                },
-            )
-        }
         Row(
-            modifier = Modifier
-                .graphicsLayer {
-                    scaleX = scale
-                    scaleY = scale
-                }
-                .clip(shape)
-                .then(
-                    when {
-                        pressed && style.pressedFill != null -> Modifier.background(style.pressedFill, shape)
-                        style.fill != null -> Modifier.background(style.fill, shape)
-                        else -> Modifier
-                    },
-                )
-                .drawWithContent {
-                    drawContent()
-                    if (pressed && style.pressedOverlay != null) drawRect(style.pressedOverlay)
-                }
+            modifier = material
                 .then(if (style.edge != null) Modifier.neonBorder(shape, style.edge, fx) else Modifier)
                 .then(if (focused) Modifier.border(2.dp, n.focusRing, shape) else Modifier),
             horizontalArrangement = Arrangement.Center,
@@ -247,20 +212,18 @@ fun NeonButton(
             }
             text?.let {
                 Box(contentAlignment = Alignment.Center) {
-                    Text(
+                    ButtonLabel(
+                        text = text,
                         modifier = Modifier
-                            .padding(
+                            .padding(vertical = Dimens.x1)
+                            .buttonLabelEnds(
                                 start = leftIcon?.let { 0.dp } ?: Dimens.x3,
                                 end = rightIcon?.let { 0.dp } ?: Dimens.x3,
-                                top = Dimens.x1,
-                                bottom = Dimens.x1,
+                                reserve = rightIcon?.let { TrailingIconReserve } ?: 0.dp,
                             )
                             .alpha(if (loading) 0f else 1f),
-                        textAlign = TextAlign.Center,
-                        text = text,
-                        style = MaterialTheme.customTypography.buttonM,
-                        color = style.label,
                         maxLines = maxLines,
+                        color = style.label,
                     )
                     if (loading) SignalLoader(color = style.label)
                 }
@@ -314,22 +277,16 @@ private fun SignalLoader(color: Color) {
     }
 }
 
-private fun Order.toNeon(): NeonVariant = when (this) {
-    Order.PRIMARY -> NeonVariant.Primary
-    Order.SECONDARY, Order.TERTIARY -> NeonVariant.Secondary
-}
-
 /*
  * Drop-ins with the ui-core signatures (jp.co.soramitsu.ui_core.component.button.*): migrate a
- * file by swapping its imports; call sites stay unchanged. Mapping (design spec 7.1):
- * FilledButton PRIMARY -> Primary, SECONDARY/TERTIARY -> Secondary; FilledPolkaswapButton ->
- * Swap; TonalButton, BleachedButton, OutlinedButton -> Secondary; TextButton -> Tertiary.
+ * file by swapping its imports; call sites stay unchanged. They are the ui-core buttons
+ * themselves, with ui-core's default shape. SafeFilledButton is the filled button.
  */
 
 @Composable
 fun FilledButton(
     modifier: Modifier = Modifier,
-    shape: Shape = NeonPillShape,
+    shape: Shape = RoundedCornerShape(Lit.ControlRadius),
     size: Dp,
     order: Order,
     enabled: Boolean = true,
@@ -338,15 +295,15 @@ fun FilledButton(
     rightIcon: Painter? = null,
     maxLines: Int = 1,
     onClick: () -> Unit,
-) = NeonButton(
-    modifier = modifier, size = size, variant = order.toNeon(), enabled = enabled, text = text,
-    leftIcon = leftIcon, rightIcon = rightIcon, maxLines = maxLines, shape = shape, onClick = onClick,
+) = jp.co.soramitsu.ui_core.component.button.FilledButton(
+    modifier = modifier, shape = shape, size = size, order = order, enabled = enabled, text = text,
+    leftIcon = leftIcon, rightIcon = rightIcon, maxLines = maxLines, onClick = onClick,
 )
 
 @Composable
 fun SafeFilledButton(
     modifier: Modifier = Modifier,
-    shape: Shape = NeonPillShape,
+    shape: Shape = RoundedCornerShape(Lit.ControlRadius),
     size: Dp,
     order: Order,
     enabled: Boolean = true,
@@ -355,15 +312,15 @@ fun SafeFilledButton(
     rightIcon: Painter? = null,
     maxLines: Int = 1,
     onClick: () -> Unit,
-) = NeonButton(
-    modifier = modifier, size = size, variant = if (order == Order.PRIMARY) NeonVariant.Safe else NeonVariant.Secondary, enabled = enabled, text = text,
-    leftIcon = leftIcon, rightIcon = rightIcon, maxLines = maxLines, shape = shape, onClick = onClick,
+) = jp.co.soramitsu.ui_core.component.button.FilledButton(
+    modifier = modifier, shape = shape, size = size, order = order, enabled = enabled, text = text,
+    leftIcon = leftIcon, rightIcon = rightIcon, maxLines = maxLines, onClick = onClick,
 )
 
 @Composable
 fun FilledPolkaswapButton(
     modifier: Modifier = Modifier,
-    shape: Shape = NeonPillShape,
+    shape: Shape = RoundedCornerShape(Lit.ControlRadius),
     size: Dp,
     order: Order,
     enabled: Boolean = true,
@@ -372,15 +329,15 @@ fun FilledPolkaswapButton(
     rightIcon: Painter? = null,
     maxLines: Int = 1,
     onClick: () -> Unit,
-) = NeonButton(
-    modifier = modifier, size = size, variant = NeonVariant.Swap, enabled = enabled, text = text,
-    leftIcon = leftIcon, rightIcon = rightIcon, maxLines = maxLines, shape = shape, onClick = onClick,
+) = jp.co.soramitsu.ui_core.component.button.FilledPolkaswapButton(
+    modifier = modifier, shape = shape, size = size, order = order, enabled = enabled, text = text,
+    leftIcon = leftIcon, rightIcon = rightIcon, maxLines = maxLines, onClick = onClick,
 )
 
 @Composable
 fun TonalButton(
     modifier: Modifier = Modifier,
-    shape: Shape = NeonPillShape,
+    shape: Shape = RoundedCornerShape(Lit.ControlRadius),
     size: Dp,
     order: Order,
     text: String? = null,
@@ -389,15 +346,15 @@ fun TonalButton(
     rightIcon: Painter? = null,
     maxLines: Int = 1,
     onClick: () -> Unit,
-) = NeonButton(
-    modifier = modifier, size = size, variant = NeonVariant.Secondary, enabled = enabled, text = text,
-    leftIcon = leftIcon, rightIcon = rightIcon, maxLines = maxLines, shape = shape, onClick = onClick,
+) = jp.co.soramitsu.ui_core.component.button.TonalButton(
+    modifier = modifier, shape = shape, size = size, order = order, enabled = enabled, text = text,
+    leftIcon = leftIcon, rightIcon = rightIcon, maxLines = maxLines, onClick = onClick,
 )
 
 @Composable
 fun BleachedButton(
     modifier: Modifier = Modifier,
-    shape: Shape = NeonPillShape,
+    shape: Shape = RoundedCornerShape(Lit.ControlRadius),
     size: Dp,
     order: Order,
     enabled: Boolean = true,
@@ -406,15 +363,15 @@ fun BleachedButton(
     rightIcon: Painter? = null,
     maxLines: Int = 1,
     onClick: () -> Unit,
-) = NeonButton(
-    modifier = modifier, size = size, variant = NeonVariant.Secondary, enabled = enabled, text = text,
-    leftIcon = leftIcon, rightIcon = rightIcon, maxLines = maxLines, shape = shape, onClick = onClick,
+) = jp.co.soramitsu.ui_core.component.button.BleachedButton(
+    modifier = modifier, shape = shape, size = size, order = order, enabled = enabled, text = text,
+    leftIcon = leftIcon, rightIcon = rightIcon, maxLines = maxLines, onClick = onClick,
 )
 
 @Composable
 fun OutlinedButton(
     modifier: Modifier = Modifier,
-    shape: Shape = NeonPillShape,
+    shape: Shape = RoundedCornerShape(Lit.ControlRadius),
     size: Dp,
     order: Order,
     enabled: Boolean = true,
@@ -423,15 +380,15 @@ fun OutlinedButton(
     rightIcon: Painter? = null,
     maxLines: Int = 1,
     onClick: () -> Unit,
-) = NeonButton(
-    modifier = modifier, size = size, variant = NeonVariant.Secondary, enabled = enabled, text = text,
-    leftIcon = leftIcon, rightIcon = rightIcon, maxLines = maxLines, shape = shape, onClick = onClick,
+) = jp.co.soramitsu.ui_core.component.button.OutlinedButton(
+    modifier = modifier, shape = shape, size = size, order = order, enabled = enabled, text = text,
+    leftIcon = leftIcon, rightIcon = rightIcon, maxLines = maxLines, onClick = onClick,
 )
 
 @Composable
 fun TextButton(
     modifier: Modifier = Modifier,
-    shape: Shape = NeonPillShape,
+    shape: Shape = RoundedCornerShape(Lit.ControlRadius),
     size: Dp,
     order: Order,
     text: String? = null,
@@ -440,7 +397,7 @@ fun TextButton(
     rightIcon: Painter? = null,
     maxLines: Int = 1,
     onClick: () -> Unit,
-) = NeonButton(
-    modifier = modifier, size = size, variant = NeonVariant.Tertiary, enabled = enabled, text = text,
-    leftIcon = leftIcon, rightIcon = rightIcon, maxLines = maxLines, shape = shape, onClick = onClick,
+) = jp.co.soramitsu.ui_core.component.button.TextButton(
+    modifier = modifier, shape = shape, size = size, order = order, enabled = enabled, text = text,
+    leftIcon = leftIcon, rightIcon = rightIcon, maxLines = maxLines, onClick = onClick,
 )

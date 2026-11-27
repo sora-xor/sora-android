@@ -81,27 +81,3 @@ interface NexusTransactionSigner {
         quote: NexusTransferFeeQuote,
     ): NexusSignedTransaction
 }
-
-/**
- * Fail-closed provider used until a reviewed SDK artifact and funded live receipt vectors are
- * installed. It prevents a read-capable build from accidentally advertising transaction support.
- */
-class UnavailableNexusTransactionSigner : NexusTransactionSigner {
-    override fun isQualifiedFor(network: NexusNetwork): Boolean = false
-
-    override suspend fun quote(request: NexusTransferSigningRequest): NexusTransferFeeQuote =
-        throw IllegalStateException("NEXUS_SIGNER_NOT_QUALIFIED")
-
-    override suspend fun sign(
-        request: NexusTransferSigningRequest,
-        quote: NexusTransferFeeQuote,
-    ): NexusSignedTransaction = throw IllegalStateException("NEXUS_SIGNER_NOT_QUALIFIED")
-}
-
-/** Fail-closed finality binding retained until the reviewed read-only native adapter is installed. */
-class UnavailableNexusFinalityReader : NexusFinalityReader {
-    override fun isQualifiedFor(network: NexusNetwork): Boolean = false
-
-    override suspend fun finalizedCheckpoint(network: NexusNetwork): NexusFinalityCheckpoint =
-        throw IllegalStateException("NEXUS_FINALITY_READER_NOT_QUALIFIED")
-}

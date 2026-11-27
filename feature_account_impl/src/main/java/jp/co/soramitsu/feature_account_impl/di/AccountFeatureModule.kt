@@ -19,9 +19,13 @@ limitations under the License.
 
 package jp.co.soramitsu.feature_account_impl.di
 
+import android.app.KeyguardManager
+import android.content.Context
+import android.os.SystemClock
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 import jp.co.soramitsu.androidfoundation.coroutine.CoroutineManager
@@ -29,6 +33,7 @@ import jp.co.soramitsu.common.data.EncryptedPreferences
 import jp.co.soramitsu.common.data.SoraPreferences
 import jp.co.soramitsu.common.resourses.LanguagesHolder
 import jp.co.soramitsu.core_db.AppDatabase
+import jp.co.soramitsu.feature_account_api.domain.PhoneScreenLock
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsDatasource
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserDatasource
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
@@ -52,6 +57,7 @@ class AccountFeatureModule {
         lh: LanguagesHolder,
         sora2AddressCodec: Sora2AddressCodec,
         userRepositorySr25519Crypto: UserRepositorySr25519Crypto,
+        phoneScreenLock: PhoneScreenLock,
     ): UserRepository =
         UserRepositoryImpl(
             ud,
@@ -61,6 +67,21 @@ class AccountFeatureModule {
             lh,
             sora2AddressCodec,
             userRepositorySr25519Crypto,
+            phoneScreenLock,
+        )
+
+    /**
+     * One for the whole app: the PIN screen records the system prompt's success in it and the
+     * repository checks it before a new PIN replaces one that cannot be read.
+     */
+    @Provides
+    @Singleton
+    fun providePhoneScreenLock(@ApplicationContext context: Context): PhoneScreenLock =
+        PhoneScreenLock(
+            deviceSecure = {
+                context.getSystemService(KeyguardManager::class.java)?.isDeviceSecure == true
+            },
+            elapsedMillis = SystemClock::elapsedRealtime,
         )
 
     /** The selected account's ability to sign, for every screen host (`SoraBaseFragment`). */

@@ -14,7 +14,7 @@ import jp.co.soramitsu.androidfoundation.testing.MainCoroutineRule
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.account.*
 import jp.co.soramitsu.common.io.FileManager
-import jp.co.soramitsu.common.logger.FirebaseWrapper
+import jp.co.soramitsu.common.logger.WalletDiagnostics
 import jp.co.soramitsu.common.presentation.compose.uikit.tokens.ScreenStatus
 import jp.co.soramitsu.common.util.*
 import jp.co.soramitsu.feature_assets_api.domain.*
@@ -49,7 +49,7 @@ class QrPresentationFlowTest {
     private val dispatchers = mockk<CoroutineManager> { every { io } returns Dispatchers.Main; every { main } returns Dispatchers.Main }
     @Before fun setup() {
         mockkStatic(Uri::parse); every { Uri.parse(any()) } returns uri
-        mockkObject(FirebaseWrapper); every { FirebaseWrapper.recordException(any()) } just Runs
+        mockkObject(WalletDiagnostics); every { WalletDiagnostics.recordException(any()) } just Runs
         every { interactor.subscribeAssetsActiveOfCurAccount() } returns assets
         coEvery { interactor.getCurSoraAccount() } answers { account }
         coEvery { interactor.getPublicKeyHex(true) } returns "11".repeat(32)
@@ -60,7 +60,7 @@ class QrPresentationFlowTest {
         every { resources.getString(R.string.wallet_qr_share_message_empty_template_v2) } returns "%s on %s at %s"
         every { files.writeExternalCacheBitmap(any(), any(), any(), any()) } returns uri
     }
-    @After fun cleanup() { store.clear(); unmockkStatic(Uri::parse); unmockkObject(FirebaseWrapper) }
+    @After fun cleanup() { store.clear(); unmockkStatic(Uri::parse); unmockkObject(WalletDiagnostics) }
     private fun vm() = QRCodeFlowViewModel(interactor, qr, dispatchers, generator, avatar, clipboard,
         NumbersFormatter(), resources, files, router).also { store.put("vm", it) }
     @Test fun receiveShareUsesRenderedBitmapAndExactAddress() = runTest {

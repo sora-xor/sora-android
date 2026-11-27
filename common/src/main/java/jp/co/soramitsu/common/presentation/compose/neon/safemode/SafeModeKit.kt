@@ -20,7 +20,6 @@ limitations under the License.
 package jp.co.soramitsu.common.presentation.compose.neon.safemode
 
 import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -45,6 +44,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -52,6 +52,12 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.ime
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -60,7 +66,6 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.material.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -92,22 +97,23 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.window.DialogWindowProvider
 import androidx.core.view.WindowCompat
+import jp.co.soramitsu.common.presentation.compose.neon.neonGlass
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.presentation.compose.neon.NeonBackground
 import jp.co.soramitsu.common.presentation.compose.neon.NeonButton
-import jp.co.soramitsu.common.presentation.compose.neon.NeonGlow
 import jp.co.soramitsu.common.presentation.compose.neon.NeonVariant
 import jp.co.soramitsu.common.presentation.compose.neon.neonBorder
 import jp.co.soramitsu.common.presentation.compose.theme.neon.LocalFx
 import jp.co.soramitsu.common.presentation.compose.theme.neon.neon
 import jp.co.soramitsu.common.presentation.compose.theme.tokens.NeonType
+import jp.co.soramitsu.ui_core.lit.LitLayout
 import jp.co.soramitsu.ui_core.component.button.properties.Size as ButtonSize
+import jp.co.soramitsu.ui_core.lit.litCoin
 import jp.co.soramitsu.ui_core.theme.customTypography
 
 /*
  * The Safe Mode kit (design spec 7.17, 9): calm, opaque surfaces for recovery and upgrade states.
- * No red, rose or magenta, no grid, no pulse, no caps. Amber is used only for a "needs action"
- * row. Every text pair is a §3 token pair (text.primary / text.secondary on the opaque surface).
+ * Step shapes distinguish the current state independently of color.
  */
 
 /** Test tags shared by every Safe Mode surface (instrumented tests and the debug preview). */
@@ -124,52 +130,29 @@ object SafeModeTags {
     const val PHRASE_VEIL = "safeModePhraseVeil"
 }
 
-/**
- * Shield emblem: a glass circle with a 1.5 dp mint ring, a mint shield and a static `glow.safe`.
- * [breathing] (in-progress states only) runs at most five slow cycles, FULL tier and no reduced
- * motion only; it then rests at the static glow.
- */
+/** The shield is printed on the same coin used for wallet emblems. */
 @Composable
 fun ShieldEmblem(
     modifier: Modifier = Modifier,
     size: Dp = 72.dp,
-    breathing: Boolean = false,
 ) {
     val n = MaterialTheme.neon
-    val fx = LocalFx.current
-    val glow = remember { Animatable(0f) }
-    LaunchedEffect(breathing, fx.pulses) {
-        glow.snapTo(0f)
-        if (!breathing || !fx.pulses) return@LaunchedEffect
-        repeat(5) {
-            glow.animateTo(1f, tween(1600))
-            glow.animateTo(0f, tween(1600))
-        }
-    }
     Box(
         modifier = modifier
             .size(size + 24.dp)
             .clearAndSetSemantics { },
         contentAlignment = Alignment.Center,
     ) {
-        NeonGlow(
-            spec = n.glowSafe,
-            shape = CircleShape,
-            modifier = Modifier.size(size),
-            alpha = { n.glowSafe.rest + (n.glowSafe.peak - n.glowSafe.rest) * glow.value },
-        )
         Box(
             modifier = Modifier
                 .size(size)
-                .clip(CircleShape)
-                .background(n.glassSolid)
-                .border(1.5.dp, n.success, CircleShape),
+                .litCoin(),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
                 modifier = Modifier.size(size * 32 / 72),
                 painter = painterResource(R.drawable.ic_neon_shield_safe),
-                tint = n.success,
+                tint = n.redText,
                 contentDescription = null,
             )
         }
@@ -177,8 +160,8 @@ fun ShieldEmblem(
 }
 
 /**
- * Full-screen Safe Mode host: the safe aurora (cyan and mint only), system-bar padding and a
- * scrolling column of at most 560 dp, centred. The Safe CTA is never pinned, so every option
+ * Full-screen Safe Mode host: the page background, system-bar padding and a scrolling column of
+ * at most 560 dp, centred. The Safe CTA is never pinned, so every option
  * stays visible together (design spec 9.4).
  */
 @Composable
@@ -187,7 +170,7 @@ fun SafeModeScreen(
     content: @Composable ColumnScope.() -> Unit,
 ) {
     Box(modifier = modifier.fillMaxSize()) {
-        NeonBackground(safe = true)
+        NeonBackground()
         BoxWithConstraints(
             modifier = Modifier
                 .fillMaxSize()
@@ -204,7 +187,7 @@ fun SafeModeScreen(
             ) {
                 Column(
                     modifier = Modifier
-                        .widthIn(max = 560.dp)
+                        .widthIn(max = LitLayout.ContentMaxWidth)
                         .fillMaxWidth()
                         .heightIn(min = minHeight)
                         .padding(horizontal = 16.dp, vertical = 24.dp),
@@ -252,16 +235,12 @@ fun SafetyPanel(
     modifier: Modifier = Modifier,
     assurances: List<String> = emptyList(),
     callout: String? = null,
-    breathing: Boolean = false,
     beforeActions: @Composable ColumnScope.() -> Unit = {},
     actions: @Composable ColumnScope.() -> Unit,
 ) {
     val n = MaterialTheme.neon
     SafeCard(modifier = modifier.testTag(SafeModeTags.PANEL)) {
-        ShieldEmblem(
-            modifier = Modifier.align(Alignment.CenterHorizontally),
-            breathing = breathing,
-        )
+        ShieldEmblem(modifier = Modifier.align(Alignment.CenterHorizontally))
         Spacer(Modifier.size(8.dp))
         Text(
             modifier = Modifier
@@ -298,7 +277,7 @@ fun SafetyPanel(
     }
 }
 
-/** One verified assurance: a 20 dp cyan check and primary text. */
+/** One verified assurance with a checkmark. */
 @Composable
 fun AssuranceRow(text: String, modifier: Modifier = Modifier) {
     val n = MaterialTheme.neon
@@ -314,7 +293,7 @@ fun AssuranceRow(text: String, modifier: Modifier = Modifier) {
                 .padding(top = 1.dp)
                 .size(20.dp),
             painter = painterResource(R.drawable.ic_checkmark_24),
-            tint = n.cyan,
+            tint = n.redText,
             contentDescription = null,
         )
         Spacer(Modifier.width(12.dp))
@@ -326,18 +305,14 @@ fun AssuranceRow(text: String, modifier: Modifier = Modifier) {
     }
 }
 
-/**
- * Reassurance callout (design spec 7.17, 9.1-3): `infoContainer`, radius 16, a cyan shield and
- * primary text. Information, not a warning: no caps, no bold, no warning colour.
- */
+/** A glass notice with the same shield as the verification header. */
 @Composable
 fun ReassuranceCallout(text: String, modifier: Modifier = Modifier) {
     val n = MaterialTheme.neon
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .background(n.infoContainer)
+            .neonGlass(RoundedCornerShape(16.dp))
             .padding(12.dp)
             .semantics(mergeDescendants = true) { },
         verticalAlignment = Alignment.Top,
@@ -347,7 +322,7 @@ fun ReassuranceCallout(text: String, modifier: Modifier = Modifier) {
                 .padding(top = 1.dp)
                 .size(20.dp),
             painter = painterResource(R.drawable.ic_neon_shield_safe),
-            tint = n.cyan,
+            tint = n.redText,
             contentDescription = null,
         )
         Spacer(Modifier.width(12.dp))
@@ -548,21 +523,20 @@ private fun StepGlyph(state: SafeStepState) {
             modifier = Modifier
                 .size(24.dp)
                 .clip(CircleShape)
-                .background(n.successContainer)
-                .border(1.5.dp, n.success, CircleShape),
+                .background(n.glassSolid)
+                .border(1.5.dp, n.redText, CircleShape),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
                 modifier = Modifier.size(16.dp),
                 painter = painterResource(R.drawable.ic_checkmark_24),
-                tint = n.success,
+                tint = n.redText,
                 contentDescription = null,
             )
         }
 
         SafeStepState.RUNNING -> {
-            // A cyan arc; it turns on the one shared clock and is static (dashed look) under
-            // reduce motion or on MINIMAL.
+            // Use a stationary segmented ring with reduced motion.
             val rotation = if (fx.loops) {
                 val transition = rememberInfiniteTransition(label = "stepArc")
                 transition.animateFloat(
@@ -592,7 +566,7 @@ private fun StepGlyph(state: SafeStepState) {
                 )
                 if (fx.loops) {
                     drawArc(
-                        color = n.cyan,
+                        color = n.redText,
                         startAngle = -90f,
                         sweepAngle = 100f,
                         useCenter = false,
@@ -603,7 +577,7 @@ private fun StepGlyph(state: SafeStepState) {
                 } else {
                     repeat(4) { i ->
                         drawArc(
-                            color = n.cyan,
+                            color = n.redText,
                             startAngle = -90f + i * 90f,
                             sweepAngle = 45f,
                             useCenter = false,
@@ -627,17 +601,21 @@ private fun StepGlyph(state: SafeStepState) {
             modifier = Modifier.size(24.dp),
             contentAlignment = Alignment.Center,
         ) {
-            // Amber, the only "needs action" colour in Safe Mode. `warning` (not the light
-            // `warningFill`) keeps 3:1 against the surface in both themes.
-            Box(
-                Modifier
-                    .size(14.dp)
-                    .clip(CircleShape)
-                    .background(n.warning),
+            Icon(
+                modifier = Modifier.size(20.dp),
+                painter = painterResource(R.drawable.ic_neu_exclamation),
+                tint = n.redText,
+                contentDescription = null,
             )
         }
     }
 }
+
+/** The least of a sheet's body that is shown between its title and its actions before the whole sheet scrolls. */
+private val SHEET_BODY_LEAST = 160.dp
+
+/** The grabber above the title (8 + 4 dp) and the body's own padding (16 dp above and below). */
+private val SHEET_CHROME = 44.dp
 
 /**
  * Opaque Safe Mode sheet (design spec 7.10): top radius 28, grabber, `headline2` title and a
@@ -683,13 +661,30 @@ fun SafeSheet(
                     indication = null,
                     enabled = dismissEnabled,
                     onClick = onClose,
-                ),
+                )
+                // The sheet stands on the keyboard when one is up, measured against what is left above it.
+                .imePadding(),
             contentAlignment = Alignment.BottomCenter,
         ) {
             val shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)
+            // On a short window (a phone on its side, a split screen, the keyboard up, very large text) the title and
+            // the actions could leave the body no room, and a choice in it (Restore's backup confirmation) could not
+            // be reached: there the whole sheet scrolls as one, with the actions after the body. What they leave is
+            // measured: the title and the actions keep their heights whichever way the sheet is laid out.
+            val density = LocalDensity.current
+            var titleHeight by remember { mutableIntStateOf(0) }
+            var actionsHeight by remember { mutableIntStateOf(0) }
+            // What the sheet's own navigation bar padding adds: with the keyboard up, the keyboard's padding above has
+            // already taken the bar's part.
+            val navigationBar =
+                (WindowInsets.navigationBars.getBottom(density) - WindowInsets.ime.getBottom(density)).coerceAtLeast(0)
+            val short = with(density) {
+                (maxHeight * 0.92f).roundToPx() - navigationBar - titleHeight - actionsHeight <
+                    (SHEET_BODY_LEAST + SHEET_CHROME).roundToPx()
+            }
             Column(
                 modifier = Modifier
-                    .widthIn(max = 640.dp)
+                    .widthIn(max = LitLayout.ContentMaxWidth)
                     .fillMaxWidth()
                     .heightIn(max = maxHeight * 0.92f)
                     .clip(shape)
@@ -701,6 +696,7 @@ fun SafeSheet(
                         indication = null,
                         onClick = {},
                     )
+                    .then(if (short) Modifier.verticalScroll(rememberScrollState()) else Modifier)
                     .navigationBarsPadding()
                     .testTag(SafeModeTags.SHEET),
             ) {
@@ -715,6 +711,7 @@ fun SafeSheet(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .onSizeChanged { titleHeight = it.height }
                         .padding(start = 24.dp, end = 8.dp, top = 12.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
@@ -737,8 +734,7 @@ fun SafeSheet(
                 }
                 Column(
                     modifier = Modifier
-                        .weight(1f, fill = false)
-                        .verticalScroll(rememberScrollState())
+                        .then(if (short) Modifier else Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()))
                         .padding(horizontal = 24.dp, vertical = 16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                     content = content,
@@ -746,6 +742,7 @@ fun SafeSheet(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .onSizeChanged { actionsHeight = it.height }
                         .padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                     content = footer,
@@ -753,14 +750,4 @@ fun SafeSheet(
             }
         }
     }
-}
-
-/** A checklist row inside a sheet: a glyph and a line of text (design spec 9.5, U11). */
-@Composable
-fun SafeChecklistRow(
-    text: String,
-    state: SafeStepState,
-    modifier: Modifier = Modifier,
-) {
-    StepList(listOf(SafeStep(text, state)), modifier)
 }

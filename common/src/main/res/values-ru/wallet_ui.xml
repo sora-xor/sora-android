@@ -1,0 +1,5 @@
+<resources>
+    <string name="portfolio_exclusions">Неучтённые активы</string>
+    <string name="portfolio_row_expanded">Развёрнуто</string>
+    <string name="portfolio_row_collapsed">Свёрнуто</string>
+</resources>

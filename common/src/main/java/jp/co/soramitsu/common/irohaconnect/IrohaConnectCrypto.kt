@@ -146,11 +146,6 @@ object IrohaConnectCrypto {
         return signer.generateSignature()
     }
 
-    fun publicEd25519(privateKeySeed: ByteArray): ByteArray {
-        require(privateKeySeed.size == 32)
-        return Ed25519PrivateKeyParameters(privateKeySeed, 0).generatePublicKey().encoded
-    }
-
     fun verifyEd25519(publicKey: ByteArray, message: ByteArray, signature: ByteArray): Boolean {
         if (publicKey.size != 32 || signature.size != 64) return false
         return runCatching {

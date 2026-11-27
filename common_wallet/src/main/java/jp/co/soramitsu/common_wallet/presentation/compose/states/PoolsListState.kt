@@ -20,11 +20,11 @@ limitations under the License.
 package jp.co.soramitsu.common_wallet.presentation.compose.states
 
 import jp.co.soramitsu.common.domain.AssetHolder
-import jp.co.soramitsu.common.domain.formatFiat
 import jp.co.soramitsu.common.domain.iconUri
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.StringPair
 import jp.co.soramitsu.common_wallet.domain.model.CommonUserPoolData
+import jp.co.soramitsu.common_wallet.presentation.compose.util.AmountFormat
 
 class PoolsListState(
     val pools: List<PoolsListItemState>
@@ -46,9 +46,10 @@ fun mapPoolsData(
     poolsData: List<CommonUserPoolData>,
     numbersFormatter: NumbersFormatter,
     rewardTokenIconsList: List<List<String>> = emptyList()
-): Pair<PoolsListState, Double> {
+): Pair<PoolsListState, Double?> {
     val formatted = poolsData.map { it.printFiat() }
-    val sum = formatted.map { it?.first ?: 0.0 }.sumOf { it }
+    // Pools of which none has a price have no value to sum: no value, never a zero. (No pools at all sum to zero.)
+    val sum = if (formatted.isNotEmpty() && formatted.all { it == null }) null else formatted.sumOf { it?.first ?: 0.0 }
     val state = PoolsListState(
         poolsData.mapIndexed { i, poolData ->
             val rewardIcons = if (rewardTokenIconsList.isEmpty()) {
@@ -75,7 +76,9 @@ fun mapPoolsData(
                 ),
                 token1Icon = poolData.basic.baseToken.iconUri(),
                 token2Icon = poolData.basic.targetToken.iconUri(),
-                fiat = formatted[i]?.first?.let { poolData.basic.baseToken.formatFiat(it, numbersFormatter) }
+                // A pool worth under a cent reads "<$0.01", never "$0"; one without a price shows no value.
+                fiat = formatted[i]?.first
+                    ?.let { AmountFormat.fiatAtLeastCent(it, poolData.basic.baseToken.fiatSymbol.orEmpty(), numbersFormatter) }
                     .orEmpty(),
                 fiatChange = "",
 //                fiatChange = formatted[i]?.second?.let {

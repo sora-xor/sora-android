@@ -24,16 +24,11 @@ class WalletEntryIntentContractTest {
     }
     private val context = CapturingContext()
     private val clearTask = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-    @Test fun normalStartClearsTheOldTaskAndInvitationKeepsTheCurrentTask() {
+    @Test fun normalStartClearsTheOldTask() {
         val starter = MainStarterImpl()
         starter.start(context)
         assertEquals(MainActivity::class.java.name, context.started.component!!.className)
         assertEquals(clearTask, context.started.flags); assertNull(context.started.action); assertNotNull(context.options)
-        starter.startWithInvite(context)
-        assertEquals(MainActivity::class.java.name, context.started.component!!.className)
-        assertEquals(0, context.started.flags)
-        assertEquals("jp.co.soramitsu.feature_main_impl.ACTION_INVITE", context.started.action)
-        assertNotNull(context.options)
     }
     @Test fun languageAndNewAccountRestartsCarryDistinctActionsInANewTask() {
         MainActivity.restartAfterLanguageChange(context)

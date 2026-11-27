@@ -43,8 +43,6 @@ fun AppSettingsScreen(
     onSystemToggle: (Boolean) -> Unit,
     onDarkToggle: (Boolean) -> Unit,
     onTestNetworksToggle: (Boolean) -> Unit,
-    checkedReduceEffects: Boolean = false,
-    onReduceEffectsToggle: (Boolean) -> Unit = {},
 ) {
     ContentCard {
         Column(
@@ -68,19 +66,6 @@ fun AppSettingsScreen(
                     }
                 },
                 modifier = Modifier.padding(vertical = Dimens.x2),
-            )
-            OptionSwitch(
-                icon = null,
-                label = stringResource(id = R.string.appearance_reduce_effects),
-                bottomDivider = false,
-                available = true,
-                checked = checkedReduceEffects,
-                onClick = onReduceEffectsToggle,
-            )
-            Text(
-                text = stringResource(id = R.string.appearance_reduce_effects_description),
-                style = MaterialTheme.customTypography.paragraphXS,
-                color = MaterialTheme.customColors.fgSecondary,
             )
             if (testNetworksAvailable) {
                 Text(

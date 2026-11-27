@@ -28,5 +28,35 @@ enum class PinCodeAction {
     TIMEOUT_CHECK,
     LOGOUT,
     CUSTOM_NODE,
-    SELECT_NODE
+    SELECT_NODE,
+
+    /**
+     * Account options' "Backup to Google" and "Delete Google backup". The backup carries the
+     * recovery phrase, raw seed and key-pair JSON, so it asks for the PIN like showing them does.
+     * On success the PIN screen closes and hands [PIN_CONFIRMED_ACTION_KEY] back to the screen
+     * that asked (MainRouter.returnFromPinConfirmation).
+     */
+    GOOGLE_BACKUP,
+
+    /**
+     * Settings > Login & security, turning biometric unlock on while this install has no usable
+     * approval for the biometrics enrolled now (they changed since the owner last approved them,
+     * or were never approved here). The PIN, and for a changed enrollment the owner's answer,
+     * approve them. The unlock itself never asks (update rule of 2026-11-09).
+     */
+    APPROVE_BIOMETRICS,
+
+    /**
+     * HASHI bridge: signing a SORA transfer to Ethereum, an Ethereum deposit, a claim or a speed-up.
+     * On success the PIN screen closes and hands [PIN_CONFIRMED_ACTION_KEY] back to the bridge
+     * screen that asked (MainRouter.returnFromPinConfirmation), like [GOOGLE_BACKUP].
+     */
+    CONFIRM_BRIDGE,
 }
+
+/**
+ * Saved-state key under which the PIN screen hands the confirmed [PinCodeAction] name back to the
+ * screen below it. The receiver removes it once handled, so a recreated screen never acts on the
+ * same confirmation twice.
+ */
+const val PIN_CONFIRMED_ACTION_KEY = "PIN_CONFIRMED_ACTION"

@@ -207,6 +207,29 @@ class SwapViewModelTest {
     }
 
     @Test
+    fun `retry restores assets and keeps the pay token out of the open receive picker`() = runTest {
+        initViewModel(emptyCatalog = true)
+        advanceUntilIdle()
+        viewModel.toCardClicked()
+        assertTrue(viewModel.swapTokensFilter.value.tokenIds.isEmpty())
+        val xor = TestAssets.xorAsset()
+        val other = TestAssets.valAsset()
+        given(assetsInteractor.subscribeAssetsActiveOfCurAccount()).willReturn(flowOf(listOf(xor, other)))
+        given(assetsInteractor.getAssetOrThrow(xor.token.id)).willReturn(xor)
+
+        viewModel.retryAssets()
+        advanceUntilIdle()
+
+        kVerify(assetsInteractor).updateBalanceVisibleAssets()
+        val state = viewModel.swapMainState.value
+        assertFalse(state.assetCatalogUnavailable)
+        assertFalse(state.refreshingAssets)
+        assertEquals(xor.token.id, state.tokenFromState?.token?.id)
+        assertEquals(listOf(other.token.id), viewModel.swapTokensFilter.value.tokenIds)
+        assertFalse(state.confirmButtonState.enabled)
+    }
+
+    @Test
     fun init() = runTest {
         initViewModel()
         advanceUntilIdle()
@@ -253,6 +276,24 @@ class SwapViewModelTest {
         assertEquals(BigDecimal.TEN, viewModel.swapMainState.value.tokenToState?.amount)
         assertEquals("Review", viewModel.swapMainState.value.swapButtonState.text)
         assertTrue(viewModel.swapMainState.value.swapButtonState.enabled)
+    }
+
+    @Test
+    fun `token cards without a fiat price show the balance without empty parentheses`() = runTest {
+        given(swapInteractor.fetchAvailableSources(TestTokens.valToken.id, TestTokens.xorToken.id))
+            .willReturn(setOf(Market.SMART, Market.XYK))
+
+        // The test tokens have no fiat price, as every token has while the price feed is down.
+        initViewModel(
+            xorBalance = BigDecimal("100"),
+            valBalance = BigDecimal("2.5"),
+            firstTokenId = TestTokens.valToken.id,
+            secondTokenId = TestTokens.xorToken.id,
+        )
+        advanceUntilIdle()
+
+        assertEquals("2.5", viewModel.swapMainState.value.tokenFromState?.balance)
+        assertEquals("100", viewModel.swapMainState.value.tokenToState?.balance)
     }
 
     @Test

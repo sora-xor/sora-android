@@ -26,8 +26,9 @@ import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletDatasource
 import jp.co.soramitsu.feature_wallet_api.domain.model.MigrationStatus
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.mapNotNull
+import kotlinx.coroutines.flow.update
 
 class PrefsWalletDatasource @Inject constructor(
     private val soraPreferences: SoraPreferences,
@@ -35,16 +36,17 @@ class PrefsWalletDatasource @Inject constructor(
 ) : WalletDatasource {
 
     companion object {
-        private const val PREFS_PARENT_INVITATION = "parent_invitation"
-
         private const val KEY_DISCLAIMER_VISIBILITY = "key_disclaimer_visibility"
-        private const val KEY_CONTACTS = "key_contacts"
         private const val KEY_CLAIM_BLOCK_HASH = "key_claim_block_hash"
         private const val KEY_CLAIM_TX_HASH = "key_claim_tx_hash"
         private const val KEY_MIGRATION_STATUS = "key_migration_status"
     }
 
-    private val migrationStatusFlow = MutableStateFlow<MigrationStatus?>(null)
+    /**
+     * The last claim result of each account in this process. Kept per account: account A's
+     * finished claim is not account B's, and B's claim screen must not close on it.
+     */
+    private val migrationStatuses = MutableStateFlow<Map<String, MigrationStatus>>(emptyMap())
 
     override fun getDisclaimerVisibility(): Flow<Boolean> {
         return soraPreferences.getBooleanFlow(KEY_DISCLAIMER_VISIBILITY, true)
@@ -59,14 +61,13 @@ class PrefsWalletDatasource @Inject constructor(
         encryptedPreferences.putEncryptedString(KEY_CLAIM_TX_HASH, txHash)
     }
 
-    override suspend fun saveMigrationStatus(migrationStatus: MigrationStatus) {
+    override suspend fun saveMigrationStatus(walletId: String, migrationStatus: MigrationStatus) {
         soraPreferences.putString(KEY_MIGRATION_STATUS, migrationStatus.toString())
-        migrationStatusFlow.value = migrationStatus
+        migrationStatuses.update { it + (walletId to migrationStatus) }
     }
 
-    override fun observeMigrationStatus(): Flow<MigrationStatus> {
-        return migrationStatusFlow.asStateFlow().filterNotNull()
-    }
+    override fun observeMigrationStatus(walletId: String): Flow<MigrationStatus> =
+        migrationStatuses.mapNotNull { it[walletId] }.distinctUntilChanged()
 
     override suspend fun retrieveClaimBlockAndTxHash(): Pair<String, String> {
         return encryptedPreferences.getDecryptedString(KEY_CLAIM_BLOCK_HASH) to encryptedPreferences.getDecryptedString(

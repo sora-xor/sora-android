@@ -1,5 +1,7 @@
 package jp.co.soramitsu.feature_blockexplorer_impl.presentation.screen
 
+import jp.co.soramitsu.common.presentation.compose.components.LoadingRows
+import jp.co.soramitsu.common.presentation.compose.components.NothingFoundText
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -12,7 +14,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.selection.SelectionContainer
-import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Divider
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.MaterialTheme
@@ -88,10 +89,7 @@ internal fun AccountActivityScreen(
                     }
                     if (entries.isEmpty() && !refreshing && !hasError && !hasMore) {
                         item("empty") {
-                            Text(stringResource(R.string.activity_empty_content_title),
-                                style = MaterialTheme.customTypography.paragraphM,
-                                color = MaterialTheme.customColors.fgSecondary,
-                                modifier = Modifier.padding(vertical = Dimens.x6))
+                            NothingFoundText(stringResource(R.string.activity_empty_content_title))
                         }
                     }
                     if (soraError) {
@@ -126,9 +124,7 @@ internal fun AccountActivityScreen(
                     }
                     if (refreshing && entries.isEmpty()) {
                         item("loading") {
-                            Box(Modifier.fillMaxWidth().padding(Dimens.x6), contentAlignment = Alignment.Center) {
-                                CircularProgressIndicator(color = MaterialTheme.customColors.accentPrimary)
-                            }
+                            LoadingRows(stringResource(R.string.common_loading))
                         }
                     }
                     if (entries.isEmpty() && !refreshing && !hasError) {
@@ -137,7 +133,9 @@ internal fun AccountActivityScreen(
                 }
             }
         }
-        PullRefreshIndicator(refreshing, pullRefresh, Modifier.align(Alignment.TopCenter))
+        if (entries.isNotEmpty() || !refreshing) {
+            PullRefreshIndicator(refreshing, pullRefresh, Modifier.align(Alignment.TopCenter))
+        }
     }
 }
 

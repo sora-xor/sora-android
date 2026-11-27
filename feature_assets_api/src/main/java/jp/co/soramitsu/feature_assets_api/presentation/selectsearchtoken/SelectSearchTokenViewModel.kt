@@ -25,7 +25,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.isMatchFilter
-import jp.co.soramitsu.common.logger.FirebaseWrapper
+import jp.co.soramitsu.common.logger.WalletDiagnostics
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common_wallet.presentation.compose.states.mapAssetsToCardState
 import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
@@ -41,7 +41,7 @@ class SelectSearchTokenViewModel @Inject constructor(
     private val numbersFormatter: NumbersFormatter,
 ) : ViewModel() {
 
-    private val _state = MutableStateFlow(SelectSearchAssetState(emptyList()))
+    private val _state = MutableStateFlow(SelectSearchAssetState(emptyList(), loading = true))
     val state = _state.asStateFlow()
 
     private var searchTokenFilter = emptySearchTokenFilter
@@ -51,13 +51,13 @@ class SelectSearchTokenViewModel @Inject constructor(
         viewModelScope.launch {
             interactor.subscribeAssetsActiveOfCurAccount()
                 .catch {
-                    FirebaseWrapper.recordException(it)
+                    WalletDiagnostics.recordException(it)
                     emit(emptyList())
                 }
                 .collectLatest {
                     assets.clear()
                     assets.addAll(it)
-                    reCalcFilter()
+                    reCalcFilter(loading = false)
                 }
         }
     }
@@ -71,9 +71,9 @@ class SelectSearchTokenViewModel @Inject constructor(
         searchTokenFilter.tokenIds.contains(it.token.id)
     }
 
-    private fun reCalcFilter() {
+    private fun reCalcFilter(loading: Boolean = _state.value.loading) {
         val tokensFiltered =
-            if (searchTokenFilter.tokenIds.isEmpty()) assets
+            if (searchTokenFilter.tokenIds.isEmpty() && !searchTokenFilter.restrictToTokenIds) assets
             else assets.filter(tokenFilterInclude)
         val curFilterValue = searchTokenFilter.filter.lowercase()
         val list = if (curFilterValue.isBlank()) {
@@ -90,6 +90,6 @@ class SelectSearchTokenViewModel @Inject constructor(
                 )
             }
         }
-        _state.value = _state.value.copy(list = list)
+        _state.value = _state.value.copy(list = list, loading = loading)
     }
 }

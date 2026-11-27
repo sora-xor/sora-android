@@ -32,9 +32,12 @@ import jp.co.soramitsu.common.domain.iconUri
 import jp.co.soramitsu.common.domain.printFiat
 import jp.co.soramitsu.common.domain.printFiatChange
 import jp.co.soramitsu.common.util.NumbersFormatter
+import jp.co.soramitsu.common_wallet.presentation.compose.util.AmountFormat
 
 data class CardsState(
     val accountAddress: String,
+    val curAccount: String,
+    val loading: Boolean = false,
     val cards: List<CardState> = emptyList(),
     /** Accounts listed in the app, and how many of them can sign on this phone (0: not read yet). */
     val accountCount: Int = 0,
@@ -60,6 +63,10 @@ data class TitledAmountCardState(
     override val loading: Boolean,
 ) : CardState(loading)
 
+class FavoriteAssetsCardState(
+    val assets: List<AssetItemCardState>
+) : AssetCardState
+
 data class AssetItemCardState(
     val tokenIcon: String,
     val tokenId: String,
@@ -75,6 +82,8 @@ data class AssetItemCardState(
      * rest is.
      */
     val frozenAmount: String? = null,
+    /** A token Polkaswap's blacklist hides, listed only because the account holds it. */
+    val notListed: Boolean = false,
 )
 
 fun mapTokensToCardState(
@@ -110,7 +119,8 @@ fun mapAssetsToCardState(
                 precision
             ),
             tokenSymbol = it.token.symbol,
-            assetFiatAmount = it.printFiat(nf),
+            // A holding worth under a cent reads "<$0.01", never "$0"; one without a price shows no value.
+            assetFiatAmount = it.fiat?.let { fiat -> AmountFormat.fiatAtLeastCent(fiat, it.token.fiatSymbol.orEmpty(), nf) }.orEmpty(),
             fiatChange = it.token.printFiatChange(nf),
             frozenAmount = it.balance.frozenTotal
                 .takeIf { frozen -> frozen > BigDecimal.ZERO }

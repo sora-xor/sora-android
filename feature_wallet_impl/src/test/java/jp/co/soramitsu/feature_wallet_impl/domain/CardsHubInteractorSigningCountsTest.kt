@@ -3,6 +3,7 @@ package jp.co.soramitsu.feature_wallet_impl.domain
 import io.mockk.coEvery
 import io.mockk.mockk
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -25,5 +26,13 @@ class CardsHubInteractorSigningCountsTest {
         coEvery { userRepository.getSoraAccountsCount() } returns 1
         coEvery { userRepository.unavailableWalletIds() } returns setOf("cnOnly")
         assertEquals(1 to 0, interactor.accountSigningCounts())
+    }
+    @Test
+    fun `the home's Claim entry is the repository's answer for the selected account`() = runTest {
+        val pending = kotlinx.coroutines.flow.MutableStateFlow(true)
+        io.mockk.every { userRepository.flowClaimPending() } returns pending
+        assertEquals(true, interactor.flowClaimPending().first())
+        pending.value = false
+        assertEquals(false, interactor.flowClaimPending().first())
     }
 }

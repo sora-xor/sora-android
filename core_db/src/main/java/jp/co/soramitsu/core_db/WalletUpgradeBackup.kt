@@ -6,6 +6,7 @@ import android.database.DatabaseErrorHandler
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteReadOnlyDatabaseException
 import android.os.Build
+import android.os.Looper
 import android.os.StatFs
 import android.system.ErrnoException
 import android.system.Os
@@ -20,8 +21,8 @@ import jp.co.soramitsu.common.util.KeyMaterialUnavailableException
 import jp.co.soramitsu.common.account.WalletRecoveryCapabilityGate
 import jp.co.soramitsu.common.data.WalletPreferenceIntegrity
 import jp.co.soramitsu.common.data.WalletPreferenceKeys
-import jp.co.soramitsu.common.logger.FirebaseWrapper
-import jp.co.soramitsu.common.logger.FirebaseWrapper.WalletRecoveryEvent
+import jp.co.soramitsu.common.logger.WalletDiagnostics
+import jp.co.soramitsu.common.logger.WalletDiagnostics.WalletRecoveryEvent
 import jp.co.soramitsu.core_db.model.NetworkAccountLocal
 import jp.co.soramitsu.core_db.model.SoraAccountLocal
 import jp.co.soramitsu.core_db.model.WalletDeletionContract
@@ -76,6 +77,12 @@ object WalletUpgradeBackup {
     private const val MAX_PREFERENCE_KEY_LENGTH = 1_024
     private const val MAX_WALLET_ID_LENGTH = 256
     private const val MINIMUM_FREE_SPACE_HEADROOM = 16L * 1_024L * 1_024L
+
+    /** The states the storage screen is for: too little free space to go on safely. */
+    private val STORAGE_SHORTAGE_CODES = setOf("INSUFFICIENT_BACKUP_STORAGE", WalletRecoveryOptions.STORAGE_FULL)
+
+    /** What Android is asked to free when a shortage did not say how much it needs. */
+    private const val DEFAULT_SPACE_REQUEST_BYTES = 64L * 1_024L * 1_024L
     private const val BACKUP_SPACE_MULTIPLIER = 2L
     // A keys-only backup copies the encrypted preferences and wrapped-key files only. Room still
     // needs room for its own migration, so the database size is counted twice on top.
@@ -89,9 +96,16 @@ object WalletUpgradeBackup {
     private const val CORRUPT_DATABASE_COPY_PREFIX = "wallet-corrupt-quarantine-"
     private const val AUTO_RETRY_STATE_FILE = "wallet-migration-auto-retry"
     private const val STARTUP_FAILURE_STATE_FILE = "wallet-startup-failure-count"
+    private const val DATABASE_REPAIR_MARKER = "wallet-database-repair.json"
+    private const val DATABASE_REPAIR_PREFIX = "wallet-database-repair-"
+    private const val DATABASE_REPAIR_EXPLICIT_CHOICE = "wallet-database-repair-explicit-choice"
+    @VisibleForTesting
+    var afterDatabaseRepairCopyForTest: (() -> Unit)? = null
     private var consecutiveStartupFailureCode: String? = null
     private var consecutiveStartupFailures = 0
-    private const val MAX_AUTOMATIC_MIGRATION_RETRIES = 3
+
+    /** The diagnostic retry count saturates here; it never stops a retry (update rule). */
+    private const val MAX_COUNTED_AUTOMATIC_MIGRATION_RETRIES = 1_000_000
 
     /** Written by [requestSetUpAgain]; the next app process sets the old wallet files aside. */
     private const val SET_UP_AGAIN_MARKER = "wallet-set-up-again-requested"
@@ -165,6 +179,14 @@ object WalletUpgradeBackup {
     // shown at once instead of waiting for a retry that cannot happen.
     @Volatile
     private var automaticRetryFailedInProcess = false
+
+    /**
+     * Room was admitted to the database file in this process (a gated helper handed out a
+     * connection). Until then no handle can write the old file back, so Try again may run the
+     * same lost-database repair a new process runs ([retry]).
+     */
+    @Volatile
+    private var databaseOpenedInProcess = false
 
     /** Material that is set aside (never deleted) because no account row owns it. */
     @Volatile
@@ -251,7 +273,7 @@ object WalletUpgradeBackup {
         val failure = blockingFailure
         val transient = transientVerificationFailure
         val code = failure?.code ?: transient ?: inSessionRecoveryCode ?: return null
-        return WalletRecoveryOptions.forState(
+        val options = WalletRecoveryOptions.forState(
             code = code,
             transientFailure = failure == null && transient != null,
             facts = recoveryFacts.copy(
@@ -262,6 +284,10 @@ object WalletUpgradeBackup {
             availableBytes = failure?.availableBytes,
             consecutiveFailedStarts = if (code == consecutiveStartupFailureCode) consecutiveStartupFailures else 0,
         )
+        // A verification failure recorded in this process (for example a VERIFIED receipt an
+        // older build wrote with a backward clock) is re-verified from the account rows by the
+        // same authorized retry Try again runs, so it is retried by itself first.
+        return if (failure == null && transient == null) options.copy(retryAutomatically = true) else options
     }
 
     /** The wallet key cannot be used right now (missing Keystore key or busy Keystore). */
@@ -302,16 +328,42 @@ object WalletUpgradeBackup {
         processStartForTest = false
         if (firstInProcess) {
             automaticRetryFailedInProcess = false
+            databaseOpenedInProcess = false
             // Only the first preparation of a process may set wallet files aside: nothing has
             // opened the DataStore or Room yet, so no open handle can write the old data back.
             val applicationContext = context.applicationContext ?: context
-            val setUpAgain = runCatching { performPendingSetUpAgain(applicationContext) }
+            val hadExplicitRequest = isSetUpAgainRequested(applicationContext)
+            val setUpAgain = runCatching {
+                if (hadExplicitRequest) {
+                    // Finish an already-started database rename before applying an explicit
+                    // reset/return. Otherwise its surviving plan could later resurrect the
+                    // generation the user just chose to set aside.
+                    withPublicationLock(applicationContext.noBackupFilesDir, BACKUP_PUBLICATION_LOCK,
+                        "DATABASE_REPAIR_INCOMPLETE") {
+                        val pendingRepair = File(applicationContext.noBackupFilesDir, DATABASE_REPAIR_MARKER)
+                        if (pendingRepair.existsNoFollowOrThrow("DATABASE_REPAIR_INCOMPLETE")) {
+                            finishDatabaseRepair(applicationContext, pendingRepair)
+                        }
+                    }
+                    val choice = File(applicationContext.noBackupFilesDir, DATABASE_REPAIR_EXPLICIT_CHOICE)
+                    if (!choice.existsNoFollowOrThrow("SET_UP_AGAIN_INCOMPLETE")) {
+                        writeDurably(choice, "chosen")
+                        fsyncDirectory(applicationContext.noBackupFilesDir)
+                    }
+                }
+                performPendingSetUpAgain(applicationContext)
+                // An explicit reset/return must never be reversed by automatic recovery. Runs on
+                // the main thread at app start: a repair short of space stops here, with the
+                // database closed, and the storage step gives back cache on a worker (retry).
+                if (!hadExplicitRequest) repairLostDatabaseFromMatchingBackup(applicationContext)
+            }
             setUpAgain.exceptionOrNull()?.let { error ->
                 preparedAdmission = null
                 migrationRecoverySnapshot = null
-                blockingFailure = Failure("SET_UP_AGAIN_INCOMPLETE")
+                blockingFailure = Failure(if (hadExplicitRequest) "SET_UP_AGAIN_INCOMPLETE" else error.safeCode())
                 recoveryFacts = RecoveryFacts(hasWalletFiles = true)
                 WalletRecoveryCapabilityGate.enterBlocked()
+                rememberStartupFailure(applicationContext, blockingFailure?.code)
                 return Result.failure(error)
             }
         }
@@ -367,6 +419,12 @@ object WalletUpgradeBackup {
      * Refused (SET_UP_AGAIN_INCOMPLETE, nothing checked or changed) while a confirmed "Set up
      * this device again" waits for the next app start: only a new process may set the old files
      * aside, so the app must not verify and open them in this one. The caller restarts instead.
+     *
+     * While Room has not opened the database in this process, Try again first runs the same
+     * lost-database repair as a new app start (finishing a saved repair plan, or repairing from
+     * the newest matching backup), so a repair that failed on a busy disk is not left for a
+     * restart the person does not know about, and a missing database half-way through a repair is
+     * never admitted as an empty installation.
      */
     @Synchronized
     fun retry(context: Context): Result<Unit> {
@@ -379,10 +437,27 @@ object WalletUpgradeBackup {
             val authorized = authorizeMigrationRetry(context)
             if (authorized.isSuccess) return authorized
         }
+        if (!databaseOpenedInProcess) {
+            val applicationContext = context.applicationContext ?: context
+            withDisposableStorageReclaimed(applicationContext, null) {
+                repairLostDatabaseFromMatchingBackup(applicationContext)
+            }
+                .exceptionOrNull()?.let { error ->
+                    preparedAdmission = null
+                    migrationRecoverySnapshot = null
+                    blockingFailure = Failure(error.safeCode())
+                    recoveryFacts = RecoveryFacts(hasWalletFiles = true)
+                    WalletRecoveryCapabilityGate.enterBlocked()
+                    return Result.failure(error)
+                }
+        }
+        // Try again and the storage step run on a worker: here, and only here, cache is given
+        // back when the space is short ([withDisposableStorageReclaimed]).
         val result = prepareWithCapacityOverride(
             context = context,
             availableBackupBytesOverride = null,
             retainStartupAdmission = false,
+            reclaimDisposableStorage = true,
         )
         val failure = blockingFailure
         if (
@@ -400,11 +475,13 @@ object WalletUpgradeBackup {
 
     /**
      * Called once when the app's screens start, before the wallet verification runs (Splash).
-     * An interrupted or failed verification is retried automatically, at most
-     * [MAX_AUTOMATIC_MIGRATION_RETRIES] times in a row, before the recovery options are shown.
-     * Only a start that runs the verification uses this budget: background starts (workers,
-     * receivers, boot) never call this. The retry re-runs only the copy-on-write verification;
-     * account rows and encrypted preferences are never changed by it.
+     * An interrupted or failed verification is retried automatically on every such start: an
+     * update never stops at a screen that only repeats the same check (rule of 2026-11-09). The
+     * compare-and-set authorization and the validated snapshot still guard every retry; how many
+     * starts retried in a row is counted for diagnostics only, and a count that cannot be saved
+     * (a full disk) never stops the retry. Background starts (workers, receivers, boot) never
+     * call this. The retry re-runs only the copy-on-write verification; account rows and
+     * encrypted preferences are never changed by it.
      */
     @Synchronized
     fun authorizeAutomaticMigrationRetry(context: Context): Boolean {
@@ -417,42 +494,46 @@ object WalletUpgradeBackup {
             return false
         }
         val applicationContext = context.applicationContext ?: context
-        if (automaticMigrationRetriesUsed(applicationContext) >= MAX_AUTOMATIC_MIGRATION_RETRIES) {
-            return false
-        }
-        // From here on this process has tried. If the counter cannot be saved or the retry
-        // cannot be authorized, the recovery options are shown now rather than after a retry
-        // that cannot happen.
-        if (!claimMigrationRetry(applicationContext)) {
-            automaticRetryFailedInProcess = true
-            return false
-        }
+        countAutomaticMigrationRetry(applicationContext)
         if (authorizeMigrationRetry(applicationContext).isSuccess) return true
+        // The authorization itself failed (the journal or the settings changed underneath, or
+        // the database could not be written): the recovery screen retries it with its own
+        // backoff instead of waiting for a start that would fail the same way.
         automaticRetryFailedInProcess = true
         blockingFailure = failure
         WalletRecoveryCapabilityGate.enterBlocked()
         return false
     }
 
-    /** True when [authorizeAutomaticMigrationRetry] would retry. Reads one small file. */
-    @Synchronized
-    fun isAutomaticMigrationRetryAvailable(context: Context): Boolean =
-        !automaticRetryFailedInProcess &&
-            blockingFailure?.code == "WALLET_MIGRATION_RECOVERY_REQUIRED" &&
-            migrationRecoverySnapshot != null &&
-            automaticMigrationRetriesUsed(context.applicationContext ?: context) <
-            MAX_AUTOMATIC_MIGRATION_RETRIES
+    /**
+     * True when [authorizeAutomaticMigrationRetry] would retry. Reads no file and never takes
+     * this object's lock (see [startupFailureToShow]).
+     */
+    fun isAutomaticMigrationRetryAvailable(@Suppress("UNUSED_PARAMETER") context: Context): Boolean =
+        automaticRetryAvailable(blockingFailure)
 
     /**
      * The startup failure that the first screen must show at once, or null when the start can
      * continue: nothing blocks it, or an interrupted verification is about to be (or was just)
-     * retried automatically. Consistent with a concurrent [authorizeAutomaticMigrationRetry].
+     * retried automatically.
+     *
+     * Never takes this object's lock: the startup screen asks on the main thread (also when it
+     * is recreated, for example on rotation), while Try again or the storage step may hold the
+     * lock on a worker for long (walking the cache, `StorageManager.allocateBytes`, a database
+     * repair). It reads volatile fields only, the failure first, and stays consistent with a
+     * concurrent [authorizeAutomaticMigrationRetry] by the order that one writes in: a granted
+     * retry stores its snapshot before it clears the failure, and a refused one marks itself
+     * failed before it restores the failure, so a read in between answers as before or as after.
      */
-    @Synchronized
-    fun startupFailureToShow(context: Context): Failure? {
+    fun startupFailureToShow(@Suppress("UNUSED_PARAMETER") context: Context): Failure? {
         val failure = blockingFailure ?: return null
-        return if (isAutomaticMigrationRetryAvailable(context)) null else failure
+        return if (automaticRetryAvailable(failure)) null else failure
     }
+
+    private fun automaticRetryAvailable(failure: Failure?): Boolean =
+        failure?.code == "WALLET_MIGRATION_RECOVERY_REQUIRED" &&
+            !automaticRetryFailedInProcess &&
+            migrationRecoverySnapshot != null
 
     /**
      * "Set up this device again (keeps old data)", offered when
@@ -690,6 +771,29 @@ object WalletUpgradeBackup {
             availableBackupBytesOverride = availableBackupBytes,
             beforeFinalSourceValidationForTest = null,
             retainStartupAdmission = false,
+            reclaimDisposableStorage = false,
+        )
+    }
+
+    /**
+     * As [prepareWithAvailableBackupBytesForTest], on a phone whose cache folder can still be
+     * emptied: when [availableBackupBytes] is too little, the app's own cache is given back (as
+     * [retry] does, off the main thread only) and the check runs once more with what that really
+     * freed added.
+     */
+    @VisibleForTesting
+    @Synchronized
+    fun prepareAfterReclaimingCacheForTest(
+        context: Context,
+        availableBackupBytes: Long,
+    ): Result<Unit> {
+        require(availableBackupBytes >= 0L)
+        return prepareWithCapacityOverride(
+            context = context,
+            availableBackupBytesOverride = availableBackupBytes,
+            beforeFinalSourceValidationForTest = null,
+            retainStartupAdmission = false,
+            reclaimDisposableStorage = true,
         )
     }
 
@@ -703,13 +807,72 @@ object WalletUpgradeBackup {
         availableBackupBytesOverride = null,
         beforeFinalSourceValidationForTest = beforeFinalSourceValidation,
         retainStartupAdmission = false,
+        reclaimDisposableStorage = false,
     )
+
+    /**
+     * Runs [work] and, when it stops for lack of free space, gives back what is held only as a
+     * cache ([DisposableStorage]) and runs it once more, so the storage screen is shown only
+     * when the space is still too little (update rule of 2026-11-09). [work] gets the free
+     * bytes to assume: null for the real probe, or the test's figure, raised on the second run
+     * by what was actually deleted. Wallet files, backups and files set aside by a repair are
+     * never deleted to make room.
+     *
+     * Never on the main thread: walking the cache and `StorageManager.allocateBytes` can take
+     * long on a slow or full phone (Android requires a worker for the latter), and the app start
+     * prepares on the main thread. There the shortage is returned as it is, the database stays
+     * closed, and the storage step does this on a worker ([retry]).
+     */
+    private fun <T> withDisposableStorageReclaimed(
+        context: Context,
+        availableBackupBytesOverride: Long?,
+        work: (availableBackupBytes: Long?) -> T,
+    ): Result<T> {
+        val first = runCatching { work(availableBackupBytesOverride) }
+        val shortage = first.exceptionOrNull() ?: return first
+        if (shortage.safeCode() !in STORAGE_SHORTAGE_CODES) return first
+        if (Looper.getMainLooper().isCurrentThread) return first
+        fun freeNow(): Long = runCatching { StatFs(context.noBackupFilesDir.absolutePath).availableBytes }.getOrDefault(0L)
+        val freeBefore = if (availableBackupBytesOverride == null) freeNow() else 0L
+        whileReclaimingCacheForTest?.invoke()
+        val freed = runCatching {
+            DisposableStorage.reclaimCache(
+                cacheDirectory = context.cacheDir,
+                walletLocations = listOfNotNull(
+                    context.noBackupFilesDir,
+                    context.filesDir,
+                    context.getDatabasePath(DATABASE_NAME).parentFile,
+                    File(context.dataDir, "shared_prefs"),
+                ),
+            )
+        }.getOrDefault(0L)
+        if (availableBackupBytesOverride != null) {
+            if (freed <= 0L) return first
+            return runCatching { work(saturatingAdd(availableBackupBytesOverride, freed)) }
+        }
+        val required = (shortage as? WalletUpgradeBackupException)?.requiredBytes
+            ?.takeIf { it > 0L } ?: DEFAULT_SPACE_REQUEST_BYTES
+        if (freeNow() < required) DisposableStorage.askSystemFor(context, context.noBackupFilesDir, required)
+        // Nothing more is free than before: the same check would only fail the same way.
+        if (freeNow() <= freeBefore) return first
+        return runCatching { work(null) }
+    }
+
+    /**
+     * Runs inside [withDisposableStorageReclaimed], with this object's lock held, right before
+     * the cache is walked: a test parks the storage step there to show that nothing the screens
+     * read waits for it.
+     */
+    @VisibleForTesting
+    @Volatile
+    var whileReclaimingCacheForTest: (() -> Unit)? = null
 
     private fun prepareWithCapacityOverride(
         context: Context,
         availableBackupBytesOverride: Long?,
         beforeFinalSourceValidationForTest: (() -> Unit)? = null,
         retainStartupAdmission: Boolean,
+        reclaimDisposableStorage: Boolean = false,
     ): Result<Unit> {
         preparedAdmission = null
         transientVerificationFailure = null
@@ -721,12 +884,17 @@ object WalletUpgradeBackup {
         // by a valid base context.
         val applicationContext = context.applicationContext ?: context
         preparedContext = java.lang.ref.WeakReference(applicationContext)
-        val result = runCatching {
+        val prepareOnce = { available: Long? ->
             prepareOrThrow(
                 context = applicationContext,
-                availableBackupBytesOverride = availableBackupBytesOverride,
+                availableBackupBytesOverride = available,
                 beforeFinalSourceValidationForTest = beforeFinalSourceValidationForTest,
             )
+        }
+        val result = if (reclaimDisposableStorage) {
+            withDisposableStorageReclaimed(applicationContext, availableBackupBytesOverride, prepareOnce)
+        } else {
+            runCatching { prepareOnce(availableBackupBytesOverride) }
         }
         val failure = result.exceptionOrNull()?.let { error ->
             Failure(
@@ -743,7 +911,7 @@ object WalletUpgradeBackup {
         migrationRecoverySnapshot = recovery
         blockingFailure = failure
         if (failure != null) {
-            FirebaseWrapper.recordWalletRecovery(when (failure.code) {
+            WalletDiagnostics.recordWalletRecovery(when (failure.code) {
                 "STORAGE_FULL", "INSUFFICIENT_BACKUP_STORAGE" -> WalletRecoveryEvent.GATE_STORAGE_FULL
                 "DATABASE_LOCKED" -> WalletRecoveryEvent.GATE_DATABASE_LOCKED
                 "DATABASE_IO" -> WalletRecoveryEvent.GATE_DATABASE_IO
@@ -807,7 +975,7 @@ object WalletUpgradeBackup {
         }
         migrationRecoverySnapshot = current
         WalletRecoveryCapabilityGate.enterLegacyReadOnly()
-        FirebaseWrapper.recordWalletRecovery(WalletRecoveryEvent.READ_ONLY_ENTERED)
+        WalletDiagnostics.recordWalletRecovery(WalletRecoveryEvent.READ_ONLY_ENTERED)
         keepCodeForRecoveryScreen()
         blockingFailure = null
     }
@@ -1004,7 +1172,7 @@ object WalletUpgradeBackup {
             WalletRecoveryCapabilityGate.enterBlocked()
         }
         WalletRecoveryCapabilityGate.enterLegacyReadOnly()
-        FirebaseWrapper.recordWalletRecovery(WalletRecoveryEvent.READ_ONLY_ENTERED)
+        WalletDiagnostics.recordWalletRecovery(WalletRecoveryEvent.READ_ONLY_ENTERED)
         keepCodeForRecoveryScreen()
         blockingFailure = null
         SafeReadOnlyRoute.ROOM_READ_ONLY
@@ -1271,11 +1439,13 @@ object WalletUpgradeBackup {
 
             override val readableDatabase
                 get() = requireDatabaseAccess().let {
+                    databaseOpenedInProcess = true
                     configured(openHelper.readableDatabase)
                 }
 
             override val writableDatabase
                 get() = requireDatabaseAccess().let {
+                    databaseOpenedInProcess = true
                     configured(openHelper.writableDatabase)
                 }
 
@@ -1798,6 +1968,14 @@ object WalletUpgradeBackup {
         beforeFinalSourceValidationForTest: (() -> Unit)?,
     ) {
         val database = context.getDatabasePath(DATABASE_NAME)
+        // A saved repair plan moves the database away before it moves the replacement in. Only
+        // the repair may finish it ([prepare], [retry]); until then a missing database is not an
+        // empty installation.
+        if (File(context.noBackupFilesDir, DATABASE_REPAIR_MARKER)
+                .existsNoFollowOrThrow("DATABASE_REPAIR_INCOMPLETE")
+        ) {
+            throw WalletUpgradeBackupException("DATABASE_REPAIR_INCOMPLETE")
+        }
         quarantine = WalletQuarantine.NONE
         recoveryFacts = RecoveryFacts(
             hasWalletFiles = runCatching {
@@ -1956,6 +2134,231 @@ object WalletUpgradeBackup {
                 inventory = inventory,
             )
         }
+    }
+
+    /**
+     * An in-place update can lose its database while the encrypted wallet and PIN are intact.
+     * The newest verified no-backup generation may restore the database automatically, but
+     * only when every current credential/preference file is byte-identical to that generation.
+     * It never imports keys, rolls credentials back, or substitutes an older matching backup.
+     * A durable plan precedes every rename; the original database and companions remain aside.
+     */
+    private fun repairLostDatabaseFromMatchingBackup(context: Context) {
+        val noBackup = context.noBackupFilesDir
+        val marker = File(noBackup, DATABASE_REPAIR_MARKER)
+        // A healthy installation needs no repair writes or publication lock. Optional backup
+        // maintenance must remain nonblocking on full storage, as it was before this repair.
+        val healthyWithoutPlan = runCatching {
+            val database = context.getDatabasePath(DATABASE_NAME)
+            !marker.existsNoFollowOrThrow("DATABASE_REPAIR_INCOMPLETE") &&
+                !File(noBackup, DATABASE_REPAIR_EXPLICIT_CHOICE).existsNoFollowOrThrow("DATABASE_REPAIR_INCOMPLETE") &&
+                database.isRegularFileNoFollow() && !hasRollbackJournalHeader(database) &&
+                readVersion(database).let { version ->
+                    version in 1..CURRENT_DATABASE_VERSION &&
+                        readWalletDatabaseInventory(database, minOf(version, CURRENT_DATABASE_VERSION - 1)).accounts.isNotEmpty()
+                }
+        }.getOrDefault(false)
+        if (healthyWithoutPlan) return
+        withPublicationLock(noBackup, BACKUP_PUBLICATION_LOCK, "DATABASE_REPAIR_INCOMPLETE") {
+            // Keep an intentional empty installation empty on every subsequent start too.
+            // A newly created wallet has new preferences, so a later genuine repair can be
+            // enabled when that nonempty database has been observed.
+            val choice = File(noBackup, DATABASE_REPAIR_EXPLICIT_CHOICE)
+            if (choice.existsNoFollowOrThrow("DATABASE_REPAIR_INCOMPLETE")) {
+                val live = context.getDatabasePath(DATABASE_NAME)
+                val hasNewWallet = runCatching {
+                    live.isRegularFileNoFollow() && readWalletDatabaseInventory(live, readVersion(live)).accounts.isNotEmpty()
+                }.getOrDefault(false)
+                if (hasNewWallet && !marker.existsNoFollowOrThrow("DATABASE_REPAIR_INCOMPLETE")) {
+                    Os.remove(choice.path)
+                    fsyncDirectory(noBackup)
+                }
+                return@withPublicationLock
+            }
+            if (marker.existsNoFollowOrThrow("DATABASE_REPAIR_INCOMPLETE")) {
+                finishDatabaseRepair(context, marker)
+                return@withPublicationLock
+            }
+            val database = context.getDatabasePath(DATABASE_NAME)
+            // Do not bypass the normal gate for inaccessible, unsupported, busy, or hot-journal
+            // storage. In particular a hot journal must be replayed by its existing safe path.
+            val lost = if (!database.existsNoFollowOrThrow("DATABASE_PATH_UNREADABLE")) {
+                true
+            } else {
+                if (!database.isRegularFileNoFollow() || hasRollbackJournalHeader(database)) return@withPublicationLock
+                try {
+                    val version = readVersion(database)
+                    if (version == 0 && database.length() == 0L) true else {
+                        if (version !in 1..CURRENT_DATABASE_VERSION) return@withPublicationLock
+                        val inventory = readWalletDatabaseInventory(database, version)
+                        if (inventory.deletionOperations.isNotEmpty() || inventory.deletionTargets.isNotEmpty() ||
+                            inventory.identities.isNotEmpty() || inventory.networkAccounts.isNotEmpty() ||
+                            inventory.pendingWalletIds.isNotEmpty() || inventory.migrationJournals.isNotEmpty()) {
+                            return@withPublicationLock
+                        }
+                        if (version == CURRENT_DATABASE_VERSION) {
+                            val hasPendingSubmission = SQLiteDatabase.openDatabase(database.path, null,
+                                SQLiteDatabase.OPEN_READONLY, FAIL_CLOSED_DATABASE_ERROR_HANDLER).use { sqlite ->
+                                sqlite.rawQuery("SELECT 1 FROM sora2PendingSubmissions LIMIT 1", null).use { it.moveToFirst() }
+                            }
+                            if (hasPendingSubmission) return@withPublicationLock
+                        }
+                        inventory.accounts.isEmpty()
+                    }
+                } catch (error: Throwable) {
+                    if (error is android.database.sqlite.SQLiteDatabaseCorruptException ||
+                        (error as? WalletUpgradeBackupException)?.code == "DATABASE_CORRUPT") {
+                        // A damaged auxiliary table does not make the account inventory lost.
+                        // Its readable accounts can be newer than the snapshot even when the
+                        // encrypted preferences are unchanged. An empty table may also be an
+                        // interrupted deletion whose auxiliary journal is now unreadable.
+                        val readableAccounts = runCatching {
+                            readWalletDatabaseInventory(database, CURRENT_DATABASE_VERSION - 1).accounts
+                        }.getOrNull()
+                        if (readableAccounts != null) return@withPublicationLock
+                        true
+                    } else throw error
+                }
+            }
+            if (!lost) return@withPublicationLock
+            val newest = runCatching {
+                verifiedBackupNamespace(context, "DATABASE_REPAIR_BACKUP_INVALID", "DATABASE_REPAIR_BACKUP_INVALID")
+            }.getOrNull()
+                ?.maxByOrNull(VerifiedBackupCandidate::generation) ?: return@withPublicationLock
+            val manifest = JSONObject(File(newest.directory, "manifest.json")
+                .readBoundedUtf8NoFollow(1, MAX_MANIFEST_BYTES, "DATABASE_REPAIR_BACKUP_INVALID"))
+            val backupFiles = manifest.getJSONArray("files")
+            val records = generationRecords(backupFiles)
+            val databaseRecords = records.filter { it.first.startsWith("databases/") }
+            val credentialRecords = records.filterNot { it.first.startsWith("databases/") }
+            if (databaseRecords.none { it.first == REQUIRED_DATABASE_BACKUP } ||
+                manifest.getInt("legacyAccountCount") == 0 || credentialRecords.isEmpty()) return@withPublicationLock
+            val credentials = JSONArray().also { array -> credentialRecords.forEach { (name, fingerprint) ->
+                array.put(JSONObject().put("name", name).put("size", fingerprint.size).put("sha256", fingerprint.sha256))
+            } }
+            if (!databaseRepairCredentialsMatch(context, credentials)) return@withPublicationLock
+            requireBackupCapacity(noBackup, databaseRecords.map { File(newest.directory, it.first) })
+            val originalFiles = setAsideInventory(context, SetUpAgainScope.DATABASE_ONLY)
+
+            val id = UUID.randomUUID().toString()
+            val root = File(noBackup, "$DATABASE_REPAIR_PREFIX$id")
+            val parentIdentity = noBackup.directoryInodeIdentityNoFollow("DATABASE_REPAIR_INCOMPLETE")
+            createDirectoryExclusive(root, "DATABASE_REPAIR_INCOMPLETE")
+            val rootIdentity = root.directoryInodeIdentityNoFollow("DATABASE_REPAIR_INCOMPLETE")
+            var planPublished = false
+            try {
+                val staged = File(root, "replacement")
+                createDirectoryExclusive(staged, "DATABASE_REPAIR_INCOMPLETE")
+                databaseRecords.forEach { (name, fingerprint) ->
+                    val target = File(staged, name)
+                    ensureDirectoryTreeExclusive(staged, requireNotNull(target.parentFile), "DATABASE_REPAIR_INCOMPLETE")
+                    copyDurably(File(newest.directory, name), target)
+                    afterDatabaseRepairCopyForTest?.invoke()
+                    if (target.inspectRegularNoFollow("DATABASE_REPAIR_INCOMPLETE") != fingerprint) {
+                        throw WalletUpgradeBackupException("DATABASE_REPAIR_INCOMPLETE")
+                    }
+                }
+                fsyncDirectoryTreeBottomUp(root)
+                // Validate the staged database itself, including committed WAL pages, before any
+                // live path moves. Replaying occurs in this private copy, never in the backup.
+                val stagedDatabase = File(staged, REQUIRED_DATABASE_BACKUP)
+                if (hasRollbackJournalHeader(stagedDatabase)) replayRollbackJournal(stagedDatabase)
+                if (!stagedDatabase.passesSqliteIntegrityCheck()) throw WalletUpgradeBackupException("DATABASE_REPAIR_INCOMPLETE")
+                val inventory = readWalletDatabaseInventory(stagedDatabase, readVersion(stagedDatabase))
+                val ids = inventory.accounts.map(SoraAccountLocal::substrateAddress).toSet()
+                if (inventory.accounts.size != manifest.getInt("legacyAccountCount") ||
+                    sha256Text(ids.sorted().joinToString("\n")) != manifest.getString("legacyWalletIdsSha256")) {
+                    throw WalletUpgradeBackupException("DATABASE_REPAIR_INCOMPLETE")
+                }
+                // SQLite may have replayed the staged WAL/journal; journal its finalized bytes.
+                val finalized = JSONArray()
+                listOf("", "-wal", "-shm", "-journal").forEach { suffix ->
+                    val name = "$REQUIRED_DATABASE_BACKUP$suffix"
+                    val file = File(staged, name)
+                    if (file.existsNoFollowOrThrow("DATABASE_REPAIR_INCOMPLETE")) {
+                        val fingerprint = file.inspectRegularNoFollow("DATABASE_REPAIR_INCOMPLETE")
+                        finalized.put(JSONObject().put("name", name).put("size", fingerprint.size).put("sha256", fingerprint.sha256))
+                    }
+                }
+                if (!databaseRepairCredentialsMatch(context, credentials)) throw WalletUpgradeBackupException("SOURCE_CHANGED")
+                if (generationRecords(setAsideInventory(context, SetUpAgainScope.DATABASE_ONLY)) != generationRecords(originalFiles)) {
+                    throw WalletUpgradeBackupException("SOURCE_CHANGED")
+                }
+                val operation = JSONObject().put("id", id).put("phase", "PRESERVING")
+                    .put("original", originalFiles)
+                    .put("replacement", finalized).put("credentials", credentials)
+                fsyncBackupTreeFiles(root)
+                fsyncDirectoryTreeBottomUp(root)
+                writeDatabaseRepair(marker, operation)
+                planPublished = true
+                finishDatabaseRepair(context, marker)
+            } finally {
+                // Only this attempt's disposable copy is removable, and only before the plan
+                // is published. A failed fsync after marker rename is already resumable.
+                if (!planPublished && !marker.existsNoFollowOrThrow("DATABASE_REPAIR_INCOMPLETE")) {
+                    val copied = captureExactBackupTree(root, allowEmptyDirectories = true)
+                    if (noBackup.directoryInodeIdentityNoFollow("DATABASE_REPAIR_INCOMPLETE") != parentIdentity ||
+                        copied.directories.singleOrNull { it.relativeName.isEmpty() }?.identity != rootIdentity ||
+                        copied.directories.any { it.relativeName !in setOf("", "replacement", "replacement/databases") } ||
+                        copied.files.any { !it.relativeName.matches(Regex("replacement/databases/app\\.db(?:-wal|-shm|-journal)?")) }) {
+                        throw WalletUpgradeBackupException("DATABASE_REPAIR_INCOMPLETE")
+                    }
+                    removeExactOwnedBackupTree(root, copied, allowEmptyDirectories = true)
+                    fsyncDirectory(noBackup)
+                }
+            }
+        }
+    }
+
+    private fun databaseRepairCredentialsMatch(context: Context, expected: JSONArray): Boolean {
+        val records = generationRecords(expected)
+        if (records.any { it.first.startsWith("databases/") }) return false
+        val database = context.getDatabasePath(DATABASE_NAME)
+        val current = knownWalletFiles(context, database).filterNot { it.isDatabaseFile(database) }
+            .filter { it.existsNoFollowOrThrow("DATABASE_REPAIR_INCOMPLETE") }
+            .associate { it.backupName(context).replace(File.separatorChar, '/') to
+                it.inspectRegularNoFollow("DATABASE_REPAIR_INCOMPLETE") }
+        return current == records.toMap()
+    }
+
+    private fun writeDatabaseRepair(marker: File, operation: JSONObject) {
+        val staged = File(marker.parentFile, ".${marker.name}.tmp")
+        if (staged.existsNoFollowOrThrow("DATABASE_REPAIR_INCOMPLETE")) Os.remove(staged.path)
+        writeDurably(staged, operation.toString())
+        Os.rename(staged.path, marker.path)
+        fsyncDirectory(requireNotNull(marker.parentFile))
+    }
+
+    private fun finishDatabaseRepair(context: Context, marker: File) {
+        val operation = JSONObject(marker.readBoundedUtf8NoFollow(1, MAX_MANIFEST_BYTES, "DATABASE_REPAIR_INCOMPLETE"))
+        val id = operation.getString("id")
+        if (!DELETION_OPERATION_ID.matches(id)) throw WalletUpgradeBackupException("DATABASE_REPAIR_INCOMPLETE")
+        if (!databaseRepairCredentialsMatch(context, operation.getJSONArray("credentials"))) {
+            throw WalletUpgradeBackupException("DATABASE_REPAIR_CREDENTIALS_CHANGED")
+        }
+        val root = File(context.noBackupFilesDir, "$DATABASE_REPAIR_PREFIX$id")
+        root.directoryIdentityNoFollow("DATABASE_REPAIR_INCOMPLETE")
+        val preserved = File(root, "original")
+        val original = operation.getJSONArray("original")
+        val replacement = operation.getJSONArray("replacement")
+        if ((generationRecords(original) + generationRecords(replacement)).any { !it.first.startsWith("databases/") }) {
+            throw WalletUpgradeBackupException("DATABASE_REPAIR_INCOMPLETE")
+        }
+        if (operation.getString("phase") == "PRESERVING") {
+            verifyGeneration(File(root, "replacement"), replacement)
+            if (!preserved.existsNoFollowOrThrow("DATABASE_REPAIR_INCOMPLETE")) {
+                createDirectoryExclusive(preserved, "DATABASE_REPAIR_INCOMPLETE")
+            }
+            moveGenerationFiles(File(context.applicationInfo.dataDir), preserved, original)
+            operation.put("phase", "RESTORING")
+            writeDatabaseRepair(marker, operation)
+        }
+        if (operation.getString("phase") != "RESTORING") throw WalletUpgradeBackupException("DATABASE_REPAIR_INCOMPLETE")
+        verifyGeneration(preserved, original)
+        moveGenerationFiles(File(root, "replacement"), File(context.applicationInfo.dataDir), replacement)
+        verifyGeneration(File(context.applicationInfo.dataDir), replacement)
+        Os.remove(marker.path)
+        fsyncDirectory(context.noBackupFilesDir)
     }
 
     /**
@@ -2327,31 +2730,34 @@ object WalletUpgradeBackup {
         File(context.noBackupFilesDir, AUTO_RETRY_STATE_FILE)
 
     /**
-     * Claims one automatic verification retry. A user-requested retry always proceeds. Automatic
-     * retries stop after [MAX_AUTOMATIC_MIGRATION_RETRIES] consecutive attempts, after which the
-     * recovery options are shown; the count resets once the wallet verifies.
+     * How many app starts in a row retried an interrupted verification automatically, for
+     * support. It never decides whether a retry happens; an unreadable count reads as zero.
      */
     private fun automaticMigrationRetriesUsed(context: Context): Int {
         val file = automaticRetryStateFile(context)
         return if (file.existsNoFollow()) {
             runCatching {
                 file.readBoundedUtf8NoFollow(1, 16, "AUTO_RETRY_STATE_INVALID").trim().toInt()
-            }.getOrDefault(MAX_AUTOMATIC_MIGRATION_RETRIES)
+                    .coerceIn(0, MAX_COUNTED_AUTOMATIC_MIGRATION_RETRIES)
+            }.getOrDefault(0)
         } else {
             0
         }
     }
 
-    private fun claimMigrationRetry(context: Context): Boolean {
-        val used = automaticMigrationRetriesUsed(context)
-        if (used >= MAX_AUTOMATIC_MIGRATION_RETRIES) return false
-        return runCatching {
+    /** Best effort: a count that cannot be saved (for example on a full disk) is skipped. */
+    private fun countAutomaticMigrationRetry(context: Context) {
+        runCatching {
+            val used = automaticMigrationRetriesUsed(context)
             val staging = File(context.noBackupFilesDir, ".$AUTO_RETRY_STATE_FILE.tmp")
             if (staging.existsNoFollow()) Os.remove(staging.absolutePath)
-            writeDurably(staging, (used + 1).toString())
+            writeDurably(
+                staging,
+                (used + 1).coerceAtMost(MAX_COUNTED_AUTOMATIC_MIGRATION_RETRIES).toString(),
+            )
             Os.rename(staging.absolutePath, automaticRetryStateFile(context).absolutePath)
             fsyncDirectory(context.noBackupFilesDir)
-        }.isSuccess
+        }
     }
 
     private fun resetAutomaticMigrationRetries(context: Context) {
@@ -4649,7 +5055,7 @@ object WalletUpgradeBackup {
                 throw WalletUpgradeBackupException("DATABASE_RECOVERY_FAILED")
             }
             nonBlockingWarnings = nonBlockingWarnings + "DATABASE_JOURNAL_RECOVERED"
-            FirebaseWrapper.recordWalletRecovery(WalletRecoveryEvent.JOURNAL_RECOVERED)
+            WalletDiagnostics.recordWalletRecovery(WalletRecoveryEvent.JOURNAL_RECOVERED)
         } finally {
             removeExactValidationTree(directory, identity, parentIdentity)
         }

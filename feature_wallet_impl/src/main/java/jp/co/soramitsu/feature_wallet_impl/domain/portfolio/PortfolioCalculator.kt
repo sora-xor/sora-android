@@ -1,11 +1,16 @@
 package jp.co.soramitsu.feature_wallet_impl.domain.portfolio
 
 import java.math.BigDecimal
+import jp.co.soramitsu.common.domain.AssetHolder
 import jp.co.soramitsu.common.nexus.WalletNetworkId
 
 /**
  * Counted value of a set of holdings (portfolio-view SPEC §6). Only visible, priced, mainnet
  * holdings are counted; the others are named by kind so the caption can say what is left out.
+ *
+ * [priced] is how many holdings the value counts and [unread] how many wallets could not be read
+ * yet. A sum over nothing is not a value: while [known] is false the total is shown as unknown,
+ * never as zero.
  */
 data class PortfolioTotals(
     val fiat: Double,
@@ -14,7 +19,13 @@ data class PortfolioTotals(
     val hidden: Int,
     val unpriced: Int,
     val testnet: Int,
+    val priced: Int = 0,
+    val unread: Int = 0,
 ) {
+    /** At least one holding has a value: [fiat] is a real amount, not the sum of nothing. */
+    val known: Boolean
+        get() = priced > 0
+
     /** 24 h change as a fraction of the value 24 h ago; null when no counted holding has a change. */
     val changeFraction: Double?
         get() {
@@ -23,7 +34,7 @@ data class PortfolioTotals(
         }
 
     val excluded: Int
-        get() = hidden + unpriced + testnet
+        get() = hidden + unpriced + testnet + unread
 
     operator fun plus(other: PortfolioTotals): PortfolioTotals = PortfolioTotals(
         fiat = fiat + other.fiat,
@@ -32,6 +43,8 @@ data class PortfolioTotals(
         hidden = hidden + other.hidden,
         unpriced = unpriced + other.unpriced,
         testnet = testnet + other.testnet,
+        priced = priced + other.priced,
+        unread = unread + other.unread,
     )
 
     companion object {
@@ -93,10 +106,16 @@ object PortfolioCalculator {
     }
 
     /** Amount × the asset's own price, for a counted holding only. A group never lends a price. */
-    fun countedFiat(holding: PortfolioHolding): Double? {
+    fun countedFiat(holding: PortfolioHolding): Double? = countedFiat(holding, holding.total)
+
+    /**
+     * [amount] of a counted holding's token × its own price: the value a row prices for exactly the amount it shows
+     * (what can be sent, say, rather than all that is held).
+     */
+    fun countedFiat(holding: PortfolioHolding, amount: BigDecimal): Double? {
         if (exclusion(holding) != null) return null
         val price = holding.token.price ?: return null
-        return holding.total.toDouble() * price
+        return amount.toDouble() * price
     }
 
     /** Fiat change over 24 h of a counted holding, from its token's own price change. */
@@ -115,12 +134,14 @@ object PortfolioCalculator {
         var hidden = 0
         var unpriced = 0
         var testnet = 0
+        var priced = 0
         holdings.forEach { holding ->
             when (exclusion(holding)) {
                 Exclusion.HIDDEN -> hidden++
                 Exclusion.UNPRICED -> unpriced++
                 Exclusion.TESTNET -> testnet++
                 null -> {
+                    priced++
                     fiat += countedFiat(holding) ?: 0.0
                     countedChange(holding)?.let {
                         change += it
@@ -129,13 +150,18 @@ object PortfolioCalculator {
                 }
             }
         }
-        return PortfolioTotals(fiat, change, changeKnown, hidden, unpriced, testnet)
+        return PortfolioTotals(fiat, change, changeKnown, hidden, unpriced, testnet, priced)
     }
+
+    /** One wallet's totals; a wallet that could not be read yet is named, so it never reads as zero. */
+    fun walletTotals(snapshot: PortfolioSnapshot, walletId: String): PortfolioTotals =
+        totals(snapshot.holdings.filter { it.walletId == walletId })
+            .copy(unread = if (snapshot.sync[walletId]?.unread == true) 1 else 0)
 
     /** All wallets total = Σ each wallet's own total; the exclusions are summed too. */
     fun scopeTotals(snapshot: PortfolioSnapshot, walletIds: Collection<String>): PortfolioTotals =
         walletIds.distinct()
-            .map { id -> totals(snapshot.holdings.filter { it.walletId == id }) }
+            .map { id -> walletTotals(snapshot, id) }
             .fold(PortfolioTotals.ZERO, PortfolioTotals::plus)
 
     /** All wallets appears only with two or more wallets and is their default. */
@@ -146,15 +172,6 @@ object PortfolioCalculator {
         PortfolioScope.ALL -> snapshot.wallets.map { it.id }
         PortfolioScope.SELECTED -> listOfNotNull(snapshot.selectedWallet?.id)
     }
-
-    /** The Wallets lens exists only in All wallets. Tokens is the default. */
-    fun availableLenses(scope: PortfolioScope): List<PortfolioLens> = when (scope) {
-        PortfolioScope.ALL -> PortfolioLens.entries.toList()
-        PortfolioScope.SELECTED -> listOf(PortfolioLens.TOKENS, PortfolioLens.NETWORKS)
-    }
-
-    fun effectiveLens(requested: PortfolioLens?, scope: PortfolioScope): PortfolioLens =
-        requested?.takeIf { it in availableLenses(scope) } ?: PortfolioLens.TOKENS
 
     /** Visible holdings in scope: hidden holdings are counted out and never listed. */
     fun visibleHoldings(snapshot: PortfolioSnapshot, walletIds: Collection<String>): List<PortfolioHolding> {
@@ -201,6 +218,8 @@ object PortfolioCalculator {
             compareByDescending<PortfolioGroup> { it.countedFiat }
                 .thenBy { it.testnetOnly }
                 .thenBy { if (lens == PortfolioLens.WALLETS) walletOrder[it.key] ?: Int.MAX_VALUE else 0 }
+                // Without prices: the app's own order of the known tokens (XOR first), then by name.
+                .thenBy { group -> AssetHolder.position(group.holdings.firstOrNull()?.token?.id.orEmpty()) }
                 .thenBy { group -> group.holdings.firstOrNull()?.token?.symbol ?: group.key }
                 .thenBy { it.key }
         )
@@ -236,8 +255,8 @@ object PortfolioCalculator {
             val holdings = snapshot.holdings.filter { it.walletId == wallet.id }
             WalletSummary(
                 wallet = wallet,
-                totals = totals(holdings),
-                freshness = PortfolioFreshness.of(snapshot.sync[wallet.id], snapshot.connected, nowMillis),
+                totals = walletTotals(snapshot, wallet.id),
+                freshness = PortfolioFreshness.of(snapshot.sync[wallet.id], snapshot.connected, nowMillis, snapshot.nodeUp),
                 networks = PORTFOLIO_NETWORKS.filter { network ->
                     holdings.any { it.network == network && !it.hidden }
                 },
@@ -245,7 +264,7 @@ object PortfolioCalculator {
         }
 
     /**
-     * The scope's freshness is its worst wallet's: offline, then partial, then saved, then live.
+     * The scope's freshness is its worst wallet's: offline, partial, reading, saved, then live.
      * Among equals the oldest sync wins, and every unreachable network is named.
      */
     fun worstFreshness(
@@ -254,7 +273,7 @@ object PortfolioCalculator {
         nowMillis: Long,
     ): WalletFreshness? {
         val states = walletIds.distinct().map {
-            PortfolioFreshness.of(snapshot.sync[it], snapshot.connected, nowMillis)
+            PortfolioFreshness.of(snapshot.sync[it], snapshot.connected, nowMillis, snapshot.nodeUp)
         }
         val worst = states.maxWithOrNull(
             compareBy<WalletFreshness> { it.kind.severity }
@@ -319,11 +338,19 @@ object FanAllocation {
 /**
  * Honest sync states (portfolio-view SPEC §3.2 and §6). The selected wallet is kept current by the
  * app's live subscription; other wallets are read while the dashboard is visible, at most once a
- * minute, and show their age when a read is older than [LIVE_WINDOW_MS] or failed.
+ * minute, and show their age when a read is older than [LIVE_WINDOW_MS] or failed, and whenever the
+ * node is not answering.
  */
 object PortfolioFreshness {
     const val REFRESH_INTERVAL_MS = 60_000L
     const val LIVE_WINDOW_MS = 2 * REFRESH_INTERVAL_MS
+
+    /** The app reads prices every 20 s while it is open; this long without one, the service is gone. */
+    const val PRICES_OLD_AFTER_MS = 10 * REFRESH_INTERVAL_MS
+
+    /** These prices are the last the service gave, not current ones. */
+    fun pricesAreOld(readAtMillis: Long?, nowMillis: Long): Boolean =
+        readAtMillis != null && nowMillis - readAtMillis > PRICES_OLD_AFTER_MS
 
     /**
      * A read that finishes just after the dashboard's clock ticked is stamped a moment "later" than
@@ -331,12 +358,18 @@ object PortfolioFreshness {
      */
     const val CLOCK_SKEW_MS = 30_000L
 
-    fun of(sync: WalletSync?, connected: Boolean, nowMillis: Long): WalletFreshness {
+    /**
+     * [nodeUp] is whether the node answers now. While it does not (the app is connecting or reconnecting) nothing
+     * is live, however recently it was read: the numbers are saved ones and show their age.
+     */
+    fun of(sync: WalletSync?, connected: Boolean, nowMillis: Long, nodeUp: Boolean = true): WalletFreshness {
         val updatedAt = sync?.refreshedAtMillis
         val unreachable = sync?.unreachable.orEmpty()
         val kind = when {
             !connected -> FreshnessKind.OFFLINE
             unreachable.isNotEmpty() -> FreshnessKind.PARTIAL
+            sync?.unread == true -> FreshnessKind.READING
+            !nodeUp -> FreshnessKind.SAVED
             sync?.live == true -> FreshnessKind.LIVE
             updatedAt != null && isRecent(updatedAt, nowMillis) -> FreshnessKind.LIVE
             else -> FreshnessKind.SAVED

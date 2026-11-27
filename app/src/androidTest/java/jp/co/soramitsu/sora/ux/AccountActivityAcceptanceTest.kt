@@ -6,7 +6,6 @@ import jp.co.soramitsu.sora.testutil.NativeDisplayCapture
 
 import android.graphics.Bitmap
 import android.graphics.HardwareRenderer
-import android.view.accessibility.AccessibilityNodeInfo
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -15,6 +14,12 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.junit4.createEmptyComposeRule
+import androidx.compose.ui.test.onNodeWithText
 import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
@@ -36,15 +41,17 @@ import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
 /** Renders the real activity feed with deterministic, read-only transaction fixtures. */
 @RunWith(AndroidJUnit4::class)
 class AccountActivityAcceptanceTest {
+    @get:Rule
+    val compose = createEmptyComposeRule()
+
     private val instrumentation = InstrumentationRegistry.getInstrumentation()
     private val context get() = instrumentation.targetContext
     private val accountAddress = "SampleAccountForActivityAcceptance"
@@ -83,12 +90,20 @@ class AccountActivityAcceptanceTest {
             assertVisible(walletDateTime(sent.timestampMillis))
             assertVisible(walletDateTime(received.timestampMillis))
             assertVisible(context.getString(R.string.wallet_status_confirmed))
-            assertNull(findText(context.getString(R.string.activity_empty_content_title)))
-            assertNull(findText(sent.transactionHash))
+            compose.onNodeWithText(context.getString(R.string.activity_empty_content_title), useUnmergedTree = true).assertDoesNotExist()
+            compose.onNodeWithText(sent.transactionHash, substring = true, useUnmergedTree = true).assertDoesNotExist()
 
-            clickText(sentLabel)
-            assertVisible(context.getString(R.string.network_history_transaction_hash, sent.transactionHash))
-            assertVisible(context.getString(R.string.network_history_counterparty, counterparty))
+            compose.onNodeWithText(sentLabel, substring = true).performClick()
+            // SelectionContainer exposes its own semantics beneath the clickable row.
+            // Check the actual rendered text nodes instead of the merged accessibility ancestor.
+            compose.onNodeWithText(
+                context.getString(R.string.network_history_transaction_hash, sent.transactionHash),
+                useUnmergedTree = true,
+            ).assertIsDisplayed()
+            compose.onNodeWithText(
+                context.getString(R.string.network_history_counterparty, counterparty),
+                useUnmergedTree = true,
+            ).assertIsDisplayed()
             capture("account-activity")
         }
     }
@@ -106,13 +121,13 @@ class AccountActivityAcceptanceTest {
 
             assertVisible("${context.getString(R.string.common_sent)} · 12.5 XOR")
             assertVisible(context.getString(R.string.activity_error_title))
-            assertNull(findText(context.getString(R.string.activity_empty_content_title)))
+            compose.onNodeWithText(context.getString(R.string.activity_empty_content_title), useUnmergedTree = true).assertDoesNotExist()
             val loadMore = context.getString(R.string.nexus_history_load_more)
-            revealText(loadMore)
-            clickText(loadMore)
-            waitUntil { paginationCalls.get() == 1 }
-            assertEquals(1, paginationCalls.get())
-            assertEquals(account, requestedAccount.get())
+            compose.onNodeWithText(loadMore).performScrollTo().performClick()
+            compose.runOnIdle {
+                assertEquals(1, paginationCalls.get())
+                assertEquals(account, requestedAccount.get())
+            }
         }
     }
 
@@ -164,60 +179,7 @@ class AccountActivityAcceptanceTest {
     )
 
     private fun assertVisible(text: String) {
-        waitUntil { findText(text)?.isVisibleToUser == true }
-        assertTrue("Expected visible activity text: $text", findText(text)?.isVisibleToUser == true)
-    }
-
-    private fun findText(text: String): AccessibilityNodeInfo? {
-        fun visit(node: AccessibilityNodeInfo): AccessibilityNodeInfo? {
-            if (node.text?.toString()?.contains(text) == true ||
-                node.contentDescription?.toString()?.contains(text) == true) return node
-            for (index in 0 until node.childCount) {
-                node.getChild(index)?.let { visit(it)?.let { match -> return match } }
-            }
-            return null
-        }
-        return instrumentation.uiAutomation.rootInActiveWindow?.let(::visit)
-    }
-
-    private fun clickText(text: String) {
-        var target = findText(text) ?: error("Missing activity action: $text")
-        while (!target.isClickable) target = target.parent ?: error("Activity action is not clickable: $text")
-        check(target.performAction(AccessibilityNodeInfo.ACTION_CLICK)) { "Cannot click $text" }
-        instrumentation.waitForIdleSync()
-    }
-
-    private fun revealText(text: String) {
-        repeat(12) {
-            findText(text)?.let { node ->
-                node.performAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_SHOW_ON_SCREEN.id)
-                instrumentation.waitForIdleSync()
-                if (findText(text)?.isVisibleToUser == true) return
-            }
-            fun scroll(node: AccessibilityNodeInfo): Boolean {
-                if (node.isScrollable && node.performAction(AccessibilityNodeInfo.ACTION_SCROLL_FORWARD)) return true
-                for (index in 0 until node.childCount) {
-                    node.getChild(index)?.let { if (scroll(it)) return true }
-                }
-                return false
-            }
-            instrumentation.uiAutomation.rootInActiveWindow?.let(::scroll)
-            instrumentation.waitForIdleSync()
-            Thread.sleep(100)
-        }
-        error("Cannot reveal activity action: $text")
-    }
-
-    private fun waitUntil(predicate: () -> Boolean) {
-        val deadline = System.nanoTime() + 10_000_000_000L
-        while (!predicate()) {
-            if (System.nanoTime() >= deadline) {
-                capture("account-activity-failure")
-                error("Activity UI condition timed out")
-            }
-            Thread.sleep(100)
-        }
-        instrumentation.waitForIdleSync()
+        compose.onAllNodesWithText(text, substring = true, useUnmergedTree = true)[0].assertIsDisplayed()
     }
 
     private fun capture(name: String) {

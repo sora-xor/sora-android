@@ -29,7 +29,6 @@ import androidx.compose.material.Text
 import androidx.compose.material.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -43,24 +42,20 @@ fun PercentContainer(
     onSelectPercent: (Int) -> Unit,
     content: @Composable () -> Unit,
 ) {
-    Box(
+    Column(
         modifier = modifier,
     ) {
         val keyboardController = LocalSoftwareKeyboardController.current
-        val hideKeyboard: () -> Unit = {
-            keyboardController?.hide()
-        }
         val selectPercent: (Int) -> Unit = {
             keyboardController?.hide()
             onSelectPercent.invoke(it)
         }
         val keyboardVisible by keyboardState()
-        content()
+        Box(Modifier.fillMaxWidth().weight(1f)) { content() }
         AnimatedVisibility(
             modifier = Modifier
                 .fillMaxWidth()
-                .wrapContentHeight()
-                .align(Alignment.BottomCenter),
+                .wrapContentHeight(),
             visible = keyboardVisible && barVisible,
         ) {
             PercentBar(

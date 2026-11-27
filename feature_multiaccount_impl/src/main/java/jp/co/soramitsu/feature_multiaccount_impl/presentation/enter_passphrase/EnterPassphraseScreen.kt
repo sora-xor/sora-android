@@ -74,22 +74,25 @@ fun EnterPassphraseScreen(
         ) {
             val focusManager = LocalFocusManager.current
 
-            Text(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = Dimens.x3),
-                text = stringResource(id = recoveryState.title),
-                color = MaterialTheme.customColors.fgPrimary,
-                style = MaterialTheme.customTypography.paragraphM,
-            )
-
-            onSourceChanged?.let { select ->
+            if (onSourceChanged != null) {
                 NeonSegments(
-                    labels = listOf(stringResource(R.string.common_passphrase_title),
-                        stringResource(R.string.common_raw_seed), "JSON"),
+                    labels = listOf(
+                        stringResource(R.string.common_passphrase_title),
+                        stringResource(R.string.common_raw_seed),
+                        "JSON",
+                    ),
                     selected = recoveryState.recoveryType.ordinal,
-                    onSelect = { index -> if (index != recoveryState.recoveryType.ordinal) select(RecoveryType.values()[index]) },
+                    onSelect = { index ->
+                        if (index != recoveryState.recoveryType.ordinal) onSourceChanged(RecoveryType.values()[index])
+                    },
                     modifier = Modifier.padding(bottom = Dimens.x2),
+                )
+            } else {
+                Text(
+                    modifier = Modifier.fillMaxWidth().padding(bottom = Dimens.x2),
+                    text = stringResource(recoveryState.title),
+                    style = MaterialTheme.customTypography.paragraphM,
+                    color = MaterialTheme.customColors.fgPrimary,
                 )
             }
 
@@ -178,7 +181,7 @@ fun EnterPassphraseScreen(
             FilledButton(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = Dimens.x5),
+                    .padding(top = Dimens.x3),
                 size = Size.Large,
                 enabled = recoveryState.isButtonEnabled,
                 order = Order.PRIMARY,

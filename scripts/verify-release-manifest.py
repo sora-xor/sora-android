@@ -12,6 +12,8 @@ artifact Google Play would receive differs from it in any of these:
   - debuggable, testOnly, usesCleartextTraffic and sharedUserId must be off or absent;
   - deep links: none by default; an explicit policy can name exact filters on an activity;
   - forbidden components (IrohaConnect, the debug-only Safe Mode preview);
+  - closed-source SDKs: no Firebase, Google Play services, Play Core or Install Referrer
+    component, permission or metadata;
   - the permission list, the <queries> list and the exported components.
 
 The manifest is read straight from the file: the binary XML of an APK and the protobuf XML of
@@ -33,6 +35,18 @@ DEFAULT_POLICY_FILE = ROOT / "config" / "android-production-manifest-policy.json
 ANDROID_NS = "http://schemas.android.com/apk/res/android"
 MANIFEST_SIZE_LIMIT = 4 * 1024 * 1024
 COMPONENT_TAGS = ("activity", "activity-alias", "service", "receiver", "provider")
+# Names that only closed-source Google SDKs put into a manifest. The app links none of them.
+CLOSED_SDK_NAME_PREFIXES = (
+    "com.google.firebase.",
+    "com.google.android.gms.",
+    "com.google.android.datatransport.",
+    "com.google.android.play.",
+    "com.google.android.finsky.",
+    "com.google.mlkit.",
+    "com.android.installreferrer.",
+    "firebase_",
+    "google_analytics_",
+)
 LAUNCHER_ACTIONS = {"android.intent.action.MAIN"}
 LAUNCHER_CATEGORIES = {"android.intent.category.LAUNCHER", "android.intent.category.DEFAULT"}
 
@@ -578,9 +592,11 @@ def check_manifest(manifest: Element, policy: dict, version_code=None, version_n
         entries = [node for node in application.child_elements("meta-data") if node.get("name") == name]
         if len(entries) != 1 or not isinstance(expected, bool) or as_bool(entries[0].get("value")) is not expected:
             issues.append(f"<application> metadata {name} must occur once with boolean value {shown(expected)}")
-    for node in application.child_elements("meta-data"):
-        if node.get("name") == "firebase_analytics_collection_deactivated" and as_bool(node.get("value")) is not False:
-            issues.append("Firebase Analytics must not be permanently deactivated")
+    for element in manifest.walk():
+        if element.name in COMPONENT_TAGS + ("meta-data", "uses-permission", "uses-permission-sdk-23", "permission"):
+            name = str(element.get("name") or "")
+            if name.lower().startswith(CLOSED_SDK_NAME_PREFIXES):
+                issues.append(f"closed-source SDK in the manifest: <{element.name}> {name}")
     for attribute in ("allowBackup", "fullBackupContent"):
         # allowBackup defaults to true when it is absent, so absence is a failure too.
         if as_bool(application.get(attribute)) is not False:

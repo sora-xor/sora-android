@@ -1,7 +1,6 @@
 package jp.co.soramitsu.sora.platform
 
 import android.text.style.RelativeSizeSpan
-import androidx.compose.ui.text.style.TextDecoration
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import jp.co.soramitsu.common.util.ext.*
 import org.junit.Assert.*
@@ -24,13 +23,6 @@ class AmountTextRenderingContractTest {
         assertEquals(2, localized.getSpanStart(span)); assertEquals(6, localized.getSpanEnd(span))
         val integer = "42 XOR".decimalPartSized()
         assertEquals("42 XOR", integer.toString()); assertTrue(integer.getSpans(0, integer.length, RelativeSizeSpan::class.java).isEmpty())
-    }
-    @Test fun underliningTargetsOnlyTheFirstLiteralOccurrenceAndIgnoresMissingText() {
-        val result = underlineSubstring("Backup wallet backup", "wallet")
-        assertEquals("Backup wallet backup", result.text)
-        val span = result.spanStyles.single()
-        assertEquals(7, span.start); assertEquals(13, span.end); assertEquals(TextDecoration.Underline, span.item.textDecoration)
-        assertTrue(underlineSubstring("Unchanged", "absent").spanStyles.isEmpty())
     }
     @Test fun invalidLegacyHighlightInstructionsPreserveVisibleTextWithoutClickHandlers() {
         for (value in listOf("Only %%one delimiter", "%%first%% and %%second%%")) {

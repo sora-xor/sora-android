@@ -1,7 +1,16 @@
 @file:Suppress("INVISIBLE_MEMBER", "INVISIBLE_REFERENCE")
 package jp.co.soramitsu.sora.liquidity
 
+import android.graphics.Bitmap
 import androidx.activity.ComponentActivity
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.Modifier
+import androidx.test.platform.app.InstrumentationRegistry
+import jp.co.soramitsu.common.presentation.compose.neon.NeonBackground
+import jp.co.soramitsu.sora.testutil.NativeDisplayCapture
+import java.io.File
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
@@ -41,8 +50,49 @@ class SwapNavigationContractTest {
         fragment.debounceClickHandler = DebounceClickHandler()
         SwapFragment::class.java.getDeclaredField("viewModel\$delegate").apply { isAccessible = true }.set(fragment, lazyOf(vm))
         compose.setContent { SoraAppTheme { nav = rememberNavController(); val scroll = rememberScrollState()
-            NavHost(nav, startDestination = SwapRoutes.start) { with(fragment) { content(scroll, nav) } }
+            Box(Modifier.fillMaxSize()) {
+                NeonBackground()
+                NavHost(nav, startDestination = SwapRoutes.start, modifier = Modifier.systemBarsPadding()) {
+                    with(fragment) { content(scroll, nav) }
+                }
+            }
         } }
+    }
+    @Test fun selectedTokensAndAmountsUseTheWidthOfBothLabeledFields() {
+        val context = compose.activity
+        val pay = input("CERES", "0.12").copy(balance = "0.468", amountFiat = "")
+        val receive = input("XOR", "0.25").let {
+            it.copy(token = it.token.copy(id = AssetHolder.XOR_ASSET_ID), balance = "0.899", amountFiat = "")
+        }
+        compose.runOnIdle {
+            state.value = state.value.copy(
+                tokenFromState = pay,
+                tokenToState = receive,
+                swapButtonState = ButtonState(context.getString(R.string.review), true),
+                details = defaultSwapDetailsState(),
+            )
+        }
+        val fields = compose.onAllNodes(hasSetTextAction()).fetchSemanticsNodes()
+        assertEquals(2, fields.size)
+        val width = compose.onRoot().fetchSemanticsNode().boundsInRoot.width
+        listOf(R.string.swap_pay_label to pay, R.string.swap_receive_label to receive).forEachIndexed { index, (label, amount) ->
+            val caption = compose.onNodeWithText(context.getString(label)).assertIsDisplayed().fetchSemanticsNode().boundsInRoot
+            val number = fields[index].boundsInRoot
+            compose.onNodeWithText(amount.token.symbol).assertIsDisplayed()
+            compose.onNodeWithText(context.getString(R.string.asset_balance_value, amount.balance)).assertIsDisplayed()
+            assertTrue("Amount must remain inside the screen", number.right <= width)
+            assertTrue("The labelled field must span the phone", number.right - caption.left > width * 0.75f)
+            assertTrue("The amount needs space of its own", number.width > width * 0.28f)
+        }
+        if (InstrumentationRegistry.getArguments().getString("swapCapture") == "true") {
+            val file = File(context.getExternalFilesDir(null), "fixture-swap-pair.png")
+            val bitmap = NativeDisplayCapture.capture()
+            try {
+                file.outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
+            } finally {
+                bitmap.recycle()
+            }
+        }
     }
     @Test fun reviewingTheQuoteDoesNotConfirmItUntilTheSecondExplicitAction() {
         compose.onNodeWithText("Review swap").performClick()

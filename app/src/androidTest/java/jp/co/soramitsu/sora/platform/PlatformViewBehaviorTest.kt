@@ -81,55 +81,6 @@ class PlatformViewBehaviorTest {
         view.doAnimation(false, animation); assertNull(view.animation)
     }
 
-    @Test fun nameLimitCountsUtf8BytesAndRestoresPreviousInputAndSelection() = main {
-        val field = EditText(context)
-        var rejected = 0
-        val watcher = nameByteSizeTextWatcher(field) { rejected++ }
-        field.addTextChangedListener(watcher)
-        field.setText("a".repeat(31)); field.setSelection(31)
-        field.text.append("a")
-        assertEquals(32, field.text.length)
-        field.setSelection(32); field.text.append("界")
-        assertEquals("a".repeat(32), field.text.toString())
-        assertEquals(1, rejected)
-        assertTrue(field.selectionStart in 0..field.text.length)
-        watcher.destroy()
-        field.text.append("界")
-        assertEquals(33, field.text.length)
-        assertNull(watcher.editText)
-    }
-
-    @Test fun unicodeInputAtByteBoundaryIsAcceptedAndOversizedPasteIsRejected() = main {
-        val field = EditText(context)
-        var rejected = 0
-        val watcher = ByteSizeTextWatcher(field, { rejected++ }, 6)
-        field.addTextChangedListener(watcher)
-        field.setText("界界")
-        assertEquals("界界", field.text.toString())
-        field.setSelection(0)
-        field.setText("界界界")
-        assertEquals("界界", field.text.toString())
-        assertEquals(1, rejected)
-        assertEquals(0, field.selectionStart)
-        watcher.afterTextChanged(field.text)
-        watcher.destroy()
-        watcher.beforeTextChanged(null, 0, 0, 0)
-        watcher.onTextChanged(null, 0, 0, 0)
-    }
-
-    @Test fun destroyedLifecycleDetachesTextWatcher() = main {
-        val owner = object : LifecycleOwner {
-            val registry = LifecycleRegistry(this)
-            override val lifecycle: Lifecycle get() = registry
-        }
-        owner.registry.handleLifecycleEvent(Lifecycle.Event.ON_CREATE)
-        val watcher = nameByteSizeTextWatcher(EditText(context)) {}
-        owner.bindTextWatcher(watcher)
-        assertNotNull(watcher.editText)
-        owner.registry.handleLifecycleEvent(Lifecycle.Event.ON_DESTROY)
-        assertNull(watcher.editText)
-    }
-
     @Test fun doneActionInvokesOnlyTheDoneCallback() = main {
         val field = EditText(context)
         var calls = 0

@@ -21,7 +21,6 @@ package jp.co.soramitsu.common.domain
 
 import android.os.Parcelable
 import java.math.BigDecimal
-import jp.co.soramitsu.androidfoundation.format.equalTo
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.util.NumbersFormatter
 import kotlinx.parcelize.IgnoredOnParcel
@@ -113,28 +112,6 @@ data class Token(
         precision: Int = this.precision
     ): String =
         String.format("%s %s", nf.formatBigDecimal(balance, precision), symbol)
-
-    fun printBalanceWithConstrainedLength(
-        balance: BigDecimal,
-        nf: NumbersFormatter,
-        length: Int = 8
-    ): String {
-        val integerLength = balance.toBigInteger().toString().length
-        var newPrecision = length - integerLength
-        if (newPrecision <= 0) {
-            newPrecision = 1
-        }
-
-        return printBalance(balance, nf, newPrecision)
-    }
-}
-
-fun compareByTransferable(old: Asset?, new: Asset?): Boolean = if (old == null && new == null) {
-    true
-} else if (old == null || new == null) {
-    false
-} else {
-    old.token.id == new.token.id && old.balance.transferable.equalTo(new.balance.transferable)
 }
 
 fun List<Token>.getByIdOrEmpty(id: String): Token =

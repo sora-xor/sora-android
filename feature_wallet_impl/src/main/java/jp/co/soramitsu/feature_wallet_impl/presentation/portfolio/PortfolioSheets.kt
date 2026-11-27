@@ -1,5 +1,6 @@
 package jp.co.soramitsu.feature_wallet_impl.presentation.portfolio
 
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -7,6 +8,8 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -14,6 +17,8 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
@@ -53,9 +58,13 @@ import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.PortfolioHolding
 import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.PortfolioLens
 import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.PortfolioReadiness
 import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.PortfolioScope
+import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.PortfolioToken
 import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.PortfolioSlots
 import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.SwapBlock
 import jp.co.soramitsu.ui_core.component.button.properties.Size as ButtonSize
+import jp.co.soramitsu.ui_core.lit.LitDot
+import jp.co.soramitsu.ui_core.lit.litPlate
+import jp.co.soramitsu.ui_core.lit.litWell
 import jp.co.soramitsu.ui_core.theme.customTypography
 
 internal interface PortfolioSheetActions {
@@ -113,10 +122,10 @@ private fun WalletsSheet(model: PortfolioModel, format: PortfolioFormat, actions
                 SheetRow(
                     selected = model.scope == PortfolioScope.ALL,
                     onClick = actions::onSelectAll,
-                    leading = { AllWalletsAvatar(42.dp) },
+                    leading = { SoraMark(42.dp) },
                     title = stringResource(R.string.portfolio_all_wallets),
                     subtitle = stringResource(R.string.portfolio_wallets_together, model.wallets.size),
-                    trailingTop = format.fiat(model.allTotals.fiat),
+                    trailingTop = format.total(model.allTotals),
                     trailingBottom = changeText(format, model.allTotals.changeFraction),
                 )
             }
@@ -125,31 +134,51 @@ private fun WalletsSheet(model: PortfolioModel, format: PortfolioFormat, actions
                 SheetRow(
                     selected = model.scope == PortfolioScope.SELECTED && wallet.selected,
                     onClick = { actions.onSelectWallet(wallet.id) },
-                    leading = { WalletAvatar(wallet.name, model.colorOfWallet(wallet.id), 42.dp) },
+                    leading = { WalletAvatar(wallet.name, model.colorOfWallet(wallet.id, isDarkTheme), 42.dp) },
                     title = wallet.name,
                     subtitle = listOfNotNull(
                         stringResource(R.string.portfolio_selected).takeIf { wallet.selected },
                         summary.freshness?.let { freshnessLabel(it, model.nowMillis) },
                     ).joinToString(" · "),
-                    trailingTop = format.fiat(summary.totals.fiat),
+                    trailingTop = format.total(summary.totals),
                     trailingBottom = changeText(format, summary.totals.changeFraction),
                 )
             }
         }
-        PortfolioBanner(stringResource(R.string.portfolio_wallets_note)) {
-            Text(
-                stringResource(R.string.portfolio_refresh_all),
-                style = MaterialTheme.customTypography.textSBold,
-                color = n.link,
-                modifier = Modifier
-                    .padding(top = 6.dp)
-                    .clip(RoundedCornerShape(6.dp))
-                    .clickable(role = Role.Button, onClick = actions::onRefreshAll)
-                    .padding(vertical = 6.dp),
-            )
+        // With one wallet there is nothing to add up or to refresh in the background.
+        if (model.allWalletsAvailable) {
+            PortfolioBanner(stringResource(R.string.portfolio_wallets_note)) {
+                Text(
+                    stringResource(R.string.portfolio_refresh_all),
+                    style = MaterialTheme.customTypography.textSBold,
+                    color = n.link,
+                    modifier = Modifier
+                        .padding(top = 6.dp)
+                        .clip(RoundedCornerShape(6.dp))
+                        .clickable(role = Role.Button, onClick = actions::onRefreshAll)
+                        .padding(vertical = 6.dp),
+                )
+            }
         }
-        SecondaryAction(stringResource(R.string.portfolio_manage_wallets), actions::onManageWallets)
+        SheetLink(stringResource(R.string.portfolio_manage_wallets), actions::onManageWallets)
+        SheetLink(stringResource(R.string.portfolio_manage_assets), actions::onManageAssets)
     }
+}
+
+/** A link line at the end of a sheet. */
+@Composable
+private fun SheetLink(text: String, onClick: () -> Unit) {
+    Text(
+        text,
+        style = MaterialTheme.customTypography.textMBold,
+        color = MaterialTheme.neon.link,
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(6.dp))
+            .clickable(role = Role.Button, onClick = onClick)
+            .heightIn(min = 48.dp)
+            .wrapContentHeight(Alignment.CenterVertically),
+    )
 }
 
 @Composable
@@ -162,14 +191,18 @@ private fun HowWeCountSheet(model: PortfolioModel, format: PortfolioFormat, acti
             style = MaterialTheme.customTypography.paragraphM,
             color = n.textSecondary,
         )
-        PortfolioCard(radius = 18.dp) {
-            KeyValueRow(stringResource(R.string.portfolio_counted), format.fiat(totals.fiat))
+        SheetCard {
+            KeyValueRow(stringResource(R.string.portfolio_counted), format.total(totals))
             RowDivider()
             KeyValueRow(stringResource(R.string.portfolio_hidden_by_you), pluralStringResource(R.plurals.portfolio_assets_not_included, totals.hidden, totals.hidden))
             RowDivider()
             KeyValueRow(stringResource(R.string.portfolio_without_price), pluralStringResource(R.plurals.portfolio_assets_not_included, totals.unpriced, totals.unpriced))
             RowDivider()
-            KeyValueRow(stringResource(R.string.portfolio_testnets), stringResource(R.string.portfolio_never_counted))
+            KeyValueRow(stringResource(R.string.portfolio_testnets), pluralStringResource(R.plurals.portfolio_assets_not_included, totals.testnet, totals.testnet))
+            if (totals.unread > 0) {
+                RowDivider()
+                KeyValueRow(stringResource(R.string.balance_unavailable), pluralStringResource(R.plurals.portfolio_wallets, totals.unread, totals.unread))
+            }
             RowDivider()
             KeyValueRow(stringResource(R.string.portfolio_pool_stakes), stringResource(R.string.portfolio_not_included))
         }
@@ -197,6 +230,7 @@ private fun SyncSheet(model: PortfolioModel, actions: PortfolioSheetActions) {
                 freshness.unreachable.joinToString(", ") { networkName(it) },
             )
             FreshnessKind.SAVED -> stringResource(R.string.portfolio_sync_saved)
+            FreshnessKind.READING -> stringResource(R.string.portfolio_reading_balances)
             else -> stringResource(R.string.portfolio_sync_live)
         }
         Text(body, style = MaterialTheme.customTypography.paragraphM, color = n.textSecondary)
@@ -207,7 +241,7 @@ private fun SyncSheet(model: PortfolioModel, actions: PortfolioSheetActions) {
                     selected = false,
                     onClick = {},
                     role = Role.Button,
-                    leading = { WalletAvatar(summary.wallet.name, model.colorOfWallet(summary.wallet.id), 38.dp) },
+                    leading = { WalletAvatar(summary.wallet.name, model.colorOfWallet(summary.wallet.id, isDarkTheme), 38.dp) },
                     title = summary.wallet.name,
                     subtitle = state?.unreachable?.takeIf { it.isNotEmpty() }?.let { unreachable ->
                         stringResource(R.string.portfolio_unreachable, unreachable.joinToString(", ") { networkName(it) })
@@ -243,15 +277,14 @@ private fun HoldingCard(model: PortfolioModel, holding: PortfolioHolding, line: 
         Modifier
             .fillMaxWidth()
             .heightIn(min = 68.dp)
+            .litPlate(radius = 14.dp, elevation = 8.dp)
             .clip(shape)
-            .background(n.glassFill)
-            .border(1.dp, n.hairline, shape)
             .then(if (onClick != null) Modifier.clickable(role = Role.Button, onClick = onClick) else Modifier)
             .padding(14.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box {
-            TokenOrb(holding.token.iconUri, 38.dp)
+            TokenOrb(holding.token, 38.dp)
             NetworkBadge(holding.network, 17.dp, Modifier.align(Alignment.BottomEnd))
         }
         Spacer(Modifier.width(12.dp))
@@ -282,14 +315,15 @@ private fun HoldingChooser(model: PortfolioModel, candidates: List<PortfolioHold
                 role = Role.Button,
                 leading = {
                     Box {
-                        TokenOrb(holding.token.iconUri, 38.dp)
+                        TokenOrb(holding.token, 38.dp)
                         NetworkBadge(holding.network, 17.dp, Modifier.align(Alignment.BottomEnd))
                     }
                 },
                 title = "${holding.token.symbol} · ${networkName(holding.network)}",
                 subtitle = model.wallet(holding.walletId)?.name,
+                // The value is of what can be sent, the amount shown above it, never of all that is held.
                 trailingTop = format.amount(holding.transferable),
-                trailingBottom = PortfolioCalculator.countedFiat(holding)?.let(format::fiat),
+                trailingBottom = PortfolioCalculator.countedFiat(holding, holding.transferable)?.let(format::fiat),
             )
         }
     }
@@ -327,8 +361,12 @@ private fun MoveSheet(model: PortfolioModel, holdingKey: String?, format: Portfo
         var amountText by rememberSaveable(holding.key) { mutableStateOf("") }
         val amount = amountText.replace(',', '.').toBigDecimalOrNull()
         // Blank means enter the amount in Send; nonempty input must be a positive balance.
-        val invalidAmount = amountText.isNotEmpty() &&
-            (amount == null || amount.signum() <= 0 || amount > holding.transferable)
+        val amountError = when {
+            amountText.isEmpty() -> null
+            amount == null || amount.signum() <= 0 -> R.string.portfolio_positive_amount
+            amount > holding.transferable -> R.string.portfolio_amount_too_high
+            else -> null
+        }
         val symbol = holding.token.symbol
         val network = networkName(holding.network)
         SwitchNote(model, holding.walletId)
@@ -359,7 +397,7 @@ private fun MoveSheet(model: PortfolioModel, holdingKey: String?, format: Portfo
                 SheetRow(
                     selected = destination == wallet.id,
                     onClick = { destination = wallet.id },
-                    leading = { WalletAvatar(wallet.name, model.colorOfWallet(wallet.id), 38.dp) },
+                    leading = { WalletAvatar(wallet.name, model.colorOfWallet(wallet.id, isDarkTheme), 38.dp) },
                     title = wallet.name,
                     subtitle = stringResource(R.string.portfolio_arrives_on, symbol, network) + " · " + address.truncateUserAddress(),
                 )
@@ -368,29 +406,28 @@ private fun MoveSheet(model: PortfolioModel, holdingKey: String?, format: Portfo
         Overline(stringResource(R.string.portfolio_amount))
         AmountField(
             value = amountText,
-            symbol = symbol,
-            iconUri = holding.token.iconUri,
-            error = invalidAmount,
+            token = holding.token,
+            error = amountError,
             onValueChange = { text -> if (isAmountInput(text)) amountText = text },
             onMax = { amountText = PortfolioReadiness.maxAmount(holding).stripTrailingZeros().toPlainString() },
         )
-        PortfolioCard(radius = 18.dp) {
+        SheetCard {
             KeyValueRow(stringResource(R.string.portfolio_network), network)
-            RowDivider()
-            KeyValueRow(stringResource(R.string.portfolio_route), stringResource(R.string.portfolio_route_same_network))
             RowDivider()
             KeyValueRow(stringResource(R.string.network_fee), stringResource(R.string.portfolio_fee_in_send))
         }
-        PortfolioBanner(stringResource(R.string.portfolio_move_note))
         val wallet = model.wallet(holding.walletId)
         NeonButton(
             modifier = Modifier.fillMaxWidth(),
             size = ButtonSize.Large,
             variant = NeonVariant.Primary,
-            enabled = !busy && destination != null && !invalidAmount,
+            enabled = !busy && destination != null && amountError == null,
             loading = busy,
             text = if (wallet != null && !wallet.selected) {
-                stringResource(R.string.portfolio_switch_and_review, wallet.name)
+                val label = if (amountText.isEmpty()) R.string.portfolio_continue_wallet else R.string.portfolio_switch_and_review
+                stringResource(label, wallet.name)
+            } else if (amountText.isEmpty()) {
+                stringResource(R.string.common_enter_amount)
             } else {
                 stringResource(R.string.portfolio_review_in_send)
             },
@@ -399,28 +436,34 @@ private fun MoveSheet(model: PortfolioModel, holdingKey: String?, format: Portfo
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun AmountField(
     value: String,
-    symbol: String,
-    iconUri: String?,
-    error: Boolean,
+    token: PortfolioToken,
+    error: Int?,
     onValueChange: (String) -> Unit,
     onMax: () -> Unit,
 ) {
     val n = MaterialTheme.neon
+    val symbol = token.symbol
     val shape = RoundedCornerShape(16.dp)
-    Row(
+    // The amount keeps room for a real number (at least 112 dp). Where the token and Max do not leave that beside
+    // them (a 320 dp screen, a long symbol, larger text) they stand on a line of their own under the amount.
+    FlowRow(
         Modifier
             .fillMaxWidth()
             .heightIn(min = 60.dp)
+            // A field is a well pressed into the sheet.
+            .litWell(radius = 12.dp, depth = 2.6.dp)
             .clip(shape)
-            .background(n.neuBg)
-            .border(1.dp, if (error) n.error else n.borderInput, shape)
-            .padding(start = 16.dp, end = 10.dp),
-        verticalAlignment = Alignment.CenterVertically,
+            .then(if (error != null) Modifier.border(1.5.dp, n.error, shape) else Modifier)
+            .padding(start = 16.dp, end = 10.dp, top = 4.dp, bottom = 4.dp),
+        horizontalArrangement = Arrangement.End,
+        verticalArrangement = Arrangement.Center,
+        itemVerticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(Modifier.weight(1f)) {
+        Box(Modifier.weight(1f).widthIn(min = 112.dp)) {
             if (value.isEmpty()) {
                 Text("0", style = MaterialTheme.customTypography.headline1, color = n.textTertiary)
             }
@@ -436,14 +479,24 @@ private fun AmountField(
                     .semantics { contentDescription = symbol },
             )
         }
-        TokenOrb(iconUri, 24.dp)
-        Spacer(Modifier.width(6.dp))
-        Text(symbol, style = MaterialTheme.customTypography.headline3, color = n.textPrimary)
-        Spacer(Modifier.width(8.dp))
-        NeonButton(size = ButtonSize.ExtraSmall, variant = NeonVariant.Secondary, text = stringResource(R.string.portfolio_max), onClick = onMax)
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            TokenOrb(token, 24.dp)
+            Spacer(Modifier.width(6.dp))
+            // Max is measured before the ticker: a very long one is cut short rather than pushing Max out.
+            Text(
+                symbol,
+                style = MaterialTheme.customTypography.headline3,
+                color = n.textPrimary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f, fill = false),
+            )
+            Spacer(Modifier.width(8.dp))
+            NeonButton(size = ButtonSize.ExtraSmall, variant = NeonVariant.Secondary, text = stringResource(R.string.portfolio_max), onClick = onMax)
+        }
     }
-    if (error) {
-        Text(stringResource(R.string.portfolio_amount_too_high), style = MaterialTheme.customTypography.textS, color = n.error)
+    if (error != null) {
+        Text(stringResource(error), style = MaterialTheme.customTypography.textS, color = n.error)
     }
 }
 
@@ -506,38 +559,29 @@ private fun SwapSheet(model: PortfolioModel, holdingKey: String?, format: Portfo
         ) {
             targets.forEach { id ->
                 val on = id == target
-                val color = PortfolioPalette.slot(PortfolioSlots.seed(PortfolioLens.TOKENS)[id])
-                val shape = RoundedCornerShape(20.dp)
+                val color = PortfolioPalette.slot(PortfolioSlots.seed(PortfolioLens.TOKENS)[id], isDarkTheme)
+                val shape = RoundedCornerShape(12.dp)
                 Row(
                     Modifier
                         .heightIn(min = 48.dp)
+                        // Raised at rest, let in when chosen.
+                        .then(if (on) Modifier.litWell(radius = 12.dp, depth = 2.2.dp) else Modifier.litPlate(radius = 12.dp, elevation = 6.dp))
                         .clip(shape)
-                        .background(if (on) color.copy(alpha = 0.18f) else n.glassFill)
-                        .border(if (on) 1.5.dp else 1.dp, if (on) color else n.hairline, shape)
                         .clickable(role = Role.RadioButton, onClick = { target = id })
                         .semantics { selected = on }
                         .padding(horizontal = 16.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Box(Modifier.size(10.dp).clip(RoundedCornerShape(3.dp)).background(color))
+                    LitDot(color, diameter = 8.dp)
                     Spacer(Modifier.width(8.dp))
                     Text(TARGET_SYMBOLS[id] ?: id.take(6), style = MaterialTheme.customTypography.textSBold, color = n.textPrimary)
                 }
             }
         }
-        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            CheckLine(stringResource(R.string.portfolio_check_account, wallet?.name.orEmpty()), ok = true)
-            CheckLine(stringResource(R.string.portfolio_check_available), ok = true)
-            CheckLine(
-                stringResource(if (model.swapDisclaimerPending) R.string.portfolio_check_disclaimer_pending else R.string.portfolio_check_disclaimer_done),
-                ok = !model.swapDisclaimerPending,
-            )
+        if (model.swapDisclaimerPending) {
+            Text(stringResource(R.string.portfolio_check_disclaimer_pending),
+                style = MaterialTheme.customTypography.textS, color = n.textSecondary)
         }
-        Text(
-            stringResource(R.string.portfolio_swap_note),
-            style = MaterialTheme.customTypography.paragraphS,
-            color = n.textSecondary,
-        )
         NeonButton(
             modifier = Modifier.fillMaxWidth(),
             size = ButtonSize.Large,
@@ -569,10 +613,10 @@ private fun PickWalletSheet(model: PortfolioModel, action: WalletAction, format:
                     selected = false,
                     onClick = { actions.onPickWallet(action, wallet.id) },
                     role = Role.Button,
-                    leading = { WalletAvatar(wallet.name, model.colorOfWallet(wallet.id), 42.dp) },
+                    leading = { WalletAvatar(wallet.name, model.colorOfWallet(wallet.id, isDarkTheme), 42.dp) },
                     title = wallet.name,
-                    subtitle = if (wallet.selected) stringResource(R.string.portfolio_selected) else stringResource(R.string.portfolio_switch_first),
-                    trailingTop = format.fiat(summary.totals.fiat),
+                    subtitle = if (wallet.selected) stringResource(R.string.portfolio_selected) else null,
+                    trailingTop = format.total(summary.totals),
                 )
             }
         }

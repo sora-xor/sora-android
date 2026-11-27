@@ -19,6 +19,7 @@ limitations under the License.
 
 package jp.co.soramitsu.feature_main_impl.presentation.pincode
 
+import android.os.Build
 import android.os.CountDownTimer
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -29,6 +30,13 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.util.Date
 import javax.inject.Inject
+import jp.co.soramitsu.feature_account_api.domain.PhoneScreenLock
+import jp.co.soramitsu.feature_account_api.domain.ScreenLockConfirmation
+import jp.co.soramitsu.feature_account_api.domain.ScreenLockConfirmationRequiredException
+import jp.co.soramitsu.feature_account_api.domain.WalletPinLockedException
+import javax.crypto.Cipher
+import jp.co.soramitsu.common.security.BiometricUnlockGate
+import jp.co.soramitsu.androidfoundation.coroutine.CoroutineManager
 import jp.co.soramitsu.androidfoundation.fragment.SingleLiveEvent
 import jp.co.soramitsu.androidfoundation.fragment.trigger
 import jp.co.soramitsu.androidfoundation.resource.ResourceManager
@@ -36,8 +44,10 @@ import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.interfaces.WithProgress
 import jp.co.soramitsu.common.presentation.compose.SnackBarState
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
+import jp.co.soramitsu.common.util.UnlockJourneyTrace
 import jp.co.soramitsu.common.presentation.viewmodel.FailureNotice
 import jp.co.soramitsu.common.util.KeyMaterialUnavailableException
+import jp.co.soramitsu.common.util.WalletStorageFailures
 import jp.co.soramitsu.common.vibration.DeviceVibrator
 import jp.co.soramitsu.common.presentation.compose.neon.safemode.WalletSessionState
 import jp.co.soramitsu.feature_main_api.domain.model.PinCodeAction
@@ -46,12 +56,11 @@ import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_main_impl.domain.MainInteractor
 import jp.co.soramitsu.feature_main_impl.domain.PinCodeInteractor
 import jp.co.soramitsu.feature_select_node_api.SelectNodeRouter
-import jp.co.soramitsu.sora.substrate.substrate.ConnectionManager
+import kotlin.coroutines.EmptyCoroutineContext
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
 @HiltViewModel
@@ -63,7 +72,11 @@ class PinCodeViewModel @Inject constructor(
     private val selectNodeRouter: SelectNodeRouter,
     private val progress: WithProgress,
     private val deviceVibrator: DeviceVibrator,
-    connectionManager: ConnectionManager,
+    private val biometricGate: BiometricUnlockGate = BiometricUnlockGate(),
+    /** Runs the claim check after the PIN screen has closed; null in tests (the screen's scope). */
+    private val coroutineManager: CoroutineManager? = null,
+    /** Records the system screen-lock prompt's success; null where no such prompt can be shown. */
+    private val phoneScreenLock: PhoneScreenLock? = null,
 ) : BaseViewModel(), WithProgress by progress {
 
     internal var state by mutableStateOf(
@@ -77,13 +90,18 @@ class PinCodeViewModel @Inject constructor(
     private lateinit var action: PinCodeAction
     private var tempCode = ""
     private var isBiometryEnabled = false
-    private var isPincodeUpdateNeeded: Boolean = false
     private var isChanging = false
     private var triesUsed = 0
     private var buttonsDisabled = false
     private var timerStartedTimeStamp = 0L
 
+    private var pinSetupAwaitingBiometry = false
     private var inputedCode = ""
+
+    // Export, backup, PIN changes, removal and node changes always require the wallet PIN.
+    private val biometricAllowed: Boolean
+        get() = ::action.isInitialized && action == PinCodeAction.TIMEOUT_CHECK &&
+            isBiometryEnabled && !buttonsDisabled && biometricGate.isAvailable()
 
     val showFingerPrintEventLiveData = SingleLiveEvent<Boolean>()
     val startFingerprintScannerEventLiveData = SingleLiveEvent<Boolean>()
@@ -96,21 +114,41 @@ class PinCodeViewModel @Inject constructor(
     private val _fingerPrintCanceledFromPromptEvent = SingleLiveEvent<Unit>()
     val fingerPrintCanceledFromPromptEvent: LiveData<Unit> = _fingerPrintCanceledFromPromptEvent
 
-    private val _checkInviteLiveData = SingleLiveEvent<Unit>()
-    val checkInviteLiveData: LiveData<Unit> = _checkInviteLiveData
 
     private val _pincodeChangedEvent = SingleLiveEvent<Unit>()
     val pincodeChangedEvent: LiveData<Unit> = _pincodeChangedEvent
 
     /**
-     * Set once the PIN or biometrics were confirmed for "Forget account": the removal screen
+     * Set once the PIN was confirmed for "Forget account": the removal screen
      * replaces the keypad. Nothing is removed before [onRemovalConfirmed].
      */
     internal var removal by mutableStateOf<AccountRemovalState?>(null)
         private set
+    private var removalOpenedAtReturn = 0
+    private var removalBriefingJob: Job? = null
 
     private val _biometryInitialDialogEvent = SingleLiveEvent<Unit>()
     val biometryInitialDialogEvent: LiveData<Unit> = _biometryInitialDialogEvent
+
+    /**
+     * True while the owner is asked about biometrics that changed since they last approved them.
+     * Asked only when the owner turns biometric unlock on in Settings ([PinCodeAction.APPROVE_BIOMETRICS])
+     * and the typed PIN was right; the unlock itself never asks. A held value, not an event, so
+     * the question comes back if the screen is rebuilt.
+     */
+    private val _enrollmentChangeQuestion = MutableLiveData(false)
+    val enrollmentChangeQuestion: LiveData<Boolean> = _enrollmentChangeQuestion
+
+    /**
+     * The stored PIN cannot be read while accounts are on the phone: before a new PIN is
+     * chosen, the phone's own screen lock is asked for in the system prompt. Each event shows
+     * that prompt once. Until it is passed, the keypad takes no digit; touching it asks again,
+     * so cancelling the prompt never ends anywhere, and Back leaves the app as on any unlock.
+     */
+    private val _screenLockPromptEvent = SingleLiveEvent<Unit>()
+    val screenLockPromptEvent: LiveData<Unit> = _screenLockPromptEvent
+    private var awaitingScreenLock = false
+    private var screenLockConfirmation: ScreenLockConfirmation? = null
 
     private val _resetApplicationEvent = SingleLiveEvent<Unit>()
     val resetApplicationEvent: LiveData<Unit> = _resetApplicationEvent
@@ -128,26 +166,8 @@ class PinCodeViewModel @Inject constructor(
             if (timerStartedTimeStamp > 0L) {
                 startTimer()
 
-                if (!buttonsDisabled) {
-                    interactor.resetTimerStartedTimestamp()
-                    timerStartedTimeStamp = 0
-                }
             }
         }
-
-        connectionManager.connectionState
-            .catch { onError(it) }
-            .onEach {
-                val reconnected = it && !state.isConnected
-                state = state.copy(
-                    isConnected = it
-                )
-                // U2: "We'll continue as soon as you're back online" - continue by itself.
-                if (reconnected && state.migrating && state.checkNeedsNetwork) {
-                    viewModelScope.launch { tryCatch { proceed() } }
-                }
-            }
-            .launchIn(viewModelScope)
 
         viewModelScope.launch {
             tryCatch {
@@ -170,17 +190,45 @@ class PinCodeViewModel @Inject constructor(
 
     private fun startTimer() {
         buttonsDisabled = true
+        biometricGate.cancel()
         showFingerPrintEventLiveData.value = false
         createIdleTimer().start()
     }
+
+    /**
+     * How many digits the stored PIN has. SORA 2.x made 4-digit PINs. They keep working as they
+     * are: an update never stops the owner to replace one (rule of 2026-11-09), so every check
+     * takes the stored length and Settings > Change PIN is the way to 6 digits. If the stored PIN
+     * cannot be read here, the usual 6 is shown and the check itself reports the failure.
+     */
+    private suspend fun storedPinDigits(): Int =
+        try {
+            if (interactor.isPincodeUpdateNeeded()) {
+                PinCodeInteractor.OLD_PINCODE_LENGTH
+            } else {
+                PinCodeInteractor.PINCODE_LENGTH
+            }
+        } catch (error: CancellationException) {
+            throw error
+        } catch (error: Throwable) {
+            PinCodeInteractor.PINCODE_LENGTH
+        }
 
     fun startAuth(pinCodeAction: PinCodeAction) {
         // Back on the removal screen (from the JSON export): it is already past the PIN and
         // keeps its state; nothing is asked or started again.
         if (removal != null) return
+        biometricGate.cancel()
         if (pinCodeAction == PinCodeAction.TIMEOUT_CHECK) WalletSessionState.markLocked()
         viewModelScope.launch {
             action = pinCodeAction
+            state = state.copy(
+                maxDotsCount = if (action == PinCodeAction.CREATE_PIN_CODE) {
+                    PinCodeInteractor.PINCODE_LENGTH
+                } else {
+                    storedPinDigits()
+                }
+            )
             when (action) {
                 PinCodeAction.CREATE_PIN_CODE -> {
                     state = state.copy(
@@ -194,30 +242,27 @@ class PinCodeViewModel @Inject constructor(
                 PinCodeAction.OPEN_JSON,
                 PinCodeAction.LOGOUT,
                 PinCodeAction.CUSTOM_NODE,
-                PinCodeAction.SELECT_NODE -> {
+                PinCodeAction.SELECT_NODE,
+                PinCodeAction.GOOGLE_BACKUP,
+                PinCodeAction.CONFIRM_BRIDGE,
+                PinCodeAction.APPROVE_BIOMETRICS -> {
                     state = state.copy(
                         toolbarTitleString = resourceManager.getString(R.string.pincode_enter_pin_code),
-                        isBiometricButtonVisible = true
+                        isBiometricButtonVisible = false
                     )
-                    showFingerPrintEventLiveData.value = isBiometryEnabled
+                    showFingerPrintEventLiveData.value = biometricAllowed
                 }
 
                 PinCodeAction.CHANGE_PIN_CODE -> {
-                    isPincodeUpdateNeeded = interactor.isPincodeUpdateNeeded()
-                    // The forced 4-to-6 digit change replaces the unlock (U10).
-                    if (isPincodeUpdateNeeded) WalletSessionState.markLocked()
-                    val maxDotsLength = if (isPincodeUpdateNeeded) {
-                        PinCodeInteractor.OLD_PINCODE_LENGTH
-                    } else {
-                        PinCodeInteractor.PINCODE_LENGTH
-                    }
+                    // Only ever opened from Settings: the current PIN (4 digits if SORA 2.x set
+                    // it) is typed, then a 6-digit one is made. It can be cancelled like any
+                    // other change; nothing at startup forces it.
                     state = state.copy(
-                        maxDotsCount = maxDotsLength,
                         toolbarTitleString = resourceManager.getString(R.string.pincode_enter_current_pin_code),
                         isBackButtonVisible = true
                     )
 
-                    showFingerPrintEventLiveData.value = isBiometryEnabled
+                    showFingerPrintEventLiveData.value = biometricAllowed
                 }
 
                 PinCodeAction.TIMEOUT_CHECK -> {
@@ -227,28 +272,21 @@ class PinCodeViewModel @Inject constructor(
                                 toolbarTitleString = resourceManager.getString(R.string.pincode_enter_pin_code),
                                 isBackButtonVisible = false
                             )
-                            showFingerPrintEventLiveData.value = isBiometryEnabled
+                            showFingerPrintEventLiveData.value = biometricAllowed
                         } else {
                             state = state.copy(
                                 toolbarTitleString = resourceManager.getString(R.string.pincode_set_your_pin_code),
                                 isBackButtonVisible = false
                             )
-                            showFingerPrintEventLiveData.value = isBiometryEnabled
                             action = PinCodeAction.CREATE_PIN_CODE
+                            showFingerPrintEventLiveData.value = false
                         }
                     } catch (t: Throwable) {
-                        onError(t)
-                        if (t is KeyMaterialUnavailableException) {
-                            // The stored PIN exists but the wallet key cannot be used right now
-                            // (busy or missing Keystore key). Keep asking for the existing PIN;
-                            // offering to create a new one would replace the stored PIN.
-                            state = state.copy(
-                                toolbarTitleString = resourceManager.getString(R.string.pincode_enter_pin_code),
-                                isBackButtonVisible = false
-                            )
-                            showFingerPrintEventLiveData.value = isBiometryEnabled
+                        if (t is KeyMaterialUnavailableException || WalletStorageFailures.isTransient(t)) {
+                            onError(t)
+                            keepAskingForTheStoredPin()
                         } else {
-                            action = PinCodeAction.CREATE_PIN_CODE
+                            offerNewPinOverUnreadable(t)
                         }
                     }
                 }
@@ -256,9 +294,79 @@ class PinCodeViewModel @Inject constructor(
         }
     }
 
+    /**
+     * The stored PIN exists but cannot be read right now (busy or missing Keystore key, a busy
+     * disk). Keep asking for the existing PIN; offering to create a new one would replace the
+     * stored PIN (and saving it would fail the same way).
+     */
+    private fun keepAskingForTheStoredPin() {
+        state = state.copy(
+            toolbarTitleString = resourceManager.getString(R.string.pincode_enter_pin_code),
+            isBackButtonVisible = false
+        )
+        showFingerPrintEventLiveData.value = biometricAllowed
+    }
+
+    /**
+     * The stored PIN is there and stays unreadable (damaged data), so a new one is set. With
+     * accounts on a phone that has a screen lock, the phone's owner proves it first in the
+     * system prompt: a new PIN opens every account, and nobody typed the old one. A phone
+     * without a screen lock has no stronger proof to give, so the new PIN is offered as before.
+     */
+    private suspend fun offerNewPinOverUnreadable(cause: Throwable) {
+        val needsScreenLock = try {
+            phoneScreenLock != null && interactor.newPinNeedsScreenLock()
+        } catch (error: CancellationException) {
+            throw error
+        } catch (error: Throwable) {
+            // Whether accounts are on the phone is not known right now.
+            onError(error)
+            keepAskingForTheStoredPin()
+            return
+        }
+        action = PinCodeAction.CREATE_PIN_CODE
+        state = state.copy(
+            maxDotsCount = PinCodeInteractor.PINCODE_LENGTH,
+            toolbarTitleString = resourceManager.getString(R.string.pincode_set_your_pin_code),
+            isBackButtonVisible = false
+        )
+        showFingerPrintEventLiveData.value = false
+        if (!needsScreenLock) {
+            onError(cause)
+            return
+        }
+        // No message of the app's own: the system prompt says what is asked and why.
+        jp.co.soramitsu.common.logger.WalletDiagnostics.recordException(cause)
+        // The screen came back (it was rebuilt) after the prompt was passed: not asked twice.
+        if (screenLockConfirmation != null) return
+        awaitingScreenLock = true
+        _screenLockPromptEvent.trigger()
+    }
+
+    /**
+     * The system prompt reported success: the phone's owner is here and chooses the new PIN.
+     * Only the system's own confirmation counts ([ScreenLockPrompt.accepts]): on Android 11 and
+     * later the device credential alone, never a biometric; on Android 8 to 10 Keyguard's
+     * confirmation (platform limit). A prompt that closes any other way (cancelled, failed, not
+     * shown) changes nothing, and the next touch of the keypad shows it again.
+     */
+    fun onScreenLockConfirmed(authenticationType: Int, sdkInt: Int = Build.VERSION.SDK_INT) {
+        if (!awaitingScreenLock || !ScreenLockPrompt.accepts(authenticationType, sdkInt)) return
+        screenLockConfirmation = phoneScreenLock?.confirmed()
+        awaitingScreenLock = false
+    }
+
+    /** A new PIN is being saved: the keypad takes nothing until the save has answered. */
+    private var savingPin = false
+
     fun pinCodeNumberClicked(
         pinCodeNumber: String,
     ) {
+        if (savingPin) return
+        if (awaitingScreenLock) {
+            _screenLockPromptEvent.trigger()
+            return
+        }
         if (!buttonsDisabled) {
             if (inputedCode.length >= state.maxDotsCount) {
                 return
@@ -275,7 +383,7 @@ class PinCodeViewModel @Inject constructor(
     }
 
     fun pinCodeDeleteClicked() {
-        if (inputedCode.isEmpty()) {
+        if (savingPin || inputedCode.isEmpty()) {
             return
         }
         inputedCode = inputedCode.substring(0, inputedCode.length - 1)
@@ -332,16 +440,34 @@ class PinCodeViewModel @Inject constructor(
     }
 
     private fun registerPinCode() {
+        if (savingPin) return
+        savingPin = true
         viewModelScope.launch {
             tryCatch {
-                interactor.savePin(inputedCode)
+                try {
+                    interactor.savePin(inputedCode, screenLockConfirmation)
+                } catch (_: ScreenLockConfirmationRequiredException) {
+                    // The repository wants the phone's screen lock first (the confirmation ran
+                    // out while the PIN was typed, was already used, or this screen never
+                    // asked): nothing was saved. Ask in the system prompt, then the new PIN is
+                    // chosen again.
+                    askScreenLockBeforeNewPin()
+                    return@tryCatch
+                } finally {
+                    savingPin = false
+                }
+                screenLockConfirmation = null
                 if (isChanging) {
+                    // Checking the current PIN already settled the biometrics.
                     _pincodeChangedEvent.trigger()
                     WalletSessionState.markUnlocked()
                     mainRouter.popBackStack()
                 } else {
+                    // A first PIN: the owner is asked about biometrics right below.
+                    biometricGate.approveEnrollmentAfterPin()
                     val available = interactor.isBiometryAvailable()
                     if (available) {
+                        pinSetupAwaitingBiometry = true
                         _biometryInitialDialogEvent.trigger()
                     } else {
                         proceed()
@@ -351,11 +477,54 @@ class PinCodeViewModel @Inject constructor(
         }
     }
 
-    private suspend fun checkPinCode() {
-        val result = interactor.checkPin(inputedCode)
+    private fun askScreenLockBeforeNewPin() {
+        tempCode = ""
+        inputedCode = ""
+        screenLockConfirmation = null
+        state = state.copy(
+            toolbarTitleString = resourceManager.getString(
+                if (isChanging) R.string.pincode_enter_new_pin_code else R.string.pincode_set_your_pin_code
+            ),
+            isBackButtonVisible = false,
+            checkedDotsCount = 0,
+        )
+        if (phoneScreenLock == null) return
+        awaitingScreenLock = true
+        _screenLockPromptEvent.trigger()
+    }
 
+    private suspend fun checkPinCode() {
+        val unlocking = action == PinCodeAction.TIMEOUT_CHECK
+        if (unlocking) UnlockJourneyTrace.pinEntered()
+        val result = try {
+            interactor.checkPin(inputedCode)
+        } catch (_: WalletPinLockedException) {
+            UnlockJourneyTrace.pinAnswered(acceptedForUnlock = false)
+            inputedCode = ""
+            state = state.copy(checkedDotsCount = 0, isBackButtonVisible = false)
+            triesUsed = interactor.retrieveTriesUsed()
+            timerStartedTimeStamp = interactor.retrieveTimerStartedTimestamp()
+            startTimer()
+            return
+        } catch (error: Throwable) {
+            // Only the trace section is closed here; the error goes on exactly as before.
+            UnlockJourneyTrace.pinAnswered(acceptedForUnlock = false)
+            throw error
+        }
+
+        UnlockJourneyTrace.pinAnswered(acceptedForUnlock = result && unlocking)
         if (result) {
-            processSuccessfullAuth()
+            if (action == PinCodeAction.APPROVE_BIOMETRICS) {
+                approveBiometricsAfterPin()
+            } else {
+                // A typed PIN approves only biometrics never approved on this install (the first
+                // unlock after updating from a version without the approval). A changed
+                // enrollment stays unapproved, so biometric unlock stays off, and the unlock goes
+                // on without a question (update rule of 2026-11-09): the owner turns it on again
+                // in Settings, behind the PIN and their answer.
+                biometricGate.approveFirstEnrollmentAfterPin()
+                processSuccessfullAuth()
+            }
         } else {
             inputedCode = ""
             state = state.copy(
@@ -364,19 +533,59 @@ class PinCodeViewModel @Inject constructor(
                 enableShakeAnimation = true
             )
             deviceVibrator.makeShortVibration()
-            proccessFailedAuthIdleTimer(true)
+            proccessFailedAuthIdleTimer()
+        }
+    }
+
+    /**
+     * The owner turns biometric unlock on in Settings and typed the right PIN. A typed PIN proves
+     * the owner is here, not that they know the phone's biometrics changed, so a changed
+     * enrollment waits for their answer; biometrics never approved here are approved by the PIN.
+     */
+    private suspend fun approveBiometricsAfterPin() {
+        if (biometricGate.enrollmentChanged()) {
+            _enrollmentChangeQuestion.value = true
+        } else {
+            enableApprovedBiometrics()
+        }
+    }
+
+    private suspend fun enableApprovedBiometrics() {
+        biometricGate.approveEnrollmentAfterPin()
+        interactor.setBiometryEnabled(true)
+        isBiometryEnabled = true
+        processSuccessfullAuth()
+    }
+
+    fun onEnrollmentChangeKept() {
+        if (_enrollmentChangeQuestion.value != true) return
+        _enrollmentChangeQuestion.value = false
+        viewModelScope.launch {
+            tryCatch { enableApprovedBiometrics() }
+        }
+    }
+
+    fun onEnrollmentChangeRefused() {
+        if (_enrollmentChangeQuestion.value != true) return
+        _enrollmentChangeQuestion.value = false
+        viewModelScope.launch {
+            tryCatch {
+                interactor.setBiometryEnabled(false)
+                isBiometryEnabled = false
+                processSuccessfullAuth()
+            }
         }
     }
 
     override fun onBackPressed() {
-        if (removal != null) {
+        if (removal != null || removalBriefingJob?.isActive == true) {
             // Back on the removal screen cancels: nothing was removed.
             onRemovalCancelled()
             return
         }
         if (PinCodeAction.CREATE_PIN_CODE == action) {
             if (tempCode.isEmpty()) {
-                if (isChanging && !isPincodeUpdateNeeded) {
+                if (isChanging) {
                     mainRouter.popBackStack()
                 } else {
                     _closeAppLiveData.trigger()
@@ -392,7 +601,7 @@ class PinCodeViewModel @Inject constructor(
                 )
             }
         } else {
-            if (PinCodeAction.TIMEOUT_CHECK == action || isPincodeUpdateNeeded) {
+            if (PinCodeAction.TIMEOUT_CHECK == action) {
                 _closeAppLiveData.trigger()
             } else {
                 mainRouter.popBackStack()
@@ -403,31 +612,39 @@ class PinCodeViewModel @Inject constructor(
     fun onResume() {
         // The removal screen is already behind the PIN: coming back to it from the JSON export
         // (whose Back returns here) does not ask for the PIN again. The phrase is veiled again
-        // whenever the screen was left ([onRemovalHidden]).
-        if (removal != null) return
-        if (action != PinCodeAction.CREATE_PIN_CODE && !buttonsDisabled) {
-            startFingerprintScannerEventLiveData.value = isBiometryEnabled
+        // whenever the screen was left ([onRemovalHidden]). Coming back from the background closes
+        // it instead, so a phone left on this screen shows no phrase to whoever picks it up.
+        if (removal != null || removalBriefingJob?.isActive == true) {
+            if (WalletSessionState.returnsFromBackground != removalOpenedAtReturn) onRemovalCancelled()
+            return
         }
-        if (state.migrating && state.isConnected) {
-            viewModelScope.launch {
-                delay(300)
-                proceed()
-            }
-        }
+        startFingerprintScannerEventLiveData.value = biometricAllowed
     }
 
     fun onAuthenticationError(errString: String) {
+        biometricGate.cancel()
         fingerPrintErrorLiveData.value = errString
     }
 
-    fun onAuthenticationSucceeded() {
-        processSuccessfullAuth()
+    fun prepareBiometricUnlock(): Cipher? =
+        if (biometricAllowed) biometricGate.prepare() else null
+
+    fun cancelBiometricUnlock() = biometricGate.cancel()
+
+    fun onAuthenticationSucceeded(cipher: Cipher? = null) {
+        if (!biometricAllowed) {
+            biometricGate.cancel()
+            return
+        }
+        if (biometricGate.consume(cipher)) processSuccessfullAuth()
     }
 
-    private fun proccessFailedAuthIdleTimer(countAttempts: Boolean) {
+    private fun proccessFailedAuthIdleTimer() {
         viewModelScope.launch {
-            if (countAttempts) triesUsed++
-            interactor.saveTriesUsed(triesUsed)
+            // The verifier owns the persisted budget; this screen never overwrites another
+            // flow's failures with a stale in-memory count.
+            triesUsed = interactor.retrieveTriesUsed()
+            timerStartedTimeStamp = interactor.retrieveTimerStartedTimestamp()
 
             if (triesUsed >= 3) {
                 startTimer()
@@ -443,9 +660,8 @@ class PinCodeViewModel @Inject constructor(
     private fun processSuccessfullAuth() {
         triesUsed = 0
         viewModelScope.launch {
-            interactor.resetTriesUsed()
-            interactor.resetTimerStartedTimestamp()
-
+            // Only the counted PIN verifier resets PIN failures. Biometric unlock must not
+            // grant a fresh guessing budget for secret export or signing.
             when (action) {
                 PinCodeAction.OPEN_PASSPHRASE -> {
                     mainRouter.popBackStack()
@@ -481,6 +697,18 @@ class PinCodeViewModel @Inject constructor(
                     selectNodeRouter.returnFromPinCodeCheck()
                 }
 
+                PinCodeAction.GOOGLE_BACKUP -> {
+                    mainRouter.returnFromPinConfirmation(PinCodeAction.GOOGLE_BACKUP)
+                }
+
+                PinCodeAction.CONFIRM_BRIDGE -> {
+                    mainRouter.returnFromPinConfirmation(PinCodeAction.CONFIRM_BRIDGE)
+                }
+
+                PinCodeAction.APPROVE_BIOMETRICS -> {
+                    mainRouter.popBackStack()
+                }
+
                 else -> {
                     proceed()
                 }
@@ -495,12 +723,16 @@ class PinCodeViewModel @Inject constructor(
      * The PIN is not asked for again to show it.
      */
     private fun logout() {
-        viewModelScope.launch {
+        removalOpenedAtReturn = WalletSessionState.returnsFromBackground
+        removalBriefingJob = viewModelScope.launch {
             try {
                 check(this@PinCodeViewModel::addresses.isInitialized) {
                     "WALLET_DELETION_TARGETS_MISSING"
                 }
                 val briefing = interactor.walletRemovalBriefing(addresses.toList())
+                // Leaving while the keys load cancels this request too. A late result must not
+                // reopen the secret screen after Back or a return from the background.
+                ensureActive()
                 removal = AccountRemovalState(
                     accounts = briefing.accounts.map { account ->
                         AccountRemovalState.Account(
@@ -577,13 +809,15 @@ class PinCodeViewModel @Inject constructor(
 
     fun onRemovalCancelled() {
         if (removal?.working == true) return
+        removalBriefingJob?.cancel()
+        removalBriefingJob = null
         removal = null
         mainRouter.popBackStack()
     }
 
     fun onAuthenticationFailed() {
         deviceVibrator.makeShortVibration()
-        proccessFailedAuthIdleTimer(false)
+        proccessFailedAuthIdleTimer()
     }
 
     fun setBiometryAvailable(isAuthReady: Boolean) {
@@ -634,7 +868,7 @@ class PinCodeViewModel @Inject constructor(
     }
 
     private suspend fun handleWalletDeletionError(error: Throwable) {
-        jp.co.soramitsu.common.logger.FirebaseWrapper.recordException(error)
+        jp.co.soramitsu.common.logger.WalletDiagnostics.recordException(error)
         val failureCode = try {
             interactor.walletDeletionFailureCode()
         } catch (lookupError: CancellationException) {
@@ -694,6 +928,8 @@ class PinCodeViewModel @Inject constructor(
             ?: "WALLET_DELETION_FAILED"
 
     fun biometryDialogYesClicked() {
+        if (!pinSetupAwaitingBiometry) return
+        pinSetupAwaitingBiometry = false
         viewModelScope.launch {
             tryCatch {
                 interactor.setBiometryEnabled(true)
@@ -703,6 +939,8 @@ class PinCodeViewModel @Inject constructor(
     }
 
     fun biometryDialogNoClicked() {
+        if (!pinSetupAwaitingBiometry) return
+        pinSetupAwaitingBiometry = false
         viewModelScope.launch {
             tryCatch {
                 interactor.setBiometryEnabled(false)
@@ -711,63 +949,38 @@ class PinCodeViewModel @Inject constructor(
         }
     }
 
-    fun onSwitchNode() {
-        selectNodeRouter.showSelectNode()
-    }
-
-    private var proceeding = false
     private var proceeded = false
 
     /**
-     * After unlocking: checks whether the account still has an older SORA balance to claim.
-     * Only an unchecked 15-word legacy phrase needs the network for that; every other account is
-     * checked on the phone, so being offline never keeps the person at this screen (U2).
+     * After unlocking the wallet opens at once: nothing after the PIN waits for the network or an
+     * answer, and nothing is put in front of the wallet (update rule of 2026-11-09). A claim of
+     * an older SORA balance that is known on this phone is an entry on the wallet home ("Claim"),
+     * there for as long as it is pending. Whether an account has one is checked afterwards in the
+     * background; the entry appears when that check finds one, and a check that fails runs again
+     * after the next unlock.
      */
     private suspend fun proceed() {
-        // Set before the first suspension: a second trigger (reconnect, resume, biometrics
-        // dialog) while this one waits must not navigate a second time.
-        if (proceeding || proceeded) return
-        proceeding = true
-        try {
-            val needsNetwork = try {
-                interactor.migrationCheckNeedsNetwork()
+        // A second trigger (resume, biometrics dialog) must not navigate a second time.
+        if (proceeded) return
+        proceeded = true
+        WalletSessionState.markUnlocked()
+        mainRouter.popBackStack()
+        checkClaimInBackground()
+    }
+
+    /** The optional claim check, after the wallet opened. Never keeps anyone out of it. */
+    private fun checkClaimInBackground() {
+        val manager = coroutineManager
+        val scope = manager?.applicationScope ?: viewModelScope
+        scope.launch(manager?.io ?: EmptyCoroutineContext) {
+            try {
+                interactor.needsMigration()
             } catch (error: CancellationException) {
                 throw error
-            } catch (_: Throwable) {
-                // Unreadable right now: the optional check below is skipped, never waited for.
-                false
+            } catch (error: Throwable) {
+                // Nothing was recorded: it runs again after the next unlock.
+                jp.co.soramitsu.common.logger.WalletDiagnostics.recordException(error)
             }
-            // Only a check that needs the network ever says it waits for it (U2).
-            state = state.copy(
-                migrating = true,
-                checkNeedsNetwork = needsNetwork,
-            )
-            if (state.isConnected || !needsNetwork) {
-                val needs = try {
-                    interactor.needsMigration()
-                } catch (error: CancellationException) {
-                    throw error
-                } catch (error: Throwable) {
-                    // The claim check is optional: it runs again at the next unlock (nothing was
-                    // recorded). It never keeps the person out of the wallet.
-                    jp.co.soramitsu.common.logger.FirebaseWrapper.recordException(error)
-                    false
-                }
-                state = state.copy(
-                    migrating = false,
-                    checkNeedsNetwork = false,
-                )
-                proceeded = true
-                WalletSessionState.markUnlocked()
-                if (needs) {
-                    mainRouter.showClaim()
-                } else {
-                    mainRouter.popBackStack()
-                }
-            }
-            // Otherwise it waits for the network; the reconnect handler calls this again.
-        } finally {
-            proceeding = false
         }
     }
 
@@ -782,7 +995,7 @@ class PinCodeViewModel @Inject constructor(
             }
             isChanging = true
             isBiometryEnabled = false
-            showFingerPrintEventLiveData.value = isBiometryEnabled
+            showFingerPrintEventLiveData.value = biometricAllowed
             state =
                 state.copy(
                     toolbarTitleString = resourceManager.getString(R.string.pincode_enter_new_pin_code),
@@ -793,6 +1006,7 @@ class PinCodeViewModel @Inject constructor(
     }
 
     fun canceledFromPrompt() {
+        biometricGate.cancel()
         _fingerPrintCanceledFromPromptEvent.trigger()
     }
 
@@ -838,8 +1052,7 @@ class PinCodeViewModel @Inject constructor(
 
             override fun onFinish() {
                 buttonsDisabled = false
-                showFingerPrintEventLiveData.value = isBiometryEnabled
-                viewModelScope.launch { interactor.resetTimerStartedTimestamp() }
+                showFingerPrintEventLiveData.value = biometricAllowed
                 state =
                     state.copy(toolbarTitleString = resourceManager.getString(R.string.pincode_enter_pin_code))
             }
@@ -847,7 +1060,7 @@ class PinCodeViewModel @Inject constructor(
     }
 
     fun changeFingerPrintButtonVisibility(isVisible: Boolean) {
-        state = state.copy(isBiometricButtonVisible = isVisible)
+        state = state.copy(isBiometricButtonVisible = isVisible && biometricAllowed)
     }
 
     fun setNewLengthPinCodeClicked() {

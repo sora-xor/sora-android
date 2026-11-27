@@ -57,6 +57,9 @@ interface UserRepository {
 
     fun flowCurSoraAccount(): Flow<SoraAccount>
 
+    /** The selected account if it is already in memory. Reads nothing, so it can never wait. */
+    fun curSoraAccountIfLoaded(): SoraAccount? = null
+
     fun flowSoraAccountsList(): Flow<List<SoraAccount>>
 
     suspend fun soraAccountsList(): List<SoraAccount>
@@ -67,7 +70,23 @@ interface UserRepository {
 
     suspend fun getRegistrationState(): OnboardingState
 
-    suspend fun savePin(pin: String)
+    /**
+     * Saves the app PIN. In place of a stored PIN that cannot be read while accounts are on the
+     * phone, a phone with a screen lock saves it only with a fresh [screenLock] confirmation
+     * from the system prompt and otherwise throws
+     * [jp.co.soramitsu.feature_account_api.domain.ScreenLockConfirmationRequiredException].
+     */
+    suspend fun savePin(
+        pin: String,
+        screenLock: jp.co.soramitsu.feature_account_api.domain.ScreenLockConfirmation? = null,
+    )
+
+    /**
+     * True when a new PIN can be saved only after the phone's screen lock was passed: a PIN is
+     * stored but cannot be read, accounts are on the phone, and the phone has a screen lock.
+     * Throws when the stored PIN or the accounts cannot be looked at right now.
+     */
+    suspend fun newPinNeedsScreenLock(): Boolean
 
     suspend fun retrievePin(): String
 
@@ -105,9 +124,28 @@ interface UserRepository {
 
     suspend fun getAccountNameForMigration(): String
 
+    /**
+     * Saves what a claim check found for [soraAccount]. "Pending" is not saved once the account's
+     * claim was confirmed ([markClaimConfirmed]): a check that read the network before the
+     * confirmation and answers after it cannot bring the claim back.
+     */
     suspend fun saveNeedsMigration(it: Boolean, soraAccount: SoraAccount)
 
+    /**
+     * The network confirmed [soraAccount]'s claim (or already had it). Done for good: a claim is
+     * made once. Its flag is cleared and stays cleared, whatever an older check saves later.
+     */
+    suspend fun markClaimConfirmed(soraAccount: SoraAccount)
+
     suspend fun needsMigration(soraAccount: SoraAccount): Boolean
+
+    /**
+     * Whether a claim of an older SORA balance is known on this phone for the selected account:
+     * the last check found one and it is not done yet. Follows the selected account and every
+     * change of the saved answer (a check that finishes, a claim that completes). Reads the
+     * phone only.
+     */
+    fun flowClaimPending(): Flow<Boolean>
 
     suspend fun saveIsMigrationFetched(it: Boolean, soraAccount: SoraAccount)
 

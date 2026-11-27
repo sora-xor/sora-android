@@ -38,7 +38,6 @@ object BuildUtils {
 enum class BuildType(val type: String) {
     RELEASE("release"),
     DEBUG("debug"),
-    FIREBASE("firebasedebug")
 }
 
 enum class Flavor(val flavorName: String) {

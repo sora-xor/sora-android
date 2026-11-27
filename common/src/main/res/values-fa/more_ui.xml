@@ -1,0 +1,12 @@
+<resources>
+    <string name="contacts_none">گیرنده اخیری وجود ندارد</string>
+    <string name="pin_delete_last_digit">حذف آخرین رقم</string>
+    <string name="common_egyptian">مصری میانه (هیروگلیف)</string>
+    <plurals name="backup_selected_count">
+        <item quantity="one">%1$d انتخاب شده</item>
+        <item quantity="other">%1$d انتخاب شده</item>
+    </plurals>
+    <string name="contacts_lookup_unavailable">جستجوی آدرس در دسترس نیست</string>
+    <string name="portfolio_positive_amount">مقداری بیشتر از صفر وارد کنید.</string>
+    <string name="portfolio_continue_wallet">ادامه با %1$s</string>
+</resources>

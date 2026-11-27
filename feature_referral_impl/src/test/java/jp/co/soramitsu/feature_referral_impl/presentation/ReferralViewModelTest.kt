@@ -305,10 +305,10 @@ class ReferralViewModelTest {
         setupViewModel()
         advanceUntilIdle()
 
-        assertEquals(
-            R.string.common_error_general_title to R.string.common_error_network,
-            referralViewModel.errorFromResourceLiveData.value,
-        )
+        val notice = checkNotNull(referralViewModel.confirmDialogLiveData.value)
+        assertEquals("text-${R.string.common_try_again}", notice.confirmText)
+        assertNull(referralViewModel.errorFromResourceLiveData.value)
+        assertNull(referralViewModel.alertDialogLiveData.value)
         // Changing the number of invitations while offline is reported the same way.
         referralViewModel.onBondPlus()
         advanceUntilIdle()
@@ -710,9 +710,13 @@ class ReferralViewModelTest {
         assertEquals("text-${R.string.common_try_again}", question.confirmText)
         assertEquals("text-${R.string.common_close}", question.dismissText)
 
+        assertNull(referralViewModel.errorFromResourceLiveData.value)
+        assertNull(referralViewModel.alertDialogLiveData.value)
+        val readsBeforeRetry = feeQuestionCount()
         offline = false
         question.onConfirm()
         advanceUntilIdle()
+        assertEquals(readsBeforeRetry + 1, feeQuestionCount())
         referrerBalanceFlowEmit(BigDecimal.ZERO)
         advanceUntilIdle()
 
@@ -720,6 +724,29 @@ class ReferralViewModelTest {
             ReferralFeatureRoutes.WELCOME_PAGE,
             referralViewModel.navToStart.getOrAwaitValue(),
         )
+    }
+
+    @Test fun `bond amounts without a fiat price show no empty or zero parentheses`() = runTest {
+        // TestAssets' XOR has no fiat price, as when the price feed is down.
+        programLoaded()
+        referralViewModel.openBond()
+        advanceUntilIdle()
+        val state = referralViewModel.referralScreenState.value
+        assertEquals("0.07", state.bondState.invitationsAmount.substringBefore(' '))
+        assertTrue(state.bondState.invitationsAmount, '(' !in state.bondState.invitationsAmount)
+        assertTrue(state.common.referrerFee, '(' !in state.common.referrerFee)
+        assertEquals("", state.common.extrinsicFeeFiat)
+    }
+
+    @Test fun `bond amounts with a fiat price show it in parentheses`() = runTest {
+        whenever(walletInteractor.getFeeToken())
+            .thenReturn(xorToken.copy(fiatPrice = 2.0, fiatSymbol = "$"))
+        programLoaded()
+        referralViewModel.openBond()
+        advanceUntilIdle()
+        val amount = referralViewModel.referralScreenState.value.bondState.invitationsAmount
+        assertTrue(amount, amount.startsWith("0.07"))
+        assertTrue(amount, amount.endsWith(" (\$0.14)"))
     }
 
     @Test fun `bond count accepts zero and rejects negative input while stepper has a minimum of one`() = runTest {

@@ -19,6 +19,7 @@ import jp.co.soramitsu.common.irohaconnect.IrohaConnectSigningKind
 import jp.co.soramitsu.common.presentation.compose.neon.FilledButton
 import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.component.button.properties.Size
+import jp.co.soramitsu.ui_core.lit.litContentWidth
 import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
 
@@ -34,7 +35,7 @@ fun IrohaConnectScreen(
 ) {
     Column(
         Modifier.fillMaxSize().background(MaterialTheme.customColors.bgPage)
-            .statusBarsPadding().navigationBarsPadding()
+            .windowInsetsPadding(WindowInsets.safeDrawing).litContentWidth()
             .verticalScroll(rememberScrollState()).padding(24.dp)
             .testTag("iroha_connect_root"),
         verticalArrangement = Arrangement.spacedBy(20.dp),
@@ -141,4 +142,47 @@ private fun Detail(label: String, value: String) {
 private fun PrimaryAction(label: String, tag: String, onClick: () -> Unit) {
     FilledButton(modifier = Modifier.fillMaxWidth().testTag(tag), text = label,
         size = Size.Large, order = Order.PRIMARY, onClick = onClick)
+}
+
+
+/** Wallet PIN entry uses an in-app keypad; the PIN never reaches a third-party keyboard. */
+@Composable
+internal fun IrohaConnectPinDialog(
+    error: String?,
+    onCancel: () -> Unit,
+    onConfirm: (String) -> Unit,
+) {
+    var pin by remember { mutableStateOf("") }
+    androidx.compose.material.AlertDialog(
+        onDismissRequest = onCancel,
+        title = { Text(stringResource(R.string.account_repair_pin_label)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("•".repeat(pin.length), modifier = Modifier.fillMaxWidth())
+                if (error != null) Text(error, color = MaterialTheme.colors.error)
+                listOf(listOf("1", "2", "3"), listOf("4", "5", "6"), listOf("7", "8", "9"), listOf("", "0", "⌫")).forEach { row ->
+                    Row(Modifier.fillMaxWidth()) {
+                        row.forEach { digit ->
+                            TextButton(
+                                modifier = Modifier.weight(1f),
+                                enabled = digit.isNotEmpty(),
+                                onClick = {
+                                    if (digit == "⌫") pin = pin.dropLast(1)
+                                    else if (pin.length < 6) pin += digit
+                                },
+                            ) { Text(digit) }
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(enabled = pin.length == 4 || pin.length == 6, onClick = {
+                val entered = pin
+                pin = ""
+                onConfirm(entered)
+            }) { Text(stringResource(R.string.common_confirm)) }
+        },
+        dismissButton = { TextButton(onClick = onCancel) { Text(stringResource(R.string.common_cancel)) } },
+    )
 }

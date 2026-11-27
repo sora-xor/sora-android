@@ -1,0 +1,13 @@
+<resources>
+    <string name="contacts_none">Нема недавних прималаца</string>
+    <string name="pin_delete_last_digit">Обриши последњу цифру</string>
+    <string name="common_egyptian">Средњоегипатски (хијероглифи)</string>
+    <plurals name="backup_selected_count">
+        <item quantity="one">%1$d изабран</item>
+        <item quantity="few">%1$d изабрана</item>
+        <item quantity="other">%1$d изабрано</item>
+    </plurals>
+    <string name="contacts_lookup_unavailable">Претрага адресе није доступна</string>
+    <string name="portfolio_positive_amount">Унесите износ већи од нуле.</string>
+    <string name="portfolio_continue_wallet">Настави са %1$s</string>
+</resources>

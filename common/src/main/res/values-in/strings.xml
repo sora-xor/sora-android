@@ -33,14 +33,11 @@
   <string name="address_not_found_1">Recipients not found</string>
   <string name="amount_error_no_funds">Maaf, Anda tidak memiliki cukup dana untuk mentransfer jumlah yang ditentukan.</string>
   <string name="appearance_title">Appearance</string>
-  <string name="appearance_reduce_effects">Kurangi efek</string>
-  <string name="appearance_reduce_effects_description">Menonaktifkan efek cahaya, kaca, dan gerakan. Berguna pada ponsel lama atau untuk menghemat baterai.</string>
   <string name="apr_description">APR in farming denotes the annualized return on investment for participating in DeFi liquidity provision or staking activities.</string>
   <string name="ask_biometry_message">Apakah Anda ingin menggunakan biometri untuk otentikasi?</string>
   <string name="asset_details_asset_id">Asset ID</string>
   <string name="asset_details_liquid_balance">Liquid balance</string>
   <string name="asset_details_recent_activity">Recent activity</string>
-  <string name="asset_details_token_price">Token price</string>
   <string name="asset_details_your_pools">Your %s pools</string>
   <string name="asset_to_send">Asset to send</string>
   <string name="backup_not_enough_space_error">Backup failed. Not enough space on your Google Drive. Free some space and try again.</string>
@@ -70,7 +67,6 @@
   <string name="common_back">Back</string>
   <string name="common_backup">Backup</string>
   <string name="common_balance">Saldo</string>
-  <string name="common_bashkir">Bashkir</string>
   <string name="common_bridged">Bridged</string>
   <string name="common_cancel">Batalkan</string>
   <string name="common_chinese">China</string>
@@ -80,12 +76,10 @@
   <string name="common_close">Tutup</string>
   <string name="tx_details_view_on_explorer">Lihat di explorer</string>
   <string name="common_confirm">Konfirmasi</string>
-  <string name="common_connected">Terhubung</string>
   <string name="common_connecting">Menghubungkan …</string>
   <string name="common_continue">Lanjutkan</string>
   <string name="common_copied">Disalin ke Clipboard</string>
   <string name="common_create_qr_request">Create QR-request</string>
-  <string name="common_croatian">Kroasia</string>
   <string name="common_currencies">Currencies</string>
   <string name="common_delete">Delete</string>
   <string name="common_disabled">Disabled</string>
@@ -99,8 +93,6 @@
   <string name="common_error_fee_rate_not_available">Tidak dapat menghubungi withdrawal provider. Silakan coba lagi nanti.</string>
   <string name="common_error_general_message">Kami sedang bekerja keras untuk memperbaiki masalah ini, Silahkan coba lagi nanti.</string>
   <string name="common_error_general_title">Error</string>
-  <string name="common_error_internal_error_title">Kesalahan Internal</string>
-  <string name="common_error_invalid_parameters">Parameter tidak valid</string>
   <string name="common_error_invalid_parameters_body">Silakan periksa koneksi internet anda dan coba lagi.</string>
   <string name="common_error_invalid_query_format">query Anda salah. Silakan coba lagi.</string>
   <string name="common_error_invitation_accepting_window_closed">Menerima undangan window ditutup</string>
@@ -112,7 +104,6 @@
   <string name="common_error_network">Silakan periksa koneksi internet anda dan coba lagi.</string>
   <string name="common_error_no_browser_error">Please install a browser to open the link</string>
   <string name="common_error_not_enough_invitations">Maaf, Anda tidak memiliki undangan untuk dibagikan</string>
-  <string name="common_error_not_found_title">Resource tidak tersedia</string>
   <string name="common_error_phone_already_exists">Maaf, nomor telepon ini sudah digunakan. Silakan, coba yang lain.</string>
   <string name="common_error_phone_already_registered">Nomor telepon sudah terdaftar atau digunakan oleh pengguna lain</string>
   <string name="common_error_pincode_check_error">Kode yang dimasukkan salah</string>
@@ -121,22 +112,18 @@
   <string name="common_error_seed_is_not_valid">Please make sure that your input contains 64 hex symbols.</string>
   <string name="common_error_seed_is_not_valid_title">Seed is invalid</string>
   <string name="common_error_self_invitation">Anda tidak dapat menggunakan kode undangan Anda sendiri</string>
-  <string name="common_error_unauthorized_body">Silakan periksa koneksi internet anda dan coba lagi nanti.</string>
-  <string name="common_error_unauthorized_title">Otorisasi gagal</string>
   <string name="common_error_user_not_found">Passphrase Anda tidak valid. Silahkan coba yang lain.</string>
   <string name="common_error_user_values_not_found">Tidak dapat melanjutkan operasi karena user values data tidak ditemukan</string>
   <string name="common_error_votes_invalid_format">Maaf, jumlah suara Anda tidak dapat ditafsirkan. Tolong, cobalah untuk memilih lagi.</string>
   <string name="common_error_votes_not_enough">Maaf, Anda tidak memiliki cukup poin untuk memilih.</string>
   <string name="common_error_voting_is_not_allowed">Maaf, project tidak dapat menerima votes lagi.</string>
   <string name="common_error_wrong_user_status">Tidak dapat melanjutkan operasi karena status pengguna tidak valid</string>
-  <string name="common_estonian">Estonia</string>
   <string name="common_expand">Expand</string>
   <string name="common_explore">Explore</string>
   <string name="common_failed">Gagal</string>
   <string name="common_farming">Farming</string>
   <string name="common_farms">Farms</string>
   <string name="common_fee">Fee</string>
-  <string name="common_filipino">Filipina</string>
   <string name="common_finnish">Finlandia</string>
   <string name="common_french">Perancis</string>
   <string name="common_german">German</string>
@@ -144,15 +131,9 @@
   <string name="common_google_backup_decryption_failed_2">Possibly the password you entered is invalid.</string>
   <string name="common_hebrew">Hebrew</string>
   <string name="common_hindi">Hindi</string>
-  <plurals name="common_hour">
-    <item quantity="other">Jam\nJam</item>
-  </plurals>
   <string name="common_indonesian">Indonesia</string>
   <string name="common_insufficient_balance">Insufficient balance</string>
-  <string name="common_italian">Italia</string>
   <string name="common_japanese">Jepang</string>
-  <string name="common_khmer">Khmer</string>
-  <string name="common_korean">Korea</string>
   <string name="common_loading">Memuat</string>
   <string name="common_malay">Malaysia</string>
   <string name="common_max">max</string>
@@ -176,7 +157,6 @@
   <string name="common_remove">Remove</string>
   <string name="common_request">Request</string>
   <string name="common_russian">Rusia</string>
-  <string name="common_scan">Pindai</string>
   <string name="common_scan_qr">Scan QR</string>
   <string name="common_search_pools">Search pools</string>
   <string name="common_sec">detik</string>
@@ -192,15 +172,11 @@
   <string name="common_sms_code_expired">Kode verifikasi telah kedaluwarsa. Silakan coba yang lain.</string>
   <string name="common_sms_code_not_correct">Kode verifikasi salah</string>
   <string name="common_spanish">Spanyol</string>
-  <string name="common_spanish_colombia">Spanyol (Kolombia)</string>
   <string name="common_supply">Supply</string>
   <string name="common_supply_liquidity_title">Supply liquidity</string>
-  <string name="common_swedish">Swedia</string>
   <string name="common_terms_title">Syarat &amp; Ketentuan</string>
-  <string name="common_thai">Thailand</string>
   <string name="common_today">Hari ini</string>
   <string name="common_turkish">Turkish</string>
-  <string name="common_ukrainian">Ukraina</string>
   <string name="common_update">Update</string>
   <string name="common_upload_from_library">Upload from library</string>
   <string name="common_vietnamese">Vietnamese</string>
@@ -237,10 +213,7 @@
   <string name="eth_tx_address">Ethereum account address</string>
   <string name="eth_tx_hash">Ethereum transaction hash</string>
   <string name="explore_create_pool">Create pool</string>
-  <string name="explore_demeter_subtitle">Stake your pool share and earn additional rewards</string>
   <string name="explore_demeter_title">Demeter Farming</string>
-  <string name="explore_provide_and_earn">Provide liquidity and earn rewards</string>
-  <string name="explore_swap_tokens_on_sora">Swap tokens on SORA network</string>
   <string name="export_account_details_backup_description">If you lose access to this device, your funds will be lost, unless you back up!</string>
   <string name="export_account_details_backup_options">Backup options</string>
   <string name="export_account_details_show_passphrase">Show Passphrase</string>
@@ -252,16 +225,16 @@
   <string name="export_json_input_label">Set password for JSON file</string>
   <string name="export_protection_json_1">If I lose my JSON, my funds will be lost forever.</string>
   <string name="export_protection_json_2">If I expose or share my JSON to anybody, my funds can get stolen.</string>
-  <string name="export_protection_json_3">It is my full reponsibility to keep my JSON secure.</string>
+  <string name="export_protection_json_3">It is my full responsibility to keep my JSON secure.</string>
   <string name="export_protection_json_description">In the next step you will be able to download a JSON file that allow you to recover your accounts.</string>
   <string name="export_protection_json_title">Export JSON</string>
   <string name="export_protection_passphrase_1">If I lose my passphrase, my funds will be lost forever.</string>
   <string name="export_protection_passphrase_2">If I expose or share my passphrase to anybody, my funds can get stolen.</string>
-  <string name="export_protection_passphrase_3">It is my full reponsibility to keep my passphrase secure.</string>
+  <string name="export_protection_passphrase_3">It is my full responsibility to keep my passphrase secure.</string>
   <string name="export_protection_passphrase_description">In the next step you will see the 24-word passphrase that allows you to recover the account.</string>
   <string name="export_protection_seed_1">If I lose my raw seed, my funds will be lost forever.</string>
   <string name="export_protection_seed_2">If I expose or share my raw seed to anybody, my funds can get stolen.</string>
-  <string name="export_protection_seed_3">It is my full reponsibility to keep my raw seed secure.</string>
+  <string name="export_protection_seed_3">It is my full responsibility to keep my raw seed secure.</string>
   <string name="export_protection_seed_description">In the next step you will see Raw Seed (a long hash) that allow you to recover an account.</string>
   <string name="export_select_account">Select account for batch export</string>
   <string name="faq_title">FAQ</string>
@@ -272,13 +245,9 @@
   <string name="history_referrer">Referrer</string>
   <string name="import_account_not_backed_up">Not backed up!</string>
   <string name="import_account_not_backed_up_alert_action_title">I will risk it</string>
-  <string name="import_account_not_backed_up_alert_description">If your device gets lost or stolen, you will loose your wallet and all your funds forever.</string>
+  <string name="import_account_not_backed_up_alert_description">If your device gets lost or stolen, you will lose your wallet and all your funds forever.</string>
   <string name="import_more_title">Import more</string>
   <string name="imported_account_title">Account imported</string>
-  <string name="invite_code_applied_body">Kode berhasil diterapkan</string>
-  <string name="invite_code_applied_title">Congratulations!</string>
-  <string name="invite_enter_error_already_applied">Anda telah menerapkan kode undangan lain</string>
-  <string name="invite_enter_error_time_is_up">Waktu untuk menerapkan kode undangan sudah habis</string>
   <string name="invoice_scan_error_match">Anda tidak dapat mengirim ke diri sendiri</string>
   <string name="invoice_scan_error_no_info">QR tidak dapat diterjemahkan</string>
   <string name="invoice_scan_error_user_not_found">Tidak dapat menemukan pengguna dari QR</string>
@@ -363,22 +332,7 @@
   <string name="pool_share_title_1">Your pool share</string>
   <string name="pooled_assets">Pooled assets</string>
   <string name="profile_biometry_title">Autentikasi biometri</string>
-  <plurals name="project_date_day_plurals">
-    <item quantity="other">%s hari yang tersisa</item>
-  </plurals>
-  <plurals name="project_date_hour_plurals">
-    <item quantity="other">%s jam yang tersisa</item>
-  </plurals>
-  <plurals name="project_date_minute_plurals">
-    <item quantity="other">%s menit yang tersisa</item>
-  </plurals>
-  <plurals name="project_date_second_plurals">
-    <item quantity="other">%s detik yang tersisa</item>
-  </plurals>
-  <string name="project_ended_template">Berakhir %s</string>
-  <string name="protect_loss_access_funds">Protect yourself from losing access to your funds</string>
   <string name="qr_code">Kode QR</string>
-  <string name="qr_upload">Unggah dari galeri</string>
   <string name="receive_tokens">Receive tokens</string>
   <string name="received_from_adar">Received from ADAR</string>
   <string name="recent_recipients">Recent recipients</string>
@@ -424,7 +378,6 @@
   <string name="remove_pool_confirmation_description">Output is estimated. If the price changes more than %s%% your transaction will revert.</string>
   <string name="remove_pool_confirmation_title">Confirm Remove</string>
   <string name="request_supply_liquidity">You need to supply liquidity to a corresponding pool pair to start staking it for extra rewards:</string>
-  <string name="restart_required">Restart required</string>
   <string name="review">Review</string>
   <string name="route">Route</string>
   <string name="scan_qr_show_my_qr">Show my QR code</string>
@@ -432,8 +385,6 @@
   <string name="search_token_placeholder">Search by Asset ID, Name or Ticker Symbol</string>
   <string name="select_account_address_1">Search or add a new address</string>
   <string name="select_account_import">Select account to import</string>
-  <string name="select_asset_receive">Select Asset to Receive</string>
-  <string name="select_asset_send">Select Asset to Send</string>
   <string name="select_node_add_custom_node">Add Custom Node</string>
   <string name="select_node_custom_node_edit_node">Edit node</string>
   <string name="select_node_custom_nodes">Custom Nodes</string>
@@ -450,20 +401,14 @@
   <string name="select_pool_share">Select your pool share to stake</string>
   <string name="select_recipient">Pilih Penerima</string>
   <string name="settings_accounts">Accounts</string>
-  <string name="settings_accounts_subtitle">Manage accounts, backup passphrase</string>
-  <string name="settings_app_subtitle">Language, Appearance</string>
   <string name="settings_crypto_accounts">Crypto Accounts</string>
   <string name="settings_header_app">App settings</string>
-  <string name="settings_information_subtitle">Disclaimer, FAQ, About app</string>
   <string name="settings_information_title">Information</string>
-  <string name="settings_invite_subtitle">Share invite link</string>
   <string name="settings_invite_title">Invite Friends &amp; Earn</string>
-  <string name="settings_login_subtitle">PIN and Biometric auth</string>
   <string name="settings_login_title">Login &amp; Security</string>
   <string name="settings_nodes">Nodes</string>
   <string name="show_more">Show more</string>
   <string name="slippage">Slippage</string>
-  <string name="something_went_wrong">Something went wrong</string>
   <string name="start_staking">Start staking</string>
   <string name="status_error">Error</string>
   <string name="status_pending">Tertunda</string>
@@ -475,13 +420,9 @@
   <string name="transaction_date_1">Date and time</string>
   <string name="transaction_id">Hash transaksi</string>
   <string name="tutorial_many_world">Banyak Dunia.\n Satu Ekonomi.</string>
-  <string name="tutorial_many_world_desc">SORA bekerja untuk menjadi sistem ekonomi multiverse yang terdesentralisasi, membiayai pembuatan aplikasi baru dan menarik, di bawah pengawasan demokratis Parlemen SORA.</string>
   <string name="tutorial_privacy_policy">Kebijakan Privasi</string>
   <string name="tutorial_terms_and_conditions_3">Syarat &amp; Ketentuan</string>
   <string name="tutorial_terms_and_conditions_template_1">By continuing you are agreeing with the </string>
-  <string name="unexpected_error">An unexpected error has occured.\n\nYou may troubleshoot this issue in SORA community at the @sora_happy Telegram chat.</string>
-  <string name="update_downloaded">An update for the SORA application has been downloaded and is ready to be installed.\n\nIt is important to use the latest version of the application.\n\nIn order to update the app, a restart is required.</string>
-  <string name="update_install_now">Would you like to install the update now?</string>
   <string name="wallet_backup">Wallet Backup</string>
   <string name="wallet_balance_locked">Terkunci</string>
   <string name="wallet_balance_reserved">Dipesan</string>
@@ -499,7 +440,6 @@
   <string name="wallet_unbonded">Unbonded</string>
   <string name="wallet_unbonding">Unbonding</string>
   <string name="your_pooled">Your %s pooled</string>
-  <string name="wallet_network_activity">Aktivitas</string>
   <string name="wallet_keys_unavailable">This phone can\'t unlock the saved wallet data</string>
   <string name="wallet_keys_unavailable_description">The wallet data on this phone can\'t be unlocked here, for example because it was copied from another phone. Nothing was changed, and your funds are safe on the blockchain. Close and reopen the app to see your recovery options, or contact support.</string>
     <string name="safe_mode_technical_details">Detail teknis</string>
@@ -514,19 +454,11 @@
     <string name="safe_mode_updating_body">Kunci Anda tetap berada di perangkat ini. Biasanya selesai dalam kurang dari satu menit.</string>
     <string name="safe_mode_finishing_title">Menyelesaikan pembaruan</string>
     <string name="safe_mode_finishing_body">Melanjutkan proses sebelumnya. Kunci Anda tetap berada di perangkat ini.</string>
-    <string name="safe_mode_checking_title">Memeriksa dompet Anda</string>
-    <string name="safe_mode_checking_body">SORA sedang memeriksa akun sebelum membuka dompet. Kunci Anda tetap berada di perangkat ini.</string>
-    <string name="safe_mode_waiting_network_body">Kami akan melanjutkan begitu Anda kembali terhubung ke internet.</string>
-    <string name="safe_mode_change_node">Ganti node</string>
     <string name="safe_mode_step_check_data">Memeriksa data dompet</string>
     <string name="safe_mode_step_storage">Memperbarui penyimpanan dompet</string>
     <string name="safe_mode_step_accounts">Memeriksa akun Anda</string>
     <string name="safe_mode_step_accounts_progress">%1$d dari %2$d</string>
     <string name="safe_mode_step_finishing">Menyelesaikan proses</string>
-    <string name="safe_mode_step_unlocked">Dompet terbuka</string>
-    <string name="safe_mode_step_network">Menghubungkan ke jaringan</string>
-    <string name="safe_mode_step_network_waiting">Menunggu jaringan</string>
-    <string name="safe_mode_step_account_check">Memeriksa akun Anda</string>
     <string name="safe_mode_step_state_done">Selesai</string>
     <string name="safe_mode_step_state_running">Sedang berlangsung</string>
     <string name="safe_mode_step_state_waiting">Belum dimulai</string>
@@ -540,20 +472,10 @@
     <string name="safe_mode_learn_more">Pelajari lebih lanjut</string>
     <string name="safe_mode_new_pin_title">Pilih PIN baru dengan 6 digit</string>
     <string name="safe_mode_new_pin_body">Ini membuat akses dompet lebih sulit ditebak. Dompet dan dana Anda tidak berubah.</string>
-    <string name="safe_mode_whats_new_title">Selamat datang di SORA Wallet baru</string>
-    <string name="safe_mode_whats_new_body">Dompet Anda telah diperbarui. Berikut hal yang diperiksa SORA.</string>
-    <string name="safe_mode_whats_new_accounts">Akun Anda ada di perangkat ini</string>
-    <string name="safe_mode_whats_new_pin">Dompet Anda dikunci dengan PIN</string>
-    <string name="safe_mode_whats_new_balances">Saldo dimuat</string>
-    <string name="safe_mode_whats_new_balances_loading">Memuat saldo</string>
-    <string name="safe_mode_whats_new_backup">Cadangkan frasa pemulihan Anda</string>
-    <string name="safe_mode_back_up_now">Cadangkan sekarang</string>
-    <string name="safe_mode_later">Nanti</string>
     <string name="safe_mode_device_transfer">Dompet Anda tidak berpindah ke ponsel baru secara otomatis. Simpan frasa pemulihan atau cadangan Google Drive.</string>
     <string name="safe_mode_pending_check">Transaksi sebelumnya masih diperiksa. Pengiriman dijeda agar tidak ada yang terkirim dua kali.</string>
     <string name="safe_mode_tap_to_reveal">Ketuk untuk menampilkan</string>
     <string name="safe_mode_reveal_privacy">Pastikan tidak ada yang dapat melihat layar Anda.</string>
-    <string name="safe_mode_support_no_email">Belum ada aplikasi email yang disiapkan. Anda dapat menulis ke %1$s.</string>
     <string name="safe_mode_retained_title">Dompet yang ditemukan di ponsel ini</string>
     <string name="safe_mode_retained_body">SORA menemukan kunci dompet di ponsel ini yang tidak digunakan oleh akun mana pun, misalnya dari penyiapan akun yang belum selesai. Kunci tersebut disimpan dan tidak ada yang dihapus. Anda dapat memulihkannya di sini.</string>
     <string name="safe_mode_retained_restore">Pulihkan dompet ini</string>
@@ -571,7 +493,6 @@
     <string name="account_repair_confirm">Perbaiki akun</string>
   <string name="backup_no_matching_secret">No recovery phrase or seed saved on this phone matches this account, so none is shown. The account itself still works. To back it up, export it as an encrypted JSON file. You can bring it back later from Import account, Backup file (JSON).</string>
   <string name="backup_no_matching_secret_read_only">No recovery phrase or seed saved on this phone matches this account, so none is shown. To use this account on this phone again, go to Import account and enter its recovery phrase, raw seed or backup file.</string>
-    <string name="safe_mode_whats_new_accounts_some_read_only">Akun yang dapat mengirim dari ponsel ini: %1$s dari %2$s. Untuk memperbaiki sisanya, impor frasa pemulihannya.</string>
     <string name="account_repair_title_backup">Perbaiki akun ini dari cadangan</string>
   <string name="json_backup_invalid_title">This backup file can\'t be read</string>
   <string name="json_backup_invalid">This isn\'t an encrypted account backup (JSON) that SORA can read. Check that you chose the file you exported, or pasted all of its text. Nothing was changed.</string>
@@ -608,7 +529,6 @@
     <string name="recovery_json_no_file_picker">Ponsel ini tidak memiliki aplikasi untuk memilih file. Tempel teks file cadangan ke kolom yang tersedia. Tidak ada yang diubah.</string>
   <string name="export_json_keys_unusable_named_title">Some accounts can\'t be exported</string>
   <string name="export_json_keys_unusable_named">These accounts can\'t be exported, because the keys saved for them on this phone can\'t be used:\n\n%1$s\n\nNo file was made. Export your other accounts without them. To use these accounts on this phone again, go to Import account and enter their recovery phrase, raw seed or backup file.</string>
-    <string name="safe_mode_whats_new_batch_export">File cadangan JSON berisi beberapa akun yang dibuat oleh SORA versi lama mungkin kosong. Jika Anda mengandalkannya, ekspor kembali akun melalui Akun.</string>
   <!-- ak2-readonly-ux: read-only accounts are labelled, explained and repairable; removal shows the matching backup first -->
   <string name="failure_generic_title">This wasn\'t completed</string>
   <string name="failure_generic_message">SORA couldn\'t complete this just now. Please try again in a moment. If you were making a transaction, check Activity first, so that nothing is sent twice.</string>
@@ -743,11 +663,12 @@
   <string name="neon_theme_light">Terang</string>
   <!-- English fallback for new Nexus and recovery copy pending translation. -->
   <string name="nexus_production_address">Production address</string>
-  <string name="nexus_copy_production_address">Copy production address</string>
-  <string name="nexus_production_not_live">Not live yet</string>
   <string name="nexus_production_address_notice">Your SORA Nexus production address is ready to copy. The production network has not launched yet; balances, history and transfers will be available after launch.</string>
   <string name="nexus_send_not_available">Sending is currently unavailable for this account. You can view your balance, copy your address and receive testnet XOR.</string>
   <string name="nexus_history_load_more">Load older transfers</string>
   <string name="recovery_json_password_help">Enter the password you set when saving this backup. This is not your app PIN.</string>
   <string name="account_switching">Switching account…</string>
+  <string name="hide_zero_balances">Hide zero balances</string>
+  <string name="show_zero_balances">Show zero balances</string>
+  <string name="global_results">Global results</string>
 </resources>

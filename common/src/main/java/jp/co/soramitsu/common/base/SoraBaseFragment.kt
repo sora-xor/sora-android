@@ -36,7 +36,6 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Scaffold
 import androidx.compose.material.SnackbarResult
 import androidx.compose.material.rememberScaffoldState
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
@@ -72,6 +71,7 @@ import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.util.AppStoreListing
 import jp.co.soramitsu.common.util.BuildUtils
 import jp.co.soramitsu.common.util.DebounceClickHandler
+import jp.co.soramitsu.ui_core.lit.litContentWidth
 import jp.co.soramitsu.ui_core.theme.customColors
 import kotlinx.coroutines.launch
 
@@ -233,8 +233,11 @@ abstract class SoraBaseFragment<T : BaseViewModel> : Fragment() {
                     }
 
                     Box(Modifier.fillMaxSize()) {
-                        NeonBackground(safe = useSafeAurora)
+                        NeonBackground()
+                        // The page fills the window; the screen itself is one column of readable width in the
+                        // middle of it (ui-core's LitLayout), toolbar and all.
                         Scaffold(
+                            modifier = Modifier.litContentWidth(),
                             scaffoldState = scaffoldState,
                             backgroundColor = Color.Transparent,
                             topBar = {
@@ -279,9 +282,6 @@ abstract class SoraBaseFragment<T : BaseViewModel> : Fragment() {
         }
     }
 
-    @Composable
-    open fun backgroundColorComposable() = MaterialTheme.customColors.bgPage
-
     open fun backgroundColor() = R.attr.baseBackground
 
     open fun onDestinationChanged(destination: String) {}
@@ -293,8 +293,6 @@ abstract class SoraBaseFragment<T : BaseViewModel> : Fragment() {
     open fun onNavClicked() {
         viewModel.onNavIcon()
     }
-
-    protected open val useSafeAurora: Boolean = false
 
     abstract fun NavGraphBuilder.content(scrollState: ScrollState, navController: NavHostController)
 

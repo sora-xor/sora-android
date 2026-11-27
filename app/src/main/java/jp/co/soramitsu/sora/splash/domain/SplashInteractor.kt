@@ -93,6 +93,11 @@ class SplashInteractor @Inject constructor(
 
     suspend fun checkMigration() { startMigration().await() }
 
+    /** Returns once no verification is running (at once when none is). */
+    suspend fun awaitRunningVerification() {
+        synchronized(this) { verificationJob }?.join()
+    }
+
     suspend fun retryMigration(): Boolean = startMigration().await()
 
     private suspend fun checkMigration(target: CompletableDeferred<Boolean>) {
@@ -173,9 +178,5 @@ class SplashInteractor @Inject constructor(
         throw error
     } catch (_: Throwable) {
         false
-    }
-
-    suspend fun saveInviteCode(inviteCode: String) {
-        userRepository.saveParentInviteCode(inviteCode)
     }
 }

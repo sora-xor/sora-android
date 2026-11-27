@@ -21,7 +21,15 @@ package jp.co.soramitsu.feature_assets_impl.presentation.screens.send
 
 import android.os.Bundle
 import android.view.View
+import android.view.Gravity
+import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
+import android.widget.FrameLayout
+import androidx.compose.ui.platform.ComposeView
+import jp.co.soramitsu.common.presentation.compose.components.TransactionResultBadgeOverlay
+import jp.co.soramitsu.common.presentation.compose.theme.SoraAppTheme
+import jp.co.soramitsu.common.util.ext.runDelayed
 import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -43,10 +51,9 @@ import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.base.SoraBaseFragment
 import jp.co.soramitsu.common.domain.BottomBarController
 import jp.co.soramitsu.common.presentation.compose.components.PercentContainer
-import jp.co.soramitsu.common.presentation.view.ToastDialog
 import jp.co.soramitsu.feature_assets_api.presentation.selectsearchtoken.SelectSearchTokenScreen
-import jp.co.soramitsu.feature_assets_impl.presentation.components.compose.send.SendConfirmScreen
-import jp.co.soramitsu.feature_assets_impl.presentation.components.compose.send.SendScreen
+import jp.co.soramitsu.common_wallet.presentation.compose.send.SendConfirmScreen
+import jp.co.soramitsu.common_wallet.presentation.compose.send.SendScreen
 import jp.co.soramitsu.ui_core.resources.Dimens
 
 @AndroidEntryPoint
@@ -102,6 +109,7 @@ class TransferAmountFragment : SoraBaseFragment<TransferAmountViewModel>() {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
+                    .verticalScroll(scrollState)
                     .padding(horizontal = Dimens.x2)
             ) {
                 val state = viewModel.sendState.collectAsStateWithLifecycle().value
@@ -147,13 +155,14 @@ class TransferAmountFragment : SoraBaseFragment<TransferAmountViewModel>() {
                 barVisible = percentageVisibility.value,
             ) {
                 val focusRequester = remember { FocusRequester() }
+                val state = viewModel.sendState.collectAsStateWithLifecycle().value
                 Column(
                     modifier = Modifier
                         .padding(horizontal = Dimens.x2)
                         .padding(top = Dimens.x1)
                         .fillMaxSize()
+                        .verticalScroll(scrollState)
                 ) {
-                    val state = viewModel.sendState.collectAsStateWithLifecycle().value
                     SendScreen(
                         address = state.address,
                         icon = state.icon,
@@ -176,8 +185,9 @@ class TransferAmountFragment : SoraBaseFragment<TransferAmountViewModel>() {
                     )
                 }
 
-                LaunchedEffect(Unit) {
-                    focusRequester.requestFocus()
+                val canFocus = state.input?.let { it.enabled && !it.readOnly } == true
+                LaunchedEffect(canFocus) {
+                    if (canFocus) focusRequester.requestFocus()
                 }
             }
         }
@@ -187,15 +197,16 @@ class TransferAmountFragment : SoraBaseFragment<TransferAmountViewModel>() {
         super.onViewCreated(view, savedInstanceState)
         (activity as BottomBarController).hideBottomBar()
         viewModel.transactionSuccessEvent.observe { badge ->
-            activity?.let {
-                // "Transaction confirmed" or "Transaction submitted", as the outcome says.
-                ToastDialog(
-                    R.drawable.ic_green_pin,
-                    badge.text,
-                    1000,
-                    it
-                ).show()
+            val host = activity ?: return@observe
+            val content = host.findViewById<FrameLayout>(android.R.id.content)
+            // The result page opens immediately. Keep the one-second receipt on the activity
+            // so navigation can replace the send fragment without removing the announcement.
+            val dark = darkThemeManager.darkModeStatusFlow.value
+            val receipt = ComposeView(host).apply {
+                setContent { SoraAppTheme(darkTheme = dark) { TransactionResultBadgeOverlay(badge) } }
             }
+            content.addView(receipt, FrameLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT, Gravity.CENTER))
+            host.runDelayed(1_000) { content.removeView(receipt) }
         }
     }
 }

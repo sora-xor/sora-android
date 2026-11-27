@@ -20,53 +20,64 @@ limitations under the License.
 package jp.co.soramitsu.common.presentation.compose.components
 
 import android.content.res.Configuration
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Button
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
-import androidx.compose.material.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import java.math.BigDecimal
 import jp.co.soramitsu.androidfoundation.format.orZero
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.domain.AssetAmountInputState
-import jp.co.soramitsu.common.domain.OptionsProvider
-import jp.co.soramitsu.common.presentation.compose.TokenIcon
+import jp.co.soramitsu.common.presentation.compose.TokenBadge
 import jp.co.soramitsu.common.presentation.compose.theme.SoraAppTheme
 import jp.co.soramitsu.common.util.testTagAsId
-import jp.co.soramitsu.ui_core.component.button.properties.Size
 import jp.co.soramitsu.ui_core.component.input.number.BasicNumberInput
 import jp.co.soramitsu.ui_core.component.input.number.DefaultCursorPosition
+import jp.co.soramitsu.ui_core.lit.litPad
+import jp.co.soramitsu.common.presentation.compose.theme.neon.LocalFx
+import jp.co.soramitsu.common.presentation.compose.theme.neon.neon
+import jp.co.soramitsu.ui_core.lit.Lit
+import jp.co.soramitsu.ui_core.lit.PickerAndField
+import jp.co.soramitsu.ui_core.lit.litWell
 import jp.co.soramitsu.ui_core.resources.Dimens
-import jp.co.soramitsu.ui_core.theme.borderRadius
 import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
 
+/**
+ * The amount of a token, with its icon, symbol and balance.
+ *
+ * @param tokenSelectable false when the amount can only be of this token: the symbol has no
+ * chevron and tapping it chooses nothing.
+ */
 @Composable
 fun AssetAmountInput(
     modifier: Modifier,
@@ -75,96 +86,79 @@ fun AssetAmountInput(
     onAmountChange: (BigDecimal) -> Unit,
     onSelectToken: () -> Unit,
     onFocusChange: (Boolean) -> Unit,
+    tokenSelectable: Boolean = true,
+    label: String? = null,
 ) {
-    val shape = RoundedCornerShape(MaterialTheme.borderRadius.xl)
+    // Something that takes input is let into the surface, with a boundary that does not depend on the light.
+    val shape = RoundedCornerShape(Lit.ControlRadius)
     val focusedInput = remember { mutableStateOf(false) }
-    Row(
+    Column(
         modifier = modifier
             .fillMaxWidth()
-            .wrapContentHeight()
-            .background(
-                color = MaterialTheme.customColors.bgSurface,
-                shape = shape,
-            )
-            .border(
-                border = BorderStroke(
-                    1.dp,
-                    if (focusedInput.value) MaterialTheme.customColors.fgPrimary else MaterialTheme.customColors.bgSurface
-                ),
-                shape = shape,
-            )
-            .padding(Dimens.x2),
-        verticalAlignment = Alignment.CenterVertically,
+            .litWell(radius = Lit.ControlRadius, depth = 2.dp, ruled = true)
+            .then(if (focusedInput.value) Modifier.border(BorderStroke(2.dp, MaterialTheme.neon.focusRing), shape) else Modifier)
+            .padding(horizontal = Dimens.x2, vertical = Dimens.x1),
     ) {
-        TokenIcon(
-            uri = state?.token?.iconFile,
-            size = Size.Small,
-            modifier = Modifier
-                .testTagAsId("TokenIcon")
-                .clickable(onClick = onSelectToken)
-        )
-        Column(
-            modifier = Modifier
-                .padding(start = Dimens.x1_2)
-                .fillMaxWidth()
-                .wrapContentHeight()
-        ) {
+        if (label != null) {
+            Text(label, style = MaterialTheme.customTypography.textXSBold, color = MaterialTheme.customColors.fgSecondary)
+        }
+        val selectable = tokenSelectable && state?.readOnly != true
+        // The token at its own width and the amount in the rest. Where that leaves the amount too few digits (a
+        // 320 dp screen, larger text, a long symbol), the amount takes a line of its own under the token.
+        PickerAndField(fieldMin = AMOUNT_MIN_WIDTH, picker = {
             Row(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .wrapContentHeight(),
+                    .heightIn(min = 48.dp)
+                    .testTagAsId("SelectToken" + state?.token?.symbol.orEmpty())
+                    .then(if (selectable) Modifier.clickable(role = Role.Button, onClick = onSelectToken) else Modifier),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text(
-                    modifier = Modifier
-                        .testTagAsId("SelectToken" + (state?.token?.symbol ?: ""))
-                        .wrapContentSize()
-                        .clickable(onClick = onSelectToken),
-                    text = state?.token?.symbol ?: stringResource(id = R.string.choose_token),
-                    style = MaterialTheme.customTypography.displayS,
-                    color = MaterialTheme.customColors.fgPrimary,
-                    maxLines = 1,
-                    overflow = TextOverflow.Clip,
-                )
-                if (state?.readOnly != true) {
-                    Icon(
-                        modifier = Modifier
-                            .padding(horizontal = Dimens.x1)
-                            .size(size = Dimens.x2),
-                        painter = painterResource(id = R.drawable.ic_chevron_down_rounded_16),
-                        tint = MaterialTheme.customColors.fgSecondary,
-                        contentDescription = null
+                if (state == null) {
+                    Box(Modifier.size(34.dp).litPad(CircleShape, elevation = 2.dp), contentAlignment = Alignment.Center) {
+                        Icon(painterResource(R.drawable.ic_neu_plus_24), null, Modifier.size(18.dp), tint = MaterialTheme.neon.cyan)
+                    }
+                } else {
+                    TokenBadge(
+                        assetId = state.token.id,
+                        symbol = state.token.symbol,
+                        uri = state.token.iconFile,
+                        size = 34.dp,
+                        modifier = Modifier.testTagAsId("TokenIcon"),
                     )
                 }
+                Text(
+                    modifier = Modifier.weight(1f, fill = false).padding(start = Dimens.x1),
+                    text = state?.token?.symbol ?: stringResource(R.string.choose_token),
+                    style = MaterialTheme.customTypography.textMBold,
+                    color = MaterialTheme.customColors.fgPrimary,
+                )
+                if (selectable) {
+                    Icon(
+                        modifier = Modifier.size(16.dp),
+                        painter = painterResource(R.drawable.ic_chevron_down_rounded_16),
+                        tint = MaterialTheme.customColors.fgSecondary,
+                        contentDescription = null,
+                    )
+                }
+            }
+        }) {
+            if (state != null) {
                 BasicNumberInput(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .testTagAsId("InputAmountField" + (state?.token?.symbol ?: ""))
-                        .wrapContentHeight(),
+                    modifier = Modifier.fillMaxWidth().testTagAsId("InputAmountField" + state.token.symbol),
                     onFocusChanged = {
                         focusedInput.value = it
-                        onFocusChange.invoke(it)
+                        onFocusChange(it)
                     },
                     textStyle = MaterialTheme.customTypography.displayS.copy(textAlign = TextAlign.End, color = MaterialTheme.customColors.fgPrimary),
-                    enabled = state?.let { it.enabled && !it.readOnly } ?: false,
-                    precision = state?.token?.precision ?: OptionsProvider.defaultScale,
+                    enabled = state.enabled && !state.readOnly,
+                    precision = state.token.precision,
                     defaultCursorPosition = DefaultCursorPosition.START,
-                    initial = state?.amount,
+                    initial = state.amount,
                     onValueChanged = onAmountChange,
                     focusRequester = focusRequester,
-                    textFieldColors = TextFieldDefaults.textFieldColors(
-                        textColor = MaterialTheme.customColors.fgPrimary,
-                        placeholderColor = MaterialTheme.customColors.fgSecondary,
-                        cursorColor = MaterialTheme.customColors.fgPrimary,
-                        focusedIndicatorColor = MaterialTheme.customColors.fgSecondary,
-                        unfocusedIndicatorColor = MaterialTheme.customColors.fgSecondary,
-                        backgroundColor = Color.Transparent,
-                    ),
                     placeholder = {
                         Text(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .wrapContentHeight(),
+                            modifier = Modifier.fillMaxWidth(),
                             text = "0",
                             style = MaterialTheme.customTypography.displayS,
                             textAlign = TextAlign.End,
@@ -173,35 +167,40 @@ fun AssetAmountInput(
                     },
                 )
             }
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .wrapContentHeight(),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
+        }
+        if (state?.error == true) {
+            Text(state.errorHint, style = MaterialTheme.customTypography.textXSBold, color = MaterialTheme.customColors.statusError)
+        } else if (state != null && (state.balance.isNotBlank() || state.amountFiat.isNotBlank())) {
+            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     modifier = Modifier.weight(1f),
-                    text = if (state?.error != true) state?.balance.orEmpty() else state.errorHint,
+                    text = if (state.balance.isNotBlank()) stringResource(R.string.asset_balance_value, state.balance) else "",
                     style = MaterialTheme.customTypography.textXSBold,
-                    color = if (state?.error != true) MaterialTheme.customColors.fgSecondary else MaterialTheme.customColors.statusError,
-                    maxLines = 1,
-                    textAlign = if (state?.error != true) TextAlign.Start else TextAlign.End,
-                    overflow = TextOverflow.Ellipsis,
+                    color = MaterialTheme.customColors.fgSecondary,
                 )
-                if (state?.error != true) {
-                    Text(
-                        modifier = Modifier.wrapContentSize(),
-                        text = state?.amountFiat.orEmpty(),
-                        style = MaterialTheme.customTypography.textXSBold,
-                        color = MaterialTheme.customColors.fgSecondary,
-                        maxLines = 1,
-                        overflow = TextOverflow.Clip,
-                    )
+                if (state.amountFiat.isNotBlank()) {
+                    Crossfade(
+                        targetState = state.amountFiat,
+                        modifier = Modifier.weight(0.65f).padding(start = Dimens.x1),
+                        animationSpec = tween(if (LocalFx.current.reduceMotion) 0 else 150),
+                        label = "Fiat value",
+                    ) { fiat ->
+                        Text(
+                            text = fiat,
+                            modifier = Modifier.fillMaxWidth(),
+                            textAlign = TextAlign.End,
+                            style = MaterialTheme.customTypography.textXSBold,
+                            color = MaterialTheme.customColors.fgSecondary,
+                        )
+                    }
                 }
             }
         }
     }
 }
+
+/** The least an amount being typed gets beside its token: about ten digits at the usual text size. */
+private val AMOUNT_MIN_WIDTH = 140.dp
 
 val previewAssetAmountInputState = AssetAmountInputState(
     token = previewToken,

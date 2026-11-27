@@ -24,7 +24,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material.MaterialTheme
@@ -33,9 +33,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import jp.co.soramitsu.common.domain.DEFAULT_ICON_URI
 import jp.co.soramitsu.common.presentation.compose.TokenIcon
@@ -45,9 +47,15 @@ import jp.co.soramitsu.common_wallet.presentation.compose.states.PoolsListItemSt
 import jp.co.soramitsu.common_wallet.presentation.compose.states.PoolsListState
 import jp.co.soramitsu.ui_core.component.button.properties.Size
 import jp.co.soramitsu.ui_core.resources.Dimens
+import jp.co.soramitsu.ui_core.component.text.FittedText
 import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
 
+/**
+ * The pools the account is in. On each row the pooled amounts ("2 XOR - 5 VAL") are the figure, at the end in the
+ * larger type, breaking only between the two amounts when the row is short; the value and the reward tokens are the
+ * small line under them.
+ */
 @Composable
 fun PoolsList(
     cardState: PoolsListState,
@@ -57,10 +65,11 @@ fun PoolsList(
         Row(
             modifier = Modifier
                 .padding(vertical = Dimens.x1)
-                .height(Size.Small)
+                .heightIn(min = Size.Small)
                 .fillMaxWidth()
                 .padding(horizontal = Dimens.x3)
-                .clickable { onPoolClick?.invoke(poolState.tokenIds) }
+                .clickable { onPoolClick?.invoke(poolState.tokenIds) },
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             ConstraintLayout(
                 modifier = Modifier.wrapContentSize()
@@ -95,27 +104,28 @@ fun PoolsList(
                     color = MaterialTheme.customColors.fgPrimary,
                     style = MaterialTheme.customTypography.textM
                 )
-
-                Text(
-                    color = MaterialTheme.customColors.fgSecondary,
-                    style = MaterialTheme.customTypography.textXSBold,
-                    text = poolState.poolAmounts,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
             }
+            // The amounts may take up to two thirds of the row's room; the pair keeps the rest. They are set smaller,
+            // then wrap, and are never cut.
             Column(
-                modifier = Modifier
-                    .wrapContentSize(),
+                modifier = Modifier.weight(2f, fill = false),
                 horizontalAlignment = Alignment.End,
             ) {
-                Text(
-                    color = MaterialTheme.customColors.fgPrimary,
-                    style = MaterialTheme.customTypography.textM,
-                    text = poolState.fiat,
-                    maxLines = 1,
+                FittedText(
+                    text = AnnotatedString(pooledAmountsText(poolState.poolAmounts)),
+                    style = MaterialTheme.customTypography.textM.copy(
+                        color = MaterialTheme.customColors.fgPrimary,
+                        textAlign = TextAlign.End,
+                    ),
+                    maxLines = Int.MAX_VALUE,
+                    smallest = POOLED_AMOUNTS_SMALLEST,
                 )
-                Row {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        color = MaterialTheme.customColors.fgSecondary,
+                        style = MaterialTheme.customTypography.textXSBold,
+                        text = poolState.fiat,
+                    )
                     poolState.rewardTokenIconsList.forEach {
                         TokenIcon(
                             modifier = Modifier.padding(horizontal = 2.dp),
@@ -128,6 +138,15 @@ fun PoolsList(
         }
     }
 }
+
+/** "2 XOR - 5 VAL" with each amount kept whole, so a short row breaks the line only between the two amounts. */
+internal fun pooledAmountsText(amounts: String): String =
+    amounts.split(POOLED_AMOUNTS_DELIMITER).joinToString(POOLED_AMOUNTS_DELIMITER) { it.replace(' ', '\u00A0') }
+
+private const val POOLED_AMOUNTS_DELIMITER = " - "
+
+/** A step over the 11 sp of the value under the amounts: they stay the larger figures however they are fitted. */
+private val POOLED_AMOUNTS_SMALLEST = 12.sp
 
 @Composable
 @Preview

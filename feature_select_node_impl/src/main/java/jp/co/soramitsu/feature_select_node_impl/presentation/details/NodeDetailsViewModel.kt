@@ -93,7 +93,7 @@ internal class NodeDetailsViewModel @AssistedInject constructor(
 
     init {
         _toolbarState.value = initSmallTitle2(
-            title = R.string.select_node_node_details,
+            title = if (nodeAddress == null) R.string.select_node_add_custom_node else R.string.select_node_node_details,
         )
         subscribeAddressChanges()
         subscribeNodeManagerEvents()
@@ -328,6 +328,8 @@ internal class NodeDetailsViewModel @AssistedInject constructor(
     private fun submitButtonEnabled(): Boolean = addressIsValid && nameIsValid && genesisHashIsValid
 
     fun onPinCodeChecked(checked: Boolean) {
+        // Process death on the PIN screen brings the form back empty, with nothing to save.
+        if (_state.value.nameState.value.text.isBlank() || _state.value.addressState.value.text.isBlank()) return
         pinCodeChecked = checked
         val nodeConnected = isCurrentNodeConnected()
         node = ChainNode(

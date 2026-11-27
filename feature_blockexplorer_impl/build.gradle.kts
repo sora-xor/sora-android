@@ -78,7 +78,6 @@ dependencies {
     implementation(project(":feature_account_api"))
     implementation(project(":feature_main_api"))
     implementation(project(":feature_wallet_api"))
-    implementation(project(":network"))
 
     implementation(libs.roomDep)
     implementation(libs.appcompatDep)
@@ -92,7 +91,7 @@ dependencies {
     implementation(libs.coroutineDep)
     implementation(libs.viewmodelKtxDep)
 
-    implementation(libs.uiCoreDep)
+    implementation(project(":ui-core"))
     implementation(libs.soramitsu.android.foundation)
     implementation(libs.navigationComposeDep)
 

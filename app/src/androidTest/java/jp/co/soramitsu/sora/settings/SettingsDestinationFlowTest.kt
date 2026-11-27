@@ -97,10 +97,6 @@ class SettingsDestinationFlowTest {
     @Test fun appLanguageActionUsesPickerHandler() {
         show(AppSettingsFragment(), settingsVm); click(R.string.change_language); compose.runOnIdle { verify { settingsVm.onLanguageClick() } }
     }
-    @Test fun reducedEffectsToggleUsesPreferenceHandler() {
-        show(AppSettingsFragment(), settingsVm); compose.onNodeWithContentDescription(compose.activity.getString(R.string.appearance_reduce_effects)).performScrollTo().performClick()
-        compose.runOnIdle { verify(exactly = 1) { settingsVm.toggleReduceEffects(true) } }
-    }
     @Test fun testNetworkToggleRequiresAvailableCapability() {
         show(AppSettingsFragment(), settingsVm); compose.onNodeWithContentDescription(compose.activity.getString(R.string.test_networks)).performScrollTo().performClick()
         compose.runOnIdle { verify(exactly = 1) { settingsVm.toggleTestNetworks(true) } }

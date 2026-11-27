@@ -26,6 +26,7 @@ internal data class ProfileScreenState(
     val nodeConnected: Boolean,
     val isDebugMenuAvailable: Boolean,
     val polkamarktVisible: Boolean,
+    val hashiBridgeVisible: Boolean = false,
 )
 
 internal val initialProfileScreenState =

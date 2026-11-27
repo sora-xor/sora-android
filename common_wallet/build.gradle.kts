@@ -1,5 +1,4 @@
 plugins {
-    id("maven-publish")
     alias(libs.plugins.androidLibrary)
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.serialization)
@@ -75,7 +74,6 @@ dependencies {
     implementation(project(":common"))
     implementation(project(":feature_blockexplorer_api"))
     implementation(project(":core_db"))
-    implementation(project(":network"))
 
     implementation(libs.coreKtxDep)
     implementation(libs.materialDep)
@@ -84,13 +82,13 @@ dependencies {
     implementation(libs.coroutineAndroidDep)
     implementation(libs.coroutineDep)
 
-    implementation(libs.uiCoreDep)
+    implementation(project(":ui-core"))
     implementation(libs.soramitsu.android.foundation)
 
     implementation(libs.coilSvgDep)
 
     implementation(libs.webSocketLibDep)
-    implementation(libs.uiCoreDep)
+    implementation(project(":ui-core"))
 
     implementation(libs.lifecycleProcessDep)
 
@@ -109,8 +107,6 @@ dependencies {
 
     implementation(libs.datastoreDep)
 
-    implementation(platform(libs.googleFirebaseBomDep))
-    implementation(libs.googleCrashlyticsDep)
 
     implementation(libs.coilDep)
     implementation(libs.coilComposeDep)

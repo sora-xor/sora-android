@@ -19,6 +19,20 @@ limitations under the License.
 
 package jp.co.soramitsu.feature_main_impl.presentation
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.DpSize
+import androidx.compose.ui.unit.dp
+import jp.co.soramitsu.common.presentation.compose.theme.SoraAppTheme
+import jp.co.soramitsu.ui_core.lit.LitCutGlassPiece
+import jp.co.soramitsu.ui_core.sacred.TenmonFlight
+import android.app.Activity
+import android.app.ActivityManager
 import android.app.ActivityOptions
 import android.content.ComponentCallbacks2
 import android.content.Context
@@ -27,38 +41,27 @@ import androidx.core.view.get
 import android.os.Bundle
 import android.view.KeyEvent
 import android.view.View
-import android.view.animation.Animation
-import android.view.animation.TranslateAnimation
 import androidx.activity.viewModels
 import androidx.annotation.AttrRes
-import androidx.annotation.StringRes
-import androidx.appcompat.app.AlertDialog
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.ViewCompat
-import androidx.core.view.isVisible
 import androidx.navigation.NavController
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.ui.NavigationUI
 import dagger.hilt.android.AndroidEntryPoint
 import dev.chrisbanes.insetter.Insetter
-import dev.chrisbanes.insetter.applyInsetter
 import dev.chrisbanes.insetter.windowInsetTypesOf
 import java.util.Date
+import kotlin.math.abs
 import javax.inject.Inject
+import jp.co.soramitsu.common.account.WalletStartupPass
 import jp.co.soramitsu.common.domain.BarsColorHandler
 import jp.co.soramitsu.common.domain.BottomBarController
 import jp.co.soramitsu.common.domain.DarkThemeManager
-import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.repeatOnLifecycle
-import androidx.lifecycle.Lifecycle
-import kotlinx.coroutines.launch
-import jp.co.soramitsu.common.presentation.compose.theme.neon.FxPolicy
-import jp.co.soramitsu.common.presentation.compose.theme.neon.FxTier
-import jp.co.soramitsu.common.presentation.compose.theme.neon.DeviceFxSignals
-import jp.co.soramitsu.common.presentation.compose.theme.neon.NeonEffectsPreference
+import jp.co.soramitsu.common.presentation.compose.neon.safemode.WalletSessionState
 import jp.co.soramitsu.common.presentation.view.ToolbarActivity
 import jp.co.soramitsu.common.util.DebounceClickHandler
 import jp.co.soramitsu.common.util.ext.attrColor
-import jp.co.soramitsu.common.util.ext.getColorAttr
 import jp.co.soramitsu.common.util.ext.gone
 import jp.co.soramitsu.common.util.ext.setNavigationBarColorCompat
 import jp.co.soramitsu.common.util.ext.setStatusBarColorCompat
@@ -80,8 +83,6 @@ class MainActivity :
     OnboardingNavigator {
 
     companion object {
-        private const val ACTION_INVITE = "jp.co.soramitsu.feature_main_impl.ACTION_INVITE"
-
         private const val ACTION_CHANGE_LANGUAGE =
             "jp.co.soramitsu.feature_main_impl.ACTION_CHANGE_LANGUAGE"
 
@@ -92,35 +93,37 @@ class MainActivity :
             "jp.co.soramitsu.feature_main_impl.DARK_THEME"
 
         private const val IDLE_MINUTES: Long = 5
-        private const val ANIM_START_POSITION = 100f
-        private const val ANIM_DURATION = 150L
-        private const val REQUEST_CODE_UPDATE = 1233
 
+        /**
+         * Opens the wallet in a task of its own. When the task of the screen that opens it is
+         * pinned (screen pinning, lock task mode), that task can be neither left nor cleared, so
+         * the wallet opens on top in it and that screen closes. Without this a pinned app that
+         * the startup screen checked again stayed on the startup screen.
+         */
         fun start(context: Context) {
+            val pinnedTask = pinnedScreen(context)
             val intent = Intent(context, MainActivity::class.java).apply {
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                flags = if (pinnedTask != null) 0 else Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             }
+            // At the end of a launch this screen carries the launch scene on from its first frame: nothing fades between.
+            val carriesLaunchScene = TenmonFlight.carriesOn
             val options = ActivityOptions.makeCustomAnimation(
                 context,
-                android.R.anim.fade_in,
-                android.R.anim.fade_out
+                if (carriesLaunchScene) 0 else android.R.anim.fade_in,
+                if (carriesLaunchScene) 0 else android.R.anim.fade_out
             )
             context.startActivity(intent, options.toBundle())
+            pinnedTask?.finish()
         }
 
-        fun startWithInvite(context: Context) {
-            val intent = Intent(context, MainActivity::class.java).apply {
-                action = ACTION_INVITE
-            }
-            val options = ActivityOptions.makeCustomAnimation(
-                context,
-                android.R.anim.fade_in,
-                android.R.anim.fade_out
-            )
-            context.startActivity(intent, options.toBundle())
+        private fun pinnedScreen(context: Context): Activity? {
+            val activity = context as? Activity ?: return null
+            val state = activity.getSystemService(ActivityManager::class.java)?.lockTaskModeState
+            return activity.takeIf { state != null && state != ActivityManager.LOCK_TASK_MODE_NONE }
         }
 
         fun restartAfterLanguageChange(context: Context) {
+            TrustedMainRestart.grant(ACTION_CHANGE_LANGUAGE)
             val intent = Intent(context, MainActivity::class.java).apply {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                 action = ACTION_CHANGE_LANGUAGE
@@ -129,6 +132,7 @@ class MainActivity :
         }
 
         fun restartAfterAddAccount(context: Context) {
+            TrustedMainRestart.grant(ACTION_ACCOUNT_ADDED)
             val intent = Intent(context, MainActivity::class.java).apply {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                 action = ACTION_ACCOUNT_ADDED
@@ -139,9 +143,6 @@ class MainActivity :
 
     @Inject
     lateinit var mainRouter: MainRouter
-
-//    @Inject
-//    lateinit var inAppUpdateManager: InAppUpdateManager
 
     @Inject
     lateinit var polkaswapRouter: PolkaswapRouter
@@ -158,50 +159,65 @@ class MainActivity :
 
     override val viewModel: MainViewModel by viewModels()
 
-    @AttrRes
-    private var curBarsColor: Int = R.attr.baseBackground
-
     override fun layoutResource() = ActivityMainBinding.inflate(layoutInflater)
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-//        lifecycleScope.launch {
-//            inAppUpdateManager.start(this@MainActivity)
-//        }
+    private var restoredFromSavedState = false
+
+    /**
+     * The wallet opens only in a process that came through the startup screen
+     * ([WalletStartupPass]). Android can start this screen directly in a new process: the task
+     * comes back from Recents after an update, or is restored after the process was killed. Such
+     * a start goes to the startup screen first, exactly like a start from the launcher, so the
+     * upgrade checks, the wallet verification and its repairs cannot be skipped. The PIN is
+     * asked there as on every start; a restart that would have skipped it is not honoured.
+     */
+    override fun mayStart(): Boolean {
+        if (WalletStartupPass.isGranted()) return true
+        TrustedMainRestart.consume(intent?.action)
+        WalletStartupPass.openStartup(this)
+        finish()
+        return false
     }
 
-//    override fun askUserToInstall() {
-//        findNavController(R.id.fragmentNavHostMain)
-//            .currentBackStackEntry?.savedStateHandle
-//            ?.getLiveData<Boolean?>(FlexibleUpdateDialog.UPDATE_REPLY)?.observe(this) {
-//                if (it == true) inAppUpdateManager.startUpdateFlexible()
-//            }
-//        mainRouter.showFlexibleUpdateScreen()
-//    }
-
-//    override fun readyToShowFlexible(): Int? {
-//        return REQUEST_CODE_UPDATE
-//    }
-
-//    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-//        super.onActivityResult(requestCode, resultCode, data)
-//        if (requestCode == REQUEST_CODE_UPDATE) {
-//            inAppUpdateManager.flexibleDesire(resultCode)
-//        }
-//    }
+    override fun onCreate(savedInstanceState: Bundle?) {
+        restoredFromSavedState = savedInstanceState != null
+        super.onCreate(savedInstanceState)
+    }
 
     override fun initViews() {
         ViewCompat.setOnApplyWindowInsetsListener(binding.bottomNavigationView) { _, insets ->
             insets
         }
+        // Clear of the bars and the keyboard, and of the camera cutout and a side navigation bar when the phone
+        // lies on its side: nothing of the wallet is drawn under them.
+        val sides = windowInsetTypesOf(navigationBars = true, displayCutout = true)
         Insetter.builder()
-            .paddingTop(windowInsetTypesOf(statusBars = true))
-            .applyToView(binding.flContainer)
-        Insetter.builder()
-            .paddingBottom(windowInsetTypesOf(navigationBars = true) or windowInsetTypesOf(ime = true))
+            .paddingTop(windowInsetTypesOf(statusBars = true, displayCutout = true))
+            .paddingBottom(windowInsetTypesOf(navigationBars = true, ime = true, displayCutout = true))
+            .paddingLeft(sides)
+            .paddingRight(sides)
             .applyToView(binding.clMainContainer)
 
         binding.bottomNavigationView.menu[2].isEnabled = false
+        val middleItem = binding.bottomNavigationView.findViewById<View>(R.id.polkaswap_nav_graph)
+        middleItem.importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS
+        // The disc takes touches over the bar's middle item and nowhere else. On a phone that item is a fifth of
+        // the bar; on a tablet the five items are narrower than that and stand together in the bar's middle, where
+        // a fifth of the bar would also cover part of Explore and Activity. So the share is measured, whenever
+        // the item or the bar is laid out again (a resized window can change the bar and leave the item as it was).
+        val fitDiscToMiddleItem = View.OnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
+            val bar = binding.bottomNavigationView.width
+            if (bar > 0 && middleItem.width > 0) {
+                val share = middleItem.width / bar.toFloat()
+                val params = binding.fabMain.layoutParams as ConstraintLayout.LayoutParams
+                if (abs(params.matchConstraintPercentWidth - share) > 0.002f) {
+                    params.matchConstraintPercentWidth = share
+                    binding.fabMain.layoutParams = params
+                }
+            }
+        }
+        middleItem.addOnLayoutChangeListener(fitDiscToMiddleItem)
+        binding.bottomNavigationView.addOnLayoutChangeListener(fitDiscToMiddleItem)
 
         ViewCompat.setAccessibilityDelegate(binding.fabMain, object : androidx.core.view.AccessibilityDelegateCompat() {
             override fun onInitializeAccessibilityNodeInfo(host: View, info: androidx.core.view.accessibility.AccessibilityNodeInfoCompat) {
@@ -209,9 +225,22 @@ class MainActivity :
                 info.className = android.widget.Button::class.java.name
             }
         })
-        lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
-                NeonEffectsPreference.reduceEffects.collect { updateSwapEffects() }
+        // The Polkaswap button: a disc of cut red glass standing in the bar, the flower inlaid in white. A finger
+        // sets it down on the bar.
+        val discPressed = mutableStateOf(false)
+        binding.fabMain.onPressedChange = { discPressed.value = it }
+        binding.fabDome.setContent {
+            SoraAppTheme {
+                Box(Modifier.fillMaxSize().padding(top = 2.dp), contentAlignment = Alignment.TopCenter) {
+                    LitCutGlassPiece(
+                        size = DpSize(35.dp, 35.dp),
+                        radius = 17.5.dp,
+                        glyph = painterResource(jp.co.soramitsu.common.R.drawable.ic_polkaswap_40),
+                        glyphSize = DpSize(25.dp, 25.dp),
+                        glyphKey = "polkaswap",
+                        pressed = discPressed.value,
+                    )
+                }
             }
         }
         binding.fabMain.setOnClickListener {
@@ -229,18 +258,20 @@ class MainActivity :
                 NavigationUI.setupWithNavController(binding.bottomNavigationView, it)
             }
 
-            when (intent.action) {
-                ACTION_CHANGE_LANGUAGE -> chooseBottomNavigationItem(R.id.profile_nav_graph)
-                ACTION_DARK_THEME_TOGGLED, ACTION_ACCOUNT_ADDED -> {}
+            // Restored after the process was killed: a secret screen does not come back with it.
+            if (restoredFromSavedState) mainRouter.closeSecretScreensLeftOpen()
+
+            val trustedRestart = TrustedMainRestart.consume(intent.action)
+            when {
+                trustedRestart && intent.action == ACTION_CHANGE_LANGUAGE ->
+                    chooseBottomNavigationItem(R.id.profile_nav_graph)
+                trustedRestart || intent.action == ACTION_DARK_THEME_TOGGLED -> {}
                 else -> viewModel.showPinFragment()
             }
         }
 
-        binding.badConnectionView.applyInsetter {
-            type(statusBars = true) {
-                padding(top = true)
-            }
-        }
+        // The launch scene the startup screen began carries on over the first screen, and uncovers it.
+        if (!restoredFromSavedState) TenmonFlight.carryOn(this)
     }
 
     override fun onDestroy() {
@@ -251,118 +282,35 @@ class MainActivity :
     }
 
     override fun subscribe(viewModel: MainViewModel) {
-        viewModel.showInviteErrorTimeIsUpLiveData.observe(
-            this
-        ) {
-            AlertDialog.Builder(this)
-                .setMessage(R.string.invite_enter_error_time_is_up)
-                .setPositiveButton(R.string.common_ok) { _, _ -> }
-                .show()
-        }
-
-        viewModel.showInviteErrorAlreadyAppliedLiveData.observe(
-            this
-        ) {
-            AlertDialog.Builder(this)
-                .setMessage(R.string.invite_enter_error_already_applied)
-                .setPositiveButton(R.string.common_ok) { _, _ -> }
-                .show()
-        }
-
         viewModel.badConnectionVisibilityLiveData.observe(
             this
         ) {
-            if (it) {
-                showBadConnectionView()
-            } else {
-                hideBadConnectionView()
-            }
+            binding.badConnectionView.visibility = if (it) View.VISIBLE else View.GONE
         }
 
-        viewModel.invitationCodeAppliedSuccessful.observe(
-            this
-        ) {
-            AlertDialog.Builder(this)
-                .setTitle(R.string.invite_code_applied_title)
-                .setMessage(R.string.invite_code_applied_body)
-                .setPositiveButton(R.string.common_ok) { _, _ -> }
-                .show()
-        }
-
-        viewModel.isPincodeUpdateNeeded.observe(this) { isUpdateNeeded ->
-            if (isUpdateNeeded) {
-                mainRouter.showPin(PinCodeAction.CHANGE_PIN_CODE)
-            } else {
-                mainRouter.showPin(PinCodeAction.TIMEOUT_CHECK)
-            }
+        // Always the ordinary unlock, also for a 4-digit PIN from SORA 2.x: the PIN screen takes
+        // its length, and an update never stops the owner to make a new PIN.
+        viewModel.isPincodeUpdateNeeded.observe(this) {
+            mainRouter.showPin(PinCodeAction.TIMEOUT_CHECK)
         }
     }
 
     override fun setColor(@AttrRes color: Int) {
-        curBarsColor = color
         val barColor = attrColor(color)
         window.setStatusBarColorCompat(barColor)
         window.setNavigationBarColorCompat(barColor)
     }
 
-    private fun showBadConnectionView(@StringRes content: Int = R.string.common_connecting) {
-        if (View.GONE == binding.badConnectionView.visibility) {
-            val errorColor = binding.badConnectionView.getColorAttr(R.attr.statusError)
-            binding.badConnectionView.setText(content)
-            binding.badConnectionView.setBackgroundColor(errorColor)
-            val animation = TranslateAnimation(0f, 0f, -ANIM_START_POSITION, 0f)
-            animation.duration = ANIM_DURATION
-            binding.badConnectionView.startAnimation(animation)
-            binding.badConnectionView.show()
-            window.setStatusBarColorCompat(errorColor)
-        }
-    }
-
-    private fun hideBadConnectionView(@StringRes content: Int = R.string.common_connected) {
-        if (View.VISIBLE == binding.badConnectionView.visibility) {
-            val successColor = binding.badConnectionView.getColorAttr(R.attr.statusSuccess)
-            binding.badConnectionView.setText(content)
-            binding.badConnectionView.setBackgroundColor(successColor)
-            window.setStatusBarColorCompat(successColor)
-            val animation = TranslateAnimation(0f, 0f, 0f, -ANIM_START_POSITION)
-            animation.duration = ANIM_DURATION
-            animation.startOffset = 500
-            animation.setAnimationListener(object : Animation.AnimationListener {
-                override fun onAnimationRepeat(p0: Animation?) {
-                }
-
-                override fun onAnimationEnd(p0: Animation?) {
-                    binding.badConnectionView.gone()
-                    window.setStatusBarColorCompat(
-                        binding.badConnectionView.getColorAttr(curBarsColor)
-                    )
-                }
-
-                override fun onAnimationStart(p0: Animation?) {
-                }
-            })
-            binding.badConnectionView.startAnimation(animation)
-        }
-    }
-
-    fun checkInviteAction() {
-//        if (ACTION_INVITE == intent.action) {
-//            viewModel.startedWithInviteAction()
-//        }
-    }
-
     override fun showBottomBar() {
         requireBinding()?.fabMain?.show()
+        requireBinding()?.bottomBarShadow?.show()
         requireBinding()?.bottomNavigationView?.show()
     }
 
     override fun hideBottomBar() {
         requireBinding()?.fabMain?.gone()
+        requireBinding()?.bottomBarShadow?.gone()
         requireBinding()?.bottomNavigationView?.gone()
-    }
-
-    override fun isBottomBarVisible(): Boolean {
-        return requireBinding()?.bottomNavigationView?.isVisible ?: false
     }
 
     fun restartAfterLanguageChange() {
@@ -388,19 +336,16 @@ class MainActivity :
     }
 
     public override fun onResume() {
-        if (timeInBackground != null && (idleTimePassedFrom(timeInBackground!!) || mainRouter.currentDestinationIsPinCheckNeeded())) {
-            viewModel.showPinFragment()
+        timeInBackground?.let { hiddenAt ->
+            // A screen that shows a secret never comes back by itself. A lock screen here would
+            // reopen it with a fingerprint, where opening it takes the typed PIN.
+            WalletSessionState.markReturnedFromBackground()
+            mainRouter.closeSecretScreensLeftOpen()
+            if (idleTimePassedFrom(hiddenAt)) viewModel.showPinFragment()
         }
 
         timeInBackground = null
         super.onResume()
-        updateSwapEffects()
-    }
-
-    private fun updateSwapEffects() {
-        val policy = FxPolicy.from(DeviceFxSignals.read(this), NeonEffectsPreference.reduceEffects.value)
-        requireBinding()?.fabMain?.setBackgroundResource(
-            if (policy.glows && policy.tier != FxTier.MINIMAL) R.drawable.bg_neon_swap_glow else 0)
     }
 
     private fun idleTimePassedFrom(timeInBackground: Date): Boolean {

@@ -28,7 +28,7 @@ class SafetySurfaceInteractionTest {
     private fun show(fontScale: Float = 1f, content: @Composable () -> Unit) {
         compose.setContent { SoraAppTheme {
             val density = LocalDensity.current
-            CompositionLocalProvider(LocalDensity provides Density(density.density, fontScale), LocalFx provides FxPolicy(FxTier.MINIMAL, true, true, true)) {
+            CompositionLocalProvider(LocalDensity provides Density(density.density, fontScale), LocalFx provides FxPolicy(FxTier.MINIMAL, true, true)) {
                 Box(Modifier.size(320.dp, 560.dp)) { content() }
             }
         } }
@@ -74,26 +74,6 @@ class SafetySurfaceInteractionTest {
     @Test fun pendingCheckWithoutHandlerHasNoInertOptionsButton() {
         show { PendingCheckCard() }; node(R.string.safe_mode_pending_check).assertExists()
         node(R.string.wallet_backup_options).assertDoesNotExist(); compose.onAllNodes(hasClickAction()).assertCountEquals(0)
-    }
-    private val checks = mutableStateOf(UpgradeCompleteChecks(false, false, false, true, 3, 1))
-    private fun upgrade() = show { UpgradeCompleteSheet(checks.value, { events += "backup" }, { events += "close" }) }
-    @Test fun upgradeNeverClaimsUnfinishedAccountOrPinChecksSucceeded() {
-        upgrade(); node(R.string.safe_mode_whats_new_accounts).assertDoesNotExist(); node(R.string.safe_mode_whats_new_pin).assertDoesNotExist()
-        node(R.string.safe_mode_whats_new_balances_loading).assertExists(); node(R.string.safe_mode_whats_new_balances).assertDoesNotExist()
-        compose.onNodeWithText(compose.activity.getString(R.string.safe_mode_whats_new_accounts_some_read_only, "1", "3")).assertExists()
-    }
-    @Test fun finishingChecksRemovesStaleLoadingAndReadOnlyWarnings() {
-        upgrade(); compose.runOnIdle { checks.value = UpgradeCompleteChecks(true, true, true, false, 1, 1) }
-        node(R.string.safe_mode_whats_new_balances_loading).assertDoesNotExist(); node(R.string.safe_mode_whats_new_balances).assertExists()
-        node(R.string.safe_mode_whats_new_batch_export).assertDoesNotExist(); node(R.string.safe_mode_back_up_now).assertDoesNotExist()
-        node(R.string.common_continue).performClick(); compose.runOnIdle { assertEquals(listOf("close"), events) }
-    }
-    @Test fun backupChoiceNeverRunsUntilExplicitlyTapped() {
-        upgrade(); compose.runOnIdle { assertTrue(events.isEmpty()) }; node(R.string.safe_mode_back_up_now).performClick()
-        compose.runOnIdle { assertEquals(listOf("backup"), events) }
-    }
-    @Test fun postponingBackupClosesWithoutStartingExport() {
-        upgrade(); node(R.string.safe_mode_later).performClick(); compose.runOnIdle { assertEquals(listOf("close"), events) }
     }
     @Test fun oddLengthPhraseRemainsPrivateUntilRevealAndUsesLeftToRightColumns() {
         val shown = mutableStateOf(false); val words = listOf("fixture-a", "fixture-b", "fixture-c", "fixture-d", "fixture-e")

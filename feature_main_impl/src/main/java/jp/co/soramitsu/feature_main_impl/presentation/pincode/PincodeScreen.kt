@@ -20,8 +20,6 @@ limitations under the License.
 package jp.co.soramitsu.feature_main_impl.presentation.pincode
 
 import androidx.annotation.DrawableRes
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -67,13 +65,16 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import jp.co.soramitsu.common.presentation.compose.neon.ProtectWalletSecrets
-import jp.co.soramitsu.common.presentation.compose.neon.NeonGlow
 import jp.co.soramitsu.common.presentation.compose.neon.NeumorphicSurface
-import jp.co.soramitsu.common.presentation.compose.neon.safemode.AccountCheckProgress
 import jp.co.soramitsu.common.presentation.compose.neon.safemode.LegacyPinUpgradePanel
 import jp.co.soramitsu.common.presentation.compose.neon.safemode.SafeModeScreen
 import jp.co.soramitsu.common.presentation.compose.theme.neon.LocalFx
 import jp.co.soramitsu.common.presentation.compose.theme.neon.neon
+import jp.co.soramitsu.ui_core.lit.LitBead
+import jp.co.soramitsu.ui_core.lit.LocalLitPalette
+import jp.co.soramitsu.ui_core.lit.litWell
+import jp.co.soramitsu.ui_core.sacred.SacredEmblem
+import jp.co.soramitsu.ui_core.sacred.TenmonFlight
 import jp.co.soramitsu.common.presentation.compose.theme.tokens.NeonType
 import jp.co.soramitsu.common.util.ext.shake
 import jp.co.soramitsu.common.util.testTagAsId
@@ -88,23 +89,11 @@ fun PincodeScreen(
     onBiometricClick: () -> Unit,
     onDeleteClick: () -> Unit,
     onWrongPinAnimationEnd: () -> Unit,
-    onSwitchNode: () -> Unit,
     onNewPinContinue: () -> Unit = {},
-    onGetHelp: () -> Unit = {},
 ) {
     ProtectWalletSecrets()
     if (pinCodeScreenState.isLengthInfoAlertVisible) {
         SafeModeScreen { LegacyPinUpgradePanel(onContinue = onNewPinContinue) }
-        return
-    }
-    if (pinCodeScreenState.migrating) {
-        AccountCheckProgress(
-            connected = pinCodeScreenState.isConnected,
-            needsNetwork = pinCodeScreenState.checkNeedsNetwork,
-            onSwitchNode = onSwitchNode,
-            onGetHelp = onGetHelp,
-            silentMillis = 0,
-        )
         return
     }
     val n = MaterialTheme.neon
@@ -115,8 +104,10 @@ fun PincodeScreen(
             onWrongPinAnimationEnd()
         }
     }
-    BoxWithConstraints(Modifier.fillMaxSize().background(n.neuBg)) {
+    BoxWithConstraints(Modifier.fillMaxSize()) {
         val keySize = if (maxWidth >= 400.dp && maxHeight >= 760.dp) 80.dp else 72.dp
+        // Room for the emblem between the dots and the keys; short screens go without.
+        val showsEmblem = maxHeight >= 720.dp
         Column(
             Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).heightIn(min = maxHeight),
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -145,6 +136,21 @@ fun PincodeScreen(
                     )
                 }
             }
+            // The SORA mark in its ring. The ring is the lock: each digit draws one more of its circles. At the start
+            // of the app the launch scene's mark flies to this one and sets down on it.
+            if (showsEmblem) {
+                SacredEmblem(
+                    share = pinCodeScreenState.checkedDotsCount.toFloat() / pinCodeScreenState.maxDotsCount.coerceAtLeast(1),
+                    wrong = pinCodeScreenState.enableShakeAnimation,
+                    line = LocalLitPalette.current.ink,
+                    wrongColor = n.error,
+                    reduceMotion = fx.reduceMotion,
+                    receivesLaunchMark = true,
+                )
+            } else {
+                // No emblem for the launch scene's mark to set down on: it gives way with its rings.
+                LaunchedEffect(Unit) { TenmonFlight.firstScreenShown(null) }
+            }
             CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
                 PincodeInputView(
                     keySize = keySize,
@@ -163,7 +169,7 @@ fun PincodeScreen(
 
 @Composable
 private fun DotsProgress(modifier: Modifier, maxDotsCount: Int, checkedDotsCount: Int, wrong: Boolean) {
-    val n = MaterialTheme.neon
+    val fx = LocalFx.current
     val entered = checkedDotsCount.coerceIn(0, maxDotsCount)
     val description = stringResource(jp.co.soramitsu.common.R.string.neon_pin_digits_entered, entered, maxDotsCount)
     Row(
@@ -171,17 +177,13 @@ private fun DotsProgress(modifier: Modifier, maxDotsCount: Int, checkedDotsCount
             contentDescription = description
             liveRegion = LiveRegionMode.Polite
         },
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         repeat(maxDotsCount) { index ->
-            val filled = index < entered
-            Box(Modifier.size(14.dp)) {
-                if (filled && !wrong) NeonGlow(n.glowDot, CircleShape, Modifier.matchParentSize())
-                Box(
-                    Modifier.matchParentSize()
-                        .background(if (filled) (if (wrong) n.error else n.cyan) else androidx.compose.ui.graphics.Color.Transparent, CircleShape)
-                        .border(1.5.dp, if (wrong) n.error else if (filled) n.cyan else n.textTertiary, CircleShape),
-                )
+            // A row of ruled wells in the page: each digit settles a bead of red glass into its place. The ring
+            // shows an empty place and the bead a filled one without any help from the light.
+            Box(Modifier.size(24.dp).litWell(radius = 12.dp, depth = 2.dp, ruled = true), contentAlignment = Alignment.Center) {
+                LitBead(filled = wrong || index < entered, diameter = 12.dp, motion = !fx.reduceMotion)
             }
         }
     }
@@ -214,7 +216,7 @@ private fun PincodeInputView(
             PinTextButton("0", keySize, onNumClick)
             if (isDeleteVisible) {
                 PinIconButton(R.drawable.ic_neu_chevron_back, keySize, "Delete",
-                    stringResource(jp.co.soramitsu.common.R.string.common_delete), onDeleteClick, onClear)
+                    stringResource(jp.co.soramitsu.common.R.string.pin_delete_last_digit), onDeleteClick, onClear)
             } else Box(Modifier.size(keySize))
         }
     }
@@ -261,6 +263,6 @@ private fun PinIconButton(
     ) {
         Icon(painterResource(icon), contentDescription = null,
             modifier = Modifier.size(if (onClear == null) 28.dp else 24.dp),
-            tint = if (onClear == null) MaterialTheme.neon.cyan else MaterialTheme.neon.textSecondary)
+            tint = if (onClear == null) MaterialTheme.neon.redText else MaterialTheme.neon.textSecondary)
     }
 }

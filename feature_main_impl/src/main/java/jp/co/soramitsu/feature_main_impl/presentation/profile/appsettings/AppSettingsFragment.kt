@@ -97,8 +97,6 @@ class AppSettingsFragment : SoraBaseFragment<AppSettingsViewModel>() {
                         viewModel.toggleDarkMode(it)
                     },
                     onTestNetworksToggle = viewModel::toggleTestNetworks,
-                    checkedReduceEffects = state.reduceEffectsChecked,
-                    onReduceEffectsToggle = viewModel::toggleReduceEffects,
                 )
             }
         }

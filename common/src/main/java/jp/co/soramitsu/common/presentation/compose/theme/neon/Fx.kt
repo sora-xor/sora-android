@@ -48,9 +48,9 @@ import kotlinx.coroutines.flow.asStateFlow
  * Effect tiers (design spec 4.0). Decided once per device state and read everywhere through
  * [LocalFx]; components never check the API level themselves.
  *
- * - FULL: glow, finite pulses, cross-window blur behind dialogs (API 31+ only).
- * - REDUCED: everything static; no pulses, no live blur.
- * - MINIMAL: opaque cards, 1.5 dp rings instead of glow, flat neumorphic faces, aurora only.
+ * - FULL: the decorative motion of the lit materials (API 31+ only).
+ * - REDUCED: shadows and loops, no decorative motion.
+ * - MINIMAL: flat neumorphic faces, no shadows and no loops.
  */
 enum class FxTier { FULL, REDUCED, MINIMAL }
 
@@ -58,43 +58,35 @@ enum class FxTier { FULL, REDUCED, MINIMAL }
 data class FxPolicy(
     val tier: FxTier,
     val reduceMotion: Boolean,
-    val opaqueGlass: Boolean,
     val highContrast: Boolean,
 ) {
-    /** Coloured glow layers. Off under high contrast (borders carry the state instead). */
-    val glows: Boolean get() = !highContrast
-
-    /** Cross-window blur behind dialogs and sheets. */
-    val realBlur: Boolean get() = tier == FxTier.FULL && !opaqueGlass && !highContrast
-
-    /** Finite CTA pulse and Safe Mode breathing. */
-    val pulses: Boolean get() = tier == FxTier.FULL && !reduceMotion
-
-    /** Grain and grid textures. */
-    val ambientDetail: Boolean get() = tier != FxTier.MINIMAL
-
     /** Neumorphic shadows and the light-theme card shadow. */
     val shadows: Boolean get() = tier != FxTier.MINIMAL
+
+    /** Decorative motion of the lit materials: the hero's comet, entrances. */
+    val litMotion: Boolean get() = tier == FxTier.FULL && !reduceMotion
 
     /** Looping motion (shimmer sweep, rotating pending rings). */
     val loops: Boolean get() = !reduceMotion && tier != FxTier.MINIMAL
 
     companion object {
         /** Safe default used before a device has been measured (and in previews). */
-        val Default = FxPolicy(FxTier.REDUCED, reduceMotion = false, opaqueGlass = false, highContrast = false)
+        val Default = FxPolicy(FxTier.REDUCED, reduceMotion = false, highContrast = false)
 
-        fun from(signals: DeviceFxSignals, reduceEffects: Boolean): FxPolicy {
+        /**
+         * Motion follows the system only: Remove animations (animator duration scale 0) turns
+         * off all decorative and looping motion; the tier comes from the device.
+         */
+        fun from(signals: DeviceFxSignals): FxPolicy {
             val tier = resolveFxTier(
                 sdkInt = signals.sdkInt,
                 isLowRamDevice = signals.isLowRamDevice,
                 totalMemBytes = signals.totalMemBytes,
                 powerSave = signals.powerSave,
-                reduceEffects = reduceEffects,
             )
             return FxPolicy(
                 tier = tier,
-                reduceMotion = reduceEffects || !signals.animatorsEnabled,
-                opaqueGlass = tier == FxTier.MINIMAL,
+                reduceMotion = !signals.animatorsEnabled,
                 highContrast = signals.highContrast,
             )
         }
@@ -116,12 +108,10 @@ fun resolveFxTier(
     isLowRamDevice: Boolean,
     totalMemBytes: Long,
     powerSave: Boolean,
-    reduceEffects: Boolean,
 ): FxTier {
     val memKnown = totalMemBytes > 0
     return when {
-        reduceEffects ||
-            sdkInt < Build.VERSION_CODES.P ||
+        sdkInt < Build.VERSION_CODES.P ||
             isLowRamDevice ||
             (memKnown && totalMemBytes < REDUCED_MIN_MEM_BYTES) -> FxTier.MINIMAL
 
@@ -201,26 +191,8 @@ internal object DeviceFxMonitor {
     }
 }
 
-/**
- * The in-app "Reduce effects" switch (Settings, Appearance). Persisted by
- * [jp.co.soramitsu.common.domain.DarkThemeManager] under its own key `neon_reduce_effects`;
- * this holder only shares the current value with every `SoraAppTheme`.
- */
-object NeonEffectsPreference {
-
-    const val KEY = "neon_reduce_effects"
-
-    private val state = MutableStateFlow(false)
-
-    val reduceEffects: StateFlow<Boolean> = state.asStateFlow()
-
-    fun update(reduceEffects: Boolean) {
-        state.value = reduceEffects
-    }
-}
-
 @Composable
-fun rememberFxPolicy(reduceEffects: Boolean): FxPolicy {
+fun rememberFxPolicy(): FxPolicy {
     val context = LocalContext.current.applicationContext
     val signals by remember(context) { DeviceFxMonitor.signals(context) }.collectAsState()
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -231,5 +203,5 @@ fun rememberFxPolicy(reduceEffects: Boolean): FxPolicy {
         lifecycleOwner.lifecycle.addObserver(observer)
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
-    return remember(signals, reduceEffects) { FxPolicy.from(signals, reduceEffects) }
+    return remember(signals) { FxPolicy.from(signals) }
 }

@@ -79,8 +79,8 @@ dependencies {
     implementation(project(":core_db"))
     implementation(project(":sorasubstrate"))
 
-    implementation(libs.xcryptoDep)
-    implementation(libs.xsubstrateDep)
+    implementation(project(":xcrypto"))
+    implementation(project(":xsubstrate"))
     implementation(libs.soramitsu.android.foundation)
 
     implementation(libs.daggerDep)

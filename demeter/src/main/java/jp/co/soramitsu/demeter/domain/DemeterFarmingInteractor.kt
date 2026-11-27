@@ -46,8 +46,6 @@ interface DemeterFarmingInteractor {
 
     suspend fun getFarmedBasicPools(): List<DemeterFarmingBasicPool>
 
-    suspend fun getStakedFarmedBalanceOfAsset(tokenId: String): BigDecimal
-
     suspend fun getFarmedPool(ids: StringTriple): DemeterFarmingPool?
 
     suspend fun getFarmedBasicPool(ids: StringTriple): DemeterFarmingBasicPool?
@@ -95,12 +93,6 @@ internal class DemeterFarmingInteractorImpl(
     override fun subscribeFarms(address: String): Flow<String> {
         return demeterFarmingRepository.subscribeFarms(address)
     }
-
-    override suspend fun getStakedFarmedBalanceOfAsset(tokenId: String): BigDecimal =
-        demeterFarmingRepository.getStakedFarmedAmountOfAsset(
-            userRepository.getCurSoraAccount().substrateAddress,
-            tokenId,
-        )
 
     override suspend fun getFarmedPool(ids: StringTriple): DemeterFarmingPool? {
         return getFarmedPools()?.firstOrNull {

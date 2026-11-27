@@ -1,0 +1,15 @@
+<resources>
+    <string name="swap_pay_label">支付</string>
+    <string name="swap_receive_label">接收</string>
+    <string name="asset_balance_value">余额 %1$s</string>
+    <string name="asset_catalog_retry">重试</string>
+    <string name="swap_market_missing_pair">选择两种代币以查看市场。</string>
+    <string name="swap_market_empty">此交易对没有市场</string>
+    <string name="swap_about_market">关于%1$s</string>
+    <string name="swap_show_terms">阅读条款</string>
+    <string name="swap_hide_terms">隐藏条款</string>
+    <string name="swap_terms_summary">兑换前请查看条款。</string>
+    <string name="asset_picker_empty">没有可用的代币</string>
+    <string name="liquidity_base_token">基础代币</string>
+    <string name="liquidity_pair_token">配对代币</string>
+</resources>

@@ -43,34 +43,6 @@ class SoraException(
             return SoraException(Kind.BUSINESS, responseCode.toString(), errorResponseCode = responseCode)
         }
 
-        fun httpError(responseCode: Int, resourceManager: ResourceManager): SoraException {
-            val errorMsg: String
-            val errorTitle: String
-            when (responseCode) {
-                400 -> {
-                    errorTitle = resourceManager.getString(R.string.common_error_invalid_parameters)
-                    errorMsg = resourceManager.getString(R.string.common_error_invalid_parameters_body)
-                }
-                401 -> {
-                    errorTitle = resourceManager.getString(R.string.common_error_unauthorized_title)
-                    errorMsg = resourceManager.getString(R.string.common_error_unauthorized_body)
-                }
-                404 -> {
-                    errorTitle = resourceManager.getString(R.string.common_error_not_found_title)
-                    errorMsg = resourceManager.getString(R.string.common_error_general_message)
-                }
-                500 -> {
-                    errorTitle = resourceManager.getString(R.string.common_error_internal_error_title)
-                    errorMsg = ""
-                }
-                else -> {
-                    errorTitle = resourceManager.getString(R.string.common_error_general_title)
-                    errorMsg = resourceManager.getString(R.string.common_error_general_message)
-                }
-            }
-            return SoraException(Kind.HTTP, errorMsg, errorTitle = errorTitle)
-        }
-
         fun networkError(resourceManager: ResourceManager, exception: Throwable): SoraException {
             return SoraException(Kind.NETWORK, resourceManager.getString(R.string.common_error_network), exception)
         }

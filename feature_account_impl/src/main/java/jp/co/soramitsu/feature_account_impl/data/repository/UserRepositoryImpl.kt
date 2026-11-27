@@ -49,6 +49,9 @@ import jp.co.soramitsu.common.data.WalletPreferenceKeys
 import jp.co.soramitsu.common.util.WalletDecryptionException
 import jp.co.soramitsu.common.util.WalletStorageFailures
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialField
+import jp.co.soramitsu.feature_account_api.domain.PhoneScreenLock
+import jp.co.soramitsu.feature_account_api.domain.ScreenLockConfirmation
+import jp.co.soramitsu.feature_account_api.domain.ScreenLockConfirmationRequiredException
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsDatasource
 import jp.co.soramitsu.feature_account_api.domain.interfaces.StoredCredential
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserDatasource
@@ -84,11 +87,14 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 @Singleton
 class UserRepositorySr25519Crypto @Inject constructor() : StoredKeyCrypto {
@@ -125,17 +131,28 @@ class UserRepositoryImpl(
     private val languagesHolder: LanguagesHolder,
     private val sora2AddressCodec: Sora2AddressCodec,
     private val userRepositorySr25519Crypto: UserRepositorySr25519Crypto,
+    private val phoneScreenLock: PhoneScreenLock,
 ) : UserRepository {
 
     private companion object {
         const val DELETION_PREVIEW_TTL_MILLIS = 2 * 60 * 1_000L
         val SELECTABLE_STATES = setOf("VERIFIED", "UNAVAILABLE")
+        /** Labels an account being removed must have: its backup was judged. */
         val DELETABLE_SECRET_SOURCES = setOf(
             StoredSecretsVerdict.SOURCE_MNEMONIC,
             StoredSecretsVerdict.SOURCE_MNEMONIC_UNSUPPORTED,
             StoredSecretsVerdict.SOURCE_RAW_SEED,
             StoredSecretsVerdict.SOURCE_LEGACY_SECRET,
         )
+
+        /**
+         * Labels an account that stays may have. Besides the judged ones, an account whose key
+         * was proven but whose backup could not be read yet: the removal of another account
+         * changes nothing of it (its row, keys and backup stay), and its signing key is proven
+         * again live before anything is removed, as for every account.
+         */
+        val RETAINABLE_SECRET_SOURCES =
+            DELETABLE_SECRET_SOURCES + StoredSecretsVerdict.SOURCE_BACKUP_NOT_CHECKED
         const val UNAVAILABLE_STATE = "UNAVAILABLE"
         const val REMOVED_UNAVAILABLE_COPY_REASON = "removed-unavailable-account"
         const val REMOVED_WITHOUT_BACKUP_COPY_REASON = "removed-account-without-backup"
@@ -377,6 +394,13 @@ class UserRepositoryImpl(
                 unrestorableLegacyWallet(owner = address)
                 return null
             }
+            // SORA 2.4.x copied these keys under the address before it saved the account; a
+            // process stop in between leaves that copy, and the promotion below finishes it. A
+            // copy that names this address but holds another address's key is not this wallet.
+            if (!scopedCopyMatches(address)) {
+                unrestorableLegacyWallet(owner = address)
+                return null
+            }
             val account = accounts.singleOrNull()
                 ?: SoraAccountLocal(address, userDatasource.getAccountName())
             if (accounts.isEmpty()) {
@@ -401,6 +425,32 @@ class UserRepositoryImpl(
         } finally {
             keys.privateKey.fill(0)
             keys.nonce.fill(0)
+        }
+    }
+
+    /**
+     * False only when keys stored under [address] decrypt to the key of another address. Missing
+     * keys match (nothing was copied); unreadable ones are left to the wallet verification, which
+     * judges the signing key per account. A Keystore or storage failure is rethrown.
+     */
+    private suspend fun scopedCopyMatches(address: String): Boolean {
+        val scoped = try {
+            credentialsDatasource.retrieveKeys(address)
+        } catch (error: CancellationException) {
+            throw error
+        } catch (error: Throwable) {
+            if (WalletStorageFailures.isTransient(error) ||
+                WalletStorageFailures.isKeyMaterialUnavailable(error)
+            ) {
+                throw error
+            }
+            null
+        } ?: return true
+        return try {
+            sora2AddressCodec.toSoraAddressOrNull(scoped.publicKey) == address
+        } finally {
+            scoped.privateKey.fill(0)
+            scoped.nonce.fill(0)
         }
     }
 
@@ -479,6 +529,8 @@ class UserRepositoryImpl(
             currentSoraAccount.value = soraAccount
         }
     }
+
+    override fun curSoraAccountIfLoaded(): SoraAccount? = currentSoraAccount.value
 
     override fun flowCurSoraAccount(): Flow<SoraAccount> =
         currentSoraAccount.asStateFlow()
@@ -706,9 +758,66 @@ class UserRepositoryImpl(
         }
     }
 
-    override suspend fun savePin(pin: String) {
-        markKeySetsOlderThanThePin()
-        userDatasource.savePin(pin)
+    override suspend fun savePin(pin: String, screenLock: ScreenLockConfirmation?) {
+        val taken = when (storedPin()) {
+            StoredPin.ABSENT -> {
+                markKeySetsOlderThanThePin()
+                null
+            }
+            StoredPin.READABLE -> null
+            StoredPin.UNREADABLE -> takeOwnerConfirmation(screenLock)
+        }
+        try {
+            userDatasource.savePin(pin)
+        } catch (error: Throwable) {
+            // Nothing was written: the confirmation counts again for the next try.
+            phoneScreenLock.release(taken)
+            throw error
+        }
+        phoneScreenLock.complete(taken)
+    }
+
+    override suspend fun newPinNeedsScreenLock(): Boolean =
+        storedPin() == StoredPin.UNREADABLE && unreadablePinGuardsAccounts()
+
+    private enum class StoredPin { ABSENT, READABLE, UNREADABLE }
+
+    /**
+     * What is stored as the app PIN. Throws when that is not known right now (a busy disk or
+     * Keystore): no PIN is saved then, and the person tries again. [StoredPin.UNREADABLE] is a
+     * PIN that is there and stays unreadable (damaged data).
+     */
+    private suspend fun storedPin(): StoredPin = try {
+        if (userDatasource.retrievePin().isNotEmpty()) StoredPin.READABLE else StoredPin.ABSENT
+    } catch (error: CancellationException) {
+        throw error
+    } catch (error: Throwable) {
+        if (
+            WalletStorageFailures.isTransient(error) ||
+            WalletStorageFailures.isKeyMaterialUnavailable(error)
+        ) {
+            throw error
+        }
+        StoredPin.UNREADABLE
+    }
+
+    /** A stored PIN nobody can check any more stands between the phone's holder and accounts. */
+    private suspend fun unreadablePinGuardsAccounts(): Boolean =
+        phoneScreenLock.isSet() && walletAccounts().isNotEmpty()
+
+    /**
+     * A new PIN in place of a stored one that cannot be read opens every account on the phone,
+     * and nobody typed the old PIN. The phone's own screen lock, passed just now in the system
+     * prompt, is the proof that its owner chooses the new PIN. Without accounts there is nothing
+     * for the PIN to open, and a phone without a screen lock has no stronger local proof, so
+     * both go on as before (null: nothing taken). The confirmation is taken for this one save
+     * before anything is written, so a second save that brings it is refused even while this
+     * one is still writing.
+     */
+    private suspend fun takeOwnerConfirmation(screenLock: ScreenLockConfirmation?): ScreenLockConfirmation? {
+        if (!unreadablePinGuardsAccounts()) return null
+        if (!phoneScreenLock.reserve(screenLock)) throw ScreenLockConfirmationRequiredException()
+        return screenLock
     }
 
     /**
@@ -720,25 +829,10 @@ class UserRepositoryImpl(
      *
      * Changing a PIN (the old one was just entered) marks nothing. Neither does a new PIN in
      * place of a stored one that cannot be read: that state comes from damaged data, not from a
-     * hand-over, and marking then could leave a wallet without a phrase with no way back.
+     * hand-over, and marking then could leave a wallet without a phrase with no way back. That
+     * PIN is the phone owner's instead ([requireOwnerForPinOverUnreadable]).
      */
     private suspend fun markKeySetsOlderThanThePin() {
-        val pinStored = try {
-            userDatasource.retrievePin().isNotEmpty()
-        } catch (error: CancellationException) {
-            throw error
-        } catch (error: Throwable) {
-            if (
-                WalletStorageFailures.isTransient(error) ||
-                WalletStorageFailures.isKeyMaterialUnavailable(error)
-            ) {
-                // Not known right now: the PIN is not saved either, and the person tries again.
-                throw error
-            }
-            // A PIN is stored; it cannot be read.
-            true
-        }
-        if (pinStored) return
         val accounts = walletAccounts().map(SoraAccountLocal::substrateAddress).toSet()
         // The release-era unsuffixed set is in use when its recorded owner is an account.
         val releaseEraInUse = credentialsDatasource.getAddress().let { it.isNotBlank() && it in accounts }
@@ -1536,9 +1630,16 @@ class UserRepositoryImpl(
                         // A verified account is the one whose stored key signs for its address.
                         // That is what is proven again before anything is removed; the stored
                         // phrase and seed are backup material and do not block the removal the
-                        // person chose.
+                        // person chose. An account being removed needs a judged backup label;
+                        // one that stays may also be waiting for its backup to be judged
+                        // (BACKUP_NOT_CHECKED): it does not veto removing another account.
+                        val allowedSources = if (account.substrateAddress in targetIds) {
+                            DELETABLE_SECRET_SOURCES
+                        } else {
+                            RETAINABLE_SECRET_SOURCES
+                        }
                         deletionRequire(
-                            identity.secretSource in DELETABLE_SECRET_SOURCES,
+                            identity.secretSource in allowedSources,
                             "WALLET_DELETION_SECRET_SOURCE_UNSUPPORTED",
                         )
                         deletionRequire(!watchOnly, "WALLET_DELETION_WATCH_ONLY_MISMATCH")
@@ -1666,13 +1767,44 @@ class UserRepositoryImpl(
         return userDatasource.getAccountName()
     }
 
+    /** Guards the claim flags: a check's answer and a confirmation never interleave. */
+    private val claimFlagLock = Mutex()
+
+    /**
+     * Accounts whose claim the network confirmed in this process. A confirmation also stores the
+     * flag as checked and done, so a later start reads that answer and never asks the network:
+     * only a check that was already running here can be older than the confirmation.
+     */
+    private val confirmedClaims = mutableSetOf<String>()
+
     override suspend fun saveNeedsMigration(it: Boolean, soraAccount: SoraAccount) {
-        userDatasource.saveNeedsMigration(it, soraAccount.substrateAddress)
+        claimFlagLock.withLock {
+            // A claim the network confirmed stays done: the claim check started at unlock may
+            // have read "pending" just before the confirmation and only answer now.
+            if (it && soraAccount.substrateAddress in confirmedClaims) return
+            userDatasource.saveNeedsMigration(it, soraAccount.substrateAddress)
+        }
+    }
+
+    override suspend fun markClaimConfirmed(soraAccount: SoraAccount) {
+        claimFlagLock.withLock {
+            confirmedClaims += soraAccount.substrateAddress
+            userDatasource.saveNeedsMigration(false, soraAccount.substrateAddress)
+            userDatasource.saveIsMigrationFetched(true, soraAccount.substrateAddress)
+        }
     }
 
     override suspend fun needsMigration(soraAccount: SoraAccount): Boolean {
         return userDatasource.needsMigration(soraAccount.substrateAddress)
     }
+
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+    override fun flowClaimPending(): Flow<Boolean> =
+        currentSoraAccount.asStateFlow()
+            .filterNotNull()
+            .distinctUntilChangedBy { it.substrateAddress }
+            .flatMapLatest { userDatasource.flowNeedsMigration(it.substrateAddress) }
+            .distinctUntilChanged()
 
     override suspend fun saveIsMigrationFetched(it: Boolean, soraAccount: SoraAccount) {
         userDatasource.saveIsMigrationFetched(it, soraAccount.substrateAddress)

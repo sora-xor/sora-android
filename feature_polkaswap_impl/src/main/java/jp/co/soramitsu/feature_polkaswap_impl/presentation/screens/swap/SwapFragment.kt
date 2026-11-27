@@ -23,13 +23,14 @@ import android.os.Bundle
 import android.view.View
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraphBuilder
@@ -46,9 +47,10 @@ import jp.co.soramitsu.common.presentation.args.tokenFromId
 import jp.co.soramitsu.common.presentation.args.tokenToId
 import jp.co.soramitsu.common.presentation.compose.components.PercentContainer
 import jp.co.soramitsu.common.presentation.compose.components.PolkaswapDisclaimer
-import jp.co.soramitsu.common.util.ext.getColorFromAttrs
 import jp.co.soramitsu.feature_assets_api.presentation.selectsearchtoken.SelectSearchTokenScreen
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.components.compose.SwapConfirmScreen
+import jp.co.soramitsu.ui_core.resources.Dimens
+import jp.co.soramitsu.feature_polkaswap_impl.presentation.components.compose.SwapAssetsUnavailable
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.components.compose.SwapMainScreen
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.components.compose.SwapMarketsScreen
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.components.compose.SwapSlippageScreen
@@ -83,13 +85,6 @@ class SwapFragment : SoraBaseFragment<SwapViewModel>() {
         super.onViewCreated(view, savedInstanceState)
     }
 
-    @Composable
-    override fun backgroundColorComposable() = Color(
-        color = requireContext().getColorFromAttrs(
-            R.attr.polkaswapBackground
-        ).data
-    )
-
     override fun backgroundColor(): Int = R.attr.polkaswapBackground
 
     override fun NavGraphBuilder.content(
@@ -100,10 +95,12 @@ class SwapFragment : SoraBaseFragment<SwapViewModel>() {
             navController.navigate(SwapRoutes.disclaimer)
         }
         composable(SwapRoutes.confirm) {
-            SwapConfirmScreen(
-                state = viewModel.swapMainState.collectAsStateWithLifecycle().value,
-                onConfirmClick = viewModel::onConfirmClicked,
-            )
+            Box(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(bottom = Dimens.x2)) {
+                SwapConfirmScreen(
+                    state = viewModel.swapMainState.collectAsStateWithLifecycle().value,
+                    onConfirmClick = viewModel::onConfirmClicked,
+                )
+            }
         }
         composable(SwapRoutes.disclaimer) {
             val onDisclaimerClose: () -> Unit = {
@@ -130,24 +127,34 @@ class SwapFragment : SoraBaseFragment<SwapViewModel>() {
             }
             val type = requireNotNull(it.arguments?.getString(SwapRoutes.selectTokenParamName))
             val state = viewModel.swapTokensFilter.collectAsStateWithLifecycle()
-            SelectSearchTokenScreen(
-                scrollState = scrollState,
-                onAssetSelect = { id -> onTokenSelected.invoke(id, type) },
-                searchTokenFilter = state.value,
-            )
+            val catalog = viewModel.swapMainState.collectAsStateWithLifecycle().value
+            if (catalog.assetCatalogUnavailable) {
+                Box(Modifier.fillMaxWidth().padding(Dimens.x2)) {
+                    SwapAssetsUnavailable(catalog.refreshingAssets, viewModel::retryAssets)
+                }
+            } else {
+                SelectSearchTokenScreen(
+                    scrollState = scrollState,
+                    onAssetSelect = { id -> onTokenSelected.invoke(id, type) },
+                    searchTokenFilter = state.value,
+                )
+            }
         }
         composable(SwapRoutes.markets) {
             val onMarketSelected: (Market) -> Unit = {
                 viewModel.onMarketSelected(it)
                 navController.popBackStack()
             }
-            val state =
-                viewModel.swapMainState.collectAsStateWithLifecycle().value.selectMarketState
-            if (state != null) {
+            val state = viewModel.swapMainState.collectAsStateWithLifecycle().value
+            Box(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(bottom = Dimens.x2)) {
                 SwapMarketsScreen(
-                    selected = state.first,
-                    markets = state.second,
+                    selected = state.market,
+                    markets = state.selectMarketState?.second.orEmpty(),
                     onMarketSelect = onMarketSelected,
+                    emptyText = if (state.tokenFromState == null || state.tokenToState == null) {
+                        R.string.swap_market_missing_pair
+                    } else R.string.swap_market_empty,
+                    onBack = { navController.popBackStack() },
                 )
             }
         }
@@ -157,10 +164,12 @@ class SwapFragment : SoraBaseFragment<SwapViewModel>() {
                 navController.popBackStack()
             }
             val state = viewModel.swapMainState
-            SwapSlippageScreen(
-                value = state.collectAsStateWithLifecycle().value.slippage,
-                onDone = { debounceClickHandler.debounceClick { onSlippageEntered(it) } },
-            )
+            Box(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(bottom = Dimens.x2)) {
+                SwapSlippageScreen(
+                    value = state.collectAsStateWithLifecycle().value.slippage,
+                    onDone = { debounceClickHandler.debounceClick { onSlippageEntered(it) } },
+                )
+            }
         }
         composable(
             route = SwapRoutes.start,
@@ -199,20 +208,23 @@ class SwapFragment : SoraBaseFragment<SwapViewModel>() {
                 barVisible = percentageVisibility.value,
             ) {
                 val swapState = viewModel.swapMainState
-                SwapMainScreen(
-                    state = swapState.collectAsStateWithLifecycle().value,
-                    onSlippageClick = onSlippageClick,
-                    onSelectFrom = onFromAssetClick,
-                    onSelectTo = onToAssetClick,
-                    onMarketClick = onMarketClick,
-                    onFocusChangeFrom = onFocusChangeFromToken,
-                    onFocusChangeTo = onFocusChangeToToken,
-                    onAmountChangeFrom = viewModel::onFromAmountChange,
-                    onAmountChangeTo = viewModel::onToAmountChange,
-                    onTokenSwapClick = viewModel::onTokensSwapClick,
-                    onSwapClick = onSwapReview,
-                    onRetryFee = viewModel::onRetryFee,
-                )
+                Box(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(bottom = Dimens.x2)) {
+                    SwapMainScreen(
+                        state = swapState.collectAsStateWithLifecycle().value,
+                        onSlippageClick = onSlippageClick,
+                        onSelectFrom = onFromAssetClick,
+                        onSelectTo = onToAssetClick,
+                        onMarketClick = onMarketClick,
+                        onFocusChangeFrom = onFocusChangeFromToken,
+                        onFocusChangeTo = onFocusChangeToToken,
+                        onAmountChangeFrom = viewModel::onFromAmountChange,
+                        onAmountChangeTo = viewModel::onToAmountChange,
+                        onTokenSwapClick = viewModel::onTokensSwapClick,
+                        onSwapClick = onSwapReview,
+                        onRetryFee = viewModel::onRetryFee,
+                        onRetryAssets = viewModel::retryAssets,
+                    )
+                }
             }
         }
     }

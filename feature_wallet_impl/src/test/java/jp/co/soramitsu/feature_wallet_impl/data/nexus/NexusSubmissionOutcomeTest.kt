@@ -12,11 +12,24 @@ class NexusSubmissionOutcomeTest {
         assertTrue(error is NexusNotSubmittedException)
         assertSame(failed, error?.cause)
     }
-    @Test fun `transport and later status-read failures cannot be classified as unsent`() = runTest {
+    @Test fun `a transport failure that may have reached Torii stays unknown`() = runTest {
         val unknown = NexusToriiException("NEXUS_NETWORK_IO", submissionMayHaveReachedTorii = true)
         assertSame(unknown, runCatching { submitAndTrackNexus({ throw unknown }, { it }) }.exceptionOrNull())
+    }
+    @Test fun `a status read that fails after Torii took the transfer leaves it pending, not unsent or unknown`() = runTest {
         val readFailure = NexusToriiException("NEXUS_STATUS_IO", submissionMayHaveReachedTorii = false)
-        val result = NexusSendResult("id", "hash", "SUBMITTED")
-        assertSame(readFailure, runCatching { submitAndTrackNexus({ result }, { throw readFailure }) }.exceptionOrNull())
+        val submitted = NexusSendResult("id", "hash", "SUBMITTED")
+        assertSame(submitted, submitAndTrackNexus({ submitted }, { throw readFailure }))
+        assertSame(submitted, submitAndTrackNexus({ submitted }, { throw IllegalStateException("TAIRA_HTTP_409") }))
+    }
+    @Test fun `tracking reports how the transfer ended`() = runTest {
+        val submitted = NexusSendResult("id", "hash", "SUBMITTED")
+        val finalized = NexusSendResult("id", "hash", "FINALIZED")
+        assertSame(finalized, submitAndTrackNexus({ submitted }, { finalized }))
+    }
+    @Test fun `closing the outcome cancels tracking rather than reporting a result`() = runTest {
+        val closed = kotlinx.coroutines.CancellationException("closed")
+        val submitted = NexusSendResult("id", "hash", "SUBMITTED")
+        assertSame(closed, runCatching { submitAndTrackNexus({ submitted }, { throw closed }) }.exceptionOrNull())
     }
 }

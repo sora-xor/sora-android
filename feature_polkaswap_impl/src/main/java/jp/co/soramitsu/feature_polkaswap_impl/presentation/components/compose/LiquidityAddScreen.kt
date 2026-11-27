@@ -19,6 +19,8 @@ limitations under the License.
 
 package jp.co.soramitsu.feature_polkaswap_impl.presentation.components.compose
 
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -31,13 +33,13 @@ import androidx.compose.material.Divider
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.constraintlayout.compose.ConstraintLayout
 import java.math.BigDecimal
 import jp.co.soramitsu.common.presentation.compose.neon.safemode.LocalSelectedAccountReadOnly
 import jp.co.soramitsu.common.R
@@ -73,51 +75,40 @@ internal fun LiquidityAddScreen(
     onSelect1: () -> Unit,
     onSelect2: () -> Unit,
     onRetryEstimate: () -> Unit = {},
+    onRetryAssets: () -> Unit = {},
 ) {
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .verticalScroll(rememberScrollState())
             .padding(horizontal = Dimens.x2)
     ) {
-        ConstraintLayout(
-            modifier = Modifier
-                .fillMaxWidth()
-                .wrapContentHeight()
-        ) {
-            val (token1, token2, arrow) = createRefs()
-            AssetAmountInput(
-                modifier = Modifier.constrainAs(token1) {
-                    top.linkTo(parent.top)
-                    start.linkTo(parent.start)
-                },
-                state = state.assetState1,
-                onAmountChange = onAmountChange1,
-                onSelectToken = onSelect1,
-                onFocusChange = onFocusChange1,
-            )
-            AssetAmountInput(
-                modifier = Modifier.constrainAs(token2) {
-                    top.linkTo(token1.bottom, 8.dp)
-                    start.linkTo(parent.start)
-                },
-                state = state.assetState2,
-                onAmountChange = onAmountChange2,
-                onSelectToken = onSelect2,
-                onFocusChange = onFocusChange2,
-            )
-            Icon(
-                modifier = Modifier
-                    .size(size = Dimens.x3)
-                    .constrainAs(arrow) {
-                        top.linkTo(token1.bottom, (-8).dp)
-                        start.linkTo(parent.start)
-                        end.linkTo(parent.end)
-                    },
-                painter = painterResource(id = R.drawable.ic_neu_chevron_down_fill),
-                tint = MaterialTheme.customColors.fgSecondary,
-                contentDescription = null
-            )
+        if (state.assetCatalogUnavailable) {
+            SwapAssetsUnavailable(state.refreshingAssets, onRetryAssets)
+            return@Column
         }
+        AssetAmountInput(
+            modifier = Modifier.fillMaxWidth(),
+            state = state.assetState1,
+            label = stringResource(R.string.liquidity_base_token),
+            onAmountChange = onAmountChange1,
+            onSelectToken = onSelect1,
+            onFocusChange = onFocusChange1,
+        )
+        Icon(
+            painter = painterResource(R.drawable.ic_plus_24_inside),
+            contentDescription = null,
+            modifier = Modifier.align(Alignment.CenterHorizontally).size(Dimens.x3),
+            tint = MaterialTheme.customColors.fgSecondary,
+        )
+        AssetAmountInput(
+            modifier = Modifier.fillMaxWidth(),
+            state = state.assetState2,
+            label = stringResource(R.string.liquidity_pair_token),
+            onAmountChange = onAmountChange2,
+            onSelectToken = onSelect2,
+            onFocusChange = onFocusChange2,
+        )
         Divider(
             modifier = Modifier.fillMaxWidth(),
             thickness = Dimens.x2,
@@ -199,16 +190,18 @@ internal fun LiquidityAddScreen(
             thickness = Dimens.x2,
             color = Color.Transparent
         )
-        DetailsItem(
-            text = stringResource(id = R.string.pool_share_title_1),
-            value1 = state.estimated.shareOfPool,
-        )
+        if (state.estimated.shareOfPool.isNotBlank()) {
+            DetailsItem(
+                text = stringResource(id = R.string.pool_share_title_1),
+                value1 = state.estimated.shareOfPool,
+            )
+        }
         Divider(
             modifier = Modifier.fillMaxWidth(),
             thickness = Dimens.x2,
             color = Color.Transparent
         )
-        if (state.pairNotExist != true) {
+        if (state.pairNotExist != true && !state.prices.apy.isNullOrBlank()) {
             DetailsItem(
                 text = stringResource(id = R.string.pool_apy_title),
                 value1 = state.prices.apy.orEmpty(),
@@ -220,9 +213,9 @@ internal fun LiquidityAddScreen(
                 color = Color.Transparent
             )
         }
-        DetailsItemNetworkFee(
-            fee = state.prices.fee,
-        )
+        if (state.prices.fee.isNotBlank()) {
+            DetailsItemNetworkFee(fee = state.prices.fee)
+        }
     }
 }
 

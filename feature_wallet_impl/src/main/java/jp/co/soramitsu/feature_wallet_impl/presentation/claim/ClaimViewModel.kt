@@ -30,7 +30,7 @@ import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.domain.OptionsProvider
 import jp.co.soramitsu.common.domain.TransactionChainFailure
 import jp.co.soramitsu.common.domain.TransactionOutcome
-import jp.co.soramitsu.common.logger.FirebaseWrapper
+import jp.co.soramitsu.common.logger.WalletDiagnostics
 import jp.co.soramitsu.common.presentation.transaction.TransactionOutcomeTexts
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
@@ -124,6 +124,11 @@ class ClaimViewModel @Inject constructor(
         if (claimDone && screenInFront) router.closeClaimScreen()
     }
 
+    /** Back leaves the claim for the wallet underneath; nothing in flight is cancelled. */
+    override fun onBackPressed() {
+        router.closeClaimScreen()
+    }
+
     fun contactsUsClicked() {
         _openSendEmailEvent.postValue(OptionsProvider.email)
     }
@@ -154,7 +159,7 @@ class ClaimViewModel @Inject constructor(
             } finally {
                 submitting = false
             }
-            FirebaseWrapper.log(FirebaseWrapper.Breadcrumb.MIGRATION_ATTEMPT_FINISHED)
+            WalletDiagnostics.log(WalletDiagnostics.Breadcrumb.MIGRATION_ATTEMPT_FINISHED)
             when {
                 notSent != null && notSent.isEarlierTransactionUnresolved() -> {
                     // Nothing was sent now. The earlier transaction may be this claim or any

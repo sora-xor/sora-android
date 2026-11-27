@@ -70,6 +70,8 @@ class PinCodeInteractorTest {
     @Before
     fun setUp() = runTest {
         given(userRepository.retrievePin()).willReturn(pin)
+        given(userRepository.retrievePinTriesUsed()).willReturn(0)
+        given(userRepository.retrieveTimerStartedTimestamp()).willReturn(0L)
         interactor = PinCodeInteractor(userRepository, credentialsRepository, walletRepository)
     }
 
@@ -77,6 +79,23 @@ class PinCodeInteractorTest {
     fun `save pin called`() = runTest {
         assertEquals(Unit, interactor.savePin(pin))
         verify(userRepository).savePin(pin)
+    }
+
+    @Test
+    fun `the screen lock confirmation reaches the repository with the new pin`() = runTest {
+        val confirmation = jp.co.soramitsu.feature_account_api.domain.PhoneScreenLock({ true }, { 0L }).confirmed()
+
+        interactor.savePin(pin, confirmation)
+
+        verify(userRepository).savePin(pin, confirmation)
+    }
+
+    @Test
+    fun `whether a new pin needs the screen lock is the repository's answer`() = runTest {
+        given(userRepository.newPinNeedsScreenLock()).willReturn(true)
+        assertEquals(true, interactor.newPinNeedsScreenLock())
+        given(userRepository.newPinNeedsScreenLock()).willReturn(false)
+        assertEquals(false, interactor.newPinNeedsScreenLock())
     }
 
     @Test

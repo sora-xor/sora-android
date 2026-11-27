@@ -1,0 +1,5 @@
+<resources>
+    <string name="portfolio_exclusions">Неукључена средства</string>
+    <string name="portfolio_row_expanded">Проширено</string>
+    <string name="portfolio_row_collapsed">Скупљено</string>
+</resources>

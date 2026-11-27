@@ -25,7 +25,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
@@ -143,7 +143,7 @@ fun BasicPoolListItem(
         }
         Column(
             modifier = Modifier
-                .height(40.dp)
+                .heightIn(min = 40.dp)
                 .weight(1f)
                 .padding(start = Dimens.x1, end = Dimens.x1),
             verticalArrangement = Arrangement.SpaceBetween,

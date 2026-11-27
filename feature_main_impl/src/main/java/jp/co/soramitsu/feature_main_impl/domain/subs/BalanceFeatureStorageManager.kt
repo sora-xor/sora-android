@@ -21,8 +21,10 @@ package jp.co.soramitsu.feature_main_impl.domain.subs
 
 import javax.inject.Inject
 import jp.co.soramitsu.common.domain.SingleFeatureStorageManager
+import jp.co.soramitsu.common.logger.WalletDiagnostics
 import jp.co.soramitsu.feature_assets_api.data.AssetsRepository
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletRepository
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.onEach
 
@@ -34,7 +36,17 @@ class BalanceFeatureStorageManager @Inject constructor(
     override fun subscribe(address: String): Flow<String> {
         return walletRepository.observeStorageAccount(address)
             .onEach {
-                assetsRepository.updateBalancesVisibleAssets(address)
+                // A balance refresh that fails (the node answers with an error, or with an
+                // answer that is not the read that was asked for) leaves the stored balances as
+                // they are. It must not end the subscriptions with it: the next account event
+                // reads again.
+                try {
+                    assetsRepository.updateBalancesVisibleAssets(address)
+                } catch (error: CancellationException) {
+                    throw error
+                } catch (error: Exception) {
+                    WalletDiagnostics.recordException(error)
+                }
             }
     }
 }

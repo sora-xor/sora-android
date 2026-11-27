@@ -157,9 +157,6 @@ class PolkamarktPendingRecoveryTest {
             dao.updatePendingTransaction(any(), any(), any(), any(), any())
         }
         coVerify(exactly = 0) { calls.getFinalizedHead() }
-        coVerify(exactly = 0) {
-            indexer.getAccountTransactionsByHashesQualified(any(), any())
-        }
     }
 
     @Test

@@ -1,0 +1,13 @@
+<resources>
+    <string name="contacts_none">Nenhum destinatário recente</string>
+    <string name="pin_delete_last_digit">Apagar último dígito</string>
+    <string name="common_egyptian">Egípcio médio (hieróglifos)</string>
+    <plurals name="backup_selected_count">
+        <item quantity="one">%1$d selecionada</item>
+        <item quantity="many">%1$d selecionadas</item>
+        <item quantity="other">%1$d selecionadas</item>
+    </plurals>
+    <string name="contacts_lookup_unavailable">Consulta de endereço indisponível</string>
+    <string name="portfolio_positive_amount">Insira uma quantia acima de zero.</string>
+    <string name="portfolio_continue_wallet">Continuar com %1$s</string>
+</resources>

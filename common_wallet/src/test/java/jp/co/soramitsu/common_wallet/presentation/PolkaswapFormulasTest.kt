@@ -186,17 +186,4 @@ class PolkaswapFormulasTest {
         )
     }
 
-    @Test
-    fun `test calculateMarkerAssetDesired`() {
-        val markerAssetDesired = BASE_AMOUNT.divideBy(RESERVES_FIRST).multiply(TOTAL_ISSUANCE)
-
-        assertEquals(
-            markerAssetDesired,
-            PolkaswapFormulas.calculateMarkerAssetDesired(
-                BASE_AMOUNT,
-                RESERVES_FIRST,
-                TOTAL_ISSUANCE
-            )
-        )
-    }
 }

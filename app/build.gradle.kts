@@ -1,31 +1,21 @@
 import com.github.triplet.gradle.androidpublisher.ReleaseStatus
-import com.google.firebase.appdistribution.gradle.firebaseAppDistribution
-import com.google.firebase.crashlytics.buildtools.gradle.CrashlyticsExtension
 import java.nio.file.Files
 import java.nio.file.LinkOption
 import java.nio.file.Paths
 import java.nio.file.attribute.PosixFilePermission
 
 plugins {
-    id("maven-publish")
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.baselineProfile)
     alias(libs.plugins.serialization)
     alias(libs.plugins.hilt)
     alias(libs.plugins.ksp)
-    alias(libs.plugins.firebaseCrashlyticsPlugin)
-    alias(libs.plugins.firebaseAppDistributionPlugin)
     alias(libs.plugins.triplet)
     id("kotlin-parcelize")
     alias(libs.plugins.kover)
     alias(libs.plugins.composeCompiler)
 }
 
-val googleServicesJsonFiles = fileTree(projectDir) {
-    include("google-services.json")
-    include("src/**/google-services.json")
-}
-val hasGoogleServicesJson = !googleServicesJsonFiles.isEmpty
 // These legacy environment-variable names are also used by local release setups.
 val productionKeystorePath = System.getenv("CI_KEYSTORE_PATH")?.takeIf { it.isNotBlank() }
 val productionKeystorePassword = System.getenv("CI_KEYSTORE_PASS")?.takeIf { it.isNotBlank() }
@@ -48,25 +38,19 @@ val productionReleaseSigningConfigured = listOf(
     productionKeyPassword,
 ).all { it != null }
 
-if (hasGoogleServicesJson) {
-    apply(plugin = "com.google.gms.google-services")
-} else {
-    logger.lifecycle("Skipping Google Services plugin because google-services.json is not present.")
-}
-
 kotlin {
     jvmToolchain(17)
 }
 
-// Google Play: 3.9.0 is versionCode 3090000; the next release is 3.9.1.
+// Google Play published 3.9.2 build 5 (3090205) at 100% on 17 November 2026.
 // From 3.9.0: versionCode = MAJOR * 1_000_000 + MINOR * 10_000 + PATCH * 100 + BUILD (00..99),
 // so 3.9.0 build 1 is 3090001.
-val appVersionName = "3.9.1"
+val appVersionName = "3.9.5"
 val appVersionCodeBase = appVersionName.split('.').map(String::toInt)
     .let { (major, minor, patch) -> major * 1_000_000 + minor * 10_000 + patch * 100 }
-val playLastPublishedVersionCode = 3090000
-// Local and debug builds default to the version base (3090100 for 3.9.1), above the
-// currently published Play code. Release builds still require an explicit code.
+val playLastPublishedVersionCode = 3090205
+// Local and debug builds default to the version base (3090200 for 3.9.2). Release builds still
+// require an explicit code above playLastPublishedVersionCode.
 val appVersionCode = explicitVersionCode ?: appVersionCodeBase
 
 android {
@@ -114,9 +98,6 @@ android {
             isMinifyEnabled = true
             signingConfig = signingConfigs.getByName("productionRelease")
             isShrinkResources = true
-            configure<CrashlyticsExtension> {
-                mappingFileUploadEnabled = hasGoogleServicesJson
-            }
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -132,39 +113,17 @@ android {
                 "proguard-rules.pro"
             )
         }
-        create("firebasedebug") {
-            initWith(getByName("debug"))
-            matchingFallbacks += listOf("debug")
-            versionNameSuffix = "-firebase"
-            signingConfig = signingConfigs.getByName("cidebug")
-            // Init firebase
-            val firebaseReleaseNotes = System.getenv("CI_FIREBASE_RELEASENOTES") ?: ""
-            val firebaseGroup = System.getenv("CI_FIREBASE_GROUP") ?: ""
-            firebaseAppDistribution {
-                artifactType = "APK"
-                releaseNotes = firebaseReleaseNotes
-                groups = firebaseGroup
-            }
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
-        }
+        // The startup benchmark and the profile generator clear these builds' data and type a test PIN: they get an
+        // application id of their own, so they never install as (or over) an app that holds someone's wallet.
         create("benchmarkRelease") {
             initWith(getByName("release"))
+            applicationIdSuffix = ".benchmark"
             signingConfig = signingConfigs.getByName("cidebug")
-            configure<CrashlyticsExtension> {
-                // Benchmarks are local, unsigned production-shape measurements. They must not
-                // create or upload a release mapping, especially when Google Services is absent.
-                mappingFileUploadEnabled = false
-            }
         }
         create("nonMinifiedRelease") {
             initWith(getByName("release"))
+            applicationIdSuffix = ".benchmark"
             signingConfig = signingConfigs.getByName("cidebug")
-            configure<CrashlyticsExtension> {
-                mappingFileUploadEnabled = false
-            }
         }
     }
 
@@ -215,7 +174,6 @@ android {
             dimension = "default"
             applicationIdSuffix = ".develop"
             resValue("string", "app_name", "SORA Develop")
-            manifestPlaceholders["pathPrefix"] = "/dev/#/referral"
             manifestPlaceholders["appIcon"] = "@mipmap/ic_dev_launcher"
             manifestPlaceholders["roundedIcon"] = "@mipmap/ic_dev_launcher"
         }
@@ -224,7 +182,6 @@ android {
             dimension = "default"
             applicationIdSuffix = ".communitytesting"
             resValue("string", "app_name", "Soralution")
-            manifestPlaceholders["pathPrefix"] = "/tst/#/referral"
             manifestPlaceholders["appIcon"] = "@mipmap/ic_soralution_launcher"
             manifestPlaceholders["roundedIcon"] = "@mipmap/ic_soralution_launcher_rounded"
         }
@@ -232,7 +189,6 @@ android {
         create("production") {
             dimension = "default"
             resValue("string", "app_name", "SORA")
-            manifestPlaceholders["pathPrefix"] = "/#/referral"
             manifestPlaceholders["appIcon"] = "@mipmap/ic_prod_launcher"
             manifestPlaceholders["roundedIcon"] = "@mipmap/ic_prod_launcher_rounded"
         }
@@ -243,7 +199,6 @@ android {
             testApplicationId = "jp.co.soramitsu.sora.qualification.test"
             matchingFallbacks += listOf("production")
             resValue("string", "app_name", "SORA Migration Qualification")
-            manifestPlaceholders["pathPrefix"] = "/qualification/#/referral"
             manifestPlaceholders["appIcon"] = "@mipmap/ic_prod_launcher"
             manifestPlaceholders["roundedIcon"] = "@mipmap/ic_prod_launcher_rounded"
         }
@@ -267,15 +222,6 @@ baselineProfile {
         disabledVariants = false
     }
 }
-
-// Compares the Google Drive backup client (SORA_GOOGLE_TOKEN_PROD) and the Firebase app in
-// google-services.json with the SHA-256 pins in config/android-production-google-identity.json.
-// Provides the two closures used below and the task verifyProductionGoogleIdentity.
-apply(from = rootProject.file("scripts/verify-production-google-identity.gradle"))
-
-@Suppress("UNCHECKED_CAST")
-fun googleIdentityMessages(name: String): List<String> =
-    (extra[name] as groovy.lang.Closure<List<String>>).call()
 
 val verifyProductionReleaseSigning by tasks.registering {
     group = LifecycleBasePlugin.VERIFICATION_GROUP
@@ -302,14 +248,6 @@ val verifyProductionReleaseSigning by tasks.registering {
                 "versionCode: SORA_VERSION_CODE $versionCode is outside " +
                     "$appVersionCodeBase..${appVersionCodeBase + 99} for versionName $appVersionName"
         }
-        if (!hasGoogleServicesJson) {
-            problems += "app/google-services.json is missing (Crashlytics would be off)"
-        }
-        // The Google Drive backup client must be the one 3.8.6.3 used, or people cannot see their
-        // existing Drive backups. "Present" is not enough: the value is compared with its pinned
-        // SHA-256, and while nobody has filled in that pin the build is refused. A pinned
-        // Firebase app is compared the same way. :common checks again that a client is set.
-        problems += googleIdentityMessages("productionGoogleIdentityProblems")
         if (problems.isNotEmpty()) {
             throw GradleException(
                 "productionRelease cannot be built:\n" + problems.joinToString("\n") { "- $it" },
@@ -342,7 +280,6 @@ val verifyProductionReleaseSigning by tasks.registering {
         if (Files.getPosixFilePermissions(realKeystore).any(forbiddenPermissions::contains)) {
             throw GradleException("Production release keystore must be owner-only.")
         }
-        googleIdentityMessages("productionGoogleIdentityNotes").forEach { logger.warn(it) }
     }
 }
 
@@ -403,7 +340,6 @@ dependencies {
     implementation(project(":feature_referral_impl"))
     implementation(project(":feature_account_api"))
     implementation(project(":feature_account_impl"))
-    implementation(project(":feature_ethereum_api"))
     implementation(project(":feature_polkaswap_api"))
     implementation(project(":feature_polkaswap_impl"))
     implementation(project(":feature_wallet_api"))
@@ -414,7 +350,6 @@ dependencies {
     implementation(project(":feature_blockexplorer_impl"))
     implementation(project(":feature_ecosystem_impl"))
     implementation(project(":sorasubstrate"))
-    implementation(project(":network"))
 
     implementation(libs.appcompatDep)
     implementation(libs.appcompatResDep)
@@ -424,15 +359,14 @@ dependencies {
     implementation(libs.navigationFragmentDep)
     implementation(libs.navigationUiDep)
 
-    implementation(libs.lottieDep)
     implementation(libs.coilDep)
     implementation(libs.coilSvgDep)
 
     implementation(libs.timberDep)
 
     implementation(libs.roomDep)
-    implementation(libs.xcryptoDep)
-    implementation(libs.xsubstrateDep)
+    implementation(project(":xcrypto"))
+    implementation(project(":xsubstrate"))
     implementation(libs.soramitsu.android.foundation)
 
     implementation(libs.daggerDep)
@@ -451,7 +385,7 @@ dependencies {
     implementation(libs.composeFoundationDep)
     implementation(libs.core.splashscreen)
     implementation(libs.composeMaterialDep)
-    implementation(libs.uiCoreDep)
+    implementation(project(":ui-core"))
     implementation(libs.composeAnimationDep)
     implementation(libs.composeToolingPreviewDep)
     debugImplementation(libs.composeToolingDep)
@@ -459,10 +393,6 @@ dependencies {
 
     implementation(libs.coroutineAndroidDep)
     implementation(libs.coroutineDep)
-
-    implementation(platform(libs.googleFirebaseBomDep))
-    implementation(libs.googleCrashlyticsDep)
-    implementation(libs.firebaseAnalyticsDep)
 
     implementation(libs.webSocketLibDep)
 
@@ -509,14 +439,12 @@ dependencies {
     kover(project(":feature_referral_impl"))
     kover(project(":feature_polkaswap_api"))
     kover(project(":feature_polkaswap_impl"))
-    kover(project(":feature_referral_impl"))
-    kover(project(":feature_ethereum_api"))
     kover(project(":feature_wallet_api"))
     kover(project(":feature_wallet_impl"))
     kover(project(":feature_select_node_api"))
     kover(project(":feature_select_node_impl"))
     kover(project(":sorasubstrate"))
-    kover(project(":network"))
+    kover(project(":xbackup"))
 }
 
 kover {

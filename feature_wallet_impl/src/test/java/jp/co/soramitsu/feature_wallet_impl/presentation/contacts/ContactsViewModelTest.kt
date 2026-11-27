@@ -103,4 +103,22 @@ class ContactsViewModelTest {
         val state = contactsViewModel.state
         assertEquals(2, state.accounts.size)
     }
+    @Test
+    fun `a failed lookup clears old recipients and can retry the same address`() = runTest {
+        advanceUntilIdle()
+        val query = TextFieldValue("new-recipient")
+        given(walletInteractor.getContacts(query.text))
+            .willThrow(IllegalStateException("unavailable"))
+            .willReturn(listOf("current-recipient"))
+
+        contactsViewModel.search(query)
+        advanceUntilIdle()
+        assertEquals(emptyList<ContactsListItem>(), contactsViewModel.state.accounts)
+        assertEquals(R.string.contacts_lookup_unavailable, contactsViewModel.state.hint)
+
+        contactsViewModel.search(query)
+        advanceUntilIdle()
+        assertEquals(listOf("current-recipient"), contactsViewModel.state.accounts.map { it.account })
+    }
+
 }

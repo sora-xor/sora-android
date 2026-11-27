@@ -27,14 +27,12 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
-import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.viewModels
@@ -49,6 +47,8 @@ import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.base.SoraBaseFragment
 import jp.co.soramitsu.common.base.theOnlyRoute
 import jp.co.soramitsu.common.domain.CardHubType
+import jp.co.soramitsu.common.presentation.compose.components.LoadingRows
+import jp.co.soramitsu.common.presentation.compose.components.NothingFoundText
 import jp.co.soramitsu.common.presentation.view.WrappedRecyclerView
 import jp.co.soramitsu.common.view.CustomItemTouchHelperCallback
 import jp.co.soramitsu.common_wallet.R as polkaswapR
@@ -62,9 +62,6 @@ class FullAssetSettingsFragment : SoraBaseFragment<FullAssetSettingsViewModel>()
 
     override val viewModel: FullAssetSettingsViewModel by viewModels()
     override fun backgroundColor(): Int = R.attr.baseBackgroundSecond
-
-    @Composable
-    override fun backgroundColorComposable() = MaterialTheme.customColors.bgSurface
 
     private val itemTouchHelperCallback = CustomItemTouchHelperCallback { from, to ->
         viewModel.assetPositionChanged(from, to)
@@ -111,13 +108,13 @@ class FullAssetSettingsFragment : SoraBaseFragment<FullAssetSettingsViewModel>()
 
                 val empty = viewModel.settingsStateEmpty.collectAsStateWithLifecycle().value
                 if (empty) {
-                    Text(
-                        modifier = Modifier.fillMaxWidth().wrapContentHeight(),
-                        text = stringResource(id = R.string.search_empty_state),
-                        style = MaterialTheme.customTypography.headline2,
-                        color = MaterialTheme.customColors.fgPrimary,
-                        textAlign = TextAlign.Center,
-                    )
+                    val rows = viewModel.settingsState.observeAsState().value
+                    val search = viewModel.toolbarState.observeAsState().value?.basic?.searchValue
+                    if (rows == null) {
+                        LoadingRows(stringResource(R.string.common_loading))
+                    } else {
+                        NothingFoundText(stringResource(if (search.isNullOrBlank()) R.string.asset_picker_empty else R.string.search_empty_state))
+                    }
                 }
 
                 AndroidView(

@@ -52,6 +52,7 @@ import org.mockito.BDDMockito.anyString
 import org.mockito.BDDMockito.given
 import org.mockito.Mock
 import org.mockito.Mockito.lenient
+import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
 import org.mockito.junit.MockitoJUnitRunner
 
@@ -153,6 +154,34 @@ class AccountListViewModelTest {
         assertTrue(
             requireNotNull(viewModel.accountListScreenState.value).accountList.none { it.readOnly }
         )
+    }
+
+    @Test
+    fun `a list refresh during selection ends selection mode instead of showing 0 selected`() = runTest {
+        val readOnly = MutableStateFlow(emptySet<String>())
+        given(multiAccInteractor.flowUnavailableWalletIds()).willReturn(readOnly)
+        val viewModel = AccountListViewModel(
+            multiAccInteractor,
+            avatarGenerator,
+            mainRouter,
+            clipboardManager,
+        )
+        advanceUntilIdle()
+        viewModel.onAccountSelected("address")
+        assertEquals(1, viewModel.toolbarState.getOrAwaitValue().basic.titleQuantity)
+
+        readOnly.value = setOf("curAddress")
+        advanceUntilIdle()
+
+        val state = requireNotNull(viewModel.accountListScreenState.value)
+        assertFalse(state.isActionMode)
+        assertTrue(state.accountList.none { it.isSelectedAction })
+        val toolbar = viewModel.toolbarState.getOrAwaitValue()
+        assertEquals(R.string.settings_accounts, toolbar.basic.title)
+        assertNull(toolbar.basic.titleQuantity)
+        assertNull(toolbar.basic.actionLabel)
+        viewModel.onAction()
+        verify(mainRouter, never()).showExportJSONProtection(org.mockito.kotlin.any())
     }
 
     @Test
@@ -269,7 +298,9 @@ class AccountListViewModelTest {
         }
 
         val s = accountListViewModel.toolbarState.getOrAwaitValue()
-        assertEquals("1", s.basic.title)
+        assertEquals(R.plurals.backup_selected_count, s.basic.title)
+        assertEquals(listOf(1), s.basic.titleArgs?.toList())
+        assertEquals(1, s.basic.titleQuantity)
         assertEquals(R.string.common_backup, s.basic.actionLabel)
     }
 
@@ -277,6 +308,10 @@ class AccountListViewModelTest {
     fun onToolbarAction() {
         accountListViewModel.onAccountSelected(soraAccounts.first().substrateAddress)
         accountListViewModel.onAccountSelected(soraAccounts.last().substrateAddress)
+        val s = accountListViewModel.toolbarState.getOrAwaitValue()
+        assertEquals(R.plurals.backup_selected_count, s.basic.title)
+        assertEquals(listOf(soraAccounts.size), s.basic.titleArgs?.toList())
+        assertEquals(soraAccounts.size, s.basic.titleQuantity)
         accountListViewModel.onAction()
 
         verify(mainRouter).showExportJSONProtection(soraAccounts.map { it.substrateAddress })
@@ -301,5 +336,8 @@ class AccountListViewModelTest {
 
         val s = accountListViewModel.toolbarState.getOrAwaitValue()
         assertEquals(R.string.settings_accounts, s.basic.title)
+        // The plain title must not keep the plural quantity, or the toolbar would read a string id as plurals.
+        assertNull(s.basic.titleArgs)
+        assertNull(s.basic.titleQuantity)
     }
 }

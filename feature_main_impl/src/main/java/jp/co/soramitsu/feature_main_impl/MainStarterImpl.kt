@@ -30,10 +30,6 @@ class MainStarterImpl @Inject constructor() : MainStarter {
         MainActivity.start(context)
     }
 
-    override fun startWithInvite(context: Context) {
-        MainActivity.startWithInvite(context)
-    }
-
     override fun restartAfterAddAccount(context: Context) {
         MainActivity.restartAfterAddAccount(context)
     }

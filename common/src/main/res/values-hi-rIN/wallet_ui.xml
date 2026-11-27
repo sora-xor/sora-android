@@ -1,0 +1,5 @@
+<resources>
+    <string name="portfolio_exclusions">शामिल न की गई संपत्तियाँ</string>
+    <string name="portfolio_row_expanded">विस्तृत</string>
+    <string name="portfolio_row_collapsed">संकुचित</string>
+</resources>

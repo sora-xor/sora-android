@@ -39,11 +39,8 @@ fun BackupCard(
         Column {
             androidx.compose.material.Text(stringResource(R.string.wallet_backup),
                 style = androidx.compose.material.MaterialTheme.customTypography.headline2)
-            androidx.compose.material.Text(stringResource(R.string.protect_loss_access_funds),
-                modifier = Modifier.padding(vertical = 8.dp),
-                style = androidx.compose.material.MaterialTheme.customTypography.textS)
             jp.co.soramitsu.common.presentation.compose.neon.safemode.SafeAction(
-                stringResource(R.string.backup_now), jp.co.soramitsu.common.presentation.compose.neon.NeonVariant.Safe,
+                stringResource(R.string.backup_now), jp.co.soramitsu.common.presentation.compose.neon.NeonVariant.Secondary,
                 onClick = onStartClicked)
             DeviceTransferNotice(modifier = Modifier.padding(top = 8.dp))
         }

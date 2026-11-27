@@ -75,11 +75,9 @@ dependencies {
     implementation(project(":common"))
     implementation(project(":common_wallet"))
     implementation(project(":core_db"))
-    implementation(project(":network"))
     implementation(project(":demeter"))
     implementation(project(":feature_assets_api"))
     implementation(project(":feature_wallet_api"))
-    implementation(project(":feature_ethereum_api"))
     implementation(project(":feature_account_api"))
     implementation(project(":sorasubstrate"))
     implementation(project(":feature_main_api"))
@@ -87,8 +85,8 @@ dependencies {
     implementation(project(":feature_polkaswap_api"))
     implementation(project(":feature_referral_api"))
 
-    implementation(libs.xsubstrateDep)
-    implementation(libs.xcryptoDep)
+    implementation(project(":xsubstrate"))
+    implementation(project(":xcrypto"))
     implementation(libs.soramitsu.android.foundation)
 
     implementation(libs.appcompatDep)
@@ -97,11 +95,9 @@ dependencies {
 
     implementation(libs.navigationFragmentDep)
 
-    implementation(libs.insetterDep)
 
     implementation(libs.timberDep)
 
-    implementation(libs.lottieDep)
 
     implementation(libs.coilDep)
     implementation(libs.coilComposeDep)
@@ -125,7 +121,7 @@ dependencies {
     implementation(libs.roomDep)
     implementation(libs.roomKtxDep)
 
-    implementation(libs.uiCoreDep)
+    implementation(project(":ui-core"))
 
     implementation(platform(libs.compose.bom))
     implementation(libs.composeUiDep)

@@ -72,14 +72,13 @@ dependencies {
     implementation(project(":common"))
     implementation(project(":common_wallet"))
     implementation(project(":sorasubstrate"))
-    implementation(project(":network"))
 
-    implementation(libs.xsubstrateDep)
+    implementation(project(":xsubstrate"))
 
     implementation(libs.coroutineAndroidDep)
     implementation(libs.coroutineDep)
 
-    implementation(libs.uiCoreDep)
+    implementation(project(":ui-core"))
     implementation(libs.hiltNavComposeDep)
 
     implementation(platform(libs.compose.bom))

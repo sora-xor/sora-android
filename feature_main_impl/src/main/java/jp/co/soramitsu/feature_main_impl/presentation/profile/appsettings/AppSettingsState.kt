@@ -24,5 +24,4 @@ data class AppSettingsState(
     val darkModeChecked: Boolean,
     val testNetworksAvailable: Boolean,
     val testNetworksChecked: Boolean,
-    val reduceEffectsChecked: Boolean = false,
 )

@@ -22,15 +22,12 @@ package jp.co.soramitsu.sora.navigation
 import androidx.navigation.NavController
 import androidx.navigation.NavOptions
 import java.math.BigDecimal
-import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.presentation.args.BUNDLE_KEY
 import jp.co.soramitsu.common.presentation.args.address
 import jp.co.soramitsu.common.presentation.args.addresses
 import jp.co.soramitsu.common.presentation.args.tokenFromId
-import jp.co.soramitsu.common.presentation.args.tokenFromNullable
 import jp.co.soramitsu.common.presentation.args.tokenId
 import jp.co.soramitsu.common.presentation.args.tokenToId
-import jp.co.soramitsu.common.presentation.args.tokenToNullable
 import jp.co.soramitsu.common.presentation.args.txHash
 import jp.co.soramitsu.common.presentation.args.withArgs
 import jp.co.soramitsu.common.presentation.compose.webview.title
@@ -46,6 +43,7 @@ import jp.co.soramitsu.feature_ecosystem_impl.presentation.claimdemeter.ClaimDem
 import jp.co.soramitsu.feature_ecosystem_impl.presentation.editfarm.EditFarmFragment
 import jp.co.soramitsu.feature_ecosystem_impl.presentation.farmdetails.FarmDetailsFragment
 import jp.co.soramitsu.common.account.AccountOptionsRouter
+import jp.co.soramitsu.feature_main_api.domain.model.PIN_CONFIRMED_ACTION_KEY
 import jp.co.soramitsu.feature_main_api.domain.model.PinCodeAction
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_main_impl.presentation.util.action
@@ -61,6 +59,8 @@ import jp.co.soramitsu.feature_select_node_impl.presentation.nodeAddress
 import jp.co.soramitsu.feature_select_node_impl.presentation.nodeName
 import jp.co.soramitsu.feature_select_node_impl.presentation.pinCodeChecked
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
+import jp.co.soramitsu.feature_wallet_impl.presentation.bridge.HashiBridgeFragment
+import jp.co.soramitsu.feature_wallet_impl.presentation.bridge.HashiTransferFragment
 import jp.co.soramitsu.sora.R
 
 class Navigator :
@@ -114,8 +114,12 @@ class Navigator :
         )
     }
 
-    override fun showFlexibleUpdateScreen() {
-        navController?.navigate(R.id.updateFlexibleFragment)
+    override fun returnFromPinConfirmation(action: PinCodeAction) {
+        navController?.previousBackStackEntry?.savedStateHandle?.set(
+            PIN_CONFIRMED_ACTION_KEY,
+            action.name,
+        )
+        navController?.popBackStack()
     }
 
     override fun popBackStack() {
@@ -176,6 +180,10 @@ class Navigator :
         navController?.navigate(R.id.fullPoolListSettingsFragment)
     }
 
+    override fun showAssetSettings() {
+        navController?.navigate(R.id.navAction_to_FullAssetListFragment)
+    }
+
     override fun showFullAssetsSettings() {
         navController?.navigate(R.id.fullAssetsSettingsFragment)
     }
@@ -205,16 +213,6 @@ class Navigator :
         )
     }
 
-    override fun showContactsFilled(tokenId: String, address: String) {
-        navController?.navigate(
-            R.id.contactsFragment,
-            withArgs {
-                this.tokenId = tokenId
-                this.address = address
-            }
-        )
-    }
-
     override fun showValTransferAmount(recipientId: String, assetId: String, initSendAmount: String?) {
         navController?.navigate(
             R.id.transferAmountFragment,
@@ -236,15 +234,17 @@ class Navigator :
         )
     }
 
-    override fun returnToAddLiquidity(tokenFrom: Token?, tokenTo: Token?) {
-        navController?.previousBackStackEntry?.savedStateHandle?.set(
-            BUNDLE_KEY,
-            withArgs {
-                this.tokenFromNullable = tokenFrom
-                this.tokenToNullable = tokenTo
-            }
-        )
-        navController?.popBackStack()
+    override fun openHashiBridge(assetId: String?) {
+        navController?.navigate(R.id.hashiBridgeFragment, HashiBridgeFragment.createBundle(assetId))
+    }
+
+    override fun openHashiBridgeTransfer(transferId: String) {
+        val navController = navController ?: return
+        // A transfer opened from the form replaces the form: Back returns to where the bridge was opened.
+        val options = NavOptions.Builder()
+            .setPopUpTo(R.id.hashiTransferFragment, true)
+            .build()
+        navController.navigate(R.id.hashiTransferFragment, HashiTransferFragment.createBundle(transferId), options)
     }
 
     override fun openQrCodeFlow(shouldNavigateToScannerDirectly: Boolean) {
@@ -290,24 +290,17 @@ class Navigator :
         navController?.navigate(R.id.appSettingsFragment)
     }
 
-    override fun returnToHubFragment() {
-        navController?.popBackStack(R.id.cardsHubFragment, false)
-    }
-
-    override fun currentDestinationIsPincode(): Boolean {
-        return navController?.currentDestination != null && navController?.currentDestination!!.id == R.id.pincodeFragment
-    }
-
-    override fun currentDestinationIsClaimFragment(): Boolean {
-        return navController?.currentDestination != null && navController?.currentDestination!!.id == R.id.claimFragment
-    }
-
     override fun currentDestinationIsPinCheckNeeded(): Boolean {
         return navController?.currentDestination != null && (navController?.currentDestination!!.id == R.id.backupFragment || navController?.currentDestination!!.id == R.id.backupJsonFragment)
     }
 
-    override fun showProfile() {
-        navController?.navigate(R.id.profile_nav_graph)
+    override fun closeSecretScreensLeftOpen() {
+        val controller = navController ?: return
+        if (!currentDestinationIsPinCheckNeeded()) return
+        val secretScreens = setOf(R.id.backupFragment, R.id.backupJsonFragment, R.id.exportProtectionFragment)
+        while (controller.currentDestination?.id in secretScreens) {
+            if (!controller.popBackStack()) return
+        }
     }
 
     override fun showReferrals() {

@@ -130,11 +130,6 @@ class PoolsInteractorImpl(
             }
     }
 
-    override fun subscribePoolsChanges(): Flow<String> =
-        userRepository.flowCurSoraAccount().flatMapLatest { soraAccount ->
-            subscribePoolsChangesOfAccount(soraAccount.substrateAddress)
-        }
-
     override suspend fun calcLiquidityDetails(
         tokenFrom: Token,
         tokenTo: Token,

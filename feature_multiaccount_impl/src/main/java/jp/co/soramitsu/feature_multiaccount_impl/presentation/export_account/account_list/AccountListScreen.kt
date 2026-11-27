@@ -24,7 +24,6 @@ import android.graphics.drawable.Drawable
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -37,12 +36,14 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
 import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -152,7 +153,7 @@ private fun AccountListItem(
             accountName = accountName,
             accountIcon = accountIcon,
             selectableIcon = R.drawable.ic_checkmark_24,
-            tint = MaterialTheme.customColors.statusSuccess,
+            tint = MaterialTheme.customColors.accentPrimary,
             showSelectableIcon = isSelected,
             readOnly = readOnly,
         )
@@ -163,15 +164,17 @@ private fun AccountListItem(
                 .wrapContentSize()
         ) {
             val dropDownExpandedState = remember { mutableStateOf(false) }
-            Icon(
-                modifier = Modifier
-                    .testTagAsId("OpenAccountMenuItem")
-                    .size(Dimens.x3)
-                    .clickable { dropDownExpandedState.value = true },
-                painter = painterResource(R.drawable.ic_menu_vertical_dots_24),
-                tint = MaterialTheme.customColors.accentTertiary,
-                contentDescription = null
-            )
+            IconButton(
+                modifier = Modifier.testTagAsId("OpenAccountMenuItem"),
+                onClick = { dropDownExpandedState.value = true },
+            ) {
+                Icon(
+                    modifier = Modifier.size(Dimens.x3),
+                    painter = painterResource(R.drawable.ic_menu_vertical_dots_24),
+                    tint = MaterialTheme.customColors.accentPrimary,
+                    contentDescription = stringResource(R.string.export_account_options),
+                )
+            }
 
             AccountMenu(
                 onSelectOptionsClicked = onSelectOptionsClicked,

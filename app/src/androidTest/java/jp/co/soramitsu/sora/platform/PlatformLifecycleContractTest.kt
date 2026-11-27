@@ -12,22 +12,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createEmptyComposeRule
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentActivity
-import androidx.lifecycle.SavedStateHandle
-import androidx.navigation.NavController
-import androidx.navigation.NavBackStackEntry
-import androidx.navigation.Navigation
 import androidx.test.core.app.ActivityScenario
-import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.mockk.*
 import jp.co.soramitsu.common.R
-import jp.co.soramitsu.common.domain.DarkThemeManager
 import jp.co.soramitsu.common.domain.ResponseCode
 import jp.co.soramitsu.common.presentation.view.ToastDialog
-import jp.co.soramitsu.common.util.TimerWrapper
 import jp.co.soramitsu.common.util.ext.*
-import jp.co.soramitsu.feature_main_impl.presentation.inappupdate.FlexibleUpdateDialog
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import org.junit.*
@@ -49,19 +40,6 @@ class PlatformLifecycleContractTest {
     }
     @After fun stop() { if (::scenario.isInitialized) scenario.close() }
 
-    @Test fun timerEmitsRealTicksAndCancellationStopsFurtherUpdates() = runBlocking {
-        val timer = TimerWrapper()
-        var ticks: Flow<Long>? = null
-        scenario.onActivity { timer.cancel(); assertFalse(timer.isStarted()); ticks = timer.start(2_000, 50) }
-        val tick = withTimeout(5_000) { ticks!!.first { it in 1..1_999 } }
-        scenario.onActivity { assertTrue(timer.isStarted()); timer.cancel(); timer.cancel(); assertFalse(timer.isStarted()) }
-        val last = ticks!!.first()
-        delay(150)
-        assertEquals(last, ticks!!.first()); assertTrue(tick > 0)
-        assertEquals("01:02:03", timer.calcTimeLeft(3_723_000))
-        assertEquals("01h 02m", timer.formatTime(3_723_000))
-        assertEquals("02h 03m", timer.formatTime(123_000))
-    }
     @Test fun toastShowsItsLocalizedMessageAndIconThenDismissesAutomatically() {
         lateinit var dialog: ToastDialog
         scenario.onActivity {
@@ -131,27 +109,4 @@ class PlatformLifecycleContractTest {
             activity.applicationContext.hideSoftKeyboard()
         }
     }
-    private fun updateDecision(accepted: Boolean) {
-        val state = SavedStateHandle()
-        val previous = mockk<NavBackStackEntry> { every { savedStateHandle } returns state }
-        val controller = mockk<NavController> {
-            every { previousBackStackEntry } returns previous
-            every { popBackStack() } returns true
-        }
-        val dark = MutableStateFlow(false)
-        val fragment = FlexibleUpdateDialog().apply {
-            darkThemeManager = mockk<DarkThemeManager> { every { darkModeStatusFlow } returns dark }
-        }
-        var expected = ""
-        scenario.onActivity { activity ->
-            Navigation.setViewNavController(activity.findViewById(android.R.id.content), controller)
-            activity.supportFragmentManager.beginTransaction().add(android.R.id.content, fragment).commitNow()
-            expected = activity.getString(if (accepted) R.string.common_update else R.string.common_cancel)
-        }
-        compose.onNode(hasText(expected) and hasClickAction()).performClick()
-        assertEquals(accepted, state.get<Boolean>(FlexibleUpdateDialog.UPDATE_REPLY))
-        verify(exactly = 1) { controller.popBackStack() }
-    }
-    @Test fun updateDialogReturnsExplicitAcceptanceToThePreviousDestination() = updateDecision(true)
-    @Test fun updateDialogReturnsCancellationToThePreviousDestination() = updateDecision(false)
 }

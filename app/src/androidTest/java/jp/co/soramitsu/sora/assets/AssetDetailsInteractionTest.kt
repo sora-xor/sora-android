@@ -85,7 +85,8 @@ class AssetDetailsInteractionTest {
         val pool = PoolsListItemState("", "", "XOR", "VAL", "2 XOR - 5 VAL", "$14.00", "+1%", "xor" to "val", emptyList())
         val current = mutableStateOf(state().copy(poolsState = PoolsListState(listOf(pool)), events = listOf(transaction)))
         show(current)
-        compose.onNodeWithText("2 XOR - 5 VAL").performScrollTo().performClick()
+        // The pool row keeps each amount with its symbol (no-break spaces), so a wrap never parts them.
+        compose.onNodeWithText("2\u00A0XOR - 5\u00A0VAL").performScrollTo().performClick()
         compose.onNodeWithText("1 XOR").performScrollTo().performClick()
         node(R.string.show_more).performScrollTo().performClick()
         compose.runOnIdle { assertEquals(listOf("pool:xor:val", "tx:$txHash", "more"), events); current.value = state() }

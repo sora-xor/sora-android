@@ -14,7 +14,7 @@ import jp.co.soramitsu.common.presentation.compose.theme.SoraAppTheme
 @Preview
 @Composable
 fun PlainWalletToolingPreview() {
-    SoraAppTheme(darkTheme = false, reduceEffects = true) {
+    SoraAppTheme(darkTheme = false) {
         Surface {
             Text("Wallet preview ready", Modifier.testTag("tooling-preview-content"))
         }
@@ -30,7 +30,7 @@ class WalletToolingPreviewProvider : PreviewParameterProvider<String> {
 fun ParameterizedWalletToolingPreview(
     @PreviewParameter(WalletToolingPreviewProvider::class) state: String,
 ) {
-    SoraAppTheme(darkTheme = false, reduceEffects = true) {
+    SoraAppTheme(darkTheme = false) {
         Surface {
             Text("Wallet state: $state", Modifier.testTag("tooling-preview-content"))
         }

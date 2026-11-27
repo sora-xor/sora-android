@@ -20,59 +20,57 @@ limitations under the License.
 package jp.co.soramitsu.common.presentation.compose.theme.tokens
 
 import androidx.compose.ui.graphics.Color
+import jp.co.soramitsu.ui_core.lit.LitNight
 
 /**
- * SORA Neon dark palette mapped onto the ui-core [jp.co.soramitsu.ui_core.theme.CustomColors]
- * slots (design spec 2.3). Keep in sync with `res/values-night/colors.xml` (neon_*) and
- * [jp.co.soramitsu.common.presentation.compose.theme.neon.NeonDark].
- *
- * fgInverted is the dark "ink": it is both the label on neon fills (primary button) and the
- * text on the inverted surface.
+ * The night palette: warm charcoal, ivory type, the red as a lighter ink. Nothing glows; a filled button keeps its
+ * own deeper red (`LitNight.red`).
  */
 object NightThemeColors {
 
-    val AccentPrimary = Color(0xFFFF3355)
+    val AccentPrimary = LitNight.redText
 
-    val AccentPrimaryContainer = Color(0xFF2A0C15)
+    val AccentPrimaryContainer = Color(0xFF4A2620)
 
-    val AccentSecondary = Color(0xFFF5F6FB)
+    val AccentSecondary = LitNight.ink
 
-    val AccentSecondaryContainer = Color(0xFF1C1C28)
+    val AccentSecondaryContainer = LitNight.padLit
 
-    val AccentTertiary = Color(0xFF7CCFE0)
+    val AccentTertiary = LitNight.inkTertiary
 
-    val AccentTertiaryContainer = Color(0xFF0F1E24)
+    val AccentTertiaryContainer = LitNight.padLit
 
-    val BgPage = Color(0xFF06060B)
+    val BgPage = LitNight.page
 
-    val BgSurface = Color(0xFF14141F)
+    val BgSurface = LitNight.surface
 
-    val BgSurfaceVariant = Color(0xFF1C1C28)
+    val BgSurfaceVariant = LitNight.wellFloor
 
-    val BgSurfaceInverted = Color(0xFFF5F6FB)
+    val BgSurfaceInverted = LitNight.ink
 
-    val FgPrimary = Color(0xFFF5F6FB)
+    val FgPrimary = LitNight.ink
 
-    val FgSecondary = Color(0xFFB3B7CB)
+    val FgSecondary = LitNight.inkSecondary
 
-    val FgTertiary = Color(0xFF969BB4)
+    val FgTertiary = LitNight.inkTertiary
 
-    val FgInverted = Color(0xFF06060B)
+    val FgInverted = LitNight.page
 
-    val FgOutline = Color(0xFF26263A)
+    val FgOutline = Color(0xFF4A4541)
 
-    val StatusSuccess = Color(0xFF2EF2A4)
+    val StatusSuccess = Color(0xFF7CC49A)
 
-    val StatusSuccessContainer = Color(0xFF0B221D)
+    val StatusSuccessContainer = Color(0xFF23382C)
 
-    val StatusWarning = Color(0xFFFFB547)
+    /** The ochre lifted off the charcoal, without glare. */
+    val StatusWarning = Color(0xFFD9B36A)
 
-    val StatusWarningContainer = Color(0xFF241B12)
+    val StatusWarningContainer = Color(0xFF3A3122)
 
-    val StatusError = Color(0xFFFF6B85)
+    /** A warning as a filled mark, with the day ink on it. */
+    val StatusWarningFill = Color(0xFFC8983C)
 
-    val StatusErrorContainer = Color(0xFF2A1119)
+    val StatusError = LitNight.redText
 
-    /** ui-core `elevation` slot: no grey shadows on the dark canvas. */
-    val Elevation = Color(0x00000000)
+    val StatusErrorContainer = Color(0xFF4A2620)
 }

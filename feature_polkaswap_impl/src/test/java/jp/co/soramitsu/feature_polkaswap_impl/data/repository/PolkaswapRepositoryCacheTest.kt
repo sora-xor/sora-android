@@ -28,7 +28,10 @@ class PolkaswapRepositoryCacheTest {
     private val mapper = mockk<AssetLocalToAssetMapper>()
     private val explorer = mockk<BlockExplorerManager>()
     private val config = mockk<SoraConfigManager>()
-    private val subject = PolkaswapRepositoryImpl(datasource, db, mapper, explorer, config, mockk<SubstrateCalls>())
+    private val whitelist = mockk<jp.co.soramitsu.common.domain.WhitelistTokensManager>().also {
+        every { it.blacklistIds } returns emptySet()
+    }
+    private val subject = PolkaswapRepositoryImpl(datasource, db, mapper, explorer, config, mockk<SubstrateCalls>(), whitelist)
     private val currency = SoraCurrency("USD", "United States Dollar", "$")
     private val wallet = SoraAccount("owner", "Main")
     private val base = Token("xor", "XOR", "SORA", 18, true, null, 2.0, 0.0, "$")
@@ -58,6 +61,36 @@ class PolkaswapRepositoryCacheTest {
         assertEquals(BigDecimal("200"), result.targetReserves)
         assertEquals(0.12, result.sbapy)
         coVerify { assets.getToken("xor", currency.code); assets.getToken("usd", currency.code) }
+    }
+
+    @Test fun `Explore leaves out a pair with a blacklisted token and follows a blacklist that arrives later`() = runTest {
+        val pepe = targetLocal.copy(id = "pepe", symbol = "PEPE")
+        val pepePool = basic.copy(tokenIdTarget = "pepe")
+        val rows = kotlinx.coroutines.flow.MutableSharedFlow<List<BasicPoolWithTokenFiatLocal>>(replay = 1)
+        every { pools.subscribeBasicPoolsWithToken() } returns rows
+        coEvery { mapper.map(any<TokenFiatLocal>()) } answers {
+            when (firstArg<TokenFiatLocal>().token.id) { "xor" -> base; "usd" -> target; else -> target.copy(id = "pepe", symbol = "PEPE") }
+        }
+        var hidden = setOf("pepe")
+        every { whitelist.blacklistIds } answers { hidden }
+        val shown = mutableListOf<List<String>>()
+        val job = launch { subject.subscribeBasicPools().collect { list -> shown += list.map { it.targetToken.id } } }
+        val stored = listOf(
+            BasicPoolWithTokenFiatLocal(basic, TokenFiatLocal(baseLocal, null), TokenFiatLocal(targetLocal, null)),
+            BasicPoolWithTokenFiatLocal(pepePool, TokenFiatLocal(baseLocal, null), TokenFiatLocal(pepe, null)),
+        )
+        rows.emit(stored)
+        advanceUntilIdle()
+        // The token list is stored again under a new blacklist: Room emits the pools again.
+        hidden = setOf("usd")
+        rows.emit(stored.toList())
+        advanceUntilIdle()
+        // Either token of the pair hides it, the base token too.
+        hidden = setOf("xor")
+        rows.emit(stored.map { it.copy() })
+        advanceUntilIdle()
+        job.cancel()
+        assertEquals(listOf(listOf("usd"), listOf("pepe"), emptyList()), shown)
     }
 
     @Test fun `all basic pools and base dex metadata retain source order`() = runTest {

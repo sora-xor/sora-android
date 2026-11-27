@@ -25,7 +25,6 @@ import jp.co.soramitsu.feature_ecosystem_impl.presentation.allcurrencies.*
 import jp.co.soramitsu.feature_ecosystem_impl.presentation.alldemeter.*
 import jp.co.soramitsu.feature_ecosystem_impl.presentation.claimdemeter.ClaimDemeterScreen
 import jp.co.soramitsu.feature_ecosystem_impl.presentation.claimdemeter.model.ClaimScreenState
-import jp.co.soramitsu.feature_main_impl.presentation.inappupdate.InAppUpdateScreen
 import jp.co.soramitsu.feature_wallet_impl.presentation.editcardshub.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.Assert.*
@@ -112,9 +111,10 @@ class ExploreAndWalletInteractionTest {
         val state = mutableStateOf(PoolsListState(listOf(first, first.copy(poolToken2Symbol = "ETH", poolAmounts = "3 XOR - 6 ETH", fiat = "$24", tokenIds = "xor" to "eth"))))
         show { Column { PoolsList(state.value) { events += "${it.first}:${it.second}" } } }
         compose.onNodeWithText("$12").assertExists(); compose.onNodeWithText("$24").assertExists()
-        compose.onNodeWithText("3 XOR - 6 ETH").performClick()
+        // Each pooled amount is kept whole on the row (no-break spaces inside it).
+        compose.onNodeWithText("3\u00A0XOR - 6\u00A0ETH").performClick()
         compose.runOnIdle { assertEquals(listOf("xor:eth"), events); state.value = PoolsListState(emptyList()) }
-        compose.onNodeWithText("2 XOR - 4 VAL").assertDoesNotExist()
+        compose.onNodeWithText("2\u00A0XOR - 4\u00A0VAL").assertDoesNotExist()
     }
     private fun claim() = ClaimScreenState(Triple("xor", "val", "pswap"), "", "2.000000000000000001 PSWAP", "$4.00", "0.007 XOR", true, false, false)
     private fun showClaim(state: State<ClaimScreenState>) = show {
@@ -164,12 +164,5 @@ class ExploreAndWalletInteractionTest {
         compose.runOnIdle { state.value = EditCardsHubScreenState(emptyList(), emptyList()) }
         node(R.string.common_currencies).assertDoesNotExist()
         compose.onNodeWithText(compose.activity.getString(R.string.common_enabled).uppercase()).assertDoesNotExist()
-    }
-    @Test fun updatePromptMakesRestartExplicitAndKeepsCancelSeparate() {
-        show { InAppUpdateScreen({ events += "update" }, { events += "cancel" }) }
-        node(R.string.restart_required).assertExists(); node(R.string.update_downloaded).assertExists()
-        compose.onNode(hasText(compose.activity.getString(R.string.common_update)) and hasClickAction()).performClick()
-        node(R.string.common_cancel).performClick()
-        compose.runOnIdle { assertEquals(listOf("update", "cancel"), events) }
     }
 }

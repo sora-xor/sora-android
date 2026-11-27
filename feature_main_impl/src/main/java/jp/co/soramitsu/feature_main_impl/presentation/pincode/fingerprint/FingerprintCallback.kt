@@ -38,7 +38,7 @@ class FingerprintCallback(private val pinCodeViewModel: PinCodeViewModel) : Biom
     }
 
     override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
-        pinCodeViewModel.onAuthenticationSucceeded()
+        pinCodeViewModel.onAuthenticationSucceeded(result.cryptoObject?.cipher)
     }
 
     override fun onAuthenticationFailed() {

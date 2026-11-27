@@ -33,14 +33,11 @@
   <string name="address_not_found_1">Qəbul edənlər tapılmadı</string>
   <string name="amount_error_no_funds">Bağışlayın, göstərilən məbləği köçürmək üçün kifayət qədər vəsaitiniz yoxdur.</string>
   <string name="appearance_title">Appearance</string>
-  <string name="appearance_reduce_effects">Reduce effects</string>
-  <string name="appearance_reduce_effects_description">Turns off glow, glass and motion effects. Useful on older phones or to save battery.</string>
   <string name="apr_description">Fermerçilikdə APR, DeFi likvidliyinin təmin edilməsində və ya stakeinq fəaliyyətlərində iştirak üçün investisiyanın illik gəlirini ifadə edir.</string>
   <string name="ask_biometry_message">Doğrulama üçün biometriyadan istifadə etmək istərdinizmi?</string>
   <string name="asset_details_asset_id">Asset ID</string>
   <string name="asset_details_liquid_balance">Liquid balance</string>
   <string name="asset_details_recent_activity">Recent activity</string>
-  <string name="asset_details_token_price">Token price</string>
   <string name="asset_details_your_pools">Your %s pools</string>
   <string name="asset_to_send">Asset to send</string>
   <string name="backup_not_enough_space_error">Yedəkləmə alınmadı. Google Diskinizdə kifayət qədər yer yoxdur. Bir az yer boşaltın və yenidən cəhd edin.</string>
@@ -70,7 +67,6 @@
   <string name="common_back">Geri</string>
   <string name="common_backup">Yedəkləmə</string>
   <string name="common_balance">Balans</string>
-  <string name="common_bashkir">Başqırd dili</string>
   <string name="common_bridged">Körpülü</string>
   <string name="common_cancel">Ləğv edin</string>
   <string name="common_chinese">Çin dili</string>
@@ -80,12 +76,10 @@
   <string name="common_close">Bağlayın</string>
   <string name="tx_details_view_on_explorer">Eksplorerdə bax</string>
   <string name="common_confirm">Təsdiqləyin</string>
-  <string name="common_connected">Əlaqədar</string>
   <string name="common_connecting">Qoşulur …</string>
   <string name="common_continue">Davam edin</string>
   <string name="common_copied">Panoya kopyalandı</string>
   <string name="common_create_qr_request">Create QR-request</string>
-  <string name="common_croatian">Xorvat dili</string>
   <string name="common_currencies">Valyutalar</string>
   <string name="common_delete">Delete</string>
   <string name="common_disabled">Əlil</string>
@@ -99,8 +93,6 @@
   <string name="common_error_fee_rate_not_available">Çıxarma təminatçısı ilə əlaqə qurula bilmir. Zəhmət olmasa bir az sonra yenə cəhd edin.</string>
   <string name="common_error_general_message">Problemi həll etmək üçün çox çalışırıq. Zəhmət olmasa bir az sonra yenə cəhd edin.</string>
   <string name="common_error_general_title">Xəta</string>
-  <string name="common_error_internal_error_title">Daxili xəta</string>
-  <string name="common_error_invalid_parameters">Yanlış Parametrlər</string>
   <string name="common_error_invalid_parameters_body">Xahiş edirəm internet bağlantısını yoxlayın və sonra yenidən cəhd edin.</string>
   <string name="common_error_invalid_query_format">Sorğunuz səhvdir. Zəhmət olmasa bir daha cəhd edin.</string>
   <string name="common_error_invitation_accepting_window_closed">Dəvət qəbul pəncərəsi bağlandı</string>
@@ -112,7 +104,6 @@
   <string name="common_error_network">Xahiş edirəm internet bağlantısını yoxlayın və sonra yenidən cəhd edin.</string>
   <string name="common_error_no_browser_error">Linki açmaq üçün brauzer quraşdırın</string>
   <string name="common_error_not_enough_invitations">Bağışlayın, ancaq paylaşmaq üçün dəvətiniz yoxdur</string>
-  <string name="common_error_not_found_title">Resurs əlçatan deyil</string>
   <string name="common_error_phone_already_exists">Üzr istəyirik, bu telefon nömrəsi artıq istifadə olunur. Xahiş edirik başqa birini sınayın.</string>
   <string name="common_error_phone_already_registered">Bu və ya digər istifadəçi qeydiyyat zamanı bu telefon nömrəsini istifadə etmişdir</string>
   <string name="common_error_pincode_check_error">Daxil edilmiş kod səhvdir</string>
@@ -121,22 +112,18 @@
   <string name="common_error_seed_is_not_valid">Lütfən, daxiletmənizin 64 hex simvolu olduğundan əmin olun.</string>
   <string name="common_error_seed_is_not_valid_title">Toxum etibarsızdır</string>
   <string name="common_error_self_invitation">Dəvət kodunuzu özünüz üçün istifadə edə bilməzsiniz</string>
-  <string name="common_error_unauthorized_body">Xahiş edirəm internet bağlantısını yoxlayın və sonra yenidən cəhd edin.</string>
-  <string name="common_error_unauthorized_title">Avtorizasiya alınmadı</string>
   <string name="common_error_user_not_found">Parol keçidiniz yanlışdır. Xahiş edirik başqa birini sınayın.</string>
   <string name="common_error_user_values_not_found">İstifadəçi dəyərləri məlumatları tapılmadığı üçün əməliyyata davam etmək olmur</string>
   <string name="common_error_votes_invalid_format">Bağışlayın, amma səslərin miqdarı şərh edilə bilinmir. Xahiş edirik yenidən səs verməyə çalışın.</string>
   <string name="common_error_votes_not_enough">Bağışlayın, amma səs vermək üçün kifayət qədər balınız yoxdur.</string>
   <string name="common_error_voting_is_not_allowed">Bağışlayın, lakin layihə artıq səs qəbul etmir.</string>
   <string name="common_error_wrong_user_status">İstifadəçinin statusu etibarsız olduğundan əməliyyata davam etmək olmur</string>
-  <string name="common_estonian">Eston dili</string>
   <string name="common_expand">Expand</string>
   <string name="common_explore">Explore</string>
   <string name="common_failed">Uğursuz oldu</string>
   <string name="common_farming">Əkinçilik</string>
   <string name="common_farms">Təsərrüfatlar</string>
   <string name="common_fee">Haqq</string>
-  <string name="common_filipino">Filippin dili</string>
   <string name="common_finnish">Fin dili</string>
   <string name="common_french">Fransız dili</string>
   <string name="common_german">Alman</string>
@@ -144,16 +131,9 @@
   <string name="common_google_backup_decryption_failed_2">Ola bilsin ki, daxil etdiyiniz parol yanlışdır.</string>
   <string name="common_hebrew">Hebrew</string>
   <string name="common_hindi">Hindi</string>
-  <plurals name="common_hour">
-    <item quantity="one">Boş</item>
-    <item quantity="other">saat</item>
-  </plurals>
   <string name="common_indonesian">İndoneziya dili</string>
   <string name="common_insufficient_balance">Qeyri-kafi balans</string>
-  <string name="common_italian">İtalyan dili</string>
   <string name="common_japanese">Yapon dili</string>
-  <string name="common_khmer">Xmer dili</string>
-  <string name="common_korean">Koreya dili</string>
   <string name="common_loading">Loading</string>
   <string name="common_malay">Malay dili</string>
   <string name="common_max">maks</string>
@@ -177,7 +157,6 @@
   <string name="common_remove">Sil</string>
   <string name="common_request">Request</string>
   <string name="common_russian">Rus dili</string>
-  <string name="common_scan">Tara</string>
   <string name="common_scan_qr">Scan QR</string>
   <string name="common_search_pools">Search pools</string>
   <string name="common_sec">saniyə</string>
@@ -193,15 +172,11 @@
   <string name="common_sms_code_expired">Doğrulama kodunun vaxtı bitibdir. Xahiş edirik başqa birini sınayın.</string>
   <string name="common_sms_code_not_correct">Doğrulama kodu səhvdir</string>
   <string name="common_spanish">İspan dili</string>
-  <string name="common_spanish_colombia">İspan (Kolumbiya) dili</string>
   <string name="common_supply">Təchizat</string>
   <string name="common_supply_liquidity_title">Supply liquidity</string>
-  <string name="common_swedish">İsveç dili</string>
   <string name="common_terms_title">Şərtlər və Qaydalar</string>
-  <string name="common_thai">Tay dili</string>
   <string name="common_today">Bu gün</string>
   <string name="common_turkish">Türk</string>
-  <string name="common_ukrainian">Ukrayna dili</string>
   <string name="common_update">Yeniləyin</string>
   <string name="common_upload_from_library">Upload from library</string>
   <string name="common_vietnamese">Vietnamese</string>
@@ -238,10 +213,7 @@
   <string name="eth_tx_address">Ethereum hesab ünvanı</string>
   <string name="eth_tx_hash">Ethereum əməliyyat hash</string>
   <string name="explore_create_pool">Hovuz yaradın</string>
-  <string name="explore_demeter_subtitle">Hovuz payınızı paylayın və əlavə mükafatlar qazanın</string>
   <string name="explore_demeter_title">Demeter Fermerçilik</string>
-  <string name="explore_provide_and_earn">Likvidliyi təmin edin və mükafatlar qazanın</string>
-  <string name="explore_swap_tokens_on_sora">SORA şəbəkəsində tokenləri dəyişdirin</string>
   <string name="export_account_details_backup_description">Bu cihaza girişi itirsəniz, ehtiyat nüsxəsini çıxarmasanız, vəsaitiniz itiriləcək!</string>
   <string name="export_account_details_backup_options">Yedəkləmə seçimləri</string>
   <string name="export_account_details_show_passphrase">Parol ifadəsini göstərin</string>
@@ -273,13 +245,9 @@
   <string name="history_referrer">İstinad edən</string>
   <string name="import_account_not_backed_up">Not backed up!</string>
   <string name="import_account_not_backed_up_alert_action_title">I will risk it</string>
-  <string name="import_account_not_backed_up_alert_description">If your device gets lost or stolen, you will loose your wallet and all your funds forever.</string>
+  <string name="import_account_not_backed_up_alert_description">If your device gets lost or stolen, you will lose your wallet and all your funds forever.</string>
   <string name="import_more_title">Import more</string>
   <string name="imported_account_title">Account imported</string>
-  <string name="invite_code_applied_body">Kod uğurla tətbiq olundu</string>
-  <string name="invite_code_applied_title">Təbrik edirik!</string>
-  <string name="invite_enter_error_already_applied">Artıq başqa bir dəvət kodu tətbiq etmisiniz</string>
-  <string name="invite_enter_error_time_is_up">Dəvət kodunun tətbiq vaxtı bitdi</string>
   <string name="invoice_scan_error_match">Özünüzə göndərə bilməzsiniz</string>
   <string name="invoice_scan_error_no_info">QR kodunu açmaq olmur</string>
   <string name="invoice_scan_error_user_not_found">QR-dən istifadəçi tapa bilinmir</string>
@@ -364,26 +332,7 @@
   <string name="pool_share_title_1">Hovuz payınız</string>
   <string name="pooled_assets">Pooled assets</string>
   <string name="profile_biometry_title">Biometriya müəllifi</string>
-  <plurals name="project_date_day_plurals">
-    <item quantity="one">gün qalıb</item>
-    <item quantity="other">günlər qalıb</item>
-  </plurals>
-  <plurals name="project_date_hour_plurals">
-    <item quantity="one">saat qalıb</item>
-    <item quantity="other">saatlar qalıb</item>
-  </plurals>
-  <plurals name="project_date_minute_plurals">
-    <item quantity="one">dəqiqə qalıb</item>
-    <item quantity="other">dəqiqələr qalıb</item>
-  </plurals>
-  <plurals name="project_date_second_plurals">
-    <item quantity="one">saniyə qalıb</item>
-    <item quantity="other">saniyələr qalıb</item>
-  </plurals>
-  <string name="project_ended_template">Tamamlandı %s</string>
-  <string name="protect_loss_access_funds">Özünüzü pulunuza girişi itirməkdən qoruyun</string>
   <string name="qr_code">QR kodu</string>
-  <string name="qr_upload">Qalereyadan yükləyin</string>
   <string name="receive_tokens">Receive tokens</string>
   <string name="received_from_adar">ADAR-dan alınıb</string>
   <string name="recent_recipients">Recent recipients</string>
@@ -430,7 +379,6 @@
   <string name="remove_pool_confirmation_description">Çıxış təxmin edilir. Qiymət %s%% -dən çox dəyişərsə, əməliyyatınız geri qayıdacaq.</string>
   <string name="remove_pool_confirmation_title">Silinməni təsdiqləyin</string>
   <string name="request_supply_liquidity">Əlavə mükafatlar əldə etmək üçün pul qazanmağa başlamaq üçün müvafiq hovuz cütlüyünə likvidlik təqdim etməlisiniz:</string>
-  <string name="restart_required">Yenidən başlatma tələb olunur</string>
   <string name="review">Review</string>
   <string name="route">Route</string>
   <string name="scan_qr_show_my_qr">Show my QR code</string>
@@ -438,8 +386,6 @@
   <string name="search_token_placeholder">Aktiv ID, Adı və ya Ticker Simvoluna görə axtarın</string>
   <string name="select_account_address_1">Yeni ünvan axtarın və ya əlavə edin</string>
   <string name="select_account_import">Select account to import</string>
-  <string name="select_asset_receive">Qəbul etmək üçün Aktiv seçin</string>
-  <string name="select_asset_send">Göndərmək üçün Aktiv seçin</string>
   <string name="select_node_add_custom_node">Fərdi node əlavə edin</string>
   <string name="select_node_custom_node_edit_node">Düyünü redaktə edin</string>
   <string name="select_node_custom_nodes">Fərdi qovşaqlar</string>
@@ -456,20 +402,14 @@
   <string name="select_pool_share">Bahis etmək üçün hovuz payınızı seçin</string>
   <string name="select_recipient">Alıcı seçin</string>
   <string name="settings_accounts">Hesablar</string>
-  <string name="settings_accounts_subtitle">Hesabları idarə edin, parolun ehtiyat nüsxəsini çıxarın</string>
-  <string name="settings_app_subtitle">Dil, Görünüş</string>
   <string name="settings_crypto_accounts">Crypto Accounts</string>
   <string name="settings_header_app">TƏTBİQ PARAMETLƏRİ</string>
-  <string name="settings_information_subtitle">İmtina, FAQ, Proqram haqqında</string>
   <string name="settings_information_title">Məlumat</string>
-  <string name="settings_invite_subtitle">Dəvət linkini paylaşın</string>
   <string name="settings_invite_title">Dostları dəvət et və qazan</string>
-  <string name="settings_login_subtitle">PİN və Biometrik doğrulama</string>
   <string name="settings_login_title">Giriş və Təhlükəsizlik</string>
   <string name="settings_nodes">Düyünlər</string>
   <string name="show_more">Show more</string>
   <string name="slippage">Slippage</string>
-  <string name="something_went_wrong">Nəsə xəta baş verdi</string>
   <string name="start_staking">Staking başlayın</string>
   <string name="status_error">Xəta</string>
   <string name="status_pending">Gözlənilir</string>
@@ -481,20 +421,15 @@
   <string name="transaction_date_1">Date and time</string>
   <string name="transaction_id">Köçürmə əməliyyatının İD-si</string>
   <string name="tutorial_many_world">Bir çox Dünyalar.\n Bir İqtisadiyyat.</string>
-  <string name="tutorial_many_world_desc">SORA, SORA Parlamentinin demokratik nəzarəti altında, yeni və maraqlı tətbiqlərin yaradılmasını maliyyələşdirən, mərkəzləşdirilməmiş çox yönlü bir iqtisadi sistem olmaq üçün çalışır.</string>
   <string name="tutorial_privacy_policy">Gizlilik Siyasəti</string>
   <string name="tutorial_terms_and_conditions_3">Şərtlər və Qaydalar</string>
   <string name="tutorial_terms_and_conditions_template_1">By continuing you are agreeing with the </string>
-  <string name="unexpected_error">Gözlənilməz xəta baş verdi. \n\n Siz @sora_happy Telegram çatında SORA icmasında bu problemi həll edə bilərsiniz.</string>
-  <string name="update_downloaded">SORA tətbiqi üçün yeniləmə endirilib və quraşdırılmağa hazırdır. \n\n Proqramın ən son versiyasından istifadə etmək vacibdir. \n\n Proqramı yeniləmək üçün yenidən başladın tələb olunur.</string>
-  <string name="update_install_now">Güncəlləməni indi quraşdırmaq istərdinizmi?</string>
   <string name="wallet_backup">Pulqabı ehtiyat nüsxəsi</string>
   <string name="wallet_balance_locked">Kilidlənmiş</string>
   <string name="wallet_balance_reserved">Rezerv edilmiş</string>
   <string name="wallet_bonded">Bağlı</string>
   <string name="wallet_connect_account">Hesab</string>
   <string name="wallet_connect_done">Tamamlandı</string>
-  <string name="wallet_network_activity">Fəaliyyət</string>
   <string name="wallet_qr_share_message_empty_template_v2" formatted="false">Mənə %s göndərmək üçün bu QR-ni skan edin. Mənim %s Şəbəkə Hesabım ID:\n%s</string>
   <string name="wallet_receive_xor">XOR qəbul edin</string>
   <string name="wallet_redeemable">Əldə edilə bilər</string>
@@ -520,19 +455,11 @@
   <string name="safe_mode_updating_body">Your keys stay on this device. This usually takes under a minute.</string>
   <string name="safe_mode_finishing_title">Finishing your update</string>
   <string name="safe_mode_finishing_body">Picking up where we left off. Your keys stay on this device.</string>
-  <string name="safe_mode_checking_title">Checking your wallet</string>
-  <string name="safe_mode_checking_body">SORA is checking your account before opening the wallet. Your keys stay on this device.</string>
-  <string name="safe_mode_waiting_network_body">We\'ll continue as soon as you\'re back online.</string>
-  <string name="safe_mode_change_node">Change node</string>
   <string name="safe_mode_step_check_data">Checking wallet data</string>
   <string name="safe_mode_step_storage">Updating wallet storage</string>
   <string name="safe_mode_step_accounts">Checking your accounts</string>
   <string name="safe_mode_step_accounts_progress">%1$d of %2$d</string>
   <string name="safe_mode_step_finishing">Finishing up</string>
-  <string name="safe_mode_step_unlocked">Wallet unlocked</string>
-  <string name="safe_mode_step_network">Connecting to the network</string>
-  <string name="safe_mode_step_network_waiting">Waiting for network</string>
-  <string name="safe_mode_step_account_check">Checking your account</string>
   <string name="safe_mode_step_state_done">Done</string>
   <string name="safe_mode_step_state_running">In progress</string>
   <string name="safe_mode_step_state_waiting">Not started yet</string>
@@ -546,20 +473,10 @@
   <string name="safe_mode_learn_more">Learn more</string>
   <string name="safe_mode_new_pin_title">Choose a new 6-digit PIN</string>
   <string name="safe_mode_new_pin_body">This makes your wallet harder to guess. Your wallet and funds don\'t change.</string>
-  <string name="safe_mode_whats_new_title">Welcome to the new SORA Wallet</string>
-  <string name="safe_mode_whats_new_body">Your wallet was updated. Here is what SORA checked.</string>
-  <string name="safe_mode_whats_new_accounts">Your accounts are on this device</string>
-  <string name="safe_mode_whats_new_pin">Your wallet is locked with your PIN</string>
-  <string name="safe_mode_whats_new_balances">Balances loaded</string>
-  <string name="safe_mode_whats_new_balances_loading">Loading balances</string>
-  <string name="safe_mode_whats_new_backup">Back up your recovery phrase</string>
-  <string name="safe_mode_back_up_now">Back up now</string>
-  <string name="safe_mode_later">Later</string>
   <string name="safe_mode_device_transfer">Your wallet won\'t move to a new phone automatically. Keep your recovery phrase or a Google Drive backup.</string>
   <string name="safe_mode_pending_check">A previous transaction is still being checked. Sending is paused so nothing is sent twice.</string>
   <string name="safe_mode_tap_to_reveal">Tap to reveal</string>
   <string name="safe_mode_reveal_privacy">Make sure no one can see your screen.</string>
-  <string name="safe_mode_support_no_email">No email app is set up. You can write to %1$s.</string>
   <string name="safe_mode_retained_title">Wallets found on this phone</string>
   <string name="safe_mode_retained_body">SORA found wallet keys on this phone that no account uses, for example from an account setup that was not finished. They were kept and nothing was deleted. You can restore them here.</string>
   <string name="safe_mode_retained_restore">Restore this wallet</string>
@@ -577,7 +494,6 @@
   <string name="account_repair_confirm">Repair account</string>
   <string name="backup_no_matching_secret">No recovery phrase or seed saved on this phone matches this account, so none is shown. The account itself still works. To back it up, export it as an encrypted JSON file. You can bring it back later from Import account, Backup file (JSON).</string>
   <string name="backup_no_matching_secret_read_only">No recovery phrase or seed saved on this phone matches this account, so none is shown. To use this account on this phone again, go to Import account and enter its recovery phrase, raw seed or backup file.</string>
-  <string name="safe_mode_whats_new_accounts_some_read_only">Accounts that can send from this phone: %1$s of %2$s. To repair the rest, import their recovery phrase.</string>
   <string name="account_repair_title_backup">Repair this account from your backup</string>
   <string name="json_backup_invalid_title">This backup file can\'t be read</string>
   <string name="json_backup_invalid">This isn\'t an encrypted account backup (JSON) that SORA can read. Check that you chose the file you exported, or pasted all of its text. Nothing was changed.</string>
@@ -614,7 +530,6 @@
   <string name="recovery_json_no_file_picker">This phone has no app for choosing a file. Paste the text of your backup file into the field instead. Nothing was changed.</string>
   <string name="export_json_keys_unusable_named_title">Some accounts can\'t be exported</string>
   <string name="export_json_keys_unusable_named">These accounts can\'t be exported, because the keys saved for them on this phone can\'t be used:\n\n%1$s\n\nNo file was made. Export your other accounts without them. To use these accounts on this phone again, go to Import account and enter their recovery phrase, raw seed or backup file.</string>
-  <string name="safe_mode_whats_new_batch_export">A JSON backup file with several accounts made by an earlier version of SORA can be empty. If you rely on one, export your accounts again from Accounts.</string>
   <!-- ak2-readonly-ux: read-only accounts are labelled, explained and repairable; removal shows the matching backup first -->
   <string name="failure_generic_title">This wasn\'t completed</string>
   <string name="failure_generic_message">SORA couldn\'t complete this just now. Please try again in a moment. If you were making a transaction, check Activity first, so that nothing is sent twice.</string>
@@ -749,11 +664,12 @@
   <string name="neon_theme_light">Light</string>
   <!-- English fallback for new Nexus and recovery copy pending translation. -->
   <string name="nexus_production_address">Production address</string>
-  <string name="nexus_copy_production_address">Copy production address</string>
-  <string name="nexus_production_not_live">Not live yet</string>
   <string name="nexus_production_address_notice">Your SORA Nexus production address is ready to copy. The production network has not launched yet; balances, history and transfers will be available after launch.</string>
   <string name="nexus_send_not_available">Sending is currently unavailable for this account. You can view your balance, copy your address and receive testnet XOR.</string>
   <string name="nexus_history_load_more">Load older transfers</string>
   <string name="recovery_json_password_help">Enter the password you set when saving this backup. This is not your app PIN.</string>
   <string name="account_switching">Switching account…</string>
+  <string name="hide_zero_balances">Hide zero balances</string>
+  <string name="show_zero_balances">Show zero balances</string>
+  <string name="global_results">Global results</string>
 </resources>

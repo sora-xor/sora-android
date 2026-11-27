@@ -14,6 +14,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import jp.co.soramitsu.common.R
+import jp.co.soramitsu.ui_core.lit.litContentWidth
 import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
 
@@ -32,7 +33,8 @@ fun WalletSheet(
         Surface(color = MaterialTheme.customColors.bgPage,
             contentColor = MaterialTheme.customColors.fgPrimary,
             modifier = Modifier.fillMaxSize()) {
-            Column(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding().imePadding()) {
+            // Clear of the bars, the keyboard and a cutout on every side; one column of readable width on a tablet.
+            Column(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing).litContentWidth()) {
                 Row(Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 12.dp)) {
                     Text(title, style = MaterialTheme.customTypography.headline2,
                         modifier = Modifier.weight(1f).padding(top = 12.dp))

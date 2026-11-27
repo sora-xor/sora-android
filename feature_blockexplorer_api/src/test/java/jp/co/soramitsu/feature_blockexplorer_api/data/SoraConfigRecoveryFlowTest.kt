@@ -28,10 +28,8 @@ class SoraConfigRecoveryFlowTest {
         val manager = subject()
         assertEquals("1234", manager.getGenesis()); assertEquals("0x1234", manager.getGenesis(true))
         assertEquals("Fixture", manager.getNodes().single().name)
-        assertEquals("https://fixture.example/join", manager.getInviteLink())
         assertEquals("https://fixture.example/types.json", manager.getSubstrateTypesUrl())
         assertEquals(OptionsProvider.blockExplorerUrl, manager.getBlockExplorerUrl())
-        assertEquals(OptionsProvider.polkaswapIndexerEndpoint, manager.getIndexerUrl())
         assertEquals("JPY", manager.getSelectedCurrency().code)
         assertTrue(manager.getTransactionExplorerUrl("0x1234")!!.endsWith("q=0x1234"))
         coVerify(exactly = 1) { http.getUtf8(OptionsProvider.configCommon, 1024 * 1024); http.getUtf8(OptionsProvider.configMobile, 1024 * 1024) }
@@ -51,21 +49,20 @@ class SoraConfigRecoveryFlowTest {
         coEvery { http.getUtf8(any(), any()) } throws BoundedHttpTextException("BOUNDED_HTTP_IO")
         coEvery { preferences.getString("commonConfig") } returns "{malformed"
         assertEquals(emptyList<SoraConfigNode>(), manager.getNodes())
-        assertEquals("", manager.getGenesis()); assertEquals("", manager.getInviteLink()); assertEquals("", manager.getSubstrateTypesUrl())
-        assertEquals(OptionsProvider.blockExplorerUrl, manager.getBlockExplorerUrl()); assertEquals(OptionsProvider.polkaswapIndexerEndpoint, manager.getIndexerUrl())
+        assertEquals("", manager.getGenesis()); assertEquals("", manager.getSubstrateTypesUrl())
+        assertEquals(OptionsProvider.blockExplorerUrl, manager.getBlockExplorerUrl())
         assertEquals("USD", manager.getSelectedCurrency().code)
     }
     @Test fun `missing mobile cache cannot expose a partial live common configuration`() = runTest {
         val manager = subject()
         coEvery { http.getUtf8(OptionsProvider.configMobile, any()) } throws BoundedHttpTextException("BOUNDED_HTTP_IO")
         coEvery { preferences.getString("mobileConfig") } returns ""
-        assertTrue(manager.getNodes().isEmpty()); assertEquals("", manager.getInviteLink())
+        assertTrue(manager.getNodes().isEmpty())
     }
     @Test fun `cache write failure preserves a successfully decoded live value`() = runTest {
         val manager = subject()
         coEvery { preferences.putString(any(), any()) } throws IllegalStateException("Storage unavailable")
         assertEquals("Fixture", manager.getNodes().single().name)
-        assertEquals("https://fixture.example/join", manager.getInviteLink())
     }
     @Test fun `cancellation during remote read cache write and fallback read is propagated`() = runTest {
         for (stage in listOf("read", "write", "cache")) {
@@ -86,6 +83,40 @@ class SoraConfigRecoveryFlowTest {
         val manager = subject(); coEvery { preferences.getString("selected_currency") } returns "UNKNOWN"
         assertEquals("USD", manager.getSelectedCurrency().code)
         coVerify(exactly = 0) { preferences.putString("selected_currency", any()) }
+    }
+    @Test fun `the selected currency is answered from the saved configuration without the network`() = runTest {
+        val manager = subject()
+        coEvery { http.getUtf8(any(), any()) } coAnswers { kotlinx.coroutines.awaitCancellation() }
+        coEvery { preferences.getString("mobileConfig") } returns mobile
+        assertEquals("JPY", manager.getSelectedCurrency().code)
+        coVerify(exactly = 0) { http.getUtf8(any(), any()) }
+    }
+    @Test fun `the default currency needs neither a saved configuration nor the network`() = runTest {
+        val manager = subject(); coEvery { preferences.getString("selected_currency") } returns ""
+        coEvery { http.getUtf8(any(), any()) } coAnswers { kotlinx.coroutines.awaitCancellation() }
+        val currency = manager.getSelectedCurrency()
+        assertEquals("USD", currency.code); assertEquals("$", currency.sign)
+        coVerify(exactly = 0) { http.getUtf8(any(), any()) }
+    }
+    @Test fun `a currency the saved configuration does not list waits for the configuration, as before`() = runTest {
+        // The saved list is older than the choice: it must not turn the chosen currency into the default.
+        val manager = subject()
+        coEvery { preferences.getString("mobileConfig") } returns mobile.replace("\"JPY\"", "\"EUR\"")
+        assertEquals("JPY", manager.getSelectedCurrency().code)
+        coVerify(exactly = 1) { http.getUtf8(OptionsProvider.configMobile, any()) }
+    }
+    @Test fun `a currency no configuration lists is the default once the configuration has answered`() = runTest {
+        val manager = subject(); coEvery { preferences.getString("selected_currency") } returns "UNKNOWN"
+        coEvery { preferences.getString("mobileConfig") } returns mobile
+        assertEquals("USD", manager.getSelectedCurrency().code)
+        coVerify(exactly = 1) { http.getUtf8(OptionsProvider.configMobile, any()) }
+    }
+    @Test fun `a saved configuration that does not decode is not used for the currency`() = runTest {
+        val manager = subject()
+        coEvery { preferences.getString("mobileConfig") } returns "{malformed"
+        // Not the default: the configuration is fetched, as before, and lists the currency.
+        assertEquals("JPY", manager.getSelectedCurrency().code)
+        coVerify(exactly = 1) { http.getUtf8(OptionsProvider.configMobile, any()) }
     }
     @Test fun `utf8 admission counts CJK and rejects either orphan surrogate`() {
         assertEquals("界", requireSoraConfigPayloadWithinLimit("界", 3))

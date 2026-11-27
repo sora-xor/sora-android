@@ -20,6 +20,7 @@ limitations under the License.
 package jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.account_details
 
 import android.content.Intent
+import android.os.SystemClock
 import androidx.activity.result.ActivityResultLauncher
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.LiveData
@@ -42,6 +43,7 @@ import jp.co.soramitsu.common.domain.SoraException
 import jp.co.soramitsu.common.presentation.compose.components.initSmallTitle2
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.util.ext.isPasswordSecure
+import jp.co.soramitsu.feature_main_api.domain.model.PinCodeAction
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_multiaccount_impl.domain.MultiaccountInteractor
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.CreateBackupPasswordState
@@ -132,8 +134,30 @@ class AccountDetailsViewModel @AssistedInject constructor(
     private var isFromAuthorization = false
     private var cloudOperationInFlight = false
 
+    /**
+     * A Google Drive backup step waiting for the PIN screen. The backup holds the recovery phrase,
+     * the raw seed and the key-pair JSON, so making or deleting it asks for the PIN exactly as
+     * showing them does; Account options itself opens without the PIN.
+     */
+    private enum class GoogleBackupStep { START, CONTINUE_AFTER_SIGN_IN, UPLOAD, DELETE }
+
+    private var stepAwaitingPin: GoogleBackupStep? = null
+
+    /** When the PIN last confirmed the backup in progress, from [elapsedRealtime]; null if not. */
+    private var pinConfirmedAt: Long? = null
+
+    /**
+     * Milliseconds since boot. Unlike the wall clock it cannot be set back to stretch a PIN
+     * confirmation. Replaced in tests.
+     */
+    internal var elapsedRealtime: () -> Long = SystemClock::elapsedRealtime
+
+    /** A Drive call or an upload is running; no other backup action starts meanwhile. */
+    private fun cloudBusy(): Boolean =
+        cloudOperationInFlight || _createBackupPasswordState.value?.isLoading == true
+
     private fun beginCloudOperation(): Boolean {
-        if (cloudOperationInFlight || _createBackupPasswordState.value?.isLoading == true) return false
+        if (cloudBusy()) return false
         cloudOperationInFlight = true
         _accountDetailsScreenState.value = _accountDetailsScreenState.value?.copy(isBackupLoading = true)
         return true
@@ -381,13 +405,54 @@ class AccountDetailsViewModel @AssistedInject constructor(
         }
     }
 
+    /** True while the PIN confirmed the backup in progress at most [PIN_CONFIRMATION_MS] ago. */
+    private fun pinIsFresh(): Boolean {
+        val confirmedAt = pinConfirmedAt ?: return false
+        return elapsedRealtime() - confirmedAt in 0..PIN_CONFIRMATION_MS
+    }
+
+    private fun requestPin(step: GoogleBackupStep) {
+        stepAwaitingPin = step
+        router.showPinForBackup(PinCodeAction.GOOGLE_BACKUP, listOf(address))
+    }
+
+    /**
+     * The PIN screen confirmed [PinCodeAction.GOOGLE_BACKUP]: the step that asked for it runs now.
+     * A confirmation nothing asked for (a recreated screen, a stale result) does nothing.
+     */
+    fun onPinConfirmed(launcher: ActivityResultLauncher<Intent>?) {
+        val step = stepAwaitingPin ?: return
+        stepAwaitingPin = null
+        pinConfirmedAt = elapsedRealtime()
+        when (step) {
+            GoogleBackupStep.START -> startGoogleBackup(launcher)
+            GoogleBackupStep.CONTINUE_AFTER_SIGN_IN -> continueAfterGoogleSignIn()
+            GoogleBackupStep.UPLOAD -> uploadBackup()
+            GoogleBackupStep.DELETE -> deleteBackup()
+        }
+    }
+
+    private fun backupPasswordReady(state: CreateBackupPasswordState): Boolean =
+        !state.isLoading && state.warningIsSelected &&
+            state.password.value.text.isPasswordSecure() &&
+            state.password.value.text == state.passwordConfirmation.value.text
+
+    /**
+     * "Set password" on the backup screen. The upload runs when the PIN confirmed this backup in
+     * the last [PIN_CONFIRMATION_MS]; after longer (the phone was left on this screen) the PIN is
+     * asked again first.
+     */
     fun onBackupPasswordClicked() {
         if (!requireCloudBackup() || cloudOperationInFlight) return
+        val state = _createBackupPasswordState.value ?: return
+        if (!backupPasswordReady(state)) return
+        if (pinIsFresh()) uploadBackup() else requestPin(GoogleBackupStep.UPLOAD)
+    }
+
+    private fun uploadBackup() {
+        if (!requireCloudBackup() || cloudOperationInFlight) return
         _createBackupPasswordState.value?.let { createBackupPasswordState ->
-            if (createBackupPasswordState.isLoading || !createBackupPasswordState.warningIsSelected ||
-                !createBackupPasswordState.password.value.text.isPasswordSecure() ||
-                createBackupPasswordState.password.value.text != createBackupPasswordState.passwordConfirmation.value.text
-            ) return
+            if (!backupPasswordReady(createBackupPasswordState)) return
             _createBackupPasswordState.value = createBackupPasswordState.copy(isLoading = true)
             viewModelScope.launch(coroutineManager.io) {
                 try {
@@ -452,6 +517,8 @@ class AccountDetailsViewModel @AssistedInject constructor(
                             )
 
                             withContext(coroutineManager.main) {
+                                // The confirmation covered this one backup.
+                                pinConfirmedAt = null
                                 _accountDetailsScreenState.value = _accountDetailsScreenState
                                     .value?.copy(
                                         isBackupAvailable = backupService.isAccountBackedUp(
@@ -494,9 +561,20 @@ class AccountDetailsViewModel @AssistedInject constructor(
         }
     }
 
+    /**
+     * "Backup to Google" or "Delete Google backup". Each one starts with the PIN; a confirmation
+     * left over from an earlier backup is never reused, so the unlocked app alone cannot send the
+     * phrase to a Google account of someone else's choosing.
+     */
     fun onBackupClicked(
         launcher: ActivityResultLauncher<Intent>?
     ) {
+        if (launcher == null || !requireCloudBackup() || cloudBusy()) return
+        pinConfirmedAt = null
+        requestPin(GoogleBackupStep.START)
+    }
+
+    private fun startGoogleBackup(launcher: ActivityResultLauncher<Intent>?) {
         if (launcher == null || !requireCloudBackup() || !beginCloudOperation()) return
 
         startBackup()
@@ -538,9 +616,15 @@ class AccountDetailsViewModel @AssistedInject constructor(
         }
     }
 
+    /** "Delete" in the dialog that the PIN-confirmed backup flow opens for an existing backup. */
     fun deleteGoogleBackup() {
-        if (!requireCloudBackup() || !beginCloudOperation()) return
+        if (!requireCloudBackup() || cloudBusy()) return
         _deleteDialogState.value = false
+        if (pinIsFresh()) deleteBackup() else requestPin(GoogleBackupStep.DELETE)
+    }
+
+    private fun deleteBackup() {
+        if (!requireCloudBackup() || !beginCloudOperation()) return
 
         viewModelScope.launch {
             try {
@@ -566,6 +650,7 @@ class AccountDetailsViewModel @AssistedInject constructor(
             } catch (e: Exception) {
                 onError(R.string.wallet_cloud_backup_failed)
             } finally {
+                pinConfirmedAt = null
                 finishCloudOperation()
             }
         }
@@ -585,7 +670,17 @@ class AccountDetailsViewModel @AssistedInject constructor(
             accountDetailsScreenState.value?.copy(isBackupLoading = false)
     }
 
+    /** Google's account picker returned an account for the backup that the PIN started. */
     fun onSuccessfulGoogleSignin() {
+        if (!requireCloudBackup() || cloudBusy()) return
+        if (pinIsFresh()) {
+            continueAfterGoogleSignIn()
+        } else {
+            requestPin(GoogleBackupStep.CONTINUE_AFTER_SIGN_IN)
+        }
+    }
+
+    private fun continueAfterGoogleSignIn() {
         if (!requireCloudBackup() || !beginCloudOperation()) return
         viewModelScope.launch {
             try {
@@ -650,5 +745,10 @@ class AccountDetailsViewModel @AssistedInject constructor(
             onSuccessfulGoogleSignin()
         }
         isFromAuthorization = false
+    }
+
+    private companion object {
+        /** How long one PIN confirmation lets a started backup continue without asking again. */
+        const val PIN_CONFIRMATION_MS = 5 * 60 * 1000L
     }
 }

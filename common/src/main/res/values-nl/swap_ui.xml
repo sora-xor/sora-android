@@ -1,0 +1,15 @@
+<resources>
+    <string name="swap_pay_label">Betalen</string>
+    <string name="swap_receive_label">Ontvangen</string>
+    <string name="asset_balance_value">Balans %1$s</string>
+    <string name="asset_catalog_retry">Opnieuw proberen</string>
+    <string name="swap_market_missing_pair">Kies twee tokens om markten te zien.</string>
+    <string name="swap_market_empty">Geen markten voor dit paar</string>
+    <string name="swap_about_market">Over %1$s</string>
+    <string name="swap_show_terms">Voorwaarden lezen</string>
+    <string name="swap_hide_terms">Voorwaarden verbergen</string>
+    <string name="swap_terms_summary">Bekijk de voorwaarden voor het omruilen.</string>
+    <string name="asset_picker_empty">Geen tokens beschikbaar</string>
+    <string name="liquidity_base_token">Basistoken</string>
+    <string name="liquidity_pair_token">Gekoppelde token</string>
+</resources>

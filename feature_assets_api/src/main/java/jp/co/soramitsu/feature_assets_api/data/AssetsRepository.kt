@@ -54,7 +54,8 @@ interface AssetsRepository {
 
     suspend fun getToken(tokenId: String): Token?
 
-    suspend fun getXORBalance(address: String, precision: Int): XorAssetBalance
+    /** See [jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor.getXorBalance] for [forDisplay]. */
+    suspend fun getXORBalance(address: String, precision: Int, forDisplay: Boolean = true): XorAssetBalance
 
     suspend fun hideAssets(assetIds: List<String>, soraAccount: SoraAccount)
 
@@ -77,9 +78,33 @@ interface AssetsRepository {
         tokenId: String,
     ): Flow<Asset?>
 
+    /**
+     * Every whitelisted asset row of [address], whatever its visibility: what the account's rows
+     * say it holds. Reads rows only; unlike [getAssetsWhitelist] it never creates any.
+     */
+    fun subscribeAssetsOfWhitelist(address: String): Flow<List<Asset>>
+
+    /** When the newest of the app's saved prices was read; null when it has none. */
+    fun subscribeNewestPriceMillis(): Flow<Long?>
+
     fun subscribeAssetsActive(
         address: String
     ): Flow<List<Asset>>
+
+    fun subscribeAssetsFavorite(
+        address: String
+    ): Flow<List<Asset>>
+
+    fun subscribeAssetsVisible(
+        address: String
+    ): Flow<List<Asset>>
+
+    /**
+     * The assets of [address] in tokens that Polkaswap's blacklist hides, those with a balance
+     * above zero. Every other list and picker leaves these tokens out; the full asset list shows
+     * them marked, so that funds the account already holds stay reachable.
+     */
+    fun subscribeAssetsNotListed(address: String): Flow<List<Asset>>
 
     suspend fun toggleVisibilityOfToken(
         tokenId: String,
@@ -104,6 +129,14 @@ interface AssetsRepository {
     suspend fun updateBalancesVisibleAssets(address: String)
 
     suspend fun updateWhitelistBalances(address: String)
+
+    /**
+     * Waits for this run's token list walk (every asset on the chain, the whitelist and the
+     * blacklist) and, when the walk changed which balances a wallet has, reads [address] once
+     * more if [updateWhitelistBalances] read it with the list as it was before. Throws when the
+     * walk failed.
+     */
+    suspend fun updateWhitelistBalancesAfterTokenListWalk(address: String)
 
     suspend fun fetchBalance(address: String, ids: List<String>): List<BigInteger>
 }

@@ -32,6 +32,7 @@ import jp.co.soramitsu.androidfoundation.testing.getOrAwaitValue
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.feature_account_api.domain.model.WalletBackupMaterial
+import jp.co.soramitsu.feature_main_api.domain.model.PinCodeAction
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_multiaccount_impl.domain.MultiaccountInteractor
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.account_details.AccountDetailsViewModel
@@ -68,8 +69,10 @@ import org.junit.runner.RunWith
 import org.mockito.BDDMockito.given
 import org.mockito.Mock
 import org.mockito.Mockito.never
+import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mockito.junit.MockitoJUnitRunner
+import org.mockito.kotlin.any
 import org.mockito.kotlin.verifyNoMoreInteractions
 
 @ExperimentalCoroutinesApi
@@ -110,6 +113,16 @@ class AccountDetailsViewModelTest {
     private lateinit var accountDetailsViewModel: AccountDetailsViewModel
 
     private val account = SoraAccount("address", "accountName")
+
+    /** Milliseconds since boot as the view model sees them. */
+    private var now = 1_000L
+
+    /** "Backup to Google", then the PIN screen confirming it. */
+    private fun startBackupThroughPin() {
+        accountDetailsViewModel.onBackupClicked(accountResultLauncher)
+        verify(mainRouter).showPinForBackup(PinCodeAction.GOOGLE_BACKUP, listOf("address"))
+        accountDetailsViewModel.onPinConfirmed(accountResultLauncher)
+    }
 
     /** The accounts that cannot sign on this phone, as the repository reports them. */
     private val unavailable = MutableStateFlow<Set<String>>(emptySet())
@@ -155,6 +168,7 @@ class AccountDetailsViewModelTest {
             coroutineManager,
             account.substrateAddress,
         )
+        accountDetailsViewModel.elapsedRealtime = { now }
     }
 
     @Test
@@ -464,7 +478,7 @@ class AccountDetailsViewModelTest {
         given(backupService.authorize(accountResultLauncher)).willReturn(true)
         given(backupService.isAccountBackedUp(account.substrateAddress)).willReturn(false)
 
-        accountDetailsViewModel.onBackupClicked(accountResultLauncher)
+        startBackupThroughPin()
         advanceUntilIdle()
         accountDetailsViewModel.onBackupPasswordChanged(TextFieldValue(password))
         accountDetailsViewModel.onBackupPasswordConfirmationChanged(TextFieldValue(password))
@@ -500,7 +514,7 @@ class AccountDetailsViewModelTest {
     fun `onBackupClicked() called when authorize fails`() = runTest {
         given(backupService.authorize(accountResultLauncher)).willReturn(false)
 
-        accountDetailsViewModel.onBackupClicked(accountResultLauncher)
+        startBackupThroughPin()
         advanceUntilIdle()
 
         verify(backupService).authorize(accountResultLauncher)
@@ -513,7 +527,7 @@ class AccountDetailsViewModelTest {
         given(backupService.authorize(accountResultLauncher)).willReturn(true)
         given(backupService.isAccountBackedUp(account.substrateAddress)).willReturn(true)
 
-        accountDetailsViewModel.onBackupClicked(accountResultLauncher)
+        startBackupThroughPin()
         advanceUntilIdle()
 
         assertTrue(accountDetailsViewModel.deleteDialogState.value ?: false)
@@ -524,10 +538,164 @@ class AccountDetailsViewModelTest {
         given(backupService.authorize(accountResultLauncher)).willReturn(true)
         given(backupService.isAccountBackedUp(account.substrateAddress)).willReturn(false)
 
-        accountDetailsViewModel.onBackupClicked(accountResultLauncher)
+        startBackupThroughPin()
         advanceUntilIdle()
 
         val navEvent = accountDetailsViewModel.navEvent.getOrAwaitValue()
         assertEquals("jp.co.soramitsu.feature_multiaccount_impl.BackupAccount", navEvent.first)
+    }
+
+    private fun readyPasswordScreen(password: String = "password") {
+        accountDetailsViewModel.onBackupPasswordChanged(TextFieldValue(password))
+        accountDetailsViewModel.onBackupPasswordConfirmationChanged(TextFieldValue(password))
+        accountDetailsViewModel.onWarningToggle()
+    }
+
+    private suspend fun givenPhraseBackup() {
+        given(multiAccInteractor.getMnemonic(account.substrateAddress)).willReturn("mne mo nic")
+        given(multiAccInteractor.getBackupMaterial(account)).willReturn(
+            WalletBackupMaterial(
+                canSign = true,
+                phraseWords = listOf("mne", "mo", "nic"),
+                seedHex = "",
+                storedPhraseDoesNotMatch = false,
+                storedSeedDoesNotMatch = false,
+            )
+        )
+    }
+
+    @Test
+    fun `Google backup asks for the PIN before anything reaches Google`() = runTest {
+        advanceUntilIdle()
+        accountDetailsViewModel.onBackupClicked(accountResultLauncher)
+        advanceUntilIdle()
+
+        verify(mainRouter).showPinForBackup(PinCodeAction.GOOGLE_BACKUP, listOf("address"))
+        verify(backupService, never()).logout()
+        verify(backupService, never()).authorize(any())
+        verify(multiAccInteractor, never()).getBackupMaterial(account)
+        assertFalse(accountDetailsViewModel.accountDetailsScreenState.value!!.isBackupLoading)
+    }
+
+    @Test
+    fun `a PIN confirmation nothing asked for does nothing`() = runTest {
+        advanceUntilIdle()
+        accountDetailsViewModel.onPinConfirmed(accountResultLauncher)
+        advanceUntilIdle()
+
+        verify(backupService, never()).authorize(any())
+        verify(mainRouter, never()).showPinForBackup(any(), any())
+    }
+
+    @Test
+    fun `the upload asks for the PIN again when the confirmation is older than five minutes`() =
+        runTest {
+            givenPhraseBackup()
+            given(backupService.authorize(accountResultLauncher)).willReturn(true)
+            given(backupService.isAccountBackedUp(account.substrateAddress)).willReturn(false)
+            advanceUntilIdle()
+            startBackupThroughPin()
+            advanceUntilIdle()
+            readyPasswordScreen()
+
+            now += 5 * 60 * 1000L + 1
+            accountDetailsViewModel.onBackupPasswordClicked()
+            advanceUntilIdle()
+            verify(mainRouter, times(2))
+                .showPinForBackup(PinCodeAction.GOOGLE_BACKUP, listOf("address"))
+            verify(backupService, never()).saveBackupAccount(any(), any())
+
+            accountDetailsViewModel.onPinConfirmed(accountResultLauncher)
+            advanceUntilIdle()
+            verify(backupService).saveBackupAccount(any(), org.mockito.kotlin.eq("password"))
+        }
+
+    @Test
+    fun `the upload right after the PIN needs no second PIN`() = runTest {
+        givenPhraseBackup()
+        given(backupService.authorize(accountResultLauncher)).willReturn(true)
+        given(backupService.isAccountBackedUp(account.substrateAddress)).willReturn(false)
+        advanceUntilIdle()
+        startBackupThroughPin()
+        advanceUntilIdle()
+        readyPasswordScreen()
+
+        now += 5 * 60 * 1000L
+        accountDetailsViewModel.onBackupPasswordClicked()
+        advanceUntilIdle()
+
+        verify(mainRouter, times(1)).showPinForBackup(PinCodeAction.GOOGLE_BACKUP, listOf("address"))
+        verify(backupService).saveBackupAccount(any(), org.mockito.kotlin.eq("password"))
+    }
+
+    @Test
+    fun `a new backup never reuses the confirmation of the previous one`() = runTest {
+        givenPhraseBackup()
+        given(backupService.authorize(accountResultLauncher)).willReturn(true)
+        given(backupService.isAccountBackedUp(account.substrateAddress)).willReturn(false)
+        advanceUntilIdle()
+        startBackupThroughPin()
+        advanceUntilIdle()
+        readyPasswordScreen()
+        accountDetailsViewModel.onBackupPasswordClicked()
+        advanceUntilIdle()
+        verify(backupService, times(1)).authorize(accountResultLauncher)
+
+        accountDetailsViewModel.onBackupClicked(accountResultLauncher)
+        advanceUntilIdle()
+
+        verify(mainRouter, times(2)).showPinForBackup(PinCodeAction.GOOGLE_BACKUP, listOf("address"))
+        verify(backupService, times(1)).authorize(accountResultLauncher)
+    }
+
+    @Test
+    fun `deleting the backup right after the PIN-confirmed start deletes it`() = runTest {
+        given(backupService.authorize(accountResultLauncher)).willReturn(true)
+        given(backupService.isAccountBackedUp(account.substrateAddress)).willReturn(true)
+        advanceUntilIdle()
+        startBackupThroughPin()
+        advanceUntilIdle()
+        assertTrue(accountDetailsViewModel.deleteDialogState.value ?: false)
+
+        accountDetailsViewModel.deleteGoogleBackup()
+        advanceUntilIdle()
+
+        verify(backupService).deleteBackupAccount("address")
+        assertEquals(false, accountDetailsViewModel.accountDetailsScreenState.value?.isBackupAvailable)
+    }
+
+    @Test
+    fun `deleting the backup after the confirmation expired asks for the PIN first`() = runTest {
+        given(backupService.authorize(accountResultLauncher)).willReturn(true)
+        given(backupService.isAccountBackedUp(account.substrateAddress)).willReturn(true)
+        advanceUntilIdle()
+        startBackupThroughPin()
+        advanceUntilIdle()
+
+        now += 5 * 60 * 1000L + 1
+        accountDetailsViewModel.deleteGoogleBackup()
+        advanceUntilIdle()
+        verify(backupService, never()).deleteBackupAccount(any())
+        assertFalse(accountDetailsViewModel.deleteDialogState.value ?: true)
+
+        accountDetailsViewModel.onPinConfirmed(accountResultLauncher)
+        advanceUntilIdle()
+        verify(backupService).deleteBackupAccount("address")
+    }
+
+    @Test
+    fun `a Google sign-in result without a PIN confirmation asks for the PIN`() = runTest {
+        advanceUntilIdle()
+        accountDetailsViewModel.onSuccessfulGoogleSignin()
+        advanceUntilIdle()
+
+        verify(mainRouter).showPinForBackup(PinCodeAction.GOOGLE_BACKUP, listOf("address"))
+        verify(backupService, never()).getBackupAccounts()
+        assertNull(accountDetailsViewModel.createBackupPasswordState.value)
+
+        accountDetailsViewModel.onPinConfirmed(accountResultLauncher)
+        advanceUntilIdle()
+        // Once when the screen opened, once for the confirmed sign-in.
+        verify(backupService, times(2)).isAccountBackedUp("address")
     }
 }

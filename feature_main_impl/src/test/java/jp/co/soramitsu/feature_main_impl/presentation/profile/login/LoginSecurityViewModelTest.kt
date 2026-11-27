@@ -39,7 +39,11 @@ class LoginSecurityViewModelTest {
         every { it.getString(any()) } returns "Restored wallet"
     }
 
-    private fun viewModel() = LoginSecurityViewModel(mockk(relaxed = true), interactor, users, resources)
+    private val gate = mockk<jp.co.soramitsu.common.security.BiometricUnlockGate>().also {
+        every { it.isAvailable() } returns true
+    }
+
+    private fun viewModel() = LoginSecurityViewModel(mockk(relaxed = true), interactor, users, resources, gate)
 
     @Test
     fun `biometric choices persist both enabled and disabled states and pin changes require protection`() = runTest {
@@ -47,13 +51,40 @@ class LoginSecurityViewModelTest {
         coEvery { interactor.isBiometryAvailable() } returns true
         coEvery { interactor.isBiometryEnabled() } returns false
         val router = mockk<jp.co.soramitsu.feature_main_api.launcher.MainRouter>(relaxed = true)
-        val vm = LoginSecurityViewModel(router, interactor, users, resources)
+        val vm = LoginSecurityViewModel(router, interactor, users, resources, gate)
         advanceUntilIdle()
         vm.toggleBio(true); advanceUntilIdle(); assertEquals(true, vm.state.bioEnabled)
         vm.toggleBio(false); advanceUntilIdle(); assertEquals(false, vm.state.bioEnabled)
         coVerify(exactly = 1) { interactor.setBiometryEnabled(true); interactor.setBiometryEnabled(false) }
         vm.changePin()
         io.mockk.verify(exactly = 1) { router.showPin(jp.co.soramitsu.feature_main_api.domain.model.PinCodeAction.CHANGE_PIN_CODE) }
+    }
+
+    // Update rule of 2026-11-09: changed biometrics no longer stop the unlock with a question.
+    // They stay unapproved, show as off here, and turning them on goes through the PIN screen,
+    // which asks the owner about the change.
+    @Test
+    fun `biometrics without a usable approval show as off and turning them on asks for the PIN`() = runTest {
+        coEvery { users.retainedWallets() } returns emptyList()
+        coEvery { interactor.isBiometryAvailable() } returns true
+        coEvery { interactor.isBiometryEnabled() } returns true
+        every { gate.isAvailable() } returns false
+        val router = mockk<jp.co.soramitsu.feature_main_api.launcher.MainRouter>(relaxed = true)
+        val vm = LoginSecurityViewModel(router, interactor, users, resources, gate)
+        advanceUntilIdle()
+        assertEquals(false, vm.state.bioEnabled)
+
+        vm.toggleBio(true); advanceUntilIdle()
+        io.mockk.verify(exactly = 1) {
+            router.showPin(jp.co.soramitsu.feature_main_api.domain.model.PinCodeAction.APPROVE_BIOMETRICS)
+        }
+        coVerify(exactly = 0) { interactor.setBiometryEnabled(any()) }
+        assertEquals(false, vm.state.bioEnabled)
+
+        // Back from the PIN screen after the owner approved them.
+        every { gate.isAvailable() } returns true
+        vm.onScreenResumed(); advanceUntilIdle()
+        assertEquals(true, vm.state.bioEnabled)
     }
 
     @Test

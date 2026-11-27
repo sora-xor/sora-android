@@ -76,7 +76,6 @@ dependencies {
     implementation(project(":feature_blockexplorer_api"))
     implementation(project(":feature_main_api"))
     implementation(project(":feature_account_api"))
-    implementation(project(":feature_ethereum_api"))
     implementation(project(":feature_wallet_api"))
     implementation(project(":feature_polkaswap_api"))
     implementation(project(":feature_multiaccount_api"))
@@ -89,7 +88,7 @@ dependencies {
     implementation(libs.constraintDep)
     implementation(libs.biometricDep)
 
-    implementation(libs.uiCoreDep)
+    implementation(project(":ui-core"))
     implementation(libs.soramitsu.android.foundation)
 
     implementation(libs.coreKtxDep)
@@ -99,7 +98,7 @@ dependencies {
     implementation(libs.navigationUiDep)
     implementation(libs.insetterDep)
 
-    implementation(libs.xbackupDep)
+    implementation(project(":xbackup"))
 
     implementation(platform(libs.compose.bom))
     implementation(libs.composeUiDep)
@@ -134,7 +133,6 @@ dependencies {
 
     implementation(libs.lifecycleProcessDep)
 
-    implementation(libs.insetterDep)
 
     testImplementation(project(":test_data"))
     testImplementation(libs.coroutineTestDep)

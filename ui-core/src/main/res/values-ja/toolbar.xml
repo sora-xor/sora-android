@@ -1,0 +1,5 @@
+<resources>
+    <string name="toolbar_search_open">検索</string>
+    <string name="toolbar_search_close">検索を閉じる</string>
+    <string name="toolbar_search_clear">検索をクリア</string>
+</resources>

@@ -1,0 +1,11 @@
+<resources>
+    <string name="contacts_none">Không có người nhận gần đây</string>
+    <string name="pin_delete_last_digit">Xóa chữ số cuối</string>
+    <string name="common_egyptian">Tiếng Ai Cập trung đại (chữ tượng hình)</string>
+    <plurals name="backup_selected_count">
+        <item quantity="other">Đã chọn %1$d</item>
+    </plurals>
+    <string name="contacts_lookup_unavailable">Không thể tra cứu địa chỉ</string>
+    <string name="portfolio_positive_amount">Nhập số lượng lớn hơn 0.</string>
+    <string name="portfolio_continue_wallet">Tiếp tục với %1$s</string>
+</resources>

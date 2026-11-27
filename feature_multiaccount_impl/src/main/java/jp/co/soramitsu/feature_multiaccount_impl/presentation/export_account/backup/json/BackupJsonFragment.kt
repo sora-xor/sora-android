@@ -19,6 +19,7 @@ limitations under the License.
 
 package jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.backup.json
 
+import androidx.compose.foundation.verticalScroll
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -45,8 +46,6 @@ import jp.co.soramitsu.common.presentation.args.addresses
 
 @AndroidEntryPoint
 class BackupJsonFragment : SoraBaseFragment<BackupJsonViewModel>() {
-
-    override val useSafeAurora = true
 
     @Inject
     lateinit var vmf: BackupJsonViewModel.BackupJsonViewModelFactory
@@ -80,8 +79,10 @@ class BackupJsonFragment : SoraBaseFragment<BackupJsonViewModel>() {
             route = theOnlyRoute,
         ) {
             viewModel.backupJsonScreenState.observeAsState().value?.let {
+                // With the keyboard up on a short screen the form is taller than what is left: it scrolls, so the
+                // second password and Download stay within reach.
                 Box(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier.fillMaxSize().verticalScroll(scrollState),
                     contentAlignment = Alignment.TopCenter,
                 ) {
                     BackupJsonScreen(

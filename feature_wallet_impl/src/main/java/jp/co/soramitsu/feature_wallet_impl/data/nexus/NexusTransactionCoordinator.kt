@@ -22,6 +22,7 @@ import jp.co.soramitsu.core_db.model.PendingNetworkTransactionLocal
 import jp.co.soramitsu.core_db.model.WalletMigrationIds
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_blockexplorer_api.data.ProductionFeatureManager
+import kotlinx.coroutines.CancellationException
 
 data class NexusSendRequest(
     val walletId: String,
@@ -161,9 +162,28 @@ class NexusTransactionCoordinator @Inject constructor(
      * have reached Torii are recorded as ambiguous and are only resolved by hash lookup.
      */
     suspend fun submit(prepared: NexusPreparedSend): NexusSendResult {
+        // Reusing a confirmation can follow a completed handoff, so this check must stay
+        // outside the classification of a new attempt's failures.
         check(prepared.reserveSubmission()) {
             "NEXUS_CONFIRMATION_ALREADY_SUBMITTED"
         }
+        var handoffStarted = false
+        return try {
+            submitReserved(prepared) { handoffStarted = true }
+        } catch (error: CancellationException) {
+            throw error
+        } catch (error: Throwable) {
+            // Expired quotes and other preflight failures never submit a transaction. Return
+            // their draft for a fresh review instead of displaying an unknown submission.
+            if (!handoffStarted) throw NexusNotSubmittedException(error)
+            throw error
+        }
+    }
+
+    private suspend fun submitReserved(
+        prepared: NexusPreparedSend,
+        onHandoffStarted: () -> Unit,
+    ): NexusSendResult {
         val request = prepared.request
         val network = NexusNetworks.requireLive(requireNetwork(request.networkId))
         val state = featureManager.getStateForNetwork(request.networkId)
@@ -331,6 +351,7 @@ class NexusTransactionCoordinator @Inject constructor(
                     WalletRecoveryCapabilityGate.requireUserMutationAllowed()
                     requirePendingChainRecoveryClear()
                     transportStarted = true
+                    onHandoffStarted()
                     torii.submit(
                         network = network,
                         signedNorito = staged.signed.noritoBytes,
@@ -414,10 +435,17 @@ class NexusTransactionCoordinator @Inject constructor(
         pollDelayMillis = pollDelayMillis,
     )
 
-    suspend fun submitAndTrack(prepared: NexusPreparedSend): NexusSendResult {
+    /** [onSubmitted] hears as soon as Torii has the transfer; following it to its end takes longer. */
+    suspend fun submitAndTrack(
+        prepared: NexusPreparedSend,
+        onSubmitted: (NexusSendResult) -> Unit = {},
+    ): NexusSendResult {
         return submitAndTrackNexus(
             submit = { submit(prepared) },
-            track = { reconcileUntilTerminal(it.localId) },
+            track = { submitted ->
+                onSubmitted(submitted)
+                reconcileUntilTerminal(submitted.localId)
+            },
         )
     }
 
@@ -543,13 +571,15 @@ class NexusTransactionCoordinator @Inject constructor(
         network: jp.co.soramitsu.common.nexus.NexusNetwork,
         quote: NexusTransferFeeQuote,
     ) {
+        // A quote without a block limit has nothing to compare a checkpoint with: Taira's quotes
+        // expire by time (TairaTransactionSigner). As on iOS, they neither wait for one nor fail
+        // when the node cannot give one.
+        val validUntil = quote.validUntilBlock ?: return
         check(finalityReader.isQualifiedFor(network)) {
             "NEXUS_FINALITY_READER_NOT_QUALIFIED"
         }
         val finalized = finalityReader.finalizedCheckpoint(network).requireFor(network)
-        quote.validUntilBlock?.let { validUntil ->
-            check(finalized <= validUntil) { "NEXUS_QUOTE_EXPIRED" }
-        }
+        check(finalized <= validUntil) { "NEXUS_QUOTE_EXPIRED" }
     }
 
     private suspend fun requirePendingChainRecoveryClear() {
@@ -703,7 +733,7 @@ class NexusTransactionCoordinator @Inject constructor(
 }
 
 /** Evidence from the submit stage, never inferred from a later status-read error. */
-class NexusNotSubmittedException internal constructor(cause: NexusToriiException) : IllegalStateException(cause.message, cause)
+class NexusNotSubmittedException internal constructor(cause: Throwable) : IllegalStateException(cause.message, cause)
 
 internal suspend fun submitAndTrackNexus(
     submit: suspend () -> NexusSendResult,
@@ -715,6 +745,13 @@ internal suspend fun submitAndTrackNexus(
         if (!error.submissionMayHaveReachedTorii) throw NexusNotSubmittedException(error)
         throw error
     }
-    // A status lookup failure after successful submission can never authorize another send.
-    return track(submitted)
+    // Torii has this transfer. A failed status lookup can neither authorize another send nor make
+    // the submission unknown: it stays pending, and the recovery worker keeps following its hash.
+    return try {
+        track(submitted)
+    } catch (error: CancellationException) {
+        throw error
+    } catch (_: Throwable) {
+        submitted
+    }
 }

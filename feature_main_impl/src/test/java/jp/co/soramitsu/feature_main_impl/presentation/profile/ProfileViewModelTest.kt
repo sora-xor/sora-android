@@ -92,6 +92,8 @@ class ProfileViewModelTest {
             selectNodeRouter,
             productionFeatureManager,
             nodeManager,
+            io.mockk.mockk(relaxed = true),
+            io.mockk.mockk<jp.co.soramitsu.feature_wallet_api.domain.interfaces.HashiBridgeAssets>(relaxed = true),
         )
     }
 

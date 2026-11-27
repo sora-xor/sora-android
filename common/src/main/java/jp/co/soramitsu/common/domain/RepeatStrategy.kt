@@ -19,30 +19,15 @@ limitations under the License.
 
 package jp.co.soramitsu.common.domain
 
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.currentCoroutineContext
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
 
 interface RepeatStrategy {
     suspend fun repeat(block: suspend () -> Unit)
 }
 
-interface RetryStrategy {
-    @Throws(RuntimeException::class)
-    suspend fun <T> retryIf(
-        retries: Int,
-        predicate: suspend (cause: Throwable) -> Boolean,
-        block: suspend () -> T,
-    ): T
-}
-
 object RepeatStrategyBuilder {
     fun infinite(): RepeatStrategy = InfiniteRepeatStrategy()
-}
-
-object RetryStrategyBuilder {
-    fun build(): RetryStrategy = RetryStrategyImpl()
 }
 
 private class InfiniteRepeatStrategy : RepeatStrategy {
@@ -50,29 +35,6 @@ private class InfiniteRepeatStrategy : RepeatStrategy {
         while (true) {
             currentCoroutineContext().ensureActive()
             block.invoke()
-        }
-    }
-}
-
-private class RetryStrategyImpl : RetryStrategy {
-
-    override suspend fun <T> retryIf(
-        retries: Int,
-        predicate: suspend (cause: Throwable) -> Boolean,
-        block: suspend () -> T,
-    ): T {
-        var attempt = 0
-        while (true) {
-            currentCoroutineContext().ensureActive()
-            try {
-                return block.invoke()
-            } catch (error: Throwable) {
-                if (error is CancellationException) throw error
-                currentCoroutineContext().ensureActive()
-                if (attempt >= retries || !predicate(error)) throw error
-                attempt++
-                delay(500)
-            }
         }
     }
 }

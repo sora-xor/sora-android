@@ -30,9 +30,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import jp.co.soramitsu.common.presentation.compose.neon.NeumorphicSurface
@@ -56,10 +54,11 @@ fun AmountCardIcon(
     @DrawableRes res: Int,
     text: String,
     isEnabled: Boolean = true,
+    /** Draw the icon in its own colours (a brand mark, like Polkaswap's flower). */
+    ownColors: Boolean = false,
     onClick: () -> Unit,
 ) {
     val interaction = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
-    val pressed by interaction.collectIsPressedAsState()
     val n = MaterialTheme.neon
     Column(
         modifier = Modifier.widthIn(max = 112.dp)
@@ -73,7 +72,11 @@ fun AmountCardIcon(
             interactionSource = interaction, modifier = Modifier.size(Size.Large)) {
             androidx.compose.material.Icon(painterResource(res), contentDescription = null,
                 modifier = Modifier.size(24.dp),
-                tint = if (!isEnabled) n.textDisabled else if (pressed) n.cyan else n.textSecondary)
+                tint = when {
+                    !isEnabled -> n.textDisabled
+                    ownColors -> androidx.compose.ui.graphics.Color.Unspecified
+                    else -> n.cyan
+                })
         }
         Text(text = text, modifier = Modifier.padding(top = Dimens.x1),
             textAlign = androidx.compose.ui.text.style.TextAlign.Center,

@@ -40,8 +40,8 @@ import jp.co.soramitsu.common.presentation.compose.neon.safemode.AccountReadOnly
 import jp.co.soramitsu.common.presentation.compose.neon.safemode.SafeModeTags
 import jp.co.soramitsu.common.presentation.compose.neon.safemode.SelectedAccountSigningHost
 import jp.co.soramitsu.common.presentation.compose.theme.SoraAppTheme
-import jp.co.soramitsu.feature_assets_impl.presentation.components.compose.assetdetails.AssetDetailsBalanceCard
-import jp.co.soramitsu.feature_assets_impl.presentation.components.compose.send.SendScreen
+import jp.co.soramitsu.common_wallet.presentation.compose.assetdetails.AssetDetailsBalanceCard
+import jp.co.soramitsu.common_wallet.presentation.compose.send.SendScreen
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.After
 import org.junit.Assert.assertEquals

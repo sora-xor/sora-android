@@ -77,7 +77,6 @@ dependencies {
     implementation(project(":feature_wallet_api"))
     implementation(project(":sorasubstrate"))
     implementation(project(":feature_blockexplorer_api"))
-    implementation(project(":network"))
 
     implementation(libs.appcompatDep)
     implementation(libs.materialDep)
@@ -85,11 +84,9 @@ dependencies {
 
     implementation(libs.navigationFragmentDep)
 
-    implementation(libs.insetterDep)
 
     implementation(libs.timberDep)
 
-    implementation(libs.lottieDep)
 
     implementation(libs.coilDep)
     implementation(libs.coilComposeDep)
@@ -109,7 +106,7 @@ dependencies {
 
     implementation(libs.lifecycleProcessDep)
 
-    implementation(libs.uiCoreDep)
+    implementation(project(":ui-core"))
     implementation(libs.soramitsu.android.foundation)
 
     implementation(platform(libs.compose.bom))

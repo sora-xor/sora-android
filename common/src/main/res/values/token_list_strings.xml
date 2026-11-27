@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- After the balance on a full asset list row of a held token that Polkaswap's blacklist hides. -->
+    <string name="asset_not_listed_suffix">· Not listed by Polkaswap</string>
+</resources>

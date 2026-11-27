@@ -19,6 +19,12 @@ limitations under the License.
 
 package jp.co.soramitsu.common.presentation.compose.uikit.molecules
 
+import androidx.compose.material.Icon
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import jp.co.soramitsu.common.presentation.compose.theme.neon.neon
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -54,11 +60,12 @@ data class ListTileState(
 @Composable
 fun ListTile(
     state: ListTileState,
+    copyAddress: Boolean = false,
     onClick: () -> Unit
 ) {
     Row(
         modifier = Modifier
-            .clickable { onClick.invoke() }
+            .clickable(role = Role.Button, onClickLabel = if (copyAddress) stringResource(R.string.copy_to_clipboard) else null, onClick = onClick)
             .fillMaxWidth()
             .wrapContentHeight()
             .padding(all = Dimens.x1),
@@ -71,7 +78,7 @@ fun ListTile(
                 .height(Dimens.x5)
                 .aspectRatio(1f),
             painter = state.image.retrievePainter(),
-            contentDescription = ""
+            contentDescription = null
         )
         Column(
             modifier = Modifier
@@ -96,6 +103,10 @@ fun ListTile(
                 style = MaterialTheme.customTypography.textS,
                 color = MaterialTheme.customColors.fgPrimary,
             )
+        }
+        if (copyAddress) {
+            Icon(painterResource(R.drawable.ic_copy_24), contentDescription = null,
+                modifier = Modifier.size(Dimens.x3), tint = MaterialTheme.neon.redText)
         }
     }
 }

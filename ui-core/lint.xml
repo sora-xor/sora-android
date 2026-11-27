@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- ui-core is upstream source (README.md). These findings in it were reviewed and left as
+     they are: two lower-case Composable names, the number field reading the default locale
+     and preview-only Uri.parse calls. Every other check, and these checks everywhere else,
+     still apply. -->
+<lint>
+    <issue id="ComposableNaming">
+        <ignore path="src/main/java/jp/co/soramitsu/ui_core/component/menu/CustomDropdownMenu.kt" />
+        <ignore path="src/main/java/jp/co/soramitsu/ui_core/component/item/SelectableItem.kt" />
+    </issue>
+    <issue id="NonObservableLocale">
+        <ignore path="src/main/java/jp/co/soramitsu/ui_core/component/input/number/BasicNumberInput.kt" />
+    </issue>
+    <issue id="UseKtx">
+        <ignore path="src/main/java/jp/co/soramitsu/ui_core/component/asset/Asset.kt" />
+        <ignore path="src/main/java/jp/co/soramitsu/ui_core/component/asset/AssetListItem.kt" />
+    </issue>
+</lint>

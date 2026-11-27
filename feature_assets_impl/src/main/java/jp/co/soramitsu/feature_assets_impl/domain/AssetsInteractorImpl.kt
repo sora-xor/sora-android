@@ -29,7 +29,7 @@ import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.AssetHolder
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.domain.TransactionOutcome
-import jp.co.soramitsu.common.logger.FirebaseWrapper
+import jp.co.soramitsu.common.logger.WalletDiagnostics
 import jp.co.soramitsu.common.util.BuildUtils
 import jp.co.soramitsu.common.util.Flavor
 import jp.co.soramitsu.common.util.mapBalance
@@ -108,9 +108,9 @@ class AssetsInteractorImpl constructor(
         return assetsRepository.getAssetsWhitelist(address)
     }
 
-    override suspend fun getXorBalance(precision: Int): XorAssetBalance {
+    override suspend fun getXorBalance(precision: Int, forDisplay: Boolean): XorAssetBalance {
         return userRepository.getCurSoraAccount()
-            .let { account -> assetsRepository.getXORBalance(account.substrateAddress, precision) }
+            .let { account -> assetsRepository.getXORBalance(account.substrateAddress, precision, forDisplay) }
     }
 
     override fun flowCurSoraAccount(): Flow<SoraAccount> =
@@ -207,8 +207,8 @@ class AssetsInteractorImpl constructor(
             // The chain result is authoritative. Local history and telemetry are best-effort and
             // must never turn a confirmed or submission-unknown transfer into a retryable failure.
             try {
-                FirebaseWrapper.recordErrorClass(
-                    FirebaseWrapper.PrivacySafeErrorClass.STATE_FAILURE
+                WalletDiagnostics.recordErrorClass(
+                    WalletDiagnostics.PrivacySafeErrorClass.STATE_FAILURE
                 )
             } catch (_: Throwable) {
                 // Telemetry is outside the transaction result boundary.
@@ -232,6 +232,20 @@ class AssetsInteractorImpl constructor(
             assetsRepository.subscribeAssetsActive(it.substrateAddress)
         }
     }
+
+    override fun subscribeAssetsFavoriteOfAccount(soraAccount: SoraAccount): Flow<List<Asset>> =
+        assetsRepository.subscribeAssetsFavorite(soraAccount.substrateAddress)
+
+    override fun subscribeAssetsVisibleOfCurAccount(): Flow<List<Asset>> {
+        return userRepository.flowCurSoraAccount().flatMapLatest {
+            assetsRepository.subscribeAssetsVisible(it.substrateAddress)
+        }
+    }
+
+    override fun subscribeAssetsNotListedOfCurAccount(): Flow<List<Asset>> =
+        userRepository.flowCurSoraAccount().flatMapLatest {
+            assetsRepository.subscribeAssetsNotListed(it.substrateAddress)
+        }
 
     override suspend fun toggleVisibilityOfToken(tokenId: String, visibility: Boolean) {
         val curAccount = userRepository.getCurSoraAccount()
@@ -274,8 +288,27 @@ class AssetsInteractorImpl constructor(
         }
     }
 
-    override suspend fun updateWhitelistBalances() {
-        val soraAccount = userRepository.getCurSoraAccount()
+    override suspend fun updateWhitelistBalancesAfterTokenListWalk(address: String): Boolean {
+        if (!isSelected(address)) return false
+        assetsRepository.updateWhitelistBalancesAfterTokenListWalk(address)
+        // The walk can take a while: a wallet left meanwhile ends what was to follow.
+        return isSelected(address)
+    }
+
+    override suspend fun updateWhitelistBalances() =
+        updateWhitelistBalances(userRepository.getCurSoraAccount())
+
+    override suspend fun updateWhitelistBalances(address: String): Boolean {
+        val selected = userRepository.getCurSoraAccount()
+        if (selected.substrateAddress != address) return false
+        updateWhitelistBalances(selected)
+        return true
+    }
+
+    private suspend fun isSelected(address: String) =
+        userRepository.getCurSoraAccount().substrateAddress == address
+
+    private suspend fun updateWhitelistBalances(soraAccount: SoraAccount) {
         assetsRepository.updateWhitelistBalances(soraAccount.substrateAddress)
 
         if (needFakeBalance()) {

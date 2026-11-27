@@ -12,7 +12,7 @@ import jp.co.soramitsu.common.data.network.dto.PolkamarktClaimableDto
 import jp.co.soramitsu.common.data.network.dto.PolkamarktMarketId
 import jp.co.soramitsu.common.data.network.dto.PolkamarktPendingAssetId
 import jp.co.soramitsu.common.data.network.dto.PolkamarktSellQuoteDto
-import jp.co.soramitsu.common.logger.FirebaseWrapper
+import jp.co.soramitsu.common.logger.WalletDiagnostics
 import jp.co.soramitsu.common.nexus.WalletNetworkChainIdentity
 import jp.co.soramitsu.core_db.AppDatabase
 import jp.co.soramitsu.core_db.dao.WalletIdentityDao
@@ -1749,8 +1749,8 @@ class PolkamarktTraderRepository @Inject constructor(
             }
         } catch (persistenceError: Throwable) {
             try {
-                FirebaseWrapper.recordErrorClass(
-                    FirebaseWrapper.PrivacySafeErrorClass.STATE_FAILURE
+                WalletDiagnostics.recordErrorClass(
+                    WalletDiagnostics.PrivacySafeErrorClass.STATE_FAILURE
                 )
             } catch (_: Throwable) {
                 // Telemetry cannot change an authoritative transport result either.

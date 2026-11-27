@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- xsubstrate is upstream source (README.md). capitalize() in ExtrinsicExt.kt only sees the
+     encryption-type names sr25519, ed25519 and ecdsa, which capitalize the same in every
+     locale. Every other check, and DefaultLocale everywhere else, still apply. -->
+<lint>
+    <issue id="DefaultLocale">
+        <ignore path="src/main/java/jp/co/soramitsu/xsubstrate/runtime/definitions/types/generics/ExtrinsicExt.kt" />
+    </issue>
+</lint>

@@ -19,13 +19,10 @@ limitations under the License.
 
 package jp.co.soramitsu.feature_wallet_api.launcher
 
-import jp.co.soramitsu.common.domain.Token
 
 interface WalletRouter {
 
     fun showValTransferAmount(recipientId: String, assetId: String, initSendAmount: String? = null)
-
-    fun returnToHubFragment()
 
     fun popBackStackFragment()
 
@@ -35,11 +32,15 @@ interface WalletRouter {
      */
     fun closeClaimScreen()
 
-    fun showContactsFilled(tokenId: String, address: String)
-
-    fun returnToAddLiquidity(tokenFrom: Token? = null, tokenTo: Token? = null)
+    fun showAssetSettings()
 
     fun openQrCodeFlow(shouldNavigateToScannerDirectly: Boolean = false)
 
     fun openEditCardsHub()
+
+    /** The HASHI bridge screen, with [assetId] chosen, or with the token picker when null. */
+    fun openHashiBridge(assetId: String? = null)
+
+    /** The progress page of one bridge transfer. */
+    fun openHashiBridgeTransfer(transferId: String)
 }

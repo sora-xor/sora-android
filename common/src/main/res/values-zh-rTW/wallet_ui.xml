@@ -1,0 +1,5 @@
+<resources>
+    <string name="portfolio_exclusions">未計入的資產</string>
+    <string name="portfolio_row_expanded">已展開</string>
+    <string name="portfolio_row_collapsed">已折疊</string>
+</resources>

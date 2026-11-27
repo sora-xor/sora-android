@@ -1,0 +1,7 @@
+<resources>
+    <string name="portfolio_exclusions">Excluded assets</string>
+    <string name="portfolio_row_expanded">Expanded</string>
+    <string name="portfolio_row_collapsed">Collapsed</string>
+    <string name="settings_debug" translatable="false">Debug menu</string>
+    <string name="wallet_value_unknown" translatable="false">—</string>
+</resources>

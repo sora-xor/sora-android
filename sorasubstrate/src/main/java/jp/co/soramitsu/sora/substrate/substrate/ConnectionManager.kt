@@ -29,8 +29,6 @@ interface ConnectionManager {
 
     fun observeAppState()
 
-    val isStarted: Boolean
-
     val connectionState: Flow<Boolean>
 
     val isConnected: Boolean

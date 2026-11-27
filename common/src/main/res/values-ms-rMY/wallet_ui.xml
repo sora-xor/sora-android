@@ -1,0 +1,5 @@
+<resources>
+    <string name="portfolio_exclusions">Aset tidak disertakan</string>
+    <string name="portfolio_row_expanded">Dikembangkan</string>
+    <string name="portfolio_row_collapsed">Dikecilkan</string>
+</resources>

@@ -1,0 +1,15 @@
+<resources>
+    <string name="swap_pay_label">Trả</string>
+    <string name="swap_receive_label">Nhận</string>
+    <string name="asset_balance_value">Số dư %1$s</string>
+    <string name="asset_catalog_retry">Thử lại</string>
+    <string name="swap_market_missing_pair">Chọn hai token để xem thị trường.</string>
+    <string name="swap_market_empty">Không có thị trường cho cặp này</string>
+    <string name="swap_about_market">Về %1$s</string>
+    <string name="swap_show_terms">Đọc điều khoản</string>
+    <string name="swap_hide_terms">Ẩn điều khoản</string>
+    <string name="swap_terms_summary">Xem điều khoản trước khi đổi.</string>
+    <string name="asset_picker_empty">Không có token nào</string>
+    <string name="liquidity_base_token">Token cơ sở</string>
+    <string name="liquidity_pair_token">Token ghép cặp</string>
+</resources>

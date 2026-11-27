@@ -1,0 +1,28 @@
+<resources>
+    <string name="debug_app_id" translatable="false">App ID</string>
+    <string name="debug_version" translatable="false">Version</string>
+    <string name="debug_version_code" translatable="false">Version code</string>
+    <string name="debug_manufacturer" translatable="false">Manufacturer</string>
+    <string name="debug_model" translatable="false">Model</string>
+    <string name="debug_os" translatable="false">Android</string>
+    <string name="debug_api" translatable="false">API level</string>
+    <string name="debug_arch" translatable="false">Architecture</string>
+    <string name="debug_java" translatable="false">Java specification</string>
+    <string name="debug_vm" translatable="false">Virtual machine</string>
+    <string name="debug_build" translatable="false">Build type</string>
+    <string name="debug_flavor" translatable="false">Build flavor</string>
+    <string name="debug_display" translatable="false">Display</string>
+    <string name="debug_display_size" translatable="false">%1$d × %2$d px · %3$.2f×</string>
+    <string name="debug_google_account" translatable="false">Change Google account</string>
+    <string name="debug_google_changed" translatable="false">Google account changed</string>
+    <string name="debug_reset_runtime" translatable="false">Reset runtime</string>
+    <string name="contacts_none">No recent recipients</string>
+    <string name="pin_delete_last_digit">Delete last digit</string>
+    <plurals name="backup_selected_count">
+        <item quantity="one">%1$d selected</item>
+        <item quantity="other">%1$d selected</item>
+    </plurals>
+    <string name="contacts_lookup_unavailable">Address lookup unavailable</string>
+    <string name="portfolio_positive_amount">Enter an amount above zero.</string>
+    <string name="portfolio_continue_wallet">Continue with %1$s</string>
+</resources>

@@ -19,6 +19,10 @@ limitations under the License.
 
 package jp.co.soramitsu.common.presentation.compose.neon.safemode
 
+import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.runtime.remember
+import androidx.compose.foundation.layout.BoxWithConstraints
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
@@ -57,7 +61,6 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.LayoutDirection
-import androidx.core.content.edit
 import androidx.core.net.toUri
 import androidx.compose.ui.unit.dp
 import jp.co.soramitsu.common.R
@@ -110,30 +113,16 @@ object WalletSessionState {
     fun markLocked() {
         unlockedState.value = false
     }
-}
 
-/**
- * The upgrade-complete sheet (U11) is shown once per install, only to people who updated from an
- * earlier version. Kept in its own small preferences file, never in the wallet preferences.
- */
-object UpgradeWelcome {
-    private const val FILE = "sora_upgrade_welcome"
-    private const val KEY_DONE = "upgrade_welcome_3_9_done"
+    /**
+     * How many times the app came back from the background in this process, counted on the main
+     * thread. A screen that stays open past the PIN notes this and closes once it has changed.
+     */
+    var returnsFromBackground = 0
+        private set
 
-    /** True when this install was updated from an earlier version and the sheet was not shown. */
-    fun isPending(context: Context): Boolean = runCatching {
-        val prefs = context.getSharedPreferences(FILE, Context.MODE_PRIVATE)
-        if (prefs.getBoolean(KEY_DONE, false)) return@runCatching false
-        val info = context.packageManager.getPackageInfo(context.packageName, 0)
-        // A fresh install has equal times; an update from an earlier version does not.
-        info.firstInstallTime != info.lastUpdateTime
-    }.getOrDefault(false)
-
-    /** Shown, or not needed (a new wallet set up on this version). */
-    fun markDone(context: Context) {
-        runCatching {
-            context.getSharedPreferences(FILE, Context.MODE_PRIVATE).edit { putBoolean(KEY_DONE, true) }
-        }
+    fun markReturnedFromBackground() {
+        returnsFromBackground++
     }
 }
 
@@ -343,119 +332,6 @@ fun LegacyPinUpgradePanel(onContinue: () -> Unit, modifier: Modifier = Modifier)
 }
 
 /**
- * The real checks behind the upgrade-complete sheet (U11). A row shows ✓ only when its check is
- * true; [balancesLoaded] false shows a running row ("Loading balances") instead.
- */
-data class UpgradeCompleteChecks(
-    val accountsOnDevice: Boolean,
-    val protectedByPin: Boolean,
-    val balancesLoaded: Boolean,
-    val needsBackup: Boolean,
-    /** Accounts listed in the app. 0 when the count is not known. */
-    val accountCount: Int = 0,
-    /**
-     * How many of them can sign on this phone. When it is lower than [accountCount] the sheet
-     * says so instead of showing a plain tick, and says how to repair the others.
-     */
-    val signingAccountCount: Int = 0,
-) {
-    /**
-     * A person with several accounts can hold a JSON backup file of several accounts made by an
-     * earlier version. Built for release (minified), the code up to 3.8.6.3 writes that file
-     * without its content (see `JsonAccountsEncoder.generate`), so the sheet asks for a new
-     * export. The app cannot know whether such a file was made, so the note is shown to
-     * everyone it can concern: people with two or more accounts.
-     */
-    val mayHoldEmptyBatchExport: Boolean get() = accountCount >= BATCH_EXPORT_MIN_ACCOUNTS
-
-    private companion object {
-        const val BATCH_EXPORT_MIN_ACCOUNTS = 2
-    }
-}
-
-/**
- * U11 (design spec 9.2, 9.1-7): shown once, only after a successful upgrade, never over the PIN
- * and never in read-only mode (the caller decides when).
- */
-@Composable
-fun UpgradeCompleteSheet(
-    checks: UpgradeCompleteChecks,
-    onBackUpNow: () -> Unit,
-    onClose: () -> Unit,
-) {
-    val n = MaterialTheme.neon
-    SafeSheet(
-        title = stringResource(R.string.safe_mode_whats_new_title),
-        onClose = onClose,
-        footer = {
-            if (checks.needsBackup) {
-                SafeAction(
-                    text = stringResource(R.string.safe_mode_back_up_now),
-                    variant = NeonVariant.Safe,
-                    onClick = onBackUpNow,
-                )
-                SafeAction(
-                    text = stringResource(R.string.safe_mode_later),
-                    variant = NeonVariant.Tertiary,
-                    onClick = onClose,
-                )
-            } else {
-                SafeAction(
-                    text = stringResource(R.string.common_continue),
-                    variant = NeonVariant.Safe,
-                    onClick = onClose,
-                )
-            }
-        },
-    ) {
-        Text(
-            text = stringResource(R.string.safe_mode_whats_new_body),
-            style = MaterialTheme.customTypography.paragraphM,
-            color = n.textSecondary,
-        )
-        val steps = buildList {
-            if (checks.accountsOnDevice) {
-                add(SafeStep(stringResource(R.string.safe_mode_whats_new_accounts), SafeStepState.DONE))
-            }
-            if (checks.signingAccountCount < checks.accountCount) {
-                add(
-                    SafeStep(
-                        stringResource(
-                            R.string.safe_mode_whats_new_accounts_some_read_only,
-                            checks.signingAccountCount.toString(),
-                            checks.accountCount.toString(),
-                        ),
-                        SafeStepState.NEEDS_ACTION,
-                    ),
-                )
-            }
-            if (checks.protectedByPin) {
-                add(SafeStep(stringResource(R.string.safe_mode_whats_new_pin), SafeStepState.DONE))
-            }
-            add(
-                if (checks.balancesLoaded) {
-                    SafeStep(stringResource(R.string.safe_mode_whats_new_balances), SafeStepState.DONE)
-                } else {
-                    SafeStep(stringResource(R.string.safe_mode_whats_new_balances_loading), SafeStepState.RUNNING)
-                },
-            )
-            if (checks.needsBackup) {
-                add(SafeStep(stringResource(R.string.safe_mode_whats_new_backup), SafeStepState.NEEDS_ACTION))
-            }
-            if (checks.mayHoldEmptyBatchExport) {
-                add(
-                    SafeStep(
-                        stringResource(R.string.safe_mode_whats_new_batch_export),
-                        SafeStepState.NEEDS_ACTION,
-                    ),
-                )
-            }
-        }
-        StepList(steps)
-    }
-}
-
-/**
  * U12 (design spec 9.2): app data is excluded from cloud backup and device transfer
  * (`allowBackup=false`, `deny_data_extraction.xml`), so the wallet stays on this phone.
  */
@@ -543,15 +419,32 @@ private fun PhraseGridLtr(
     modifier: Modifier,
 ) {
     val n = MaterialTheme.neon
-    val rows = (words.size + 1) / 2
-    Box(modifier = modifier.fillMaxWidth()) {
+    // A recovery word is never broken across two lines. Two columns need room for the widest word of this phrase
+    // beside its number; where a narrow screen or larger text does not leave it, the revealed words stand in one
+    // column, still numbered from the top. While the phrase is hidden its placeholders always stand in two
+    // columns: the hidden view is the same for every phrase, nothing of the phrase is measured before it is
+    // revealed, and Tap to reveal stays in the middle of a grid that fits the screen.
+    val measurer = rememberTextMeasurer(cacheSize = 0)
+    val density = LocalDensity.current
+    val cellWidth = remember(words, density, revealed) {
+        if (!revealed) {
+            0.dp
+        } else {
+            val widest = words.maxOfOrNull { measurer.measure(it, NeonType.phraseWord, softWrap = false, maxLines = 1).size.width } ?: 0
+            val number = measurer.measure("00", PhraseNumberStyle, softWrap = false, maxLines = 1).size.width
+            with(density) { (widest + number).toDp() } + PHRASE_CELL_PADDING * 2 + PHRASE_NUMBER_GAP + 1.dp
+        }
+    }
+    BoxWithConstraints(modifier = modifier.fillMaxWidth()) {
+        val columns = if ((maxWidth - PHRASE_COLUMN_GAP) / 2 >= cellWidth) 2 else 1
+        val rows = (words.size + columns - 1) / columns
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .testTag(SafeModeTags.PHRASE_GRID),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(PHRASE_COLUMN_GAP),
         ) {
-            repeat(2) { column ->
+            repeat(columns) { column ->
                 Column(
                     modifier = Modifier.weight(1f),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -605,6 +498,11 @@ private fun PhraseGridLtr(
     }
 }
 
+private val PhraseNumberStyle = NeonType.mono.copy(fontSize = NeonType.mono.fontSize * (12f / 13f))
+private val PHRASE_CELL_PADDING = 12.dp
+private val PHRASE_NUMBER_GAP = 10.dp
+private val PHRASE_COLUMN_GAP = 8.dp
+
 @Composable
 private fun PhraseCell(number: Int, word: String?) {
     val n = MaterialTheme.neon
@@ -616,15 +514,15 @@ private fun PhraseCell(number: Int, word: String?) {
             .clip(shape)
             .background(n.glassSolid)
             .border(1.dp, n.hairline, shape)
-            .padding(horizontal = 12.dp),
+            .padding(horizontal = PHRASE_CELL_PADDING),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
             text = number.toString().padStart(2, '0'),
-            style = NeonType.mono.copy(fontSize = NeonType.mono.fontSize * (12f / 13f)),
+            style = PhraseNumberStyle,
             color = n.textTertiary,
         )
-        Spacer(Modifier.width(10.dp))
+        Spacer(Modifier.width(PHRASE_NUMBER_GAP))
         if (word != null) {
             Text(text = word, style = NeonType.phraseWord, color = n.textPrimary)
         } else {

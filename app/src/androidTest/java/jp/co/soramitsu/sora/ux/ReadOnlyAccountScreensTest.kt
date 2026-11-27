@@ -81,10 +81,10 @@ class ReadOnlyAccountScreensTest {
         "worth", "useful", "legal", "winner", "thank", "yellow",
     )
 
-    // ---- Label: the main screen's notice and the account list --------------------------------
+    // ---- Label: the home notice and the account list ----------------------------------------
 
     @Test
-    fun theMainScreenLabelsAReadOnlyAccountSaysWhyAndOffersTheRepair() {
+    fun theHomeNoticeSaysWhyAReadOnlyAccountCannotSignAndOffersTheRepair() {
         var readOnly by mutableStateOf(true)
         var repairs = 0
         rule.setContent {
@@ -95,6 +95,7 @@ class ReadOnlyAccountScreensTest {
             }
         }
 
+        // The notice carries the chip.
         rule.onAllNodesWithText(text(CommonR.string.safe_mode_read_only_chip)).assertCountEquals(1)
         rule.onNodeWithText(text(CommonR.string.account_read_only_title)).assertIsDisplayed()
         rule.onNodeWithText(text(CommonR.string.account_read_only_body)).assertIsDisplayed()

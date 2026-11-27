@@ -66,11 +66,6 @@ class AppSettingsViewModel @Inject constructor(
             }
         }
         viewModelScope.launch {
-            darkThemeManager.reduceEffectsFlow.collectLatest {
-                state = state.copy(reduceEffectsChecked = it)
-            }
-        }
-        viewModelScope.launch {
             guarded { productionFeatureManager.getState() }
         }
         viewModelScope.launch {
@@ -99,12 +94,6 @@ class AppSettingsViewModel @Inject constructor(
     fun toggleDarkMode(checked: Boolean) {
         viewModelScope.launch {
             guarded { darkThemeManager.setDarkThemeEnabled(checked) }
-        }
-    }
-
-    fun toggleReduceEffects(checked: Boolean) {
-        viewModelScope.launch {
-            guarded { darkThemeManager.setReduceEffects(checked) }
         }
     }
 

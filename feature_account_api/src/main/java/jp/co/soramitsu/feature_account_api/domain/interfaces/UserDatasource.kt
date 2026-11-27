@@ -49,6 +49,9 @@ interface UserDatasource {
 
     suspend fun needsMigration(suffixAddress: String): Boolean
 
+    /** The saved "a claim is waiting" flag of one account, and every later change of it. */
+    fun flowNeedsMigration(suffixAddress: String): kotlinx.coroutines.flow.Flow<Boolean>
+
     suspend fun isMigrationStatusFetched(suffixAddress: String): Boolean
 
     suspend fun saveIsMigrationFetched(it: Boolean, suffixAddress: String)

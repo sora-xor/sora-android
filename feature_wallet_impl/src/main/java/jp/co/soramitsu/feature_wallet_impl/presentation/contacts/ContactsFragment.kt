@@ -25,10 +25,6 @@ import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.fragment.app.viewModels
@@ -61,18 +57,11 @@ class ContactsFragment : SoraBaseFragment<ContactsViewModel>() {
         composable(
             route = theOnlyRoute,
         ) {
-            var qrSelection by remember { mutableStateOf(false) }
-            val onQrClick: () -> Unit = {
-                qrSelection = true
-            }
             val onContactSelect: (String) -> Unit = {
                 viewModel.onContactClick(
                     accountId = it,
                     tokenId = requireArguments().tokenId
                 )
-            }
-            if (qrSelection) {
-                viewModel.onQrScanClick()
             }
             Column(
                 modifier = Modifier
@@ -87,7 +76,7 @@ class ContactsFragment : SoraBaseFragment<ContactsViewModel>() {
                     isMyAddress = state.myAddress,
                     accounts = state.accounts,
                     isSearchEntered = state.isSearchEntered,
-                    onScanClick = onQrClick,
+                    onScanClick = viewModel::onQrScanClick,
                     onCloseSearchClick = viewModel::onCloseSearchClicked,
                     onAccountClick = onContactSelect,
                 )

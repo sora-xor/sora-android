@@ -27,7 +27,8 @@ import jp.co.soramitsu.androidfoundation.format.safeCast
 import jp.co.soramitsu.common.data.network.dto.SwapFeeDto
 import jp.co.soramitsu.common.domain.Market
 import jp.co.soramitsu.common.domain.Token
-import jp.co.soramitsu.common.logger.FirebaseWrapper
+import jp.co.soramitsu.common.domain.WhitelistTokensManager
+import jp.co.soramitsu.common.logger.WalletDiagnostics
 import jp.co.soramitsu.common.util.mapBalance
 import jp.co.soramitsu.common_wallet.domain.model.LiquidityData
 import jp.co.soramitsu.common_wallet.domain.model.WithDesired
@@ -46,7 +47,6 @@ import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
 import jp.co.soramitsu.sora.substrate.runtime.Storage
 import jp.co.soramitsu.sora.substrate.runtime.assetIdFromKey
 import jp.co.soramitsu.sora.substrate.runtime.mapToToken
-import jp.co.soramitsu.sora.substrate.runtime.poolTBCReserves
 import jp.co.soramitsu.sora.substrate.runtime.reservesKey
 import jp.co.soramitsu.sora.substrate.runtime.reservesKeyToken
 import jp.co.soramitsu.sora.substrate.runtime.takeInt32
@@ -84,6 +84,7 @@ class PolkaswapSubscriptionRepositoryImpl @Inject constructor(
     private val blockExplorerManager: BlockExplorerManager,
     private val runtimeManager: RuntimeManager,
     private val socketService: SocketService,
+    private val whitelistTokensManager: WhitelistTokensManager,
 ) : PolkaswapSubscriptionRepository,
     PolkaswapBasicRepositoryImpl(db, blockExplorerManager) {
 
@@ -116,7 +117,7 @@ class PolkaswapSubscriptionRepositoryImpl @Inject constructor(
                 }
             }
         }
-            .onFailure(FirebaseWrapper::recordException)
+            .onFailure(WalletDiagnostics::recordException)
             .getOrThrow()
     }
 
@@ -148,8 +149,12 @@ class PolkaswapSubscriptionRepositoryImpl @Inject constructor(
 
             wsConnection.getUserPoolsData(address, pair.first, pair.second)
                 .forEach { poolDataDto ->
-                    if (db.assetDao().getWhitelistOfToken(poolDataDto.assetId).isNullOrEmpty()
-                            .not()
+                    if (
+                        ownedPoolKept(
+                            whitelistName = db.assetDao().getWhitelistOfToken(poolDataDto.assetId),
+                            tokenId = poolDataDto.assetId,
+                            blacklist = whitelistTokensManager.blacklistIds,
+                        )
                     ) {
                         db.assetDao().getPrecisionOfToken(poolDataDto.assetId)
                             ?.let { tokenPrecision ->
@@ -439,24 +444,6 @@ class PolkaswapSubscriptionRepositoryImpl @Inject constructor(
         emitAll(resultFlow)
     }
 
-    override fun observePoolXYKReserves(
-        baseTokenId: String,
-        tokenId: String
-    ): Flow<String> = flow {
-        val key = runtimeManager.getRuntimeSnapshot()
-            .reservesKey(
-                baseTokenId = baseTokenId,
-                tokenId = tokenId.fromHex()
-            )
-        emitAll(substrateCalls.observeStorage(key))
-    }
-
-    override fun observePoolTBCReserves(tokenId: String): Flow<String> = flow {
-        val key =
-            runtimeManager.getRuntimeSnapshot().poolTBCReserves(tokenId.fromHex())
-        emitAll(substrateCalls.observeStorage(key))
-    }
-
     override suspend fun isSwapAvailable(tokenId1: String, tokenId2: String, dexId: Int): Boolean {
         return wsConnection.isSwapAvailable(tokenId1, tokenId2, dexId)
     }
@@ -526,3 +513,11 @@ class PolkaswapSubscriptionRepositoryImpl @Inject constructor(
             ?: wsConnection.getPoolReserveAccount(baseToken, targetToken.fromHex())
     }
 }
+
+/**
+ * Whether the account's own liquidity in a pair with [tokenId] is kept on the phone: a token on
+ * Polkaswap's whitelist, and also one its blacklist hides, so liquidity the wallet already owns
+ * stays listed and can be removed. A token on neither list is left out as before.
+ */
+internal fun ownedPoolKept(whitelistName: String?, tokenId: String, blacklist: Set<String>): Boolean =
+    !whitelistName.isNullOrEmpty() || tokenId in blacklist

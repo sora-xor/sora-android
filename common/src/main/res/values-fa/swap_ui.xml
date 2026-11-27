@@ -1,0 +1,15 @@
+<resources>
+    <string name="swap_pay_label">پرداخت</string>
+    <string name="swap_receive_label">دریافت</string>
+    <string name="asset_balance_value">موجودی %1$s</string>
+    <string name="asset_catalog_retry">تلاش دوباره</string>
+    <string name="swap_market_missing_pair">برای دیدن بازارها دو توکن انتخاب کنید.</string>
+    <string name="swap_market_empty">بازاری برای این جفت وجود ندارد</string>
+    <string name="swap_about_market">درباره %1$s</string>
+    <string name="swap_show_terms">خواندن شرایط</string>
+    <string name="swap_hide_terms">پنهان کردن شرایط</string>
+    <string name="swap_terms_summary">پیش از تبدیل، شرایط را بررسی کنید.</string>
+    <string name="asset_picker_empty">توکنی در دسترس نیست</string>
+    <string name="liquidity_base_token">توکن پایه</string>
+    <string name="liquidity_pair_token">توکن جفت</string>
+</resources>

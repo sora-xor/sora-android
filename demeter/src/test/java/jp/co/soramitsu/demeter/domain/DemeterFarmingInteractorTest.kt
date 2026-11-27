@@ -13,7 +13,6 @@ import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.*
 import jp.co.soramitsu.sora.substrate.models.ExtrinsicSubmitStatus
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import jp.co.soramitsu.sora.substrate.substrate.Sora2SubmissionActivity
-import jp.co.soramitsu.sora.substrate.substrate.ExtrinsicSubmissionUnknown
 import jp.co.soramitsu.xsubstrate.encrypt.keypair.substrate.Sr25519Keypair
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.flowOf
@@ -76,11 +75,6 @@ class DemeterFarmingInteractorTest {
         coEvery { repo.getFarmedPools(wallet.substrateAddress) } returns null
         assertNull(subject.getFarmedPools())
         assertNull(subject.getFarmedPool(ids))
-    }
-    @Test fun `staked balance is requested for the currently selected wallet`() = runTest {
-        coEvery { repo.getStakedFarmedAmountOfAsset(wallet.substrateAddress, "val") } returns amount
-        assertEquals(amount, subject.getStakedFarmedBalanceOfAsset("val"))
-        coVerify(exactly = 1) { repo.getStakedFarmedAmountOfAsset(wallet.substrateAddress, "val") }
     }
     @Test fun `subscription preserves emitted wallet updates`() = runTest {
         every { repo.subscribeFarms(wallet.substrateAddress) } returns flowOf("first", "second")

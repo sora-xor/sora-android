@@ -25,7 +25,6 @@ import jp.co.soramitsu.androidfoundation.coroutine.CoroutineManager
 import jp.co.soramitsu.androidfoundation.resource.ResourceManager
 import jp.co.soramitsu.androidfoundation.testing.MainCoroutineRule
 import jp.co.soramitsu.common.R
-import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.domain.TransactionChainFailure
 import jp.co.soramitsu.common.domain.TransactionNodeRefusal
@@ -112,7 +111,6 @@ class ClaimViewModelTest {
 
         override suspend fun getFeeToken(): Token = error("not used")
         override suspend fun getContacts(query: String): List<String>? = error("not used")
-        override suspend fun getSoraAccounts(): List<SoraAccount> = error("not used")
     }
 
     private val walletInteractor = FakeWalletInteractor()

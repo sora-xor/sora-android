@@ -30,6 +30,8 @@ import jp.co.soramitsu.feature_blockexplorer_api.data.ProductionFeatureManager
 import jp.co.soramitsu.feature_referral_api.ReferralRouter
 import jp.co.soramitsu.feature_select_node_api.NodeManager
 import jp.co.soramitsu.feature_select_node_api.SelectNodeRouter
+import jp.co.soramitsu.feature_wallet_api.domain.interfaces.HashiBridgeAssets
+import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -50,10 +52,12 @@ class ProfileViewModel @Inject constructor(
     private val selectNodeRouter: SelectNodeRouter,
     private val productionFeatureManager: ProductionFeatureManager,
     nodeManager: NodeManager,
+    private val walletRouter: WalletRouter,
+    hashiBridgeAssets: HashiBridgeAssets,
 ) : BaseViewModel() {
 
     private val _state = MutableStateFlow(
-        initialProfileScreenState,
+        initialProfileScreenState.copy(hashiBridgeVisible = hashiBridgeAssets.supported),
     )
     internal val state = _state.asStateFlow()
 
@@ -87,6 +91,10 @@ class ProfileViewModel @Inject constructor(
 
     fun showPolkamarkt() {
         polkaswapRouter.showPolkamarkt()
+    }
+
+    fun showHashiBridge() {
+        walletRouter.openHashiBridge(null)
     }
 
     fun showSelectNode() {

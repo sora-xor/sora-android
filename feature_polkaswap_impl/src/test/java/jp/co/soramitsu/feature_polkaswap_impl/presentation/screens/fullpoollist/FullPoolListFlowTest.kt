@@ -5,7 +5,7 @@ import androidx.lifecycle.ViewModelStore
 import io.mockk.*
 import jp.co.soramitsu.androidfoundation.testing.MainCoroutineRule
 import jp.co.soramitsu.common.domain.Token
-import jp.co.soramitsu.common.logger.FirebaseWrapper
+import jp.co.soramitsu.common.logger.WalletDiagnostics
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common_wallet.domain.model.*
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsInteractor
@@ -32,9 +32,9 @@ class FullPoolListFlowTest {
     private val pools = MutableStateFlow(listOf(pool("val", "Validator"), pool("eth", "Ethereum")))
     @Before fun setup() {
         every { interactor.subscribePoolsCacheOfCurAccount() } returns pools
-        mockkObject(FirebaseWrapper); every { FirebaseWrapper.recordException(any()) } just Runs
+        mockkObject(WalletDiagnostics); every { WalletDiagnostics.recordException(any()) } just Runs
     }
-    @After fun cleanup() { store.clear(); unmockkObject(FirebaseWrapper) }
+    @After fun cleanup() { store.clear(); unmockkObject(WalletDiagnostics) }
     private fun vm() = FullPoolListViewModel(interactor, NumbersFormatter(), router).also { store.put("vm", it) }
     private fun ids(vm: FullPoolListViewModel) = vm.state.value.list.pools.map { it.tokenIds }
     @Test fun loadingEndsAfterTheFirstSnapshotAndShowsExactPooledAmounts() = runTest {

@@ -58,7 +58,7 @@ enum class ProgressPrompt {
     /** Under 10 s: the steps only. */
     NONE,
 
-    /** From 10 s: "Still working… this can take up to a minute on some devices." */
+    /** Show the live status after 10 seconds. */
     STILL_WORKING,
 
     /** From 60 s: also "Keep waiting" and "Get help". It never fails on its own. */
@@ -82,7 +82,7 @@ fun progressPrompt(elapsedMillis: Long, keepWaitingAtMillis: Long? = null): Prog
 data class ProgressAction(val label: String, val onClick: () -> Unit)
 
 /**
- * Upgrade progress (design spec 9.3; U1, U2, U5): the breathing shield, a title, a body, the
+ * Upgrade progress (design spec 9.3; U1, U2, U5): the shield, a title, a body, the
  * real phases as a StepList and the "keep SORA open" callout. Back is disabled while it shows.
  *
  * [initialElapsedMillis] lets a caller that started the work earlier continue the 10 s / 60 s
@@ -123,7 +123,7 @@ fun UpgradeProgressContent(
             .testTag(SafeModeTags.PROGRESS),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        ShieldEmblem(breathing = true)
+        ShieldEmblem()
         Spacer(Modifier.size(8.dp))
         Text(
             modifier = Modifier
@@ -186,62 +186,3 @@ fun UpgradeProgressContent(
         }
     }
 }
-
-/**
- * After unlocking, the wallet checks the account (an older SORA balance to claim). Silent for
- * 1.5 s (U0); then the progress screen with its real steps (U1). Only a check that
- * [needsNetwork] mentions the network: offline it waits for it (U2, shown at once) and offers
- * "Change node"; the caller continues by itself once connected. A check that runs on the phone
- * never says it waits for the network. [silentMillis] 0 shows it at once (previews and tests).
- */
-@Composable
-fun AccountCheckProgress(
-    connected: Boolean,
-    onSwitchNode: () -> Unit,
-    onGetHelp: () -> Unit,
-    silentMillis: Long = SILENT_CHECK_MILLIS,
-    fixedElapsedMillis: Long? = null,
-    needsNetwork: Boolean = true,
-) {
-    val waiting = needsNetwork && !connected
-    var visible by remember { mutableStateOf(waiting || silentMillis <= 0) }
-    LaunchedEffect(Unit) {
-        delay(silentMillis)
-        visible = true
-    }
-    if (!visible && !waiting) return
-    SafeModeScreen {
-        UpgradeProgressContent(
-            title = stringResource(R.string.safe_mode_checking_title),
-            body = stringResource(
-                if (waiting) R.string.safe_mode_waiting_network_body else R.string.safe_mode_checking_body,
-            ),
-            steps = buildList {
-                add(SafeStep(stringResource(R.string.safe_mode_step_unlocked), SafeStepState.DONE))
-                when {
-                    !needsNetwork -> Unit
-                    connected -> add(SafeStep(stringResource(R.string.safe_mode_step_network), SafeStepState.DONE))
-                    else -> add(
-                        SafeStep(stringResource(R.string.safe_mode_step_network_waiting), SafeStepState.NEEDS_ACTION),
-                    )
-                }
-                add(
-                    SafeStep(
-                        stringResource(R.string.safe_mode_step_account_check),
-                        if (waiting) SafeStepState.WAITING else SafeStepState.RUNNING,
-                    ),
-                )
-            },
-            stepAction = if (waiting) {
-                ProgressAction(stringResource(R.string.safe_mode_change_node), onSwitchNode)
-            } else {
-                null
-            },
-            onGetHelp = onGetHelp,
-            fixedElapsedMillis = fixedElapsedMillis,
-        )
-    }
-}
-
-/** U0: a check that finishes within this time shows no progress screen. */
-const val SILENT_CHECK_MILLIS = 1_500L

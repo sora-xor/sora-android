@@ -1,0 +1,11 @@
+<resources>
+    <string name="contacts_none">最近の送信先はありません</string>
+    <string name="pin_delete_last_digit">最後の数字を削除</string>
+    <string name="common_egyptian">中エジプト語（ヒエログリフ）</string>
+    <plurals name="backup_selected_count">
+        <item quantity="other">%1$d件選択中</item>
+    </plurals>
+    <string name="contacts_lookup_unavailable">アドレスを確認できません</string>
+    <string name="portfolio_positive_amount">0より大きい数量を入力してください。</string>
+    <string name="portfolio_continue_wallet">%1$sで続ける</string>
+</resources>

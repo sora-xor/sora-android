@@ -27,10 +27,6 @@ data class PinCodeScreenState(
     val toolbarTitleString: String,
     val enableShakeAnimation: Boolean = false,
     val isLengthInfoAlertVisible: Boolean = false,
-    val migrating: Boolean = false,
-    /** The running account check needs the network (an unchecked 15-word legacy phrase). */
-    val checkNeedsNetwork: Boolean = false,
-    val isConnected: Boolean = true,
 )
 
 /**

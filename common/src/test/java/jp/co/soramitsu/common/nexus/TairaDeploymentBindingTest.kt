@@ -13,7 +13,6 @@ class TairaTestnetContractTest {
             "taira:${TairaTestnetContract.NETWORK_HEX}:",
             TairaTestnetContract.PENDING_JOURNAL_PREFIX,
         )
-        org.junit.Assert.assertFalse("taira:${TairaTestnetContract.CONTRACT_SHA256}:pending".startsWith(TairaTestnetContract.PENDING_JOURNAL_PREFIX))
         assertTrue(
             "${TairaTestnetContract.PENDING_JOURNAL_PREFIX}pending"
                 .startsWith(TairaTestnetContract.PENDING_JOURNAL_PREFIX)

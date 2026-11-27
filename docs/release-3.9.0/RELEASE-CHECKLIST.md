@@ -2,8 +2,8 @@
 
 Local build and release actions, followed by historical product-release checklists.
 
-Current 12 October 2026 screen/privacy integration and scoped evidence are summarized in
-[NEON-INTEGRATION.md](NEON-INTEGRATION.md). Earlier task sections are historical checklists;
+The 12 October 2026 screen/privacy integration and scoped evidence are summarized in
+[NEON-INTEGRATION.md](NEON-INTEGRATION.md). That report and the earlier task sections are historical;
 local validation does not imply store acceptance or physical-device qualification.
 
 ## Local build and release validation
@@ -14,27 +14,31 @@ build infrastructure; they are not current release instructions.
 
 ### Local inputs
 
-Use JDK 17, Android SDK platform 36 and build-tools 36.0.0. Supply signing inputs only in the
-local process environment. Their existing `CI_` names are retained so local release setups
-keep working; they do not require a CI service.
+Use JDK 17, Android SDK platform 37 and build-tools 36.0.0. Release artifacts are built and
+signed with `scripts/build-signed-production-release.sh` (below), which keeps the upload key
+away from Gradle. It reads:
 
 | Input | Value |
 |---|---|
-| `CI_KEYSTORE_PATH` | Absolute canonical path to the upload keystore, a regular non-symlink file with owner-only permissions. |
-| `CI_KEYSTORE_PASS` | Keystore password. |
-| `CI_KEYSTORE_KEY_ALIAS` | Upload-key alias. |
-| `CI_KEYSTORE_KEY_PASS` | Key password. |
-| `SORA_VERSION_CODE` | Explicit code in the current `appVersionName` range, above every code already uploaded to Google Play. A Gradle property `-PSORA_VERSION_CODE=...` also works. |
-| `SORA_GOOGLE_TOKEN_PROD` | The Google Drive backup OAuth client used by 3.8.6.3, in the same Google Cloud project. |
-| `app/google-services.json` | The existing Firebase app configuration for `jp.co.soramitsu.sora`; this local file is ignored by Git. |
+| `SORA_VERSION_CODE` | Explicit code in the current `appVersionName` range, above every code already uploaded to Google Play. |
+| `SORA_UPLOAD_KEYSTORE` | The upload keystore (PKCS12). Default `~/.sora-release/sora-upload.jks`. |
+| `SORA_UPLOAD_KEY_ALIAS` | Upload-key alias. Default `sora-upload`. |
+| `SORA_UPLOAD_STOREPASS_FILE` | File holding the keystore password. Default: `.storepass` next to the keystore. |
+| `SORA_UPLOAD_KEYPASS_FILE` | File holding the key password, if it differs. Default: the storepass file. |
 
-Never commit credentials or paste them into issues or chats. `CI_FIREBASE_RELEASENOTES`,
-`CI_FIREBASE_GROUP` and `CI_PLAY_KEY` remain optional inputs to the existing local Firebase
-and Play publishing Gradle tasks. Building and validating artifacts does not publish them.
+Never commit credentials or paste them into issues or chats, and never pass the upload key or
+its password to Gradle: Gradle runs every build plugin and annotation processor in the same
+process, and anything that can read its environment could take the key. The `CI_KEYSTORE_*`
+inputs of `app/build.gradle.kts` remain only for that script's throwaway build key. Building and
+validating artifacts does not publish them. No Google client ID or `google-services.json` is
+needed: the app links no Firebase or Google Play services code, and Drive backup is matched to
+the app by package name and signing certificate (see `scripts/README.md`).
 
 - [ ] Confirm the highest versionCode already uploaded across all Play tracks and choose a
-      higher code in the range enforced by `app/build.gradle.kts`. For 3.9.1 that range is
-      `3090100..3090199`; do not reuse a code already uploaded.
+      higher code in the range enforced by `app/build.gradle.kts`. For 3.9.2 that range is
+      `3090200..3090299`; do not reuse a code already uploaded. The build script's
+      `playLastPublishedVersionCode` is a recorded floor, not a live Play inventory. Check
+      Play before choosing a code and update that floor after Play accepts the upload.
 - [ ] Confirm `appVersionName` in `app/build.gradle.kts` is the intended release version.
 - [ ] Confirm the public certificate pins in `config/android-production-signing-identity.json`
       match the upload certificate currently accepted by Play and the existing app-signing
@@ -52,7 +56,6 @@ python3 scripts/test-android-native-16kb.py
 APKSIGNER="$ANDROID_HOME/build-tools/36.0.0/apksigner" python3 scripts/test-verify-release-signing.py
 python3 scripts/test-verify-release-json-export.py
 python3 scripts/test-device-test-scripts.py
-SORA_TEST_RELEASE_GATE=1 python3 scripts/test-google-identity-pin.py
 node scripts/test-production-release-lock-coverage.mjs
 ```
 
@@ -68,25 +71,37 @@ for emulator setup, offline checks and the additional 16 KB run.
 
 ### Build and check signed artifacts
 
-With the local inputs above set, run:
+Commit the release first; the script builds only committed files. Then run:
 
 ```sh
-python3 scripts/google-identity-pin.py check --google-services app/google-services.json
-./gradlew --dependency-verification=strict :app:bundleProductionRelease :app:assembleProductionRelease
-python3 scripts/verify-release-manifest.py \
-  --policy config/android-nexus-manifest-policy.json \
-  --expect-version-code "$SORA_VERSION_CODE" --expect-version-name 3.9.1 \
-  app/build/outputs/bundle/productionRelease/app-production-release.aab \
-  app/build/outputs/apk/production/release/app-production-release.apk
-APKSIGNER="$ANDROID_HOME/build-tools/36.0.0/apksigner" python3 scripts/verify-release-signing.py \
-  app/build/outputs/bundle/productionRelease/app-production-release.aab \
-  app/build/outputs/apk/production/release/app-production-release.apk
-python3 scripts/verify-android-native-16kb.py app/build/outputs/bundle/productionRelease/app-production-release.aab
-python3 scripts/verify-android-native-16kb.py app/build/outputs/apk/production/release/app-production-release.apk
-python3 scripts/verify-release-json-export.py \
-  app/build/outputs/bundle/productionRelease/app-production-release.aab \
-  app/build/outputs/apk/production/release/app-production-release.apk
+SORA_VERSION_CODE=3090202 scripts/build-signed-production-release.sh --reproduce
 ```
+
+It writes the signed `app-production-release.aab` and `.apk`, the unsigned bundle,
+`mapping.txt`, the Gradle logs and `receipt.json` (commit, checksums, signing certificate) to
+`build/release/<versionCode>-<commit>/`. What it does:
+
+- Exports the commit with `git archive` into a new directory: no uncommitted or untracked file
+  and no earlier build output can reach the release.
+- Runs Gradle with an empty Gradle home of its own, `--no-build-cache`, `--no-daemon`,
+  `--no-configuration-cache`, strict dependency verification and a cleared environment. No
+  cached task output, artifact transform or daemon from another build is reused (audit
+  2026-11-07, H3).
+- Gives Gradle only a throwaway signing key made for this build, and on macOS runs it under
+  `sandbox-exec`, unable to read or write files in the home directory apart from the build
+  directory, the Android SDK and the JDK (only file metadata stays visible). A build plugin
+  cannot read the upload key, SSH keys or tokens.
+- Removes the throwaway signature, then signs the bundle with `jarsigner` and the APK with
+  `apksigner` and the upload key, after Gradle has exited. Passwords are read from files.
+- Runs `verify-release-signing.py` (upload-certificate pin), `verify-release-manifest.py`
+  (Nexus policy, version code and name), `verify-android-native-16kb.py` and
+  `verify-release-json-export.py` on both signed files.
+- With `--reproduce`, builds a second time in another fresh directory and Gradle home and
+  fails unless the bundle, the APK contents and the R8 mapping are identical. This catches a
+  build input that differs between runs; it is no substitute for a rebuild on a second machine.
+
+The upload key still lives on this Mac. Moving it to a hardware token or a separate account,
+and requiring a second Play Console user to publish, remain open (audit 2026-11-07, H3).
 
 The explicit Nexus manifest policy covers the current network features. The separate
 `android-production-manifest-policy.json` remains the historical 3.9.x store contract.
@@ -98,8 +113,8 @@ Neither signing nor local manifest/dependency/identity checks depend on a hosted
       Verify the same accounts, addresses and balances, and a successful signed transfer.
 - [ ] Upload the validated AAB to the Play Console internal track manually. Confirm that Play
       accepts the upload certificate and retains the existing app-signing certificate.
-- [ ] Complete the device and product checks below before staged rollout, watching Crashlytics
-      crash and ANR rates between stages.
+- [ ] Complete the device and product checks below before staged rollout, watching the crash
+      and ANR rates in Play Console's Android vitals between stages.
 
 ### Leaked build credential (open security action)
 
@@ -127,8 +142,8 @@ must be treated as public.
 - [ ] Delete the secrets that no build reads any more from local credential stores and
       developer `local.properties`: `SORA_CARD_*`, `X1_ENDPOINT_URL_*`,
       `X1_WIDGET_ID_*`, `SORA_BACKEND_*`, `SORA_ANDROID_RECAPTCHA_KEY_*`,
-      `SORA_ANDROID_PLATFORM_ID_*`. Keep `SORA_GOOGLE_TOKEN_*` (Google Drive
-      backup).
+      `SORA_ANDROID_PLATFORM_ID_*`, `SORA_GOOGLE_TOKEN_PROD` and `app/google-services.json`.
+      `SORA_GOOGLE_TOKEN_TEST` only switches Drive backup on in development builds.
 
 ### Google Play Console
 
@@ -199,22 +214,14 @@ missing, unless all of these are present:
 
 - [ ] `SORA_VERSION_CODE`, passed locally as an environment variable or Gradle property.
       Use the current version range and published-code checks described above.
-- [ ] `SORA_GOOGLE_TOKEN_PROD`: the same Google Drive backup OAuth client that
-      3.8.6.3 used (same Google Cloud project). A different client builds
-      fine but hides every existing Drive backup from users.
-- [ ] Local `app/google-services.json` for `jp.co.soramitsu.sora`; without it Crashlytics is off.
 - [ ] Signing credentials (unchanged).
 
-### Firebase metrics configuration
+### No analytics or crash SDK
 
-Analytics 23.0.0 is enabled with analytics storage allowed and advertising storage,
-ad user data, ad personalization and advertising-ID collection denied. Packaged
-manifest defaults apply at SDK initialization; startup reapplies the public consent
-API to replace retained runtime values. The APK/AAB manifest verifier rejects
-missing or conflicting defaults and advertising permissions. Crashlytics, messaging,
-the official Firebase app configuration and the historical Drive client stay unchanged.
-Verify access to the existing Analytics property and actual event ingestion in the
-Firebase/Google Analytics console; a successful build alone does not prove ingestion.
+The app links no Firebase, Google Analytics or Google Play services library. Crash and ANR
+reports come from Play Console's Android vitals. The Play Console Data safety form must not
+declare analytics, crash logs or device IDs collected by an SDK. The APK/AAB manifest
+verifier rejects Firebase, Analytics and Play-services components.
 
 ### Before each release candidate (mainnet changes often)
 

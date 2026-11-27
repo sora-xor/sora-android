@@ -33,6 +33,7 @@ import jp.co.soramitsu.common.base.SoraBaseFragment
 import jp.co.soramitsu.common.base.theOnlyRoute
 import jp.co.soramitsu.common.domain.BottomBarController
 import jp.co.soramitsu.common.presentation.args.BUNDLE_KEY
+import jp.co.soramitsu.feature_select_node_impl.presentation.observeResultOnce
 import jp.co.soramitsu.feature_select_node_impl.presentation.select.ui.SelectNodeScreen
 
 @AndroidEntryPoint
@@ -45,7 +46,7 @@ internal class SelectNodeFragment : SoraBaseFragment<SelectNodeViewModel>() {
         (activity as BottomBarController).hideBottomBar()
 
         findNavController().currentBackStackEntry?.savedStateHandle
-            ?.getLiveData<Bundle?>(BUNDLE_KEY)?.observe(viewLifecycleOwner) { args ->
+            ?.observeResultOnce<Bundle>(BUNDLE_KEY, viewLifecycleOwner) {
                 viewModel.onPinCodeChecked()
             }
     }

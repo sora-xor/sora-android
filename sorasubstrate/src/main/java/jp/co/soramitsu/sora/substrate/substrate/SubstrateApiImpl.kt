@@ -22,7 +22,7 @@ package jp.co.soramitsu.sora.substrate.substrate
 import java.math.BigInteger
 import javax.inject.Inject
 import jp.co.soramitsu.common.data.network.dto.PoolDataDto
-import jp.co.soramitsu.common.logger.FirebaseWrapper
+import jp.co.soramitsu.common.logger.WalletDiagnostics
 import jp.co.soramitsu.sora.substrate.request.IsPairEnabledRequest
 import jp.co.soramitsu.sora.substrate.request.StateKeys
 import jp.co.soramitsu.sora.substrate.runtime.Pallete
@@ -63,7 +63,7 @@ class SubstrateApiImpl @Inject constructor(
                 mapper = pojoList<String>().nonNull()
             )
         }.onFailure(
-            FirebaseWrapper::recordException
+            WalletDiagnostics::recordException
         ).getOrThrow()
     }
 
@@ -95,7 +95,7 @@ class SubstrateApiImpl @Inject constructor(
                     }
             }
         }.onFailure(
-            FirebaseWrapper::recordException
+            WalletDiagnostics::recordException
         ).getOrThrow()
     }
 
@@ -235,7 +235,7 @@ class SubstrateApiImpl @Inject constructor(
                     } ?: BigInteger.ZERO
                 }
         }.getOrElse {
-            FirebaseWrapper.recordException(it)
+            WalletDiagnostics.recordException(it)
             throw it
         }
     }

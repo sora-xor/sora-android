@@ -57,4 +57,32 @@ class AssetCardStateTest {
         assertNull(rows[0].frozenAmount)
         assertNull(rows[1].frozenAmount)
     }
+
+    @Test
+    fun `a positive balance under the row's precision is never printed as 0`() {
+        val dust = mapAssetsToCardState(listOf(TestAssets.xorAsset(BigDecimal("0.000000000123"))), formatter).single()
+        assertEquals("0.0000000001 XOR", dust.assetAmount)
+        val none = mapAssetsToCardState(listOf(TestAssets.xorAsset(BigDecimal.ZERO)), formatter).single()
+        assertEquals("0 XOR", none.assetAmount)
+    }
+
+    @Test
+    fun `a holding worth under a cent shows less than a cent under its amount, never zero`() {
+        val token = TestAssets.xorAsset().token.copy(fiatPrice = 0.001, fiatSymbol = "$")
+        val dust = mapAssetsToCardState(listOf(TestAssets.xorAsset(BigDecimal("5")).copy(token = token)), formatter).single()
+        // $0.005
+        assertEquals("<$0.01", dust.assetFiatAmount)
+        val cent = mapAssetsToCardState(listOf(TestAssets.xorAsset(BigDecimal("12")).copy(token = token)), formatter).single()
+        assertEquals("$0.01", cent.assetFiatAmount)
+        val zero = mapAssetsToCardState(listOf(TestAssets.xorAsset(BigDecimal.ZERO).copy(token = token)), formatter).single()
+        assertEquals("an empty holding is worth $0", "$0", zero.assetFiatAmount)
+    }
+
+    @Test
+    fun `a holding without a price shows no value under its amount`() {
+        val token = TestAssets.xorAsset().token.copy(fiatPrice = null, fiatSymbol = "$")
+        val row = mapAssetsToCardState(listOf(TestAssets.xorAsset(BigDecimal("5")).copy(token = token)), formatter).single()
+        assertEquals("5 XOR", row.assetAmount)
+        assertEquals("", row.assetFiatAmount)
+    }
 }

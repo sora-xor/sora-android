@@ -44,14 +44,14 @@ class OnboardingEntryFlowTest {
         compose.onNodeWithTag("RecoveryChooseFile").assertDoesNotExist()
     }
     @Test fun directPhraseEntryOpensTheRequestedImportSource() {
-        launch("IMPORT_RECOVERY_PHRASE"); waitForText(R.string.recovery_enter_passphrase_title)
+        launch("IMPORT_RECOVERY_PHRASE"); waitForText(R.string.recovery_mnemonic_passphrase)
         assertEquals(RecoveryType.PASSPHRASE, state().recoveryType)
         node(R.string.common_continue).assertIsNotEnabled()
         compose.onNodeWithTag("RecoveryChooseFile").assertDoesNotExist()
     }
     @Test fun chooseSourceEntryLetsTheUserSelectRawSeed() {
         launch("IMPORT_CHOOSE_SOURCE"); waitForTag("RecoveryBackupFile")
-        node(R.string.common_raw_seed).performClick(); waitForText(R.string.recovery_enter_seed_title)
+        node(R.string.common_raw_seed).performClick(); waitForText(R.string.recovery_input_raw_seed_hint)
         assertEquals(RecoveryType.SEED, state().recoveryType); node(R.string.common_continue).assertIsNotEnabled()
     }
     @Test fun chooseSourceEntryLetsTheUserSelectEncryptedBackup() {
@@ -63,25 +63,25 @@ class OnboardingEntryFlowTest {
     @Test fun welcomeImportOpensTheSourceDialogAndPhraseFlow() {
         launch(); waitForText(R.string.recovery_title); node(R.string.recovery_title).performScrollTo().performClick()
         waitForTag("RecoveryBackupFile"); node(R.string.common_passphrase_title).performClick()
-        waitForText(R.string.recovery_enter_passphrase_title); assertEquals(RecoveryType.PASSPHRASE, state().recoveryType)
+        waitForText(R.string.recovery_mnemonic_passphrase); assertEquals(RecoveryType.PASSPHRASE, state().recoveryType)
     }
     @Test fun changingSourceClearsOldInputAndValidation() {
-        launch("IMPORT_RECOVERY_PHRASE"); waitForText(R.string.recovery_enter_passphrase_title)
+        launch("IMPORT_RECOVERY_PHRASE"); waitForText(R.string.recovery_mnemonic_passphrase)
         compose.onNode(hasSetTextAction()).performTextReplacement("invalid fixture phrase")
-        node(R.string.common_raw_seed).performClick(); waitForText(R.string.recovery_enter_seed_title)
+        node(R.string.common_raw_seed).performClick(); waitForText(R.string.recovery_input_raw_seed_hint)
         assertEquals("", state().recoveryInputState.value.text); assertFalse(state().isButtonEnabled)
     }
     @Test fun invalidPhraseNeverEnablesImportContinuation() {
-        launch("IMPORT_RECOVERY_PHRASE"); waitForText(R.string.recovery_enter_passphrase_title)
+        launch("IMPORT_RECOVERY_PHRASE"); waitForText(R.string.recovery_mnemonic_passphrase)
         compose.onNode(hasSetTextAction()).performTextReplacement("invalid fixture phrase")
         compose.waitForIdle(); node(R.string.common_continue).assertIsNotEnabled()
         assertFalse(state().isButtonEnabled)
     }
     @Test fun recreationDoesNotApplyTheOriginalEntryAgain() {
-        launch("IMPORT_RECOVERY_PHRASE"); waitForText(R.string.recovery_enter_passphrase_title)
-        node(R.string.common_raw_seed).performClick(); waitForText(R.string.recovery_enter_seed_title)
+        launch("IMPORT_RECOVERY_PHRASE"); waitForText(R.string.recovery_mnemonic_passphrase)
+        node(R.string.common_raw_seed).performClick(); waitForText(R.string.recovery_input_raw_seed_hint)
         compose.onNode(hasSetTextAction()).performTextReplacement("public-invalid-seed")
-        scenario!!.recreate(); waitForText(R.string.recovery_enter_seed_title)
+        scenario!!.recreate(); waitForText(R.string.recovery_input_raw_seed_hint)
         assertEquals(RecoveryType.SEED, state().recoveryType)
         assertEquals("public-invalid-seed", state().recoveryInputState.value.text)
     }
@@ -89,21 +89,21 @@ class OnboardingEntryFlowTest {
         launch("IMPORT_CHOOSE_SOURCE"); waitForTag("RecoveryBackupFile")
         compose.onNodeWithTag("RecoveryBackupFile").performClick(); waitForTag("RecoveryFilePassword")
         compose.onNodeWithTag("RecoveryFilePassword").performTextReplacement("fixture-password")
-        node(R.string.common_raw_seed).performClick(); waitForText(R.string.recovery_enter_seed_title)
+        node(R.string.common_raw_seed).performClick(); waitForText(R.string.recovery_input_raw_seed_hint)
         assertEquals("", state().passwordInputState.value.text)
         compose.onNodeWithTag("RecoveryFilePassword").assertDoesNotExist()
     }
     @Test fun createAccountNameSurvivesActivityRecreation() {
         launch(); waitForText(R.string.create_account_title); node(R.string.create_account_title).performScrollTo().performClick()
-        waitForText(R.string.onboarding_create_account_description)
+        waitForText(R.string.onboarding_create_account_subtitle)
         compose.onNode(hasSetTextAction()).performTextReplacement("UI fixture wallet")
-        scenario!!.recreate(); waitForText(R.string.onboarding_create_account_description)
+        scenario!!.recreate(); waitForText(R.string.onboarding_create_account_subtitle)
         compose.onNode(hasSetTextAction()).assertTextContains("UI fixture wallet")
         scenario!!.onActivity { assertEquals("UI fixture wallet", it.viewModel.createAccountCardState.value!!.accountNameInputState.value.text) }
     }
     @Test fun backFromAccountNameReturnsToWelcomeWithoutCreatingAnAccount() {
         launch(); waitForText(R.string.create_account_title); node(R.string.create_account_title).performScrollTo().performClick()
-        waitForText(R.string.onboarding_create_account_description)
+        waitForText(R.string.onboarding_create_account_subtitle)
         scenario!!.onActivity { it.onToolbarNavigation() }
         waitForText(R.string.recovery_title); node(R.string.create_account_title).assertExists()
     }

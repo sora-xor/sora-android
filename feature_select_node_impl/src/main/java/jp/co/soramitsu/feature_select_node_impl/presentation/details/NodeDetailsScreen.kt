@@ -19,6 +19,9 @@ limitations under the License.
 
 package jp.co.soramitsu.feature_select_node_impl.presentation.details
 
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -57,12 +60,15 @@ import jp.co.soramitsu.ui_core.theme.customColors
 
 @Composable
 internal fun NodeDetailsScreen(
-    viewModel: NodeDetailsViewModel
+    viewModel: NodeDetailsViewModel,
+    scrollState: ScrollState = rememberScrollState(),
 ) {
     val state = viewModel.state.collectAsStateWithLifecycle().value
 
+    // With the keyboard up on a short screen the form is taller than what is left: it scrolls, so the address field
+    // and the button under it stay within reach.
     Box(
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier.fillMaxSize().verticalScroll(scrollState)
     ) {
         NodeDetailsScreenContent(
             state = state,

@@ -367,7 +367,7 @@ class TxDetailsViewModelTest {
                     date,
                     TestTokens.xorToken.printBalance(base.fee, nf),
                     TestTokens.xorToken.printFiat(base.fee, nf),
-                    R.drawable.ic_refresh_24,
+                    R.drawable.ic_polkaswap_40,
                     "swapped",
                     explorerUrl = explorerUrl(base.txHash)
                 ),

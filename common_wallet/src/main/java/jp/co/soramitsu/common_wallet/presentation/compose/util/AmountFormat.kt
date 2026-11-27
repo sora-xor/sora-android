@@ -20,11 +20,12 @@ limitations under the License.
 package jp.co.soramitsu.common_wallet.presentation.compose.util
 
 import jp.co.soramitsu.common.domain.Asset
+import jp.co.soramitsu.common.domain.formatFiatAmount
 import jp.co.soramitsu.common.domain.printFiat
 import jp.co.soramitsu.common.util.NumbersFormatter
 
 object AmountFormat {
-    fun getAssetBalanceText(asset: Asset, nf: NumbersFormatter, precision: Int) = "%s (%s)".format(
+    fun getAssetBalanceText(asset: Asset, nf: NumbersFormatter, precision: Int) = withFiat(
         asset.printBalance(
             nf,
             withSymbol = false,
@@ -32,4 +33,19 @@ object AmountFormat {
         ),
         asset.printFiat(nf)
     )
+
+    /** "12.5 ($25)", or just "12.5" for a token without a fiat price, never "12.5 ()". */
+    fun withFiat(amount: String, fiat: String): String =
+        if (fiat.isBlank()) amount else "%s (%s)".format(amount, fiat)
+
+    /** The smallest value printed as itself, as on the Wallet home. */
+    const val SMALLEST_FIAT = 0.01
+
+    /** A value as the Wallet home prints it: a positive value under a cent is "<$0.01", never "$0". */
+    fun fiatAtLeastCent(value: Double, symbol: String, nf: NumbersFormatter): String =
+        if (value > 0.0 && value < SMALLEST_FIAT) {
+            "<" + formatFiatAmount(SMALLEST_FIAT, symbol, nf)
+        } else {
+            formatFiatAmount(value, symbol, nf)
+        }
 }

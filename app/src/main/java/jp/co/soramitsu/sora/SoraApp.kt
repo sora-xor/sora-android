@@ -28,20 +28,21 @@ import androidx.work.Configuration
 import coil.ImageLoader
 import coil.ImageLoaderFactory
 import coil.decode.SvgDecoder
-import com.google.firebase.FirebaseApp
-import com.google.firebase.analytics.FirebaseAnalytics
 import dagger.hilt.android.HiltAndroidApp
 import javax.inject.Inject
 import jp.co.soramitsu.androidfoundation.resource.ResourceManager
 import jp.co.soramitsu.common.domain.DarkThemeManager
 import jp.co.soramitsu.common.domain.OptionsProvider
 import jp.co.soramitsu.common.io.FileManager
-import jp.co.soramitsu.common.logger.FirebaseWrapper
+import jp.co.soramitsu.common.logger.WalletDiagnostics
 import jp.co.soramitsu.common.util.BuildType
 import jp.co.soramitsu.common.util.BuildUtils
 import jp.co.soramitsu.common.util.Flavor
+import jp.co.soramitsu.common.util.UnlockJourneyTrace
 import jp.co.soramitsu.core_db.WalletUpgradeBackup
 import jp.co.soramitsu.feature_select_node_api.NodeManager
+import jp.co.soramitsu.feature_wallet_impl.bridge.HashiBridgeService
+import jp.co.soramitsu.feature_wallet_impl.presentation.portfolio.PortfolioPreload
 import jp.co.soramitsu.sora.splash.domain.StartupTimeTrace
 import timber.log.Timber
 
@@ -53,6 +54,11 @@ open class SoraApp : Application(), Configuration.Provider, ImageLoaderFactory {
     // node socket or fetches node lists.
     @Inject
     lateinit var nodeManager: dagger.Lazy<NodeManager>
+
+    // Started with the node: follows HASHI bridge transfers that were not final when the app last
+    // stopped (it only reads; it never signs). Nothing to do when there are none.
+    @Inject
+    lateinit var hashiBridge: dagger.Lazy<HashiBridgeService>
 
     @Inject
     lateinit var resourceManager: ResourceManager
@@ -72,7 +78,7 @@ open class SoraApp : Application(), Configuration.Provider, ImageLoaderFactory {
     override fun attachBaseContext(base: Context) {
         super.attachBaseContext(base)
         StartupTimeTrace.begin()
-        DarkThemeManager.captureNewInstallDefault(this)
+        UnlockJourneyTrace.processAttached()
         // Hilt injects eager singletons before this class's onCreate body. Prepare the immutable
         // wallet backup first so no injected database consumer can race the upgrade gate.
         WalletUpgradeBackup.prepare(this)
@@ -103,14 +109,7 @@ open class SoraApp : Application(), Configuration.Provider, ImageLoaderFactory {
 
         registerActivityLifecycleCallbacks(resourceManager)
         registerActivityLifecycleCallbacks(StartNodeManagerWhenWalletReady())
-        val firebaseApp = runCatching { FirebaseApp.initializeApp(this) }
-            .onFailure { Timber.e(it) }
-            .getOrNull()
-        if (firebaseApp != null) {
-            runCatching { FirebaseAnalyticsPolicy.apply(FirebaseAnalytics.getInstance(this)) }
-                .onFailure { Timber.w("Firebase Analytics policy could not be applied") }
-        }
-        FirebaseWrapper.setCrashlyticsEnabled(firebaseApp != null)
+        registerActivityLifecycleCallbacks(PrepareWalletHomeOnFirstActivity())
 
         OptionsProvider.CURRENT_VERSION_CODE = BuildConfig.VERSION_CODE
         OptionsProvider.CURRENT_VERSION_NAME = BuildConfig.VERSION_NAME
@@ -125,11 +124,27 @@ open class SoraApp : Application(), Configuration.Provider, ImageLoaderFactory {
      * clear the gate without a restart, so every later activity creation or resume tries again
      * until the node connection has started.
      */
+    /** Someone is opening the app, not a background job waking it: get the Wallet home's materials ready. */
+    private inner class PrepareWalletHomeOnFirstActivity : ActivityLifecycleCallbacks {
+        override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {
+            unregisterActivityLifecycleCallbacks(this)
+            PortfolioPreload.start(this@SoraApp)
+        }
+
+        override fun onActivityStarted(activity: Activity) = Unit
+        override fun onActivityResumed(activity: Activity) = Unit
+        override fun onActivityPaused(activity: Activity) = Unit
+        override fun onActivityStopped(activity: Activity) = Unit
+        override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) = Unit
+        override fun onActivityDestroyed(activity: Activity) = Unit
+    }
+
     private inner class StartNodeManagerWhenWalletReady : ActivityLifecycleCallbacks {
         private fun startWhenReady() {
             if (WalletUpgradeBackup.blockingFailure() != null) return
             if (nodeManager.get().ensureStarted()) {
                 unregisterActivityLifecycleCallbacks(this)
+                hashiBridge.get().resumeMonitoring()
             }
         }
 
@@ -145,7 +160,7 @@ open class SoraApp : Application(), Configuration.Provider, ImageLoaderFactory {
     }
 
     private fun initLogger() {
-        val verbose = BuildUtils.isBuildType(BuildType.FIREBASE, BuildType.DEBUG) || BuildUtils.isFlavors(Flavor.DEVELOP)
+        val verbose = BuildUtils.isBuildType(BuildType.DEBUG) || BuildUtils.isFlavors(Flavor.DEVELOP)
         installWalletLogTree(verbose)
         if (verbose) {
             try {

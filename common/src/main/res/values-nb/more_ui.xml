@@ -1,0 +1,12 @@
+<resources>
+    <string name="contacts_none">Ingen nylige mottakere</string>
+    <string name="pin_delete_last_digit">Slett siste siffer</string>
+    <string name="common_egyptian">Mellomegyptisk (hieroglyfer)</string>
+    <plurals name="backup_selected_count">
+        <item quantity="one">%1$d valgt</item>
+        <item quantity="other">%1$d valgt</item>
+    </plurals>
+    <string name="contacts_lookup_unavailable">Adressesøk er utilgjengelig</string>
+    <string name="portfolio_positive_amount">Angi et beløp over null.</string>
+    <string name="portfolio_continue_wallet">Fortsett med %1$s</string>
+</resources>

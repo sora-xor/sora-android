@@ -1,0 +1,15 @@
+<resources>
+    <string name="swap_pay_label">Отдаёте</string>
+    <string name="swap_receive_label">Получаете</string>
+    <string name="asset_balance_value">Баланс %1$s</string>
+    <string name="asset_catalog_retry">Повторить</string>
+    <string name="swap_market_missing_pair">Выберите два токена, чтобы увидеть рынки.</string>
+    <string name="swap_market_empty">Нет рынков для этой пары</string>
+    <string name="swap_about_market">О рынке %1$s</string>
+    <string name="swap_show_terms">Прочитать условия</string>
+    <string name="swap_hide_terms">Скрыть условия</string>
+    <string name="swap_terms_summary">Перед обменом прочтите условия.</string>
+    <string name="asset_picker_empty">Нет доступных токенов</string>
+    <string name="liquidity_base_token">Базовый токен</string>
+    <string name="liquidity_pair_token">Парный токен</string>
+</resources>

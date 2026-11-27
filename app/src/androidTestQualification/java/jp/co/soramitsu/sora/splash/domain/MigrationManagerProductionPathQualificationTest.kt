@@ -48,6 +48,7 @@ import jp.co.soramitsu.core_db.model.NetworkAccountLocal
 import jp.co.soramitsu.core_db.model.SoraAccountLocal
 import jp.co.soramitsu.core_db.model.WalletIdentityLocal
 import jp.co.soramitsu.core_db.model.WalletMigrationIds
+import jp.co.soramitsu.feature_account_api.domain.PhoneScreenLock
 import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
 import jp.co.soramitsu.feature_account_impl.data.repository.CredentialsRepositoryImpl
 import jp.co.soramitsu.feature_account_impl.data.repository.UserRepositoryImpl
@@ -327,7 +328,8 @@ class MigrationManagerProductionPathQualificationTest {
             if (!restarted) assertEquals("", userDatasource.getCurAccountAddress())
             val journalBefore = database.walletIdentityDao().getMigrationJournal(WalletMigrationIds.NETWORK_ACCOUNTS_V1)
             val userRepository = UserRepositoryImpl(userDatasource, credentialsDatasource, database,
-                coroutineManager, LanguagesHolder(), codec, UserRepositorySr25519Crypto())
+                coroutineManager, LanguagesHolder(), codec, UserRepositorySr25519Crypto(),
+                PhoneScreenLock({ false }, { 0L }))
             awaitRepositoryInitialization(repositoryJob, initializationFailure)
             assertNull(initializationFailure.get())
             assertEquals(SoraAccount(PINNED_TWELVE_WORD_ADDRESS, PRE_MULTIACCOUNT_NAME), userRepository.getCurSoraAccount())
@@ -577,6 +579,7 @@ class MigrationManagerProductionPathQualificationTest {
                 languagesHolder = LanguagesHolder(),
                 sora2AddressCodec = sora2AddressCodec,
                 userRepositorySr25519Crypto = UserRepositorySr25519Crypto(),
+                phoneScreenLock = PhoneScreenLock({ false }, { 0L }),
             )
             verify(exactly = 1) { coroutineManager.applicationScope }
             awaitRepositoryInitialization(

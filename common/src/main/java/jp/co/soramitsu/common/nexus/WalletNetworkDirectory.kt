@@ -149,9 +149,10 @@ object WalletNetworkChoices {
 
     /**
      * The Receive or Send flow opens straight on the network when there is nothing to choose:
-     * only one live network can be used. A network that is not live yet keeps its home row, so
-     * its address stays one tap away.
+     * the wallet has only one live network. A temporarily unavailable live network still belongs
+     * in the picker, so a failed balance read cannot silently redirect Send to another network.
+     * A network that is not live yet keeps its home row, so its address stays one tap away.
      */
     fun onlyChoice(choices: List<WalletNetworkChoice>): WalletNetworkChoice? =
-        choices.filter { it.isAvailable && it.network.isLive }.singleOrNull()
+        choices.filter { it.network.isLive }.singleOrNull()?.takeIf { it.isAvailable }
 }

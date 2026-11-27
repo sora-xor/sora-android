@@ -1,15 +1,15 @@
 <resources>
     <style name="SplashTheme" parent="Theme.SplashScreen">
-    <item name="windowSplashScreenBackground">#06060B</item>
-    <item name="windowSplashScreenAnimatedIcon">@drawable/notification_brand</item>
+    <item name="windowSplashScreenBackground">@color/launch_page</item>
+    <item name="windowSplashScreenAnimatedIcon">@android:color/transparent</item>
     <item name="postSplashScreenTheme">@style/AppTheme</item>
-        <item name="android:windowBackground">#06060B</item>
-        <item name="android:colorBackground">#06060B</item>
-        <item name="android:statusBarColor">#06060B</item>
-        <item name="android:navigationBarColor">#06060B</item>
-        <item name="android:windowLightStatusBar">false</item>
-        <item name="android:windowLightNavigationBar">false</item>
-        <item name="android:windowSplashScreenBackground">#06060B</item>
-        <item name="android:windowSplashScreenIconBackgroundColor">#06060B</item>
+        <item name="android:windowBackground">@color/launch_page</item>
+        <item name="android:colorBackground">@color/launch_page</item>
+        <item name="android:statusBarColor">@color/launch_page</item>
+        <item name="android:navigationBarColor">@color/launch_page</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightNavigationBar">true</item>
+        <item name="android:windowSplashScreenBackground">@color/launch_page</item>
+        <item name="android:windowSplashScreenIconBackgroundColor">@color/launch_page</item>
     </style>
 </resources>

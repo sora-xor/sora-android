@@ -24,6 +24,7 @@ import javax.inject.Inject
 import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.domain.PoolDex
 import jp.co.soramitsu.common.domain.Token
+import jp.co.soramitsu.common.domain.WhitelistTokensManager
 import jp.co.soramitsu.common.util.StringPair
 import jp.co.soramitsu.common_wallet.data.AssetLocalToAssetMapper
 import jp.co.soramitsu.common_wallet.domain.model.BasicPoolData
@@ -55,11 +56,20 @@ class PolkaswapRepositoryImpl @Inject constructor(
     blockExplorerManager: BlockExplorerManager,
     private val soraConfigManager: SoraConfigManager,
     private val substrateCalls: SubstrateCalls,
+    private val whitelistTokensManager: WhitelistTokensManager,
 ) : PolkaswapRepository, PolkaswapBasicRepositoryImpl(db, blockExplorerManager) {
 
+    /**
+     * The pools Explore lists and searches. A pair with a token Polkaswap's blacklist hides is left
+     * out. The list is read again whenever the token table changes, which is when a new blacklist
+     * has been applied, so an open list follows it.
+     */
     override fun subscribeBasicPools(): Flow<List<BasicPoolData>> {
         return db.poolDao().subscribeBasicPoolsWithToken().map { list ->
-            list.map { local ->
+            val hidden = whitelistTokensManager.blacklistIds
+            list.filterNot { local ->
+                local.basicPoolLocal.tokenIdBase in hidden || local.basicPoolLocal.tokenIdTarget in hidden
+            }.map { local ->
                 PoolLocalMapper.mapBasicPoolTokenFiatLocal(
                     local,
                     assetLocalToAssetMapper,

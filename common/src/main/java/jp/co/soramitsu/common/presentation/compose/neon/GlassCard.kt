@@ -31,22 +31,22 @@ import androidx.compose.material.contentColorFor
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.isSpecified
 import androidx.compose.ui.graphics.takeOrElse
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import jp.co.soramitsu.common.presentation.compose.theme.neon.LocalFx
 import jp.co.soramitsu.common.presentation.compose.theme.neon.neon
+import jp.co.soramitsu.ui_core.lit.Lit
+import jp.co.soramitsu.ui_core.theme.borderRadius
+import jp.co.soramitsu.ui_core.theme.customColors
 
 /**
- * A calm "fake glass" card (design spec 4.3.1, 7.3): translucent fill, top sheen and a gradient
- * hairline; a soft shadow in light only. Never glows and never uses neumorphic shadows.
+ * A calm card (design spec 4.3.1, 7.3): a sheet of frosted glass with small corners.
  *
- * [backgroundColor] defaults to [Color.Unspecified], which means glass. An explicit colour keeps
- * legacy call sites safe: it renders as an opaque fill (QR plates rely on solid white).
+ * [backgroundColor] defaults to [Color.Unspecified], which means the glass's own milk. An
+ * explicit colour renders as an opaque sheet of that colour (QR plates rely on solid white).
  */
 @Composable
 fun GlassCard(
@@ -54,16 +54,14 @@ fun GlassCard(
     cornerRadius: Dp = 24.dp,
     innerPadding: PaddingValues = PaddingValues(0.dp),
     backgroundColor: Color = Color.Unspecified,
-    border: Brush = MaterialTheme.neon.borderGlass,
     onClick: (() -> Unit)? = null,
     content: @Composable BoxScope.() -> Unit,
 ) {
     NeonCardSurface(
         modifier = modifier,
-        shape = RoundedCornerShape(cornerRadius),
+        shape = RoundedCornerShape(cornerRadius.coerceAtMost(Lit.SheetRadius)),
         innerPadding = innerPadding,
         backgroundColor = backgroundColor,
-        border = border,
         onClick = onClick,
         content = content,
     )
@@ -80,7 +78,7 @@ fun OpaqueContentCard(
     content: @Composable BoxScope.() -> Unit,
 ) = GlassCard(modifier, cornerRadius, innerPadding, backgroundColor, onClick = onClick, content = content)
 
-/** Backup/import surfaces are opaque, with the safe palette frame. */
+/** Backup/import surfaces are opaque. */
 @Composable
 fun SafeContentCard(
     modifier: Modifier = Modifier,
@@ -89,70 +87,56 @@ fun SafeContentCard(
     backgroundColor: Color = MaterialTheme.neon.glassSolid,
     onClick: (() -> Unit)? = null,
     content: @Composable BoxScope.() -> Unit,
-) = GlassCard(modifier, cornerRadius, innerPadding, backgroundColor,
-    border = MaterialTheme.neon.borderSafe, onClick = onClick, content = content)
+) = GlassCard(modifier, cornerRadius, innerPadding, backgroundColor, onClick = onClick, content = content)
 
 /**
  * Drop-in replacement for `jp.co.soramitsu.ui_core.component.card.ContentCard` with the same
- * parameter names and order: migrate by swapping the import. It removes ui-core's grey 10 dp
- * shadow that depends on the system (not the in-app) dark mode. The default radius is 24 (it was
- * 28); that change is intended by the design.
+ * parameter names and order: migrate by swapping the import. It is the ui-core card itself, a
+ * sheet of frosted glass. [Color.Unspecified] is the surface colour.
  */
 @Composable
 fun ContentCard(
     modifier: Modifier = Modifier,
-    cornerRadius: Dp = 24.dp,
+    cornerRadius: Dp = MaterialTheme.borderRadius.ml,
     innerPadding: PaddingValues = PaddingValues(0.dp),
     backgroundColor: Color = Color.Unspecified,
     onClick: (() -> Unit)? = null,
     content: @Composable BoxScope.() -> Unit,
-) = GlassCard(
+) = jp.co.soramitsu.ui_core.component.card.ContentCard(
     modifier = modifier,
     cornerRadius = cornerRadius,
     innerPadding = innerPadding,
-    backgroundColor = backgroundColor,
+    backgroundColor = backgroundColor.takeOrElse { MaterialTheme.customColors.bgSurface },
     onClick = onClick,
     content = content,
 )
 
 /**
- * Drop-in replacement for `jp.co.soramitsu.ui_core.component.card.ContentCardEndless`: a glass
- * sheet with rounded top corners only (28, like sheets).
+ * Drop-in replacement for `jp.co.soramitsu.ui_core.component.card.ContentCardEndless`, drawn as
+ * the ui-core sheet itself.
  */
 @Composable
 fun ContentCardEndless(
     modifier: Modifier = Modifier,
-    cornerRadius: Dp = 28.dp,
+    cornerRadius: Dp = MaterialTheme.borderRadius.xl,
     innerPadding: PaddingValues = PaddingValues(0.dp),
     onClick: (() -> Unit)? = null,
     content: @Composable BoxScope.() -> Unit,
-) = NeonCardSurface(
+) = jp.co.soramitsu.ui_core.component.card.ContentCardEndless(
     modifier = modifier,
-    shape = RoundedCornerShape(topStart = cornerRadius, topEnd = cornerRadius),
+    cornerRadius = cornerRadius,
     innerPadding = innerPadding,
-    backgroundColor = Color.Unspecified,
-    border = MaterialTheme.neon.borderGlass,
     onClick = onClick,
     content = content,
 )
 
-/** Balance/receive hero: one spectrum frame, no card glow. */
+/** Balance/receive hero: a plain card. */
 @Composable
 fun HeroCard(
     modifier: Modifier = Modifier,
     onClick: (() -> Unit)? = null,
-    grid: Boolean = true,
     content: @Composable BoxScope.() -> Unit,
-) = NeonCardSurface(
-    modifier = modifier,
-    shape = ChamferShape(),
-    innerPadding = PaddingValues(0.dp),
-    backgroundColor = Color.Unspecified,
-    border = MaterialTheme.neon.borderSpectrum,
-    onClick = onClick,
-) {
-    Box(Modifier.neonGrid(MaterialTheme.neon, grid && LocalFx.current.ambientDetail), content = content)
-}
+) = ContentCard(modifier = modifier, onClick = onClick, content = content)
 
 @Composable
 private fun NeonCardSurface(
@@ -160,12 +144,10 @@ private fun NeonCardSurface(
     shape: Shape,
     innerPadding: PaddingValues,
     backgroundColor: Color,
-    border: Brush,
     onClick: (() -> Unit)?,
     content: @Composable BoxScope.() -> Unit,
 ) {
     val n = MaterialTheme.neon
-    val fx = LocalFx.current
     val legacy = backgroundColor.isSpecified
     val contentColor = if (legacy) {
         contentColorFor(backgroundColor).takeOrElse { n.textPrimary }
@@ -174,7 +156,7 @@ private fun NeonCardSurface(
     }
     Box(
         modifier
-            .neonGlass(shape, n, fx, border, opaqueColor = backgroundColor.takeIf { legacy })
+            .neonGlass(shape, opaqueColor = backgroundColor.takeIf { legacy })
             .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
             .padding(innerPadding),
     ) {

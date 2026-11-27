@@ -1,0 +1,12 @@
+<resources>
+    <string name="contacts_none">Geen recente ontvangers</string>
+    <string name="pin_delete_last_digit">Laatste cijfer wissen</string>
+    <string name="common_egyptian">Middel-Egyptisch (hiërogliefen)</string>
+    <plurals name="backup_selected_count">
+        <item quantity="one">%1$d geselecteerd</item>
+        <item quantity="other">%1$d geselecteerd</item>
+    </plurals>
+    <string name="contacts_lookup_unavailable">Adres opzoeken niet beschikbaar</string>
+    <string name="portfolio_positive_amount">Voer een bedrag boven nul in.</string>
+    <string name="portfolio_continue_wallet">Doorgaan met %1$s</string>
+</resources>

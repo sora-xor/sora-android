@@ -1,0 +1,5 @@
+<resources>
+    <string name="portfolio_exclusions">دارایی‌های محاسبه‌نشده</string>
+    <string name="portfolio_row_expanded">بازشده</string>
+    <string name="portfolio_row_collapsed">جمع‌شده</string>
+</resources>

@@ -1,0 +1,15 @@
+<resources>
+    <string name="swap_pay_label">Bayar</string>
+    <string name="swap_receive_label">Terima</string>
+    <string name="asset_balance_value">Baki %1$s</string>
+    <string name="asset_catalog_retry">Cuba lagi</string>
+    <string name="swap_market_missing_pair">Pilih dua token untuk melihat pasaran.</string>
+    <string name="swap_market_empty">Tiada pasaran untuk pasangan ini</string>
+    <string name="swap_about_market">Perihal %1$s</string>
+    <string name="swap_show_terms">Baca terma</string>
+    <string name="swap_hide_terms">Sembunyikan terma</string>
+    <string name="swap_terms_summary">Semak terma sebelum menukar.</string>
+    <string name="asset_picker_empty">Tiada token tersedia</string>
+    <string name="liquidity_base_token">Token asas</string>
+    <string name="liquidity_pair_token">Token pasangan</string>
+</resources>

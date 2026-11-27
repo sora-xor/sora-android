@@ -29,8 +29,8 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithCache
@@ -50,13 +50,15 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import jp.co.soramitsu.androidfoundation.format.TextValue
 import jp.co.soramitsu.common.R
-import jp.co.soramitsu.common.presentation.compose.theme.neon.FxTier
-import jp.co.soramitsu.common.presentation.compose.theme.neon.LocalFx
-import jp.co.soramitsu.common.presentation.compose.theme.neon.neon
 import jp.co.soramitsu.common.presentation.compose.uikit.tokens.ScreenStatus
-import jp.co.soramitsu.common.presentation.compose.neon.BleachedButton
-import jp.co.soramitsu.common.presentation.compose.neon.FilledButton
-import jp.co.soramitsu.ui_core.component.button.properties.Order
+import jp.co.soramitsu.common.presentation.compose.neon.NeonButton
+import jp.co.soramitsu.common.presentation.compose.neon.NeonVariant
+import jp.co.soramitsu.common.presentation.compose.theme.neon.LocalFx
+import jp.co.soramitsu.common.presentation.compose.theme.neon.LocalNeon
+import jp.co.soramitsu.common.presentation.compose.theme.neon.NeonClassicLight
+import jp.co.soramitsu.common.presentation.compose.theme.neon.NeonClassicLightHighContrast
+import jp.co.soramitsu.ui_core.lit.LitDay
+import jp.co.soramitsu.ui_core.lit.LocalLitPalette
 import jp.co.soramitsu.ui_core.component.button.properties.Size
 import jp.co.soramitsu.ui_core.component.toolbar.BasicToolbarState
 import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbar
@@ -91,13 +93,9 @@ fun QrCodeScannerScreen(
             uploadFromGalleryButton, showUserQrButton
         ) = createRefs()
 
-        // Design spec 7.19: the camera stays full-bleed under a #000 @ 55% scrim outside the
-        // viewfinder, framed by cyan corner brackets.
+        // Keep the camera visible through the viewfinder and the title legible over its scrim.
         val blurCameraBackground = remember { Color.Black.copy(alpha = .55f) }
-        val neon = MaterialTheme.neon
-        val fx = LocalFx.current
-        val bracketColor = neon.cyan
-        val bracketGlow = fx.glows && fx.tier != FxTier.MINIMAL
+        val bracketColor = LitDay.red
         // Edge to edge: keep the bottom button above the navigation bar; the scrim still fills it.
         val navigationBarBottom =
             WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
@@ -202,7 +200,6 @@ fun QrCodeScannerScreen(
                         length = 24.dp.toPx(),
                     )
                     val bracketStroke = Stroke(width = 3.dp.toPx(), cap = StrokeCap.Round)
-                    val glowStroke = Stroke(width = 10.dp.toPx(), cap = StrokeCap.Round)
 
                     onDrawBehind {
                         drawPath(
@@ -213,9 +210,6 @@ fun QrCodeScannerScreen(
                             ),
                             color = blurCameraBackground
                         )
-                        if (bracketGlow) {
-                            drawPath(brackets, bracketColor.copy(alpha = .25f), style = glowStroke)
-                        }
                         drawPath(brackets, bracketColor, style = bracketStroke)
                     }
                 }
@@ -258,47 +252,54 @@ fun QrCodeScannerScreen(
                 )
         )
 
-        FilledButton(
-            modifier = Modifier
-                .constrainAs(
-                    ref = uploadFromGalleryButton,
-                    constrainBlock = {
-                        top.linkTo(
-                            anchor = viewPort.bottom,
-                            margin = Dimens.x3
-                        )
-                        start.linkTo(anchor = viewPort.start)
-                        end.linkTo(anchor = viewPort.end)
+        // Use the wallet's day materials for controls over the live camera in either theme.
+        val highContrast = LocalFx.current.highContrast
+        CompositionLocalProvider(
+            LocalNeon provides if (highContrast) NeonClassicLightHighContrast else NeonClassicLight,
+            LocalLitPalette provides if (highContrast) LitDay.copy(contrastEdge = LitDay.inkSecondary) else LitDay,
+        ) {
+            NeonButton(
+                modifier = Modifier
+                    .constrainAs(
+                        ref = uploadFromGalleryButton,
+                        constrainBlock = {
+                            top.linkTo(
+                                anchor = viewPort.bottom,
+                                margin = Dimens.x3
+                            )
+                            start.linkTo(anchor = viewPort.start)
+                            end.linkTo(anchor = viewPort.end)
 
-                        width = Dimension.fillToConstraints
-                    }
-                ),
-            size = Size.Large,
-            order = Order.SECONDARY,
-            text = stringResource(id = R.string.common_upload_from_library),
-            onClick = onUploadFromGalleryClick
-        )
+                            width = Dimension.fillToConstraints
+                        }
+                    ),
+                size = Size.Large,
+                variant = NeonVariant.Primary,
+                text = stringResource(id = R.string.common_upload_from_library),
+                onClick = onUploadFromGalleryClick
+            )
 
-        if (!recipientOnly) BleachedButton(
-            modifier = Modifier
-                .constrainAs(
-                    ref = showUserQrButton,
-                    constrainBlock = {
-                        start.linkTo(anchor = viewPort.start)
-                        end.linkTo(anchor = viewPort.end)
-                        bottom.linkTo(
-                            anchor = parent.bottom,
-                            margin = Dimens.x4 + navigationBarBottom
-                        )
+            if (!recipientOnly) NeonButton(
+                modifier = Modifier
+                    .constrainAs(
+                        ref = showUserQrButton,
+                        constrainBlock = {
+                            start.linkTo(anchor = viewPort.start)
+                            end.linkTo(anchor = viewPort.end)
+                            bottom.linkTo(
+                                anchor = parent.bottom,
+                                margin = Dimens.x4 + navigationBarBottom
+                            )
 
-                        width = Dimension.fillToConstraints
-                    }
-                ),
-            size = Size.Large,
-            order = Order.SECONDARY,
-            text = stringResource(id = R.string.scan_qr_show_my_qr),
-            onClick = onShowUserQrClick
-        )
+                            width = Dimension.fillToConstraints
+                        }
+                    ),
+                size = Size.Large,
+                variant = NeonVariant.Secondary,
+                text = stringResource(id = R.string.scan_qr_show_my_qr),
+                onClick = onShowUserQrClick
+            )
+        }
     }
 }
 

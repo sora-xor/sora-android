@@ -34,7 +34,7 @@ import jp.co.soramitsu.common.domain.DEFAULT_ICON_URI
 import jp.co.soramitsu.common.presentation.compose.theme.SoraAppTheme
 import jp.co.soramitsu.common_wallet.presentation.compose.components.AssetItem
 import jp.co.soramitsu.common_wallet.presentation.compose.states.AssetItemCardState
-import jp.co.soramitsu.feature_assets_impl.presentation.components.compose.assetdetails.AssetDetailsBalanceCard
+import jp.co.soramitsu.common_wallet.presentation.compose.assetdetails.AssetDetailsBalanceCard
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
@@ -83,6 +83,9 @@ class LockedXorOnAssetPageTest {
         rule.onNode(tagEndsWith("AssetFrozenAmount"), useUnmergedTree = true)
             .assertIsDisplayed()
             .assertTextEquals("110 XOR")
+        rule.onNode(tagEndsWith("AssetFrozenAmountFiat"), useUnmergedTree = true)
+            .assertIsDisplayed()
+            .assertTextEquals("$11")
         rule.onNode(tagEndsWith("AssetLockedNote"), useUnmergedTree = true)
             .assertIsDisplayed()
             .assertTextEquals(note)
@@ -154,8 +157,11 @@ class LockedXorOnAssetPageTest {
             }
         }
 
-        rule.onNodeWithText("0 XOR \u00b7 110 XOR frozen").assertIsDisplayed()
-        // A row without frozen funds reads as it always did.
-        rule.onNodeWithText("5 VAL ").assertIsDisplayed()
+        // The liquid amount is the row's figure; the frozen amount is named under the name, after the symbol.
+        rule.onNodeWithText("0 XOR").assertIsDisplayed()
+        rule.onNodeWithText("XOR \u00b7 110 XOR frozen").assertIsDisplayed()
+        // A row without frozen funds has the symbol alone under its name.
+        rule.onNodeWithText("VAL").assertIsDisplayed()
+        rule.onNodeWithText("5 VAL").assertIsDisplayed()
     }
 }

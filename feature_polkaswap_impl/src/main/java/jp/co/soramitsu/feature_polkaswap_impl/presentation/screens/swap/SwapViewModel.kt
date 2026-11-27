@@ -48,7 +48,7 @@ import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.domain.TransactionOutcome
 import jp.co.soramitsu.common.domain.printFiat
 import jp.co.soramitsu.common.domain.subtractFee
-import jp.co.soramitsu.common.logger.FirebaseWrapper
+import jp.co.soramitsu.common.logger.WalletDiagnostics
 import jp.co.soramitsu.common.presentation.compose.states.ButtonState
 import jp.co.soramitsu.common.presentation.transaction.TransactionResultBadge
 import jp.co.soramitsu.common.presentation.transaction.badge
@@ -75,6 +75,7 @@ import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarType
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -109,6 +110,7 @@ class SwapViewModel @AssistedInject constructor(
 
     private val assetsList = mutableListOf<Asset>()
     private var assetCatalogUnavailable = false
+    private var catalogSubscription: Job? = null
     private val feeTokenAsync by viewModelScope.lazyAsync { walletInteractor.getFeeToken() }
     private suspend fun feeToken() = feeTokenAsync.await()
 
@@ -172,6 +174,7 @@ class SwapViewModel @AssistedInject constructor(
     )
     val swapMainState = _swapMainState.asStateFlow()
 
+    private var pickingFrom: Boolean? = null
     private val _swapTokensFilter = MutableStateFlow(emptySearchTokenFilter)
     val swapTokensFilter = _swapTokensFilter.asStateFlow()
 
@@ -197,6 +200,7 @@ class SwapViewModel @AssistedInject constructor(
     }
 
     override fun onCurrentDestinationChanged(curDest: String) {
+        if (curDest != SwapRoutes.selectToken) pickingFrom = null
         _toolbarState.value?.let { state ->
             _toolbarState.value = state.copy(
                 type = if (curDest == SwapRoutes.start || curDest == SwapRoutes.confirm) SoramitsuToolbarType.ImageCentered() else SoramitsuToolbarType.SmallCentered(),
@@ -281,87 +285,7 @@ class SwapViewModel @AssistedInject constructor(
             .catch { onError(it) }
             .launchIn(viewModelScope)
 
-        assetsInteractor.subscribeAssetsActiveOfCurAccount()
-            .catch { onError(it) }
-            .distinctUntilChanged()
-            .onEach { assets ->
-                assetsList.clear()
-                assetsList.addAll(assets)
-                assetCatalogUnavailable = assets.isEmpty()
-                _swapMainState.value = _swapMainState.value.copy(assetCatalogUnavailable = assetCatalogUnavailable)
-                if (assetCatalogUnavailable) {
-                    _swapMainState.value = _swapMainState.value.copy(
-                        tokenFromState = null,
-                        tokenToState = null,
-                        swapButtonState = _swapMainState.value.swapButtonState.copy(
-                            text = resourceManager.getString(R.string.wallet_assets_unavailable),
-                            enabled = false,
-                            loading = false,
-                        ),
-                        confirmButtonState = _swapMainState.value.confirmButtonState.copy(enabled = false, loading = false),
-                        confirmResult = null,
-                    )
-                    return@onEach
-                }
-
-                if (_swapMainState.value.tokenFromState == null && token1Id.isNotEmpty()) {
-                    assetsInteractor.getAssetOrThrow(token1Id).let { assetFrom ->
-                        _swapMainState.value = _swapMainState.value.copy(
-                            tokenFromState = AssetAmountInputState(
-                                token = assetFrom.token,
-                                balance = getAssetBalanceText(assetFrom),
-                                amount = null,
-                                amountFiat = "",
-                                enabled = false,
-                            ),
-                        )
-                    }
-                }
-
-                if (_swapMainState.value.tokenToState == null && token2Id.isNotEmpty()) {
-                    assetsInteractor.getAssetOrThrow(token2Id).let { assetTo ->
-                        _swapMainState.value = _swapMainState.value.copy(
-                            tokenToState = AssetAmountInputState(
-                                token = assetTo.token,
-                                balance = getAssetBalanceText(assetTo),
-                                amount = null,
-                                amountFiat = "",
-                                enabled = false,
-                            ),
-                        )
-                    }
-                }
-
-                _swapMainState.value.tokenFromState?.let { fromState ->
-                    assets.find { it.token.id == fromState.token.id }?.let { fromAsset ->
-                        _swapMainState.value = _swapMainState.value.copy(
-                            tokenFromState = fromState.copy(
-                                balance = getAssetBalanceText(fromAsset)
-                            )
-                        )
-                    }
-                }
-
-                _swapMainState.value.tokenToState?.let { toState ->
-                    assets.find { it.token.id == toState.token.id }?.let { toAsset ->
-                        _swapMainState.value = _swapMainState.value.copy(
-                            tokenToState = toState.copy(
-                                balance = getAssetBalanceText(toAsset)
-                            )
-                        )
-                    }
-                }
-
-                if (networkFee == null) {
-                    // A failure here must not end this balance subscription; the fee is asked
-                    // again with the next balance update, the next quote or Try again.
-                    refreshNetworkFee()
-                }
-
-                onChangedProperty.set(property.newReloadMarkets(false))
-            }
-            .catch { onError(it) }
-            .launchIn(viewModelScope)
+        observeAssets()
 
         swapInteractor.observePoolReserves()
             .catch {
@@ -450,6 +374,130 @@ class SwapViewModel @AssistedInject constructor(
         }
     }
 
+    private fun observeAssets() {
+        catalogSubscription?.cancel()
+        catalogSubscription = assetsInteractor.subscribeAssetsActiveOfCurAccount()
+            .catch { failure ->
+                WalletDiagnostics.recordException(failure)
+                emit(emptyList())
+            }
+            .distinctUntilChanged()
+            .onEach { assets ->
+                assetsList.clear()
+                assetsList.addAll(assets)
+                if (assets.isEmpty()) {
+                    showCatalogUnavailable()
+                    return@onEach
+                }
+
+                if (_swapMainState.value.tokenFromState == null && token1Id.isNotEmpty()) {
+                    assetsInteractor.getAssetOrThrow(token1Id).let { assetFrom ->
+                        _swapMainState.value = _swapMainState.value.copy(
+                            tokenFromState = AssetAmountInputState(
+                                token = assetFrom.token,
+                                balance = getAssetBalanceText(assetFrom),
+                                amount = null,
+                                amountFiat = "",
+                                enabled = false,
+                            ),
+                        )
+                    }
+                }
+
+                if (_swapMainState.value.tokenToState == null && token2Id.isNotEmpty()) {
+                    assetsInteractor.getAssetOrThrow(token2Id).let { assetTo ->
+                        _swapMainState.value = _swapMainState.value.copy(
+                            tokenToState = AssetAmountInputState(
+                                token = assetTo.token,
+                                balance = getAssetBalanceText(assetTo),
+                                amount = null,
+                                amountFiat = "",
+                                enabled = false,
+                            ),
+                        )
+                    }
+                }
+
+                _swapMainState.value.tokenFromState?.let { fromState ->
+                    assets.find { it.token.id == fromState.token.id }?.let { fromAsset ->
+                        _swapMainState.value = _swapMainState.value.copy(
+                            tokenFromState = fromState.copy(
+                                balance = getAssetBalanceText(fromAsset)
+                            )
+                        )
+                    }
+                }
+
+                _swapMainState.value.tokenToState?.let { toState ->
+                    assets.find { it.token.id == toState.token.id }?.let { toAsset ->
+                        _swapMainState.value = _swapMainState.value.copy(
+                            tokenToState = toState.copy(
+                                balance = getAssetBalanceText(toAsset)
+                            )
+                        )
+                    }
+                }
+
+                pickingFrom?.let(::updatePickerTokens)
+                assetCatalogUnavailable = false
+                _swapMainState.value = _swapMainState.value.copy(assetCatalogUnavailable = false)
+
+                if (networkFee == null) {
+                    // A failure here must not end this balance subscription; the fee is asked
+                    // again with the next balance update, the next quote or Try again.
+                    refreshNetworkFee()
+                }
+
+                onChangedProperty.set(property.newReloadMarkets(false))
+            }
+            .catch { failure ->
+                WalletDiagnostics.recordException(failure)
+                showCatalogUnavailable()
+            }
+            .launchIn(viewModelScope)
+    }
+
+    private fun showCatalogUnavailable() {
+        assetsList.clear()
+        pickingFrom?.let(::updatePickerTokens)
+        assetCatalogUnavailable = true
+        availableMarkets.clear()
+        marketsTokenPair = null
+        swapDetails = null
+        _swapMainState.value = _swapMainState.value.copy(
+            assetCatalogUnavailable = true,
+            details = defaultSwapDetailsState(),
+            selectMarketState = null,
+            feeUnavailable = null,
+            tokenFromState = null,
+            tokenToState = null,
+            swapButtonState = _swapMainState.value.swapButtonState.copy(
+                text = resourceManager.getString(R.string.wallet_assets_unavailable),
+                enabled = false,
+                loading = false,
+            ),
+            confirmButtonState = _swapMainState.value.confirmButtonState.copy(enabled = false, loading = false),
+            confirmResult = null,
+        )
+    }
+
+    fun retryAssets() {
+        if (_swapMainState.value.refreshingAssets) return
+        _swapMainState.value = _swapMainState.value.copy(refreshingAssets = true)
+        observeAssets()
+        viewModelScope.launch {
+            try {
+                assetsInteractor.updateBalanceVisibleAssets()
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (failure: Exception) {
+                WalletDiagnostics.recordException(failure)
+            } finally {
+                _swapMainState.value = _swapMainState.value.copy(refreshingAssets = false)
+            }
+        }
+    }
+
     fun onDisclaimerClose() {
         viewModelScope.launch {
             guarded { swapInteractor.setPolkaswapDisclaimerVisibility(false) }
@@ -469,7 +517,7 @@ class SwapViewModel @AssistedInject constructor(
 
     fun onMarketClick() {
         _swapMainState.value = _swapMainState.value.copy(
-            selectMarketState = _swapMainState.value.market to availableMarkets,
+            selectMarketState = _swapMainState.value.market to availableMarkets.takeIf { selectedTokenPair() == marketsTokenPair }.orEmpty().toList(),
             tokenFromState = _swapMainState.value.tokenFromState?.copy(
                 amount = _swapMainState.value.tokenFromState?.amount?.nullZero(),
             ),
@@ -479,42 +527,28 @@ class SwapViewModel @AssistedInject constructor(
         )
     }
 
-    fun fromCardClicked() {
-        if (assetsList.isNotEmpty()) {
-            val filtered = assetsList.filter {
-                it.token.id != _swapMainState.value.tokenToState?.token?.id.orEmpty()
-            }
-            _swapTokensFilter.value = _swapTokensFilter.value.copy(
-                tokenIds = filtered.map { it.token.id }
-            )
-            _swapMainState.value = _swapMainState.value.copy(
-                tokenFromState = _swapMainState.value.tokenFromState?.copy(
-                    amount = _swapMainState.value.tokenFromState?.amount?.nullZero(),
-                ),
-                tokenToState = _swapMainState.value.tokenToState?.copy(
-                    amount = _swapMainState.value.tokenToState?.amount?.nullZero(),
-                ),
-            )
-        }
+    fun fromCardClicked() = openTokenPicker(from = true)
+
+    fun toCardClicked() = openTokenPicker(from = false)
+
+    private fun openTokenPicker(from: Boolean) {
+        pickingFrom = from
+        _swapTokensFilter.value = emptySearchTokenFilter
+        updatePickerTokens(from)
+        val state = _swapMainState.value
+        _swapMainState.value = state.copy(
+            tokenFromState = state.tokenFromState?.let { it.copy(amount = it.amount?.nullZero()) },
+            tokenToState = state.tokenToState?.let { it.copy(amount = it.amount?.nullZero()) },
+        )
     }
 
-    fun toCardClicked() {
-        if (assetsList.isNotEmpty()) {
-            val filtered = assetsList.filter {
-                it.token.id != _swapMainState.value.tokenFromState?.token?.id.orEmpty()
-            }
-            _swapTokensFilter.value = _swapTokensFilter.value.copy(
-                tokenIds = filtered.map { it.token.id }
-            )
-            _swapMainState.value = _swapMainState.value.copy(
-                tokenFromState = _swapMainState.value.tokenFromState?.copy(
-                    amount = _swapMainState.value.tokenFromState?.amount?.nullZero(),
-                ),
-                tokenToState = _swapMainState.value.tokenToState?.copy(
-                    amount = _swapMainState.value.tokenToState?.amount?.nullZero(),
-                ),
-            )
-        }
+    private fun updatePickerTokens(from: Boolean) {
+        val state = _swapMainState.value
+        val other = if (from) state.tokenToState else state.tokenFromState
+        _swapTokensFilter.value = _swapTokensFilter.value.copy(
+            tokenIds = assetsList.map { it.token.id }.filter { it != other?.token?.id },
+            restrictToTokenIds = true,
+        )
     }
 
     private suspend fun updateTransactionReminderWarningVisibility() =
@@ -616,7 +650,7 @@ class SwapViewModel @AssistedInject constructor(
     } catch (error: CancellationException) {
         throw error
     } catch (error: Exception) {
-        FirebaseWrapper.recordException(error)
+        WalletDiagnostics.recordException(error)
         _swapMainState.value = _swapMainState.value.copy(
             feeUnavailable = NetworkFeeUnavailable.from(error),
         )
@@ -742,6 +776,9 @@ class SwapViewModel @AssistedInject constructor(
             if (selectedTokenPair() == tokenPair) {
                 availableMarkets.addAll(markets.orEmpty())
                 marketsTokenPair = tokenPair
+                if (_swapMainState.value.selectMarketState != null) {
+                    _swapMainState.value = _swapMainState.value.copy(selectMarketState = _swapMainState.value.market to availableMarkets.toList())
+                }
             }
         } catch (error: CancellationException) {
             throw error

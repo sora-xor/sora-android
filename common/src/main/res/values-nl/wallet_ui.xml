@@ -1,0 +1,5 @@
+<resources>
+    <string name="portfolio_exclusions">Niet meegetelde activa</string>
+    <string name="portfolio_row_expanded">Uitgeklapt</string>
+    <string name="portfolio_row_collapsed">Ingeklapt</string>
+</resources>

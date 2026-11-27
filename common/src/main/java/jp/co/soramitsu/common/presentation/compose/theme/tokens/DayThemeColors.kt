@@ -20,64 +20,54 @@ limitations under the License.
 package jp.co.soramitsu.common.presentation.compose.theme.tokens
 
 import androidx.compose.ui.graphics.Color
+import jp.co.soramitsu.ui_core.lit.LitDay
 
-/**
- * SORA Neon light ("Daylight") palette mapped onto the ui-core
- * [jp.co.soramitsu.ui_core.theme.CustomColors] slots (design spec 2.3). Keep in sync with
- * `res/values/colors.xml` (neon_*) and
- * [jp.co.soramitsu.common.presentation.compose.theme.neon.NeonLight].
- *
- * fgInverted is white: the label on accent fills in light.
- */
+/** The day palette: white paper and glass, sumi ink, SORA red (the materials are in `ui_core.lit`). */
 object DayThemeColors {
 
-    val AccentPrimary = Color(0xFFC80E34)
+    val AccentPrimary = LitDay.red
 
-    val AccentPrimaryContainer = Color(0xFFFBE7EB)
+    val AccentPrimaryContainer = Color(0xFFF7E1DF)
 
-    val AccentSecondary = Color(0xFF0B0C14)
+    val AccentSecondary = LitDay.ink
 
-    val AccentSecondaryContainer = Color(0xFFE9EBF2)
+    val AccentSecondaryContainer = LitDay.wellFloor
 
-    val AccentTertiary = Color(0xFF1F6B7C)
+    val AccentTertiary = LitDay.inkTertiary
 
-    val AccentTertiaryContainer = Color(0xFFE2F3F7)
+    val AccentTertiaryContainer = LitDay.wellFloor
 
-    val BgPage = Color(0xFFF2F3F8)
+    val BgPage = LitDay.page
 
-    val BgSurface = Color(0xFFFFFFFF)
+    val BgSurface = LitDay.surface
 
-    val BgSurfaceVariant = Color(0xFFE9EBF2)
+    val BgSurfaceVariant = LitDay.wellFloor
 
-    val BgSurfaceInverted = Color(0xFF14141F)
+    val BgSurfaceInverted = LitDay.ink
 
-    val FgPrimary = Color(0xFF0B0C14)
+    val FgPrimary = LitDay.ink
 
-    val FgSecondary = Color(0xFF454A5E)
+    val FgSecondary = LitDay.inkSecondary
 
-    val FgTertiary = Color(0xFF5E6278)
+    val FgTertiary = LitDay.inkTertiary
 
-    val FgInverted = Color(0xFFFFFFFF)
+    val FgInverted = LitDay.padLit
 
-    /**
-     * Dividers and decorative outlines only. Text fields use NeonTokens.borderInput (3:1) through
-     * compose.neon.InputText, which replaces this slot for the field border.
-     */
-    val FgOutline = Color(0xFFDADCE5)
+    val FgOutline = Color(0xFFDAD6CE)
 
-    val StatusSuccess = Color(0xFF08704D)
+    val StatusSuccess = LitDay.ink
 
-    val StatusSuccessContainer = Color(0xFFE3F6F0)
+    val StatusSuccessContainer = LitDay.surface
 
-    /** Amber text. Filled warning badges use NeonTokens.warningFill with an ink label. */
-    val StatusWarning = Color(0xFF8A4F00)
+    /** A calm ochre: readable as ink on white, on its own container and on its own tint. */
+    val StatusWarning = Color(0xFF8A5A0C)
 
-    val StatusWarningContainer = Color(0xFFFFF0DA)
+    val StatusWarningContainer = Color(0xFFF3E9D2)
 
-    val StatusError = Color(0xFFBC0E2D)
+    /** A warning as a filled mark, with ink on it. */
+    val StatusWarningFill = Color(0xFFDDA63A)
 
-    val StatusErrorContainer = Color(0xFFF9E7EA)
+    val StatusError = LitDay.redDeep
 
-    /** ui-core `elevation` slot: #0B0C14 at 8%. */
-    val Elevation = Color(0x140B0C14)
+    val StatusErrorContainer = Color(0xFFF7E1DF)
 }

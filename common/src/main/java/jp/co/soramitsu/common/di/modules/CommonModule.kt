@@ -22,7 +22,6 @@ package jp.co.soramitsu.common.di.modules
 import android.content.ClipboardManager
 import android.content.Context
 import android.graphics.Color
-import android.os.Build
 import android.os.Vibrator
 import coil.decode.SvgDecoder
 import com.google.gson.Gson
@@ -36,8 +35,6 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import java.nio.charset.StandardCharsets
 import java.security.SecureRandom
-import java.util.Locale
-import java.util.TimeZone
 import javax.inject.Singleton
 import jp.co.soramitsu.androidfoundation.coroutine.CoroutineManager
 import jp.co.soramitsu.androidfoundation.phone.BasicClipboardManager
@@ -51,20 +48,15 @@ import jp.co.soramitsu.common.data.network.connection.NetworkStateListener
 import jp.co.soramitsu.common.date.DateTimeFormatter
 import jp.co.soramitsu.common.delegate.WithProgressImpl
 import jp.co.soramitsu.common.domain.AppStateProvider
-import jp.co.soramitsu.common.domain.InvitationHandler
-import jp.co.soramitsu.common.domain.PushHandler
-import jp.co.soramitsu.common.inappupdate.InAppUpdateManager
 import jp.co.soramitsu.common.interfaces.WithProgress
 import jp.co.soramitsu.common.io.FileManager
 import jp.co.soramitsu.common.io.FileManagerImpl
 import jp.co.soramitsu.common.resourses.LanguagesHolder
 import jp.co.soramitsu.common.util.BuildUtils
 import jp.co.soramitsu.common.util.CryptoAssistant
-import jp.co.soramitsu.common.util.DeviceParamsProvider
 import jp.co.soramitsu.common.util.EncryptionUtil
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.QrCodeGenerator
-import jp.co.soramitsu.common.util.TextFormatter
 import jp.co.soramitsu.common.util.json_decoder.JsonAccountsEncoder
 import jp.co.soramitsu.common.vibration.DeviceVibrator
 import jp.co.soramitsu.crypto.ed25519.Ed25519Sha3
@@ -108,7 +100,6 @@ class CommonActivityModule {
 class CommonModule {
 
     private companion object {
-        const val txHistoryDBName = "historyDatabase.db"
     }
 
     @Singleton
@@ -147,13 +138,6 @@ class CommonModule {
 
     @Singleton
     @Provides
-    fun provideInAppUpdateManager(
-        @ApplicationContext c: Context,
-        sp: SoraPreferences
-    ): InAppUpdateManager = InAppUpdateManager(c, sp)
-
-    @Singleton
-    @Provides
     fun provideAppStateManager(): AppStateProvider = AppStateProviderImpl()
 
     @Singleton
@@ -163,10 +147,6 @@ class CommonModule {
 
     @Provides
     fun provideWithProgress(): WithProgress = WithProgressImpl()
-
-    @Singleton
-    @Provides
-    fun providesPushHandler(): PushHandler = PushHandler()
 
     @Singleton
     @Provides
@@ -185,20 +165,6 @@ class CommonModule {
 
     @Singleton
     @Provides
-    fun provideDeviceParams(@ApplicationContext context: Context): DeviceParamsProvider {
-        return DeviceParamsProvider(
-            context.resources.displayMetrics.widthPixels,
-            context.resources.displayMetrics.heightPixels,
-            Build.MODEL,
-            Build.VERSION.RELEASE,
-            Locale.getDefault().language,
-            Locale.getDefault().country,
-            TimeZone.getDefault()
-        )
-    }
-
-    @Singleton
-    @Provides
     fun provideSecureRandom(): SecureRandom = SecureRandom()
 
     @Singleton
@@ -213,10 +179,6 @@ class CommonModule {
             )
         )
     }
-
-    @Provides
-    @Singleton
-    fun provideInvitationHandler(): InvitationHandler = InvitationHandler()
 
     @Provides
     @Singleton
@@ -249,10 +211,6 @@ class CommonModule {
 
     @Provides
     @Singleton
-    fun provideTextFormatter(): TextFormatter = TextFormatter()
-
-    @Provides
-    @Singleton
     fun provideClipBoardManager(@ApplicationContext context: Context): BasicClipboardManager {
         return BasicClipboardManager(context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager)
     }
@@ -273,7 +231,7 @@ class CommonModule {
     @Provides
     @Singleton
     fun provideCloudBackupProvider(@ApplicationContext context: Context): CloudBackupProvider =
-        CloudBackupProvider(BuildConfig.GOOGLE_API_TOKEN.isNotBlank()) {
-            BackupService.create(BuildConfig.GOOGLE_API_TOKEN, context)
+        CloudBackupProvider(BuildConfig.CLOUD_BACKUP_ENABLED) {
+            BackupService.create(context)
         }
 }

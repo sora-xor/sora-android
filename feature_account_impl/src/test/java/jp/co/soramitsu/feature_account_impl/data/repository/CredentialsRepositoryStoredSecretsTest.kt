@@ -16,7 +16,7 @@ import jp.co.soramitsu.common.account.StoredSecretHex
 import jp.co.soramitsu.common.account.WalletRecoveryCapabilityGate
 import jp.co.soramitsu.common.domain.ResponseCode
 import jp.co.soramitsu.common.domain.SoraException
-import jp.co.soramitsu.common.logger.FirebaseWrapper
+import jp.co.soramitsu.common.logger.WalletDiagnostics
 import jp.co.soramitsu.common.util.CryptoAssistant
 import jp.co.soramitsu.common.util.json_decoder.JsonAccountsEncoder
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialField
@@ -60,13 +60,13 @@ class CredentialsRepositoryStoredSecretsTest {
         // Other test classes in the same JVM mock the phrase and seed libraries; this one runs
         // the real ones.
         unmockkAll()
-        mockkObject(FirebaseWrapper)
-        every { FirebaseWrapper.log(any<FirebaseWrapper.Breadcrumb>()) } just runs
+        mockkObject(WalletDiagnostics)
+        every { WalletDiagnostics.log(any<WalletDiagnostics.Breadcrumb>()) } just runs
     }
 
     @After
     fun release() {
-        unmockkObject(FirebaseWrapper)
+        unmockkObject(WalletDiagnostics)
     }
 
     @Test

@@ -67,9 +67,8 @@ dependencies {
     implementation(project(":common"))
     implementation(project(":common_wallet"))
     implementation(project(":sorasubstrate"))
-    implementation(project(":network"))
 
-    implementation(libs.xsubstrateDep)
+    implementation(project(":xsubstrate"))
 
     implementation(libs.kotlinxSerializationJsonDep)
 

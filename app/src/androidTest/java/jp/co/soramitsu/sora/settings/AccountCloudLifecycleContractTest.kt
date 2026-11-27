@@ -15,6 +15,7 @@ import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.backup.CloudBackupProvider
 import jp.co.soramitsu.feature_account_api.domain.model.WalletBackupMaterial
+import jp.co.soramitsu.feature_main_api.domain.model.PinCodeAction
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_multiaccount_impl.domain.MultiaccountInteractor
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.account_details.AccountDetailsViewModel
@@ -62,6 +63,10 @@ class AccountCloudLifecycleContractTest {
         compose.waitForIdle(); return vm
     }
     private fun act(block: () -> Unit) { compose.runOnUiThread(block); compose.waitForIdle() }
+    // Google backup steps wait for the PIN screen; these are the step plus its confirmation.
+    private fun AccountDetailsViewModel.backupThroughPin() { onBackupClicked(launcher); onPinConfirmed(launcher) }
+    private fun AccountDetailsViewModel.deleteThroughPin() { deleteGoogleBackup(); onPinConfirmed(launcher) }
+    private fun AccountDetailsViewModel.signInThroughPin() { onSuccessfulGoogleSignin(); onPinConfirmed(launcher) }
     private fun consent() = mockk<AuthConsentException>(relaxed = true) { every { intent } returns Intent("fixture.consent") }
     private fun ready(): AccountDetailsViewModel {
         coEvery { backup.isAccountBackedUp(any()) } returns false
@@ -70,7 +75,7 @@ class AccountCloudLifecycleContractTest {
         coEvery { interactor.getSeed(account.substrateAddress) } returns "01"
         coEvery { interactor.generateSubstrateJsonString(any(), any()) } returns "encrypted public fixture"
         coEvery { backup.saveBackupAccount(any(), any()) } just Runs
-        val vm = screen(); act { vm.onSuccessfulGoogleSignin() }
+        val vm = screen(); act { vm.signInThroughPin() }
         act { vm.onBackupPasswordChanged(TextFieldValue("PublicPassword1!")); vm.onBackupPasswordConfirmationChanged(TextFieldValue("PublicPassword1!")); vm.onWarningToggle() }
         assertTrue(vm.createBackupPasswordState.value!!.setPasswordButtonIsEnabled); return vm
     }
@@ -94,16 +99,19 @@ class AccountCloudLifecycleContractTest {
         val vm = screen()
         for (failure in listOf(SocketException("offline"), SocketTimeoutException("timeout"), IllegalStateException("service unavailable"), CancellationException("closed"))) {
             coEvery { backup.authorize(any()) } throws failure
-            act { vm.onBackupClicked(launcher) }
+            act { vm.backupThroughPin() }
             assertFalse(vm.accountDetailsScreenState.value!!.isBackupLoading); assertFalse(vm.deleteDialogState.value!!)
         }
         coEvery { backup.authorize(any()) } returns true
-        act { vm.onBackupClicked(launcher) }; assertTrue(vm.deleteDialogState.value!!)
+        act { vm.backupThroughPin() }; assertTrue(vm.deleteDialogState.value!!)
     }
     @Test fun authorizationConsentIsForwardedAndRefreshesOnlyAfterConsent() {
         val vm = screen(); val error = consent()
         coEvery { backup.authorize(any()) } throws error
-        act { vm.onBackupClicked(launcher) }; assertSame(error.intent, vm.consentExceptionHandler.value)
+        act { vm.onBackupClicked(launcher) }
+        verify(exactly = 1) { router.showPinForBackup(PinCodeAction.GOOGLE_BACKUP, listOf(account.substrateAddress)) }
+        coVerify(exactly = 0) { backup.authorize(any()) }; assertNull(vm.consentExceptionHandler.value)
+        act { vm.onPinConfirmed(launcher) }; assertSame(error.intent, vm.consentExceptionHandler.value)
         coEvery { backup.isAccountBackedUp(any()) } returns false
         act { vm.onSuccessfulConsent() }; assertNotNull(vm.createBackupPasswordState.value)
         clearMocks(backup, answers = false)
@@ -113,25 +121,25 @@ class AccountCloudLifecycleContractTest {
         val vm = screen(); val consent = consent()
         for (error in listOf(SocketException("offline"), SocketTimeoutException("timeout"), consent, IllegalStateException("failed"), CancellationException("closed"))) {
             coEvery { backup.deleteBackupAccount(any()) } throws error
-            act { vm.deleteGoogleBackup() }
+            act { vm.deleteThroughPin() }
             assertFalse(vm.accountDetailsScreenState.value!!.isBackupLoading); assertTrue(vm.accountDetailsScreenState.value!!.isBackupAvailable!!)
         }
         assertSame(consent.intent, vm.consentExceptionHandler.value)
         coEvery { backup.deleteBackupAccount(any()) } throws FileNotFoundException(Exception("already gone"))
-        act { vm.deleteGoogleBackup() }; assertFalse(vm.accountDetailsScreenState.value!!.isBackupAvailable!!)
+        act { vm.deleteThroughPin() }; assertFalse(vm.accountDetailsScreenState.value!!.isBackupAvailable!!)
     }
     @Test fun signInFailuresLeaveTheExistingBackupAndCanRecover() {
         val vm = screen(); val consent = consent()
         for (error in listOf(SocketException("offline"), SocketTimeoutException("timeout"), consent, IllegalStateException("failed"), CancellationException("closed"))) {
             coEvery { backup.isAccountBackedUp(any()) } throws error
-            act { vm.onSuccessfulGoogleSignin() }
+            act { vm.signInThroughPin() }
             assertFalse(vm.accountDetailsScreenState.value!!.isBackupLoading); assertTrue(vm.accountDetailsScreenState.value!!.isBackupAvailable!!)
         }
         assertSame(consent.intent, vm.consentExceptionHandler.value)
         coEvery { backup.isAccountBackedUp(any()) } throws FileNotFoundException(Exception("gone"))
-        act { vm.onSuccessfulGoogleSignin() }; assertFalse(vm.accountDetailsScreenState.value!!.isBackupAvailable!!)
+        act { vm.signInThroughPin() }; assertFalse(vm.accountDetailsScreenState.value!!.isBackupAvailable!!)
         coEvery { backup.isAccountBackedUp(any()) } returns true
-        act { vm.onSuccessfulGoogleSignin() }; assertTrue(vm.accountDetailsScreenState.value!!.isBackupAvailable!!)
+        act { vm.signInThroughPin() }; assertTrue(vm.accountDetailsScreenState.value!!.isBackupAvailable!!)
     }
     @Test fun failedSaveClearsMainThreadProgressAndRetainsRetryablePasswordForm() {
         val vm = ready(); val consent = consent()

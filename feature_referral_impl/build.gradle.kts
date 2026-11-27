@@ -79,7 +79,6 @@ dependencies {
     implementation(project(":feature_referral_api"))
     implementation(project(":feature_blockexplorer_api"))
     implementation(project(":sorasubstrate"))
-    implementation(project(":network"))
 
     implementation(libs.appcompatDep)
     implementation(libs.materialDep)
@@ -89,7 +88,7 @@ dependencies {
     implementation(libs.coroutineDep)
     implementation(libs.viewmodelKtxDep)
 
-    implementation(libs.uiCoreDep)
+    implementation(project(":ui-core"))
     implementation(libs.soramitsu.android.foundation)
     implementation(libs.navigationComposeDep)
 
@@ -111,7 +110,7 @@ dependencies {
 
     implementation(libs.timberDep)
 
-    implementation(libs.xsubstrateDep)
+    implementation(project(":xsubstrate"))
 
     implementation(libs.lifecycleProcessDep)
 

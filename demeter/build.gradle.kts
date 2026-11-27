@@ -77,7 +77,6 @@ dependencies {
     implementation(project(":feature_assets_api"))
     implementation(project(":feature_polkaswap_api"))
     implementation(project(":sorasubstrate"))
-    implementation(project(":network"))
 
     implementation(libs.timberDep)
 
@@ -87,7 +86,7 @@ dependencies {
     implementation(libs.coroutineDep)
     implementation(libs.coroutineAndroidDep)
 
-    implementation(libs.xsubstrateDep)
+    implementation(project(":xsubstrate"))
     implementation(libs.soramitsu.android.foundation)
 
     implementation(platform(libs.compose.bom))

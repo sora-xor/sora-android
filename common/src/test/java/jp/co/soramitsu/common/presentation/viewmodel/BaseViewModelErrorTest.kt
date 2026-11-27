@@ -79,8 +79,6 @@ class BaseViewModelErrorTest {
 
         val shown = requireNotNull(screen.errorFromResourceLiveData.value)
         assertEquals(generic, shown)
-        assertFalse(shown.first == R.string.something_went_wrong)
-        assertFalse(shown.second == R.string.unexpected_error)
     }
 
     @Test

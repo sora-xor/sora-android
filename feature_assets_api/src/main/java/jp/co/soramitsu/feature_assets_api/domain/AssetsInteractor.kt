@@ -52,7 +52,12 @@ interface AssetsInteractor {
 
     suspend fun getWhitelistAssets(): List<Asset>
 
-    suspend fun getXorBalance(precision: Int): XorAssetBalance
+    /**
+     * The selected account's XOR balance. A balance that is shown is read with every part
+     * ([forDisplay]); a caller that only checks what can be spent (a fee) passes false and keeps
+     * the tolerance for the parts it does not use (the referral bond, the reserved balance).
+     */
+    suspend fun getXorBalance(precision: Int, forDisplay: Boolean = true): XorAssetBalance
 
     fun flowCurSoraAccount(): Flow<SoraAccount>
 
@@ -81,6 +86,13 @@ interface AssetsInteractor {
 
     fun subscribeAssetsActiveOfCurAccount(): Flow<List<Asset>>
 
+    fun subscribeAssetsFavoriteOfAccount(soraAccount: SoraAccount): Flow<List<Asset>>
+
+    fun subscribeAssetsVisibleOfCurAccount(): Flow<List<Asset>>
+
+    /** See [jp.co.soramitsu.feature_assets_api.data.AssetsRepository.subscribeAssetsNotListed]. */
+    fun subscribeAssetsNotListedOfCurAccount(): Flow<List<Asset>>
+
     suspend fun toggleVisibilityOfToken(tokenId: String, visibility: Boolean)
 
     suspend fun tokenFavoriteOff(assetIds: List<String>)
@@ -92,6 +104,20 @@ interface AssetsInteractor {
     suspend fun updateAssetPositions(assetPositions: Map<String, Int>)
 
     suspend fun updateWhitelistBalances()
+
+    /**
+     * [updateWhitelistBalances] for [address], as long as it is still the selected wallet. A
+     * wallet that was left or removed meanwhile is not read, nor are its rows made again, and
+     * the answer is false: whatever was to follow the read for that wallet is not done either.
+     */
+    suspend fun updateWhitelistBalances(address: String): Boolean
+
+    /**
+     * Waits for the token list walk and reads [address]'s balances once more when the walk
+     * changed the list after [updateWhitelistBalances] read them, as long as it is still the
+     * selected wallet. False when it is not (before the walk or after it): nothing was read.
+     */
+    suspend fun updateWhitelistBalancesAfterTokenListWalk(address: String): Boolean
 
     suspend fun updateBalanceVisibleAssets()
 

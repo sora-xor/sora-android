@@ -44,6 +44,4 @@ interface TransactionHistoryHandler {
      * for the caller.
      */
     suspend fun checkWaitingTransaction(txHash: String)
-
-    suspend fun hasNewTransaction(): Boolean
 }

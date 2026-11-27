@@ -25,11 +25,9 @@ import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -37,24 +35,17 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
-import androidx.navigation.NavType
 import androidx.navigation.compose.composable
-import androidx.navigation.navArgument
 import dagger.hilt.android.AndroidEntryPoint
+import jp.co.soramitsu.common.R
+import jp.co.soramitsu.androidfoundation.intent.ShareUtil
 import jp.co.soramitsu.common.base.SoraBaseFragment
 import jp.co.soramitsu.common.base.theOnlyRoute
 import jp.co.soramitsu.common.domain.BottomBarController
 import jp.co.soramitsu.common.presentation.compose.neon.safemode.ReadOnlyBanner
 import jp.co.soramitsu.common.presentation.compose.neon.safemode.ReadOnlyLearnMoreSheet
-import jp.co.soramitsu.common.presentation.compose.neon.safemode.UpgradeCompleteChecks
-import jp.co.soramitsu.common.presentation.compose.neon.safemode.UpgradeCompleteSheet
-import jp.co.soramitsu.common.presentation.compose.neon.safemode.UpgradeWelcome
-import jp.co.soramitsu.common.presentation.compose.neon.safemode.WalletSessionState
 import jp.co.soramitsu.common.presentation.compose.neon.safemode.WalletUpgradeRetry
 import jp.co.soramitsu.common.presentation.compose.neon.safemode.rememberReadOnlyBrowsing
-import jp.co.soramitsu.common.presentation.compose.neon.safemode.rememberWalletReadOnly
-import jp.co.soramitsu.common_wallet.presentation.compose.states.BackupWalletState
-import jp.co.soramitsu.common_wallet.presentation.compose.states.CardsState
 import jp.co.soramitsu.feature_wallet_impl.presentation.portfolio.PortfolioRoutes
 import jp.co.soramitsu.feature_wallet_impl.presentation.portfolio.PortfolioViewModel
 
@@ -63,7 +54,7 @@ class CardsHubFragment : SoraBaseFragment<CardsHubViewModel>() {
 
     override val viewModel: CardsHubViewModel by viewModels()
 
-    /** The Wallet tab's home is the Portfolio view (portfolio-view SPEC). */
+    // The Portfolio view (portfolio-view SPEC) is the Wallet tab's home in every build.
     private val portfolioViewModel: PortfolioViewModel by viewModels()
 
     @javax.inject.Inject
@@ -90,6 +81,17 @@ class CardsHubFragment : SoraBaseFragment<CardsHubViewModel>() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         (activity as BottomBarController).showBottomBar()
+        // Receive's Share, as on SORA2: the QR code as an image, with the address in the text.
+        viewModel.nexusShare.observe { (qrCodeFile, message) ->
+            context?.let { context ->
+                ShareUtil.shareImageFile(
+                    context = context,
+                    title = getString(R.string.common_share),
+                    file = qrCodeFile,
+                    description = message,
+                )
+            }
+        }
     }
 
     override fun onResume() {
@@ -109,9 +111,11 @@ class CardsHubFragment : SoraBaseFragment<CardsHubViewModel>() {
     }
 
     override fun onDestinationChanged(destination: String) {
-        // "Where it lives" is a pushed screen: like other detail screens, without the bottom bar.
+        // A network's XOR pages and "Where it lives" are pushed screens: like the SORA2 detail
+        // screens, without the bottom bar.
         val bar = activity as? BottomBarController ?: return
-        if (destination == PortfolioRoutes.TOKEN) bar.hideBottomBar() else bar.showBottomBar()
+        val pushed = destination in NexusRoutes.pushed || destination == PortfolioRoutes.TOKEN
+        if (pushed) bar.hideBottomBar() else bar.showBottomBar()
     }
 
     override fun NavGraphBuilder.content(
@@ -120,7 +124,11 @@ class CardsHubFragment : SoraBaseFragment<CardsHubViewModel>() {
     ) {
         composable(
             route = theOnlyRoute,
-        ) {
+        ) { entry ->
+            // The home keeps its own scroll position under the pages pushed over it; those pages
+            // scroll with the toolbar's state, as the SORA2 screens do.
+            val homeScrollState = rememberScrollState()
+            FollowNexusSend(viewModel, entry, navController)
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -130,27 +138,8 @@ class CardsHubFragment : SoraBaseFragment<CardsHubViewModel>() {
                     viewModel.nexusPortfolio.collectAsStateWithLifecycle().value
                 val sora2Portfolio =
                     viewModel.sora2Portfolio.collectAsStateWithLifecycle().value
-                val nexusSend = viewModel.nexusSend.collectAsStateWithLifecycle().value
-                // The dashboard has a snapshot once every wallet's balances have been read.
-                val balancesLoaded = portfolioViewModel.model.collectAsStateWithLifecycle().value != null
-                NexusSendDialog(
-                    state = nexusSend,
-                    onDismiss = viewModel::closeNexusSend,
-                    onRecipient = viewModel::setNexusRecipient,
-                    onAmount = viewModel::setNexusAmount,
-                    onPrepare = viewModel::prepareNexusSend,
-                    onConfirm = viewModel::confirmNexusSend,
-                    onEdit = viewModel::editNexusSend,
-                    onRecovery = viewModel::onBackupBannerClick,
-                    onScan = ::scanNexusRecipient,
-                )
-                UpgradeSheets(
-                    state = state,
-                    balancesLoaded = balancesLoaded,
-                    onBackUpNow = viewModel::onBackupBannerClick,
-                )
                 PortfolioHomeHost(
-                    scrollState = scrollState,
+                    scrollState = homeScrollState,
                     navController = navController,
                     portfolio = portfolioViewModel,
                     hub = viewModel,
@@ -160,16 +149,23 @@ class CardsHubFragment : SoraBaseFragment<CardsHubViewModel>() {
                 )
             }
         }
+        nexusPages(
+            hub = viewModel,
+            navController = navController,
+            scrollState = scrollState,
+            onScanRecipient = ::scanNexusRecipient,
+        )
         composable(
             route = PortfolioRoutes.TOKEN,
-            arguments = listOf(navArgument(PortfolioRoutes.TOKEN_ARG) { type = NavType.StringType }),
+            arguments = PortfolioRoutes.tokenArguments,
         ) { entry ->
+            FollowNexusSend(viewModel, entry, navController)
             PortfolioWhereItLivesHost(
                 tokenId = entry.arguments?.getString(PortfolioRoutes.TOKEN_ARG).orEmpty(),
                 navController = navController,
                 portfolio = portfolioViewModel,
                 hub = viewModel,
-                onScanNexusRecipient = ::scanNexusRecipient,
+                holdingKey = entry.arguments?.getString(PortfolioRoutes.HOLDING_ARG),
             )
         }
     }
@@ -180,57 +176,25 @@ class CardsHubFragment : SoraBaseFragment<CardsHubViewModel>() {
  * history stay visible; Send and Swap are off with their reason on their own screens.
  */
 @Composable
-internal fun ReadOnlyHomeBanner() {
-    if (!rememberReadOnlyBrowsing()) return
+internal fun ReadOnlyHomeBanner(learnMore: Boolean, onLearnMore: (Boolean) -> Unit) {
+    val browsing = rememberReadOnlyBrowsing()
+    // The sheet goes with the banner: once the wallet is no longer read-only it is closed, and the hero under it
+    // moves again, instead of the sheet coming back by itself next time.
+    LaunchedEffect(browsing, learnMore) { if (!browsing && learnMore) onLearnMore(false) }
+    if (!browsing) return
     val context = LocalContext.current
-    var learnMore by remember { mutableStateOf(false) }
     ReadOnlyBanner(
         modifier = Modifier.padding(bottom = 16.dp),
         onTryAgain = { WalletUpgradeRetry.launch(context) },
-        onLearnMore = { learnMore = true },
+        onLearnMore = { onLearnMore(true) },
     )
     if (learnMore) {
         ReadOnlyLearnMoreSheet(
             onTryAgain = {
-                learnMore = false
+                onLearnMore(false)
                 WalletUpgradeRetry.launch(context)
             },
-            onClose = { learnMore = false },
+            onClose = { onLearnMore(false) },
         )
     }
-}
-
-/**
- * U11 (design spec 9.2, 9.1-7): once, after the upgrade succeeded, after the PIN and never in
- * read-only mode. Each tick is a real check: the selected account exists on this device, the
- * wallet was unlocked with the PIN, and the dashboard has read the balances. When some accounts
- * cannot sign on this phone, the sheet says how many can and how to repair the others.
- */
-@Composable
-private fun UpgradeSheets(state: CardsState, balancesLoaded: Boolean, onBackUpNow: () -> Unit) {
-    val context = LocalContext.current
-    var pending by remember { mutableStateOf(UpgradeWelcome.isPending(context)) }
-    val unlocked by WalletSessionState.unlocked.collectAsStateWithLifecycle()
-    val readOnly = rememberWalletReadOnly()
-    // The account counts are read first, so the sheet never claims more than was checked.
-    if (!pending || !unlocked || readOnly || state.accountAddress.isBlank() || state.accountCount == 0) return
-    UpgradeCompleteSheet(
-        checks = UpgradeCompleteChecks(
-            accountsOnDevice = true,
-            protectedByPin = true,
-            balancesLoaded = balancesLoaded,
-            needsBackup = state.cards.any { it is BackupWalletState },
-            accountCount = state.accountCount,
-            signingAccountCount = state.signingAccountCount,
-        ),
-        onBackUpNow = {
-            UpgradeWelcome.markDone(context)
-            pending = false
-            onBackUpNow()
-        },
-        onClose = {
-            UpgradeWelcome.markDone(context)
-            pending = false
-        },
-    )
 }

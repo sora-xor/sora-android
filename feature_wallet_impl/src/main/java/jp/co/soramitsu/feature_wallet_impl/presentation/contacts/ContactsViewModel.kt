@@ -35,6 +35,9 @@ import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import jp.co.soramitsu.ui_core.component.input.InputTextState
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 
 @HiltViewModel
@@ -58,6 +61,8 @@ class ContactsViewModel @Inject constructor(
         )
     )
 
+    private var searchJob: Job? = null
+
     init {
         _toolbarState.value = initSmallTitle2(
             title = R.string.select_recipient,
@@ -66,6 +71,10 @@ class ContactsViewModel @Inject constructor(
     }
 
     fun search(contents: TextFieldValue) {
+        if (state.input.value.text == contents.text && state.hint != R.string.contacts_lookup_unavailable) {
+            state = state.copy(input = state.input.copy(value = contents))
+            return
+        }
         state = state.copy(
             input = state.input.copy(
                 trailingIcon = if (contents.text.isEmpty()) R.drawable.ic_scan_wrapped else R.drawable.ic_close,
@@ -90,8 +99,20 @@ class ContactsViewModel @Inject constructor(
     }
 
     private fun searchUser(userRequest: String) {
-        viewModelScope.launch {
-            val accounts = interactor.getContacts(userRequest)
+        searchJob?.cancel()
+        state = state.copy(accounts = emptyList(), hint = R.string.common_loading)
+        searchJob = viewModelScope.launch {
+            val matches = try {
+                interactor.getContacts(userRequest)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                ensureActive()
+                state = state.copy(hint = R.string.contacts_lookup_unavailable)
+                return@launch
+            }
+            ensureActive()
+            val accounts = matches
                 ?.map {
                     ContactsListItem(it, avatarGenerator.createAvatar(it, 40))
                 }

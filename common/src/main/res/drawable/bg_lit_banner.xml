@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The connection notice: a strip of the page's own surface with a ruled line under it. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item><shape><solid android:color="@color/neon_surface" /></shape></item>
+    <item android:gravity="bottom" android:height="1dp"><shape><solid android:color="@color/neon_hairline" /></shape></item>
+</layer-list>

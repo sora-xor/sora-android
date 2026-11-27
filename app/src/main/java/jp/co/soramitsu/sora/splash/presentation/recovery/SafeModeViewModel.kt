@@ -25,6 +25,7 @@ import android.content.Context
 import android.os.Build
 import android.os.SystemClock
 import androidx.biometric.BiometricManager
+import jp.co.soramitsu.feature_main_impl.presentation.pincode.ScreenLockPrompt
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -33,8 +34,8 @@ import java.io.File
 import java.text.DateFormat
 import java.util.Date
 import javax.inject.Inject
-import jp.co.soramitsu.common.logger.FirebaseWrapper
-import jp.co.soramitsu.common.logger.FirebaseWrapper.WalletRecoveryEvent
+import jp.co.soramitsu.common.logger.WalletDiagnostics
+import jp.co.soramitsu.common.logger.WalletDiagnostics.WalletRecoveryEvent
 import jp.co.soramitsu.androidfoundation.coroutine.CoroutineManager
 import jp.co.soramitsu.common.account.Sora2AddressCodec
 import jp.co.soramitsu.common.backup.CloudBackupProvider
@@ -192,7 +193,21 @@ class SafeModeViewModel @Inject constructor(
     private var progressJob: Job? = null
     private var progressDelayJob: Job? = null
     private var autoRetryJob: Job? = null
+
+    /** Automatic attempts in this app start; picks the pause before the next one. */
     private var automaticAttempts = 0
+
+    /** Automatic attempts of resumable (not transient) states in this app start. */
+    private var resumableAttempts = 0
+
+    /**
+     * The state being retried behind the progress screen (no panel shown), with the options
+     * [onGetHelp] shows when the person asks for them.
+     */
+    private var automaticRetry: Pair<RecoveryPanelModel, WalletRecoveryOptions>? = null
+
+    /** The person asked for the recovery options ([onGetHelp]): states show their panel again. */
+    private var optionsRequested = false
     private var awaitingNewRun = false
 
     /** When the running Try again started (uptime), for the progress screen's prompts. */
@@ -204,17 +219,36 @@ class SafeModeViewModel @Inject constructor(
      */
     private var readOnlyAvailable = true
 
+    /**
+     * The person used this screen (an action, "Get help", or "Try upgrade again" from the
+     * read-only home). From then on a state shows its options: what they asked for gets its
+     * answer here, and nothing more is decided for them.
+     */
+    private var personInvolved = false
+
+    /** Read-only was entered (or tried) without the person once; a second time shows the options. */
+    private var readOnlyEntryTried = false
+
+    /** Cache was given back once for a storage state nobody asked for; next time, the screen. */
+    private var storageGiveBackTried = false
+
+    private fun givesBackStorageByItself(model: RecoveryPanelModel): Boolean =
+        model.kind == RecoveryPanelKind.STORAGE && !storageGiveBackTried && !personInvolved
+
     // ---- panel ------------------------------------------------------------------------------
 
     /**
      * Shows the recovery options for [code] (U4 or U6). [canContinueLegacyWallet] is false when
      * the current account was found not to resolve (read-only would only come back here); null
-     * keeps what is known.
+     * keeps what is known. [unattended]: nobody asked for this screen (an app start, or a check
+     * the app ran again by itself), so where the wallet can open read-only it does, without the
+     * panel and its confirmation ([entersReadOnlyByItself]).
      */
     fun showPanel(
         code: String,
         options: WalletRecoveryOptions? = null,
         canContinueLegacyWallet: Boolean? = null,
+        unattended: Boolean = false,
     ) {
         canContinueLegacyWallet?.let { readOnlyAvailable = it }
         val resolved = (options ?: resolveOptions(code)).let {
@@ -225,13 +259,34 @@ class SafeModeViewModel @Inject constructor(
             driveAvailable = cloudBackupProvider.isAvailable,
             restorePending = isRestorePending(code) || isRestorePending(resolved.code),
         )
-        FirebaseWrapper.recordWalletRecovery(when (model.kind) {
+        WalletDiagnostics.recordWalletRecovery(when (model.kind) {
             RecoveryPanelKind.STORAGE -> WalletRecoveryEvent.PANEL_STORAGE
             RecoveryPanelKind.TRANSIENT -> WalletRecoveryEvent.PANEL_TRANSIENT
             RecoveryPanelKind.KEYS_UNAVAILABLE -> WalletRecoveryEvent.PANEL_KEYS_UNAVAILABLE
             RecoveryPanelKind.RECOVERY -> WalletRecoveryEvent.PANEL_RECOVERY
             RecoveryPanelKind.RESTORE_PENDING -> WalletRecoveryEvent.PANEL_RESTORE_PENDING
         })
+        if (!optionsRequested && retriesByItself(model)) {
+            // An update never stops at "paused" for something that passes by itself (rule of
+            // 2026-11-09): the progress screen stays while the same check runs again.
+            showAutomaticRetry(model, resolved)
+            return
+        }
+        if (unattended && entersReadOnlyByItself(model)) {
+            enterReadOnlyByItself(model, resolved)
+            return
+        }
+        if (unattended && givesBackStorageByItself(model)) {
+            // Too little space at the app start, where nothing may walk the cache or ask
+            // Android for space (the main thread). The same check runs again on a worker, which
+            // gives back what is held only as a cache first ([WalletUpgradeBackup.retry]); the
+            // progress screen stays meanwhile. The storage screen only if still too little.
+            storageGiveBackTried = true
+            showAutomaticRetry(model, resolved)
+            runTryAgain(automatic = true)
+            return
+        }
+        automaticRetry = null
         stopProgress()
         mutableState.update {
             it.copy(
@@ -273,22 +328,148 @@ class SafeModeViewModel @Inject constructor(
             runCatching { WalletUpgradeBackup.pendingSetUpAgainScope(context) != null }.getOrDefault(false)
 
     /**
-     * Transient states are retried automatically, up to three times with growing pauses
-     * (1, 3 and 10 s), before only the options stay (product decision; design spec 9.1-5).
+     * Whether [model] is retried without the person (update rule of 2026-11-09):
+     * - a transient state (busy Keystore, locked database, I/O) always: it passes on its own, so
+     *   the retries never stop while this screen is open;
+     * - a resumable verification or repair (a saved journal or plan the next start would resume)
+     *   [MAX_RESUMABLE_AUTOMATIC_RETRIES] times per app start; a failure that comes back right
+     *   after the authorized re-verification is not going to pass by itself, and the next app
+     *   start tries again on its own;
+     * - never storage (the screen checks again when the person comes back), keys this phone
+     *   cannot use, or a confirmed restore waiting for a restart.
+     */
+    private fun retriesByItself(model: RecoveryPanelModel): Boolean = when {
+        !model.retryAutomatically -> false
+        model.kind == RecoveryPanelKind.TRANSIENT -> true
+        model.kind == RecoveryPanelKind.RECOVERY -> resumableAttempts < MAX_RESUMABLE_AUTOMATIC_RETRIES
+        else -> false
+    }
+
+    /**
+     * Whether [model] opens the wallet read-only without asking (update rule of 2026-11-09): a
+     * check that could not finish and will not pass by itself, on a start the person did nothing
+     * in, where "Continue in read-only mode" is offered (the accounts are readable and the
+     * wallet key works). The wallet's own PIN stays the check ([enterReadOnlyByItself]), signing
+     * stays off and the wallet tables stay guarded, exactly as after the confirmation this
+     * replaces. Never a second time, never once the person used this screen, and never for
+     * storage, keys this phone cannot use or a restore waiting for its restart.
+     */
+    private fun entersReadOnlyByItself(model: RecoveryPanelModel): Boolean =
+        !personInvolved && !readOnlyEntryTried &&
+            model.kind == RecoveryPanelKind.RECOVERY &&
+            RecoveryAction.READ_ONLY in model.actions
+
+    /**
+     * Read-only access without the panel and its confirmation. Only when a PIN is stored and
+     * readable: the PIN screen that follows then proves the owner, as on every start. Whatever
+     * does not work out shows the options instead.
+     */
+    private fun enterReadOnlyByItself(model: RecoveryPanelModel, options: WalletRecoveryOptions) {
+        readOnlyEntryTried = true
+        automaticRetry = null
+        autoRetryJob?.cancel()
+        showProgress(ProgressTitle.FINISHING, checkingDataDone = true)
+        mutableState.update {
+            it.copy(
+                visible = true,
+                panel = null,
+                running = RecoveryAction.READ_ONLY,
+                runningLong = false,
+                autoRetrying = true,
+                lastAttemptCode = model.code,
+            )
+        }
+        viewModelScope.launch {
+            val route = withContext(coroutineManager.io) {
+                runCatching {
+                    // Never beside a verification that is still running: its writes would meet
+                    // the read-only guard.
+                    interactor.awaitRunningVerification()
+                    if (userDatasource.retrievePin().isEmpty()) {
+                        null
+                    } else {
+                        WalletUpgradeBackup.authorizeSafeReadOnly(context).getOrThrow()
+                    }
+                }.getOrNull()
+            }
+            mutableState.update { it.copy(running = null, runningLong = false, autoRetrying = false) }
+            if (
+                route == WalletUpgradeBackup.SafeReadOnlyRoute.ROOM_READ_ONLY ||
+                route == WalletUpgradeBackup.SafeReadOnlyRoute.NORMAL_ACCESS
+            ) {
+                eventChannel.trySend(SafeModeEvent.ReadOnlyReady)
+            } else {
+                if (route == WalletUpgradeBackup.SafeReadOnlyRoute.VAULT_ONLY) readOnlyAvailable = false
+                showPanel(model.code, options)
+            }
+        }
+    }
+
+    /** The progress screen (not the panel) while [model] is retried by itself. */
+    private fun showAutomaticRetry(model: RecoveryPanelModel, options: WalletRecoveryOptions) {
+        automaticRetry = model to options
+        awaitingNewRun = true
+        val startedAt = state.value.progress?.startedAtElapsed ?: SystemClock.elapsedRealtime()
+        if (state.value.progress == null) {
+            showProgress(ProgressTitle.FINISHING, checkingDataDone = false, startedAtElapsed = startedAt)
+        }
+        mutableState.update { current ->
+            val progress = current.progress
+            current.copy(
+                visible = true,
+                panel = null,
+                running = null,
+                runningLong = false,
+                autoRetrying = false,
+                // The rows wait until the next run reports its first phase.
+                progress = progress?.let {
+                    progressFor(
+                        title = it.title,
+                        checkingData = SafeStepState.RUNNING,
+                        phase = interactor.migrationProgress.value,
+                        awaitingNewRun = true,
+                        startedAtElapsed = it.startedAtElapsed,
+                    )
+                },
+                shownAtMillis = if (current.shownAtMillis > 0) current.shownAtMillis else System.currentTimeMillis(),
+                lastAttemptCode = model.code,
+            )
+        }
+        scheduleAutomaticRetry(model)
+    }
+
+    /**
+     * Schedules the next automatic attempt for [model] (see [retriesByItself]). The pauses grow
+     * (1, 3, 10 s), then stay at 30 s. Paused while a sheet or "Show my recovery phrase" is open.
      */
     private fun scheduleAutomaticRetry(model: RecoveryPanelModel) {
         autoRetryJob?.cancel()
         // RESTORE_PENDING never retries by itself: its Try again restarts the app.
-        if (model.kind != RecoveryPanelKind.TRANSIENT || !model.retryAutomatically) return
-        if (automaticAttempts >= AUTOMATIC_RETRY_DELAYS.size) return
-        val pause = AUTOMATIC_RETRY_DELAYS[automaticAttempts]
+        if (!retriesByItself(model)) return
+        val pause = AUTOMATIC_RETRY_DELAYS[automaticAttempts.coerceAtMost(AUTOMATIC_RETRY_DELAYS.lastIndex)]
         autoRetryJob = viewModelScope.launch {
             delay(pause)
             if (state.value.running == null && state.value.sheet == null && state.value.reveal == null) {
                 automaticAttempts++
+                if (model.kind != RecoveryPanelKind.TRANSIENT) resumableAttempts++
                 runTryAgain(automatic = true)
             }
         }
+    }
+
+    /**
+     * "Get help" on the progress screen. While a state is being retried by itself, its recovery
+     * options are shown (the retries go on behind them); otherwise the support sheet opens.
+     */
+    fun onGetHelp() {
+        personInvolved = true
+        val retrying = automaticRetry
+        if (retrying == null) {
+            openSheet(SafeSheetKind.SUPPORT)
+            return
+        }
+        optionsRequested = true
+        showPanel(retrying.first.code, retrying.second)
     }
 
     private var pausedSincePanel = false
@@ -301,19 +482,19 @@ class SafeModeViewModel @Inject constructor(
         pausedSincePanel = true
     }
 
-    /** The storage screen checks again when the person comes back (for example from Settings). */
+    /**
+     * The storage screen checks again when the person comes back (for example from Settings);
+     * so does a state that is being retried by itself, without waiting for its pause.
+     */
     fun onResumed() {
         val returned = pausedSincePanel
         pausedSincePanel = false
         val current = state.value
-        if (
-            returned &&
-            current.visible &&
-            current.progress == null &&
-            current.panel?.kind == RecoveryPanelKind.STORAGE &&
-            current.running == null &&
-            current.reveal == null
-        ) {
+        if (!returned || !current.visible || current.running != null || current.reveal != null) return
+        val storage = current.progress == null && current.panel?.kind == RecoveryPanelKind.STORAGE
+        val retrying = current.sheet == null &&
+            (automaticRetry != null || current.panel?.let(::retriesByItself) == true)
+        if (storage || retrying) {
             runTryAgain(automatic = true)
         }
     }
@@ -327,6 +508,7 @@ class SafeModeViewModel @Inject constructor(
     }
 
     fun onAction(action: RecoveryAction) {
+        personInvolved = true
         if (state.value.running != null && action != RecoveryAction.CONTACT_SUPPORT) return
         when (action) {
             RecoveryAction.CANCEL_RESTORE -> {
@@ -358,8 +540,13 @@ class SafeModeViewModel @Inject constructor(
         if (state.value.running != null && state.value.sheet != SafeSheetKind.SUPPORT) return
         mutableState.update { it.copy(sheet = null, sheetFailure = null) }
         // A state that retries by itself continues to do so once the sheet is closed.
-        state.value.panel?.takeIf { state.value.running == null && state.value.reveal == null }
-            ?.let(::scheduleAutomaticRetry)
+        resumeAutomaticRetry()
+    }
+
+    private fun resumeAutomaticRetry() {
+        val current = state.value
+        if (current.running != null || current.sheet != null || current.reveal != null) return
+        (current.panel ?: automaticRetry?.first)?.let(::scheduleAutomaticRetry)
     }
 
     private fun runTryAgain(automatic: Boolean) {
@@ -428,8 +615,12 @@ class SafeModeViewModel @Inject constructor(
                     showProgress(ProgressTitle.FINISHING, checkingDataDone = true, startedAtElapsed = startedAt)
                 }
             } else {
-                // Try again re-ran the checks: the panel now shows the state they found.
-                showPanel(failureCode(error, "BACKUP_RETRY_FAILED"))
+                // Try again re-ran the checks: the panel now shows the state they found (or,
+                // after a retry nobody asked for, the wallet opens read-only where it can).
+                showPanel(
+                    failureCode(error, "BACKUP_RETRY_FAILED"),
+                    unattended = state.value.autoRetrying,
+                )
             }
 
             RecoveryAction.READ_ONLY -> {
@@ -529,7 +720,7 @@ class SafeModeViewModel @Inject constructor(
     fun technicalDetails(): List<Pair<String, String>> {
         val current = state.value
         return buildList {
-            add(DETAIL_CODE to (current.panel?.code ?: "-"))
+            add(DETAIL_CODE to (current.panel?.code ?: automaticRetry?.first?.code ?: "-"))
             current.lastAttemptCode?.let { add(DETAIL_LAST_ATTEMPT to it) }
             add(DETAIL_VERSION to "${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})")
             add(
@@ -609,6 +800,7 @@ class SafeModeViewModel @Inject constructor(
 
     /** "Try upgrade again" from the read-only home: the progress shows from the start. */
     fun startRetryFromHome() {
+        personInvolved = true
         if (isRestorePending(null)) {
             // A confirmed restore waits for a new app process: say so instead of retrying here.
             showPanel(SET_UP_AGAIN_INCOMPLETE)
@@ -663,13 +855,11 @@ class SafeModeViewModel @Inject constructor(
         autoRetryJob?.cancel()
         enteredPin.clear()
         authenticated = false
+        authenticating = false
         mutableState.update { it.copy(reveal = RevealUi.Auth(loading = true)) }
         viewModelScope.launch {
             val lock = pinAttempts.lockRemainingMillis()
             val stored = withContext(coroutineManager.io) { runCatching { userDatasource.retrievePin() } }
-            val biometryEnabled = withContext(coroutineManager.io) {
-                runCatching { userDatasource.isBiometryEnabled() }.getOrDefault(false)
-            }
             if (generation != revealGeneration) return@launch
             val pin = stored.getOrNull()
             val auth = when {
@@ -677,12 +867,13 @@ class SafeModeViewModel @Inject constructor(
                 pin.isNullOrEmpty() -> RevealUi.Auth(
                     loading = false,
                     noPin = true,
-                    error = if (canAuthenticate(DEVICE_CREDENTIAL_AUTHENTICATORS)) null else AuthError.NO_SCREEN_LOCK,
+                    error = if (screenLockAvailable()) null else AuthError.NO_SCREEN_LOCK,
                 )
                 else -> RevealUi.Auth(
                     loading = false,
                     pinLength = pin.length,
-                    biometric = biometryEnabled && canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_STRONG),
+                    // Recovery secrets require the wallet PIN whenever one is set.
+                    biometric = false,
                     error = if (lock > 0) AuthError.LOCKED else null,
                     lockedForMillis = lock,
                 )
@@ -696,11 +887,15 @@ class SafeModeViewModel @Inject constructor(
             BiometricManager.from(context).canAuthenticate(authenticators) == BiometricManager.BIOMETRIC_SUCCESS
         }.getOrDefault(false)
 
+    /** The phone has a screen lock to ask for (androidx answers for Android 11+, Keyguard below). */
+    private fun screenLockAvailable(): Boolean =
+        canAuthenticate(DEVICE_CREDENTIAL_AUTHENTICATORS) || ScreenLockPrompt.isAvailable(context)
+
     fun retryAuthCheck() = startReveal()
 
     fun requestBiometric() {
         val auth = state.value.reveal as? RevealUi.Auth ?: return
-        if (auth.error == AuthError.LOCKED) return
+        if (!auth.noPin || auth.loading || auth.error != null) return
         authenticating = true
         eventChannel.trySend(SafeModeEvent.Authenticate(deviceCredential = auth.noPin))
     }
@@ -746,7 +941,7 @@ class SafeModeViewModel @Inject constructor(
                 }
                 SafeModeVault.pinMatches(pin, entered) -> {
                     withContext(coroutineManager.io) { pinAttempts.reset() }
-                    if (generation == revealGeneration) onAuthenticated()
+                    if (generation == revealGeneration) revealAfterVerifiedPin()
                 }
                 else -> {
                     val lock = withContext(coroutineManager.io) {
@@ -769,8 +964,22 @@ class SafeModeViewModel @Inject constructor(
         }
     }
 
-    /** PIN, biometrics or the phone's screen lock confirmed the person. */
-    fun onAuthenticated() {
+    /**
+     * A system callback can only complete the explicit no-wallet-PIN recovery flow, and only
+     * with the system's own confirmation ([ScreenLockPrompt.accepts]): on Android 11 and later
+     * the device credential alone, so a fingerprint or face reveals nothing; on Android 8 to 10
+     * Keyguard's confirmation, which may accept a fingerprint (platform limit).
+     */
+    fun onAuthenticated(authenticationType: Int, sdkInt: Int = android.os.Build.VERSION.SDK_INT) {
+        val auth = state.value.reveal as? RevealUi.Auth ?: return
+        val wasAuthenticating = authenticating
+        authenticating = false
+        if (!wasAuthenticating || !auth.noPin || auth.loading || auth.error != null) return
+        if (!ScreenLockPrompt.accepts(authenticationType, sdkInt)) return
+        revealAfterVerifiedPin()
+    }
+
+    private fun revealAfterVerifiedPin() {
         authenticating = false
         if (state.value.reveal !is RevealUi.Auth) return
         authenticated = true
@@ -885,7 +1094,10 @@ class SafeModeViewModel @Inject constructor(
         enteredPin.clear()
         authenticated = false
         authenticating = false
+        val wasOpen = state.value.reveal != null
         mutableState.update { it.copy(reveal = null) }
+        // Retrying by itself was paused while the phrase flow was open.
+        if (wasOpen) resumeAutomaticRetry()
     }
 
     override fun onCleared() {
@@ -906,11 +1118,19 @@ class SafeModeViewModel @Inject constructor(
         const val SUPPORT_SUBJECT = "SORA wallet upgrade recovery"
         const val SILENT_UPGRADE_MILLIS = 1_500L
         const val STILL_WORKING_MILLIS = 10_000L
-        val AUTOMATIC_RETRY_DELAYS = longArrayOf(1_000L, 3_000L, 10_000L)
+        /** Pauses before each automatic attempt; the last one repeats for every later attempt. */
+        val AUTOMATIC_RETRY_DELAYS = longArrayOf(1_000L, 3_000L, 10_000L, 30_000L)
 
-        @Suppress("DEPRECATION")
-        val DEVICE_CREDENTIAL_AUTHENTICATORS =
-            BiometricManager.Authenticators.BIOMETRIC_WEAK or BiometricManager.Authenticators.DEVICE_CREDENTIAL
+        /** Automatic attempts per app start for a resumable (not transient) state. */
+        const val MAX_RESUMABLE_AUTOMATIC_RETRIES = 3
+
+        /**
+         * "Show my recovery phrase" with no app PIN stored: the phone's screen lock alone is the
+         * proof on Android 11 and later, never a fingerprint or face ([ScreenLockPrompt]).
+         * Android 8 to 10 use Keyguard's confirmation instead, since their prompt cannot take the
+         * device credential alone (platform limit: Keyguard may accept a fingerprint there).
+         */
+        const val DEVICE_CREDENTIAL_AUTHENTICATORS = ScreenLockPrompt.AUTHENTICATORS
 
         /** Maps a real verification phase to the four rows (design spec 7.16). */
         fun progressFor(

@@ -26,7 +26,6 @@ import jp.co.soramitsu.androidfoundation.resource.ResourceManager
 import jp.co.soramitsu.androidfoundation.testing.MainCoroutineRule
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.account.AccountAvatarGenerator
-import jp.co.soramitsu.common.domain.InvitationHandler
 import jp.co.soramitsu.common.domain.ResponseCode
 import jp.co.soramitsu.common.domain.SoraException
 import jp.co.soramitsu.feature_main_api.launcher.MainStarter
@@ -61,9 +60,6 @@ class OnboardingViewModelTest {
     var mainCoroutineRule = MainCoroutineRule()
 
     @Mock
-    private lateinit var invitationHandler: InvitationHandler
-
-    @Mock
     private lateinit var multiAccInteractor: MultiaccountInteractor
 
     @Mock
@@ -91,7 +87,6 @@ class OnboardingViewModelTest {
         // No key set on the phone waits to be restored, unless a test says so.
         whenever(multiAccInteractor.walletsRestorableWithPin()).thenReturn(emptyList())
         onboardingViewModel = OnboardingViewModel(
-            invitationHandler,
             multiAccInteractor,
             mainStarter,
             resourceManager,
@@ -103,7 +98,7 @@ class OnboardingViewModelTest {
 
     @Test
     fun `unconfigured Google backup does not initialize SDK or prevent local create`() = runTest {
-        val unavailable = OnboardingViewModel(invitationHandler, multiAccInteractor, mainStarter,
+        val unavailable = OnboardingViewModel(multiAccInteractor, mainStarter,
             resourceManager, jp.co.soramitsu.common.backup.CloudBackupProvider(false) { error("Must remain lazy") },
             avatarGenerator, coroutineManager)
         assertEquals(false, unavailable.tutorialScreenState.value?.isGoogleBackupAvailable)
@@ -255,7 +250,6 @@ class OnboardingViewModelTest {
     }
 
     private fun viewModel() = OnboardingViewModel(
-        invitationHandler,
         multiAccInteractor,
         mainStarter,
         resourceManager,

@@ -430,8 +430,13 @@ class IrohaConnectProtocolTest {
     }
 
     @Test
-    fun `unsupported transaction and unreadable raw payload never invoke signer`() {
-        listOf(false, true).forEach { transaction ->
+    fun `unsupported transaction and unsafe raw payload never invoke signer`() {
+        listOf(
+            IrohaConnectEnvelopePayload.SignTransaction("opaque transaction".toByteArray()),
+            IrohaConnectEnvelopePayload.SignRaw(URANAI_SIGNING_DOMAIN, byteArrayOf(1, 2, 3)),
+            IrohaConnectEnvelopePayload.SignRaw(URANAI_SIGNING_DOMAIN, ByteArray(32) { 65 }),
+        ).forEach { payload ->
+            val transaction = payload is IrohaConnectEnvelopePayload.SignTransaction
             val fixture = launchFixture("iroha", "https://taira.sora.org")
             val launch = IrohaConnectUri.parse(fixture.uri)
             val session = IrohaConnectWalletSession(launch, startedAtMillis = 1_000)
@@ -451,8 +456,6 @@ class IrohaConnectProtocolTest {
                 val walletKey = (approval.control as IrohaConnectControl.Approve).walletPublicKey
                 val keys = IrohaConnectCrypto.deriveDirectionKeys(launch.sid, walletKey, fixture.appKeys.privateKey)
                 try {
-                    val payload = if (transaction) IrohaConnectEnvelopePayload.SignTransaction("opaque transaction".toByteArray())
-                        else IrohaConnectEnvelopePayload.SignRaw(URANAI_SIGNING_DOMAIN, byteArrayOf(1, 2, 3))
                     val ciphertext = IrohaConnectCrypto.encrypt(keys.appToWallet, 2,
                         IrohaConnectWire.associatedData(launch.sid, IrohaConnectDirection.APP_TO_WALLET, 2),
                         IrohaConnectEnvelopeWire.encode(2, payload))

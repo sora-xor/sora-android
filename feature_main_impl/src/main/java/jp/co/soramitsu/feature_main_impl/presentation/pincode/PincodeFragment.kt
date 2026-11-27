@@ -19,12 +19,14 @@ limitations under the License.
 
 package jp.co.soramitsu.feature_main_impl.presentation.pincode
 
+import android.app.Activity
 import android.app.AlertDialog
 import android.os.Bundle
 import android.view.View
 import android.widget.TextView
 import android.widget.Toast
 import androidx.biometric.BiometricManager
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.biometric.BiometricPrompt
 import androidx.compose.foundation.ScrollState
 import androidx.fragment.app.viewModels
@@ -38,9 +40,10 @@ import jp.co.soramitsu.common.base.SoraBaseFragment
 import jp.co.soramitsu.common.base.theOnlyRoute
 import jp.co.soramitsu.common.domain.BottomBarController
 import jp.co.soramitsu.common.io.MainThreadExecutor
-import jp.co.soramitsu.common.presentation.compose.neon.safemode.SafeModeSupport
 import jp.co.soramitsu.common.presentation.args.addresses
 import jp.co.soramitsu.common.presentation.view.SoraProgressDialog
+import jp.co.soramitsu.common.util.OnFirstFrameDrawn
+import jp.co.soramitsu.common.util.UnlockJourneyTrace
 import jp.co.soramitsu.common.util.ext.runDelayed
 import jp.co.soramitsu.feature_main_api.domain.model.PinCodeAction
 import jp.co.soramitsu.feature_main_impl.R
@@ -56,18 +59,33 @@ class PincodeFragment : SoraBaseFragment<PinCodeViewModel>() {
         private const val DATA_CLEAR_DELAY = 500L
     }
 
+    /**
+     * Keyguard's confirmation, on Android 8 to 10 only. Platform limit: it may accept the
+     * phone's fingerprint too, and says so in its result's name ([ScreenLockPrompt]); Android 11
+     * and later ask for the device credential alone and never accept this result.
+     */
+    private val keyguardConfirmation =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                viewModel.onScreenLockConfirmed(ScreenLockPrompt.SCREEN_LOCK_OR_SYSTEM_BIOMETRIC_PRE_R)
+            }
+        }
+
     private val fingerprintWrapper: FingerprintWrapper by lazy {
         val biometricManager = BiometricManager.from(context?.applicationContext!!)
         val biometricPrompt =
             BiometricPrompt(this, MainThreadExecutor(), FingerprintCallback(viewModel))
         val promptInfo = BiometricPrompt.PromptInfo.Builder()
             .setTitle(getString(R.string.biometric_dialog_title))
+            .setAllowedAuthenticators(BiometricManager.Authenticators.BIOMETRIC_STRONG)
             .setNegativeButtonText(getString(R.string.common_cancel))
             .build()
         FingerprintWrapper(
             biometricManager,
             biometricPrompt,
-            promptInfo
+            promptInfo,
+            viewModel::prepareBiometricUnlock,
+            viewModel::cancelBiometricUnlock,
         )
     }
 
@@ -75,6 +93,7 @@ class PincodeFragment : SoraBaseFragment<PinCodeViewModel>() {
 
     private lateinit var fingerprintDialog: BottomSheetDialog
     private lateinit var progressDialog: SoraProgressDialog
+    private var enrollmentChangeDialog: AlertDialog? = null
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -119,6 +138,21 @@ class PincodeFragment : SoraBaseFragment<PinCodeViewModel>() {
                 .setNegativeButton(android.R.string.cancel) { _, _ -> viewModel.biometryDialogNoClicked() }
                 .show()
         }
+        viewModel.enrollmentChangeQuestion.observe { asked ->
+            enrollmentChangeDialog?.dismiss()
+            enrollmentChangeDialog = if (asked) {
+                AlertDialog.Builder(requireActivity())
+                    .setTitle(R.string.biometric_enrollment_changed_title)
+                    .setMessage(R.string.biometric_enrollment_changed_message)
+                    .setCancelable(false)
+                    .setPositiveButton(R.string.biometric_enrollment_changed_keep) { _, _ -> viewModel.onEnrollmentChangeKept() }
+                    .setNegativeButton(R.string.biometric_enrollment_changed_turn_off) { _, _ -> viewModel.onEnrollmentChangeRefused() }
+                    .show()
+            } else {
+                null
+            }
+        }
+        viewModel.screenLockPromptEvent.observe { confirmScreenLock() }
         viewModel.resetApplicationEvent.observe {
             runDelayed(DATA_CLEAR_DELAY) {
                 requireContext().restartApplication()
@@ -156,21 +190,34 @@ class PincodeFragment : SoraBaseFragment<PinCodeViewModel>() {
         viewModel.closeAppLiveData.observe {
             (activity as? MainActivity)?.closeApp()
         }
-        viewModel.checkInviteLiveData.observe {
-            (activity as? MainActivity)?.checkInviteAction()
-        }
-
     }
 
-    private fun contactSupport() {
-        val context = context ?: return
-        if (!SafeModeSupport.email(context, "SORA wallet check", "")) {
-            Toast.makeText(
-                context,
-                getString(jp.co.soramitsu.common.R.string.safe_mode_support_no_email, SafeModeSupport.EMAIL),
-                Toast.LENGTH_LONG,
-            ).show()
+    /**
+     * The phone's own screen lock (its PIN, pattern or password; on Android 11 and later never
+     * a biometric, on Android 8 to 10 Keyguard's confirmation, a platform limit) in the system
+     * prompt, before a new PIN replaces one that cannot be read ([ScreenLockPrompt]).
+     * Built for each request: androidx keeps one callback per activity, and this fragment's
+     * fingerprint prompt set its own. A prompt that cannot be shown changes nothing: touching
+     * the keypad asks again.
+     */
+    private fun confirmScreenLock() {
+        val title = getString(R.string.pincode_set_your_pin_code)
+        val description = getString(R.string.account_repair_screen_lock_body)
+        if (!ScreenLockPrompt.usesBiometricPrompt()) {
+            val request = ScreenLockPrompt.keyguardIntent(requireContext(), title, description) ?: return
+            runCatching { keyguardConfirmation.launch(request) }
+            return
         }
+        val prompt = BiometricPrompt(
+            this,
+            MainThreadExecutor(),
+            object : BiometricPrompt.AuthenticationCallback() {
+                override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
+                    viewModel.onScreenLockConfirmed(result.authenticationType)
+                }
+            },
+        )
+        runCatching { prompt.authenticate(ScreenLockPrompt.promptInfo(title, description)) }
     }
 
     override fun onPause() {
@@ -189,10 +236,18 @@ class PincodeFragment : SoraBaseFragment<PinCodeViewModel>() {
         viewModel.onResume()
     }
 
+    override fun onDestroyView() {
+        // The question is asked again when the view comes back.
+        enrollmentChangeDialog?.dismiss()
+        enrollmentChangeDialog = null
+        super.onDestroyView()
+    }
+
     override fun NavGraphBuilder.content(
         scrollState: ScrollState,
         navController: NavHostController
     ) {
+        val unlocking = requireArguments().action == PinCodeAction.TIMEOUT_CHECK
         composable(
             route = theOnlyRoute,
         ) {
@@ -215,15 +270,14 @@ class PincodeFragment : SoraBaseFragment<PinCodeViewModel>() {
                 )
                 return@composable
             }
+            if (unlocking) OnFirstFrameDrawn(UnlockJourneyTrace::pinPadDrawn)
             PincodeScreen(
                 pinCodeScreenState = viewModel.state,
                 onNumClick = viewModel::pinCodeNumberClicked,
                 onBiometricClick = fingerprintWrapper::toggleScanner,
                 onDeleteClick = viewModel::pinCodeDeleteClicked,
                 onWrongPinAnimationEnd = viewModel::onWrongPinAnimationEnd,
-                onSwitchNode = viewModel::onSwitchNode,
                 onNewPinContinue = viewModel::setNewLengthPinCodeClicked,
-                onGetHelp = ::contactSupport,
             )
         }
     }
