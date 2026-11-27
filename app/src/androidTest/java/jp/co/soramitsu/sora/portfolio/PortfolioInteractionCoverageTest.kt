@@ -459,14 +459,26 @@ class PortfolioInteractionCoverageTest {
         }
         val orbit = compose.onNodeWithTag(ORBIT_TEST_TAG).getUnclippedBoundsInRoot()
         val amounts = compose.onAllNodesWithTag(ORBIT_AMOUNT_TEST_TAG, useUnmergedTree = true)
+        val badges = compose.onAllNodesWithTag(ORBIT_BADGE_TEST_TAG, useUnmergedTree = true)
         amounts.assertCountEquals(3)
-        repeat(3) { index ->
-            val pill = amounts[index].getUnclippedBoundsInRoot()
+        badges.assertCountEquals(3)
+        val pills = List(3) { amounts[it].getUnclippedBoundsInRoot() }
+        val discs = List(3) { badges[it].getUnclippedBoundsInRoot() }
+        pills.forEachIndexed { index, pill ->
             assertTrue("amount $index starts on screen: $pill", pill.left >= 0.dp)
             assertTrue("amount $index ends on screen: $pill", pill.right <= 320.dp)
             assertTrue("amount $index stays in the orbit, above the token's header: $pill in $orbit", pill.bottom <= orbit.bottom)
+            // Never over another satellite's badge or amount.
+            for (other in 0 until 3) {
+                if (other == index) continue
+                assertFalse("amount $index $pill meets badge $other ${discs[other]}", meets(pill, discs[other]))
+                assertFalse("amount $index $pill meets amount $other ${pills[other]}", meets(pill, pills[other]))
+            }
         }
     }
+
+    private fun meets(a: androidx.compose.ui.unit.DpRect, b: androidx.compose.ui.unit.DpRect) =
+        a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom
 
     @Test fun aPricedTokenSaysItsShareOfTheTotal() {
         val format = PortfolioFormat(NumbersFormatter(), "$")
