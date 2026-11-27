@@ -36,7 +36,6 @@ import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.AssetHolder
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.domain.calcFiat
-import jp.co.soramitsu.common.domain.formatFiat
 import jp.co.soramitsu.common.domain.formatFiatAmount
 import jp.co.soramitsu.common.domain.formatFiatChange
 import jp.co.soramitsu.common.domain.formatFiatOrEmpty
@@ -114,11 +113,7 @@ class AssetDetailsViewModel @AssistedInject constructor(
                     state = state.copy(
                         state = state.state.copy(
                             poolsState = mapped.first,
-                            poolsSum = formatFiatAmount(
-                                mapped.second,
-                                it.fiatSymbol,
-                                numbersFormatter
-                            ),
+                            poolsSum = fiatAtLeastCent(mapped.second, it.fiatSymbol),
                         )
                     )
                 }
@@ -332,8 +327,19 @@ class AssetDetailsViewModel @AssistedInject constructor(
 
     /**
      * What [amount] of this token is worth, or nothing when the token has no price: an amount stands alone rather than
-     * over a "$0" it is not worth.
+     * over a "$0" it is not worth. A positive value under a cent is "<$0.01", never "$0".
      */
     private fun Token.valueOrEmpty(amount: BigDecimal): String =
-        calcFiat(amount)?.let { formatFiat(it, numbersFormatter) }.orEmpty()
+        calcFiat(amount)?.let { fiatAtLeastCent(it, fiatSymbol.orEmpty()) }.orEmpty()
+
+    /** A value as the Wallet home prints it: a positive value under a cent is "<$0.01", never "$0". */
+    private fun fiatAtLeastCent(value: Double, symbol: String): String =
+        if (value > 0.0 && value < SMALLEST_FIAT) {
+            "<" + formatFiatAmount(SMALLEST_FIAT, symbol, numbersFormatter)
+        } else {
+            formatFiatAmount(value, symbol, numbersFormatter)
+        }
 }
+
+/** The smallest value printed as itself, as on the Wallet home. */
+private const val SMALLEST_FIAT = 0.01

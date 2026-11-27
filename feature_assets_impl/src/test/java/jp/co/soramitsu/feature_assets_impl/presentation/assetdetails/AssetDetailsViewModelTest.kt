@@ -194,6 +194,27 @@ class AssetDetailsViewModelTest {
     }
 
     @Test
+    fun `a positive value under a cent reads as less than a cent, never as zero`() = runTest {
+        coEvery { assetsInteractor.getXorBalance(any()) } returns
+            liveBreakdown(transferable = "1", locked = "0.1")
+        val dust = allLocked.copy(token = allLocked.token.copy(fiatPrice = 0.005, fiatSymbol = "$"))
+        val viewModel = viewModel(dust)
+        advanceUntilIdle()
+
+        val page = viewModel.state.state
+        assertEquals("<$0.01", page.transferableBalanceFiat)
+        assertEquals("<$0.01", page.frozenBalanceFiat)
+
+        viewModel.onBalanceClick()
+        advanceUntilIdle()
+        val breakdown = checkNotNull(viewModel.state.state.xorBalance)
+        assertEquals("<$0.01", breakdown.frozenFiat)
+        assertEquals("<$0.01", breakdown.lockedFiat)
+        // Nothing bonded is worth nothing: a zero amount keeps its "$0".
+        assertEquals("$0", breakdown.bondedFiat)
+    }
+
+    @Test
     fun `when the network cannot be asked the amounts saved with the balance are shown`() =
         runTest {
             coEvery { assetsInteractor.getXorBalance(any()) } throws IOException("socket closed")
