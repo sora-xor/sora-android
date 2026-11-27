@@ -65,20 +65,23 @@ class SettingsAndAccountsInteractionTest {
         if (custom) "wss://node.example.test" else "wss://ws.mof.sora.org", !custom, !custom)
 
     @Test fun profileRoutesEachVisibleDestinationIndependently() {
-        show { ProfileItems(profile(), { events += "accounts" }, { events += "markets" }, { events += "nodes" },
-            { events += "settings" }, { events += "login" }, { events += "referral" }, { events += "information" }, { events += "debug" }) }
-        for (label in listOf(R.string.settings_crypto_accounts, R.string.polkamarkt_title, R.string.settings_nodes,
+        show { ProfileItems(profile().copy(hashiBridgeVisible = true), { events += "accounts" }, { events += "markets" }, { events += "nodes" },
+            { events += "settings" }, { events += "login" }, { events += "referral" }, { events += "information" }, { events += "debug" },
+            onHashiBridgeClick = { events += "bridge" }) }
+        for (label in listOf(R.string.settings_crypto_accounts, R.string.polkamarkt_title, R.string.hashi_bridge_title, R.string.settings_nodes,
             R.string.settings_header_app, R.string.settings_login_title, R.string.settings_invite_title, R.string.settings_information_title)) {
             node(label).performScrollTo().performClick()
         }
         compose.onNodeWithText(compose.activity.getString(R.string.settings_debug)).performScrollTo().performClick()
-        compose.runOnIdle { assertEquals(listOf("accounts", "markets", "nodes", "settings", "login", "referral", "information", "debug"), events) }
+        compose.runOnIdle { assertEquals(listOf("accounts", "markets", "bridge", "nodes", "settings", "login", "referral", "information", "debug"), events) }
     }
     @Test fun profileRemovesUnavailableOptionalDestinationsAndUpdatesNodeName() {
-        val state = mutableStateOf(profile())
+        val state = mutableStateOf(profile().copy(hashiBridgeVisible = true))
         show { ProfileItems(state.value, {}, {}, {}, {}, {}, {}, {}, {}) }
-        compose.runOnIdle { state.value = profile().copy(nodeName = "Offline node", nodeConnected = false, isDebugMenuAvailable = false, polkamarktVisible = false) }
+        node(R.string.hashi_bridge_title).assertExists()
+        compose.runOnIdle { state.value = profile().copy(nodeName = "Offline node", nodeConnected = false, isDebugMenuAvailable = false, polkamarktVisible = false, hashiBridgeVisible = false) }
         node(R.string.polkamarkt_title).assertDoesNotExist()
+        node(R.string.hashi_bridge_title).assertDoesNotExist()
         compose.onNodeWithText(compose.activity.getString(R.string.settings_debug)).assertDoesNotExist()
         compose.onNodeWithText("SORA mainnet").assertDoesNotExist()
         compose.onNodeWithText("Offline node").assertExists()

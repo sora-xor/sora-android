@@ -37,13 +37,14 @@ internal fun ProfileItems(
     state: ProfileScreenState,
     onAccountsClick: () -> Unit,
     onPolkamarktClick: () -> Unit,
-    onHashiBridgeClick: () -> Unit = {},
     onNodeClick: () -> Unit,
     onAppSettingsClick: () -> Unit,
     onLoginClick: () -> Unit,
     onReferralClick: () -> Unit,
     onAboutClick: () -> Unit,
-    onDebugMenuClick: () -> Unit
+    onDebugMenuClick: () -> Unit,
+    // Last, with a default: callers that pass the entries by position keep each one on its own route.
+    onHashiBridgeClick: () -> Unit = {},
 ) {
     CategoryItem(
         modifier = Modifier
