@@ -23,6 +23,7 @@ import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.os.SystemClock
 import java.security.MessageDigest
+import java.util.regex.Pattern
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.BySelector
@@ -42,7 +43,12 @@ import org.junit.Assert.assertTrue
  * English.
  */
 internal object SoraJourney {
-    const val PACKAGE_NAME = "jp.co.soramitsu.sora"
+    /**
+     * The benchmark build types' own application id (`applicationIdSuffix ".benchmark"`): no store, debug or test
+     * install of the app ever has it, so these journeys can never clear or unlock an install that holds someone's
+     * wallet, whatever was installed or uninstalled before.
+     */
+    const val PACKAGE_NAME = "jp.co.soramitsu.sora.benchmark"
 
     /** The exported launcher alias of the startup screen (the screen itself is not exported). */
     const val LAUNCHER_ACTIVITY = "jp.co.soramitsu.sora.splash.presentation.SplashActivity"
@@ -77,9 +83,8 @@ internal object SoraJourney {
     private const val IMPORT_SOURCE_MILLIS = 5_000L
     private const val IMPORT_TRIES = 3
 
-    /** How long a pressed PIN key has to show as entered, and how often a key that was not taken is pressed again. */
+    /** How long a pressed PIN key has to show as entered. */
     private const val PIN_KEY_SHOWN_MILLIS = 5_000L
-    private const val PIN_KEY_TRIES = 3
     const val STARTUP_TIMEOUT = TIMEOUT_MILLIS
     private const val POLL_MILLIS = 100L
 
@@ -98,10 +103,10 @@ internal object SoraJourney {
 
     /**
      * Refuses to touch an install that is not the benchmark build: the journeys clear app data and type a test PIN,
-     * which must never reach a wallet someone uses. A store install has another signer (and the test-key build cannot
-     * be installed over it), so its data is never cleared and its PIN attempts are never spent. A debug build is
-     * signed with the same test key but may hold a developer's or tester's own wallet: debuggable installs are
-     * refused too (the benchmark and non-minified release builds are not debuggable).
+     * which must never reach a wallet someone uses. The benchmark builds have their own application id
+     * ([PACKAGE_NAME]), which nothing else is installed as; on top of that the install must be signed with the
+     * repository's test key and not debuggable. Every journey asks this before it touches the app, and the benchmark
+     * and the profile generator ask it before Macrobenchmark can reset (reinstall) anything.
      */
     fun requireTestKeyInstall() {
         val context = InstrumentationRegistry.getInstrumentation().context
@@ -126,28 +131,11 @@ internal object SoraJourney {
     }
 
     /**
-     * Refuses, before anything can clear or reset it, an install that may hold someone's wallet: only a test-key,
-     * non-debuggable build installed as it is goes on. A test-key build put over a debug build keeps that build's
-     * data (and its wallet) and is no longer debuggable, but its install time says it was put over something.
-     * Macrobenchmark resets compilation by reinstalling the app on some Android versions, which clears its data,
-     * before a test's setup runs: the benchmark asks this first. Uninstall first to measure from a fresh install.
-     */
-    fun requireInstalledAsItself() {
-        requireTestKeyInstall()
-        val info = InstrumentationRegistry.getInstrumentation().context.packageManager.getPackageInfo(PACKAGE_NAME, 0)
-        assertTrue(
-            "Refusing to clear or reset $PACKAGE_NAME: it was installed over an earlier install, whose wallet it may " +
-                "hold (uninstall it first)",
-            info.firstInstallTime == info.lastUpdateTime,
-        )
-    }
-
-    /**
-     * Clears the app's data, only on a benchmark build installed as it is ([requireInstalledAsItself]), for the
-     * user these tests run as, and only if the clear succeeds.
+     * Clears the benchmark build's data ([requireTestKeyInstall]), for the user these tests run as, and only if the
+     * clear succeeds.
      */
     fun clearAppData(device: UiDevice) {
-        requireInstalledAsItself()
+        requireTestKeyInstall()
         // The user these tests run as, which the package was looked up for (a uid is user * 100000 + app id).
         val user = android.os.Process.myUid() / PER_USER_RANGE
         val result = device.executeShellCommand("pm clear --user $user $PACKAGE_NAME").trim()
@@ -200,19 +188,25 @@ internal object SoraJourney {
     }
 
     private fun importTestWallet(device: UiDevice) {
-        // Import account first asks for the source: Google, Passphrase, Raw seed or a backup file. A tap the launch
-        // scene took while it still covered the welcome is made again.
+        // Import account first asks for the source: Google, Passphrase, Raw seed or a backup file. One loop watches for
+        // both: the source list is taken whenever it shows, however late, and Import account is pressed again only
+        // after it has had its time to answer.
         var source: UiObject2? = null
-        var tries = 0
-        while (source == null && tries < IMPORT_TRIES) {
-            // A source list that came up only after the last wait is taken as it is, not pressed for again.
-            source = if (tries > 0) device.findObject(By.text("Passphrase")) else null
+        var presses = 0
+        var lastPress = 0L
+        val deadline = SystemClock.uptimeMillis() + TIMEOUT_MILLIS
+        while (source == null && SystemClock.uptimeMillis() < deadline) {
+            source = device.findObject(By.text("Passphrase"))
             if (source != null) break
-            tries += 1
-            waitFor(device, tag("ImportAccount"), "Import account").click()
-            source = device.wait(Until.findObject(By.text("Passphrase")), IMPORT_SOURCE_MILLIS)
+            val importButton = device.findObject(tag("ImportAccount"))
+            if (importButton != null && presses < IMPORT_TRIES && SystemClock.uptimeMillis() - lastPress > IMPORT_SOURCE_MILLIS) {
+                importButton.click()
+                presses += 1
+                lastPress = SystemClock.uptimeMillis()
+            }
+            SystemClock.sleep(POLL_MILLIS)
         }
-        assertTrue("Import account was pressed $tries times and never offered the Passphrase source", source != null)
+        assertTrue("Import account was pressed $presses times and never offered the Passphrase source", source != null)
         source!!.click()
         val field = waitFor(device, By.clazz("android.widget.EditText"), "The recovery phrase field")
         field.click()
@@ -239,34 +233,32 @@ internal object SoraJourney {
 
     private fun createPin(device: UiDevice) {
         typePin(device) // Setup pin code
-        SystemClock.sleep(600)
+        // The confirmation pad starts with no digit entered.
+        assertTrue(
+            "The PIN confirmation did not come after the PIN was set up",
+            device.wait(Until.hasObject(By.descStartsWith("${PIN_DIGITS_ENTERED}0 ")), TIMEOUT_MILLIS) == true,
+        )
         typePin(device) // Confirm pin code
         // A phone with a fingerprint is asked once whether to use it: not for the test wallet.
         device.wait(Until.findObject(By.text("Cancel")), 3_000)?.click()
     }
 
     /**
-     * Types the test PIN. Every digit but the last (which starts the check, and the pad moves on) must show as
-     * entered before the next is pressed: a tap that the launch scene took, while it still covered a pad that was
-     * not ready, only told the scene not to wait, and that key is pressed again.
+     * Types the test PIN, each key once. Every digit but the last (which starts the check, and the pad moves on) must
+     * show as entered before the next is pressed; one that does not fails the run rather than being pressed again,
+     * which could enter it twice and spend a PIN attempt. (The keys are seen only once the launch scene has let the
+     * pad through: while it covers the pad, its views are kept from UI Automator as from a screen reader.)
      */
     fun typePin(device: UiDevice) {
         TEST_PIN.forEachIndexed { index, digit ->
             val entered = index + 1
-            var taken = false
-            var tries = 0
-            while (!taken && tries < PIN_KEY_TRIES) {
-                // A digit that showed as entered only after the last wait is not pressed again.
-                if (tries > 0 && device.hasObject(By.descStartsWith("$PIN_DIGITS_ENTERED$entered "))) {
-                    taken = true
-                    break
-                }
-                tries += 1
-                waitFor(device, pinKey(digit), "PIN key $digit").click()
-                taken = entered == TEST_PIN.length ||
-                    device.wait(Until.hasObject(By.descStartsWith("$PIN_DIGITS_ENTERED$entered ")), PIN_KEY_SHOWN_MILLIS) == true
+            waitFor(device, pinKey(digit), "PIN key $digit").click()
+            if (entered < TEST_PIN.length) {
+                assertTrue(
+                    "PIN key $digit did not show as entered; not pressed again",
+                    device.wait(Until.hasObject(By.descStartsWith("$PIN_DIGITS_ENTERED$entered ")), PIN_KEY_SHOWN_MILLIS) == true,
+                )
             }
-            assertTrue("PIN key $digit was pressed $tries times and never showed as entered", taken)
         }
     }
 
@@ -310,21 +302,23 @@ internal object SoraJourney {
     }
 
     /**
-     * The home lists read balances (saved or live), no longer "Reading balances…": neither the line nor the rows that
-     * stand for the balances being read, which say so to a screen reader only.
+     * The home lists read balances: saved, live, or a confirmed empty wallet, as the Assets card's heading says by
+     * its id (nothing a person sees). A read that failed ("Balance unavailable") fails the run: the time to it is not
+     * a time to balances.
      */
     fun waitForReadBalances(device: UiDevice) {
-        assertTrue(
-            "The Wallet home was still reading its balances after $TIMEOUT_MILLIS ms",
-            device.wait(Until.gone(By.descStartsWith(READING_BALANCES)), TIMEOUT_MILLIS) == true &&
-                device.wait(Until.gone(By.textStartsWith(READING_BALANCES)), TIMEOUT_MILLIS) == true,
-        )
-        // A read that failed is not a read: the time to it is not a time to balances.
-        assertTrue("The Wallet home could not read its balances", !device.hasObject(By.text(BALANCE_UNAVAILABLE)))
+        val deadline = SystemClock.uptimeMillis() + TIMEOUT_MILLIS
+        while (SystemClock.uptimeMillis() < deadline) {
+            if (device.hasObject(tag(ASSETS_READ))) return
+            if (device.hasObject(tag(ASSETS_UNAVAILABLE))) throw AssertionError("The Wallet home could not read its balances")
+            SystemClock.sleep(POLL_MILLIS / 2)
+        }
+        throw AssertionError("The Wallet home was still reading its balances after $TIMEOUT_MILLIS ms")
     }
 
-    private const val READING_BALANCES = "Reading balances"
-    private const val BALANCE_UNAVAILABLE = "Balance unavailable"
+    /** The Assets card heading's ids (feature_wallet_impl PortfolioHome). */
+    private const val ASSETS_READ = "PortfolioAssetsRead"
+    private const val ASSETS_UNAVAILABLE = "PortfolioAssetsUnavailable"
 
     /** The home's own scroller (the Column under the hero). */
     private fun homeScroller(device: UiDevice): UiObject2 =
@@ -365,7 +359,8 @@ internal object SoraJourney {
     /** Explore, Activity and back to the Wallet tab. */
     fun switchTabs(device: UiDevice) {
         listOf("explore_nav_graph", "activities_nav_graph", "wallet_nav_graph").forEach { tab ->
-            device.findObject(By.res(PACKAGE_NAME, tab))?.click()
+            // A view id's package is the app's resources' own, whatever the application id: matched by its name.
+            device.findObject(By.res(Pattern.compile(".*:id/$tab")))?.click()
             device.waitForIdle()
         }
         waitForHome(device)

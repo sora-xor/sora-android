@@ -25,6 +25,7 @@ import jp.co.soramitsu.sora.baselineprofile.SoraJourney.ONBOARDING_ACTIVITY
 import jp.co.soramitsu.sora.baselineprofile.SoraJourney.PACKAGE_NAME
 import jp.co.soramitsu.sora.baselineprofile.SoraJourney.STARTUP_TIMEOUT
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -39,6 +40,10 @@ class BaselineProfileGenerator {
 
     @get:Rule
     val baselineProfileRule = BaselineProfileRule()
+
+    /** Before anything is cleared, unlocked or reset: only the benchmark build, under its own application id. */
+    @Before
+    fun onlyTheBenchmarkBuild() = SoraJourney.requireTestKeyInstall()
 
     /** A fresh install: launch through the startup checks to onboarding. */
     @Test

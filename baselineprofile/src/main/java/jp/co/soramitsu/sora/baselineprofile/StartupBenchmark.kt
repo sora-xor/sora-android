@@ -59,10 +59,10 @@ class StartupBenchmark {
 
     /**
      * Before Macrobenchmark can reset compilation, which reinstalls the app on some Android versions and so clears
-     * its data: only a disposable benchmark install is measured.
+     * its data: only the benchmark build, under its own application id, is measured.
      */
     @Before
-    fun onlyABenchmarkInstalledAsItself() = SoraJourney.requireInstalledAsItself()
+    fun onlyTheBenchmarkBuild() = SoraJourney.requireTestKeyInstall()
 
     @Test
     fun coldStartupWithoutCompilation() = measureFreshInstall(CompilationMode.None())

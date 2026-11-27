@@ -113,12 +113,16 @@ android {
                 "proguard-rules.pro"
             )
         }
+        // The startup benchmark and the profile generator clear these builds' data and type a test PIN: they get an
+        // application id of their own, so they never install as (or over) an app that holds someone's wallet.
         create("benchmarkRelease") {
             initWith(getByName("release"))
+            applicationIdSuffix = ".benchmark"
             signingConfig = signingConfigs.getByName("cidebug")
         }
         create("nonMinifiedRelease") {
             initWith(getByName("release"))
+            applicationIdSuffix = ".benchmark"
             signingConfig = signingConfigs.getByName("cidebug")
         }
     }

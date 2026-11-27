@@ -109,6 +109,7 @@ import jp.co.soramitsu.common.presentation.compose.theme.neon.FxTier
 import jp.co.soramitsu.common.presentation.compose.theme.neon.LocalFx
 import jp.co.soramitsu.common.presentation.compose.theme.neon.neon
 import jp.co.soramitsu.common.presentation.compose.theme.tokens.NeonType
+import jp.co.soramitsu.common.util.testTagAsId
 import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.FreshnessKind
 import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.PortfolioGroup
 import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.PortfolioHolding
@@ -906,6 +907,14 @@ private fun QuickAction(
 @Composable
 internal fun PortfolioList(model: PortfolioModel, format: PortfolioFormat, actions: PortfolioHomeActions, modifier: Modifier = Modifier) {
     val groups = model.groups.filter { it.holdings.isNotEmpty() }
+    // For the startup benchmark (an id, nothing said or shown): whether the card shows read balances (saved, live or a
+    // confirmed empty wallet), is still reading them, or could not read them.
+    val readState = when {
+        groups.isNotEmpty() -> ASSETS_READ_TAG
+        model.noTotal == NoTotal.READING -> ASSETS_READING_TAG
+        model.noTotal == NoTotal.FAILED -> ASSETS_UNAVAILABLE_TAG
+        else -> ASSETS_READ_TAG
+    }
     PortfolioCard(modifier) {
         Text(
             text = stringResource(R.string.liquid_assets),
@@ -914,7 +923,8 @@ internal fun PortfolioList(model: PortfolioModel, format: PortfolioFormat, actio
             maxLines = 1,
             modifier = Modifier
                 .padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 4.dp)
-                .semantics { heading() },
+                .semantics { heading() }
+                .testTagAsId(readState),
         )
         if (groups.isEmpty()) {
             if (model.noTotal == NoTotal.READING) {
@@ -937,6 +947,11 @@ internal fun PortfolioList(model: PortfolioModel, format: PortfolioFormat, actio
         }
     }
 }
+
+/** The Assets card heading's id while the card shows read balances, reads them, or could not read them. */
+internal const val ASSETS_READ_TAG = "PortfolioAssetsRead"
+internal const val ASSETS_READING_TAG = "PortfolioAssetsReading"
+internal const val ASSETS_UNAVAILABLE_TAG = "PortfolioAssetsUnavailable"
 
 /** Rises into place and fades in, once, the first time this row is seen; the first eight in turn. */
 @Composable
