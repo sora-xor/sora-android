@@ -20,6 +20,8 @@ import jp.co.soramitsu.androidfoundation.resource.ResourceManager
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.domain.AssetAmountInputState
 import jp.co.soramitsu.common.domain.Token
+import jp.co.soramitsu.common.hashi.HashiAvailability
+import jp.co.soramitsu.common.hashi.HashiBlock
 import jp.co.soramitsu.common.presentation.compose.theme.SoraAppTheme
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.feature_wallet_impl.bridge.HashiDirection
@@ -79,7 +81,12 @@ class HashiBridgeScreenshotActivity : ComponentActivity() {
                         )
                     } else {
                         val record = FakeTransfers.at(step)
-                        val confirm = if (step == "claim_confirm") FakeForms.claimConfirm(record, texts) else null
+                        val confirm = when (step) {
+                            "claim_confirm" -> FakeForms.stepConfirm(record, texts, R.string.hashi_bridge_receive_on_ethereum, "4100000000000000")
+                            "speed_up_confirm" -> FakeForms.stepConfirm(record, texts, R.string.hashi_bridge_speed_up, "7452000000000000")
+                            "continue_confirm" -> FakeForms.stepConfirm(record, texts, R.string.hashi_bridge_continue_deposit, "1335600000000000")
+                            else -> null
+                        }
                         HashiTransferScreen(
                             texts.transferState(record, busy = false, confirm = confirm, working = step == "deposit_working"),
                             onAction = {}, onSpeedUp = {}, onCopy = {}, onConfirm = {}, onDismissConfirm = {},
@@ -122,25 +129,46 @@ internal object FakeForms {
         ).map(texts::historyItem),
     )
 
-    fun claimConfirm(record: HashiTransferRecord, texts: HashiTexts) = HashiConfirmUi(
-        amount = "12.5 XOR",
-        receive = "12.5 XOR",
-        from = record.ethAccount,
-        to = record.recipient,
-        fees = listOf(texts.gas(BigInteger("4100000000000000"))),
+    /** The sheet of one Ethereum step (receive, continue, speed up) with the most its gas can cost. */
+    fun stepConfirm(record: HashiTransferRecord, texts: HashiTexts, title: Int, gasWei: String): HashiConfirmUi {
+        val outgoing = record.direction == HashiDirection.SORA_TO_ETHEREUM
+        val onEthereum = texts.amount(record.ethUnits, record.ethDecimals, record.symbol)
+        return HashiConfirmUi(
+            title = texts.string(title),
+            amount = onEthereum,
+            receive = if (outgoing) onEthereum else texts.amount(record.soraUnits, record.soraPrecision, record.symbol),
+            from = record.ethAccount,
+            to = if (outgoing) record.recipient else record.wallet,
+            fees = listOf(texts.gas(BigInteger(gasWei))),
+        )
+    }
+
+    private fun paused(base: HashiBridgeUiState, texts: HashiTexts, blocks: Set<HashiBlock>) = base.copy(
+        availability = HashiAvailabilityUi.PAUSED,
+        pauseReasons = texts.pauseReasons(HashiAvailability(blocks, 142, 28_500_000L, null)),
+        input = input(xor, "1,204.5 XOR", null),
     )
 
     fun at(form: String, texts: HashiTexts): HashiBridgeUiState {
         val base = base(texts)
         return when (form) {
             // Today's real state: recovery complete, no signer report.
-            "paused" -> base.copy(availability = HashiAvailabilityUi.PAUSED, input = input(xor, "1,204.5 XOR", null))
+            "paused" -> paused(base, texts, setOf(HashiBlock.SIGNERS_UNVERIFIED))
+            "paused_signers_down" -> paused(base, texts, setOf(HashiBlock.SIGNERS_DOWN))
+            "paused_guardian_halt" -> paused(base, texts, setOf(HashiBlock.GUARDIAN_HALT))
+            "paused_recovery" -> paused(base, texts, setOf(HashiBlock.RECOVERY_NOT_COMPLETE))
+            "paused_not_initialized" -> paused(base, texts, setOf(HashiBlock.NOT_INITIALIZED))
+            "paused_stalled" -> paused(base, texts, setOf(HashiBlock.STALLED_REQUESTS))
+            "paused_contract_mismatch" -> paused(base, texts, setOf(HashiBlock.CONTRACT_MISMATCH))
+            // Every reason at once: the tallest banner.
+            "paused_all" -> paused(base, texts, HashiBlock.values().toSet() - HashiBlock.READ_FAILED)
             "unreadable" -> base.copy(availability = HashiAvailabilityUi.UNREADABLE, input = input(xor, "1,204.5 XOR", null), history = emptyList())
             "open" -> base
             "incoming" -> base.copy(direction = HashiDirection.ETHEREUM_TO_SORA, input = input(usdt, "2,500 USDT", "250"))
             "picker" -> base.copy(pickerOpen = true)
             "confirm" -> base.copy(
                 confirm = HashiConfirmUi(
+                    title = texts.string(R.string.hashi_bridge_to_ethereum),
                     amount = "12.5 XOR",
                     receive = "12.5 XOR",
                     from = SORA_ACCOUNT,
@@ -152,12 +180,26 @@ internal object FakeForms {
             "confirm_low_eth" -> base.copy(
                 ethBalance = "0 ETH",
                 confirm = HashiConfirmUi(
+                    title = texts.string(R.string.hashi_bridge_to_ethereum),
                     amount = "12.5 XOR",
                     receive = "12.5 XOR",
                     from = SORA_ACCOUNT,
                     to = ETH_ACCOUNT,
                     fees = listOf(texts.sorafee(BigInteger("1000000000000000000")), texts.claimEstimate(BigInteger("3864000000000000"))),
                     warning = texts.string(R.string.hashi_bridge_eth_low),
+                )
+            )
+            // Approve 0, approve and the deposit: one sheet with the summed highest gas cost.
+            "incoming_confirm" -> base.copy(
+                direction = HashiDirection.ETHEREUM_TO_SORA,
+                input = input(usdt, "2,500 USDT", "250"),
+                confirm = HashiConfirmUi(
+                    title = texts.string(R.string.hashi_bridge_to_sora),
+                    amount = "250 USDT",
+                    receive = "250 USDT",
+                    from = ETH_ACCOUNT,
+                    to = SORA_ACCOUNT,
+                    fees = listOf(texts.gas(BigInteger("3603600000000000"))),
                 )
             )
             "error" -> base.copy(
@@ -254,7 +296,12 @@ internal object FakeTransfers {
         "paused_by_bridge" -> outgoing(HashiTransferState.PAUSED_BY_BRIDGE, withRequest = true)
         "needs_operators" -> outgoing(HashiTransferState.NEEDS_OPERATORS, withRequest = true)
         "ready_to_claim", "claim_confirm" -> outgoing(HashiTransferState.READY_TO_CLAIM, withRequest = true)
-        "claim_submitted" -> outgoing(HashiTransferState.CLAIM_SUBMITTED, withRequest = true, claim = HashiEthStepState.BROADCAST)
+        "claim_submitted", "speed_up_confirm" -> outgoing(HashiTransferState.CLAIM_SUBMITTED, withRequest = true, claim = HashiEthStepState.BROADCAST)
+        // An Ethereum node refused the signed claim: nothing is pending, the page says why.
+        "claim_refused" -> outgoing(
+            HashiTransferState.ETHEREUM_STEP_FAILED, withRequest = true, claim = HashiEthStepState.REPLACED,
+            error = "insufficient funds for gas * price + value", failure = HashiFailure.ETHEREUM_REFUSED,
+        )
         "claim_failed" -> outgoing(
             HashiTransferState.ETHEREUM_STEP_FAILED, withRequest = true, claim = HashiEthStepState.REVERTED, error = "REVERTED",
             failure = HashiFailure.ETHEREUM_REVERTED,
@@ -280,7 +327,26 @@ internal object FakeTransfers {
             HashiTransferState.FAILED, withRequest = true, error = "0x0303", failure = HashiFailure.FAILED_BY_BRIDGE,
         )
         "approve_submitted" -> incoming(HashiTransferState.APPROVE_SUBMITTED, listOf(step(HashiEthIntent.APPROVE, HashiEthStepState.BROADCAST)))
-        "ready_to_deposit" -> incoming(HashiTransferState.READY_TO_DEPOSIT, listOf(step(HashiEthIntent.APPROVE, HashiEthStepState.CONFIRMED)))
+        "approve_zero_submitted" -> incoming(
+            HashiTransferState.APPROVE_ZERO_SUBMITTED, listOf(step(HashiEthIntent.APPROVE_ZERO, HashiEthStepState.BROADCAST)),
+        )
+        "ready_to_deposit", "continue_confirm" -> incoming(
+            HashiTransferState.READY_TO_DEPOSIT, listOf(step(HashiEthIntent.APPROVE, HashiEthStepState.CONFIRMED)),
+        )
+        // Gas rose above what was confirmed: nothing was signed, Continue shows the new cost.
+        "deposit_cost_changed" -> incoming(
+            HashiTransferState.READY_TO_DEPOSIT, listOf(step(HashiEthIntent.APPROVE, HashiEthStepState.CONFIRMED)),
+            refusal = HashiRefusal.Reason.COST_CHANGED.name,
+        )
+        "deposit_unconfirmed" -> incoming(
+            HashiTransferState.ETHEREUM_STEP_FAILED,
+            listOf(step(HashiEthIntent.APPROVE, HashiEthStepState.CONFIRMED), step(HashiEthIntent.DEPOSIT, HashiEthStepState.REPLACED)),
+            failure = HashiFailure.DEPOSIT_UNCONFIRMED,
+        )
+        "allowance_not_set" -> incoming(
+            HashiTransferState.ETHEREUM_STEP_FAILED, listOf(step(HashiEthIntent.APPROVE, HashiEthStepState.CONFIRMED)),
+            failure = HashiFailure.ALLOWANCE_NOT_SET,
+        )
         "deposit_working" -> incoming(HashiTransferState.READY_TO_DEPOSIT, emptyList())
         "deposit_refused" -> incoming(
             HashiTransferState.READY_TO_DEPOSIT, listOf(step(HashiEthIntent.APPROVE, HashiEthStepState.CONFIRMED)),
