@@ -21,7 +21,10 @@ package jp.co.soramitsu.feature_assets_impl.presentation
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.width
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
@@ -32,6 +35,7 @@ import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import jp.co.soramitsu.common.domain.DEFAULT_ICON_URI
@@ -91,6 +95,25 @@ class HoldingFiguresOrderTest {
             (0 until lines).all { layout.getLineRight(it) - layout.getLineLeft(it) <= node.size.width + 1f },
         )
         assertTrue("no line falls below its place: $seen", layout.getLineBottom(lines - 1) <= node.size.height + 1f)
+        // Nor is the place itself cut by what holds it: what shows of it on screen (clipped by every parent) is all of
+        // its width, and down to its last line's baseline.
+        val shown = node.boundsInRoot
+        assertTrue("its whole width shows, ${shown.width} px of ${node.size.width}: $seen", shown.width >= node.size.width - 1f)
+        assertTrue(
+            "its last line shows, ${shown.height} px of ${node.size.height}: $seen",
+            shown.height >= layout.getLineBaseline(lines - 1) - 1f,
+        )
+    }
+
+    /** [content] 320 dp wide, with its text at [fontScale] times its size. */
+    private fun narrow(fontScale: Float, content: @Composable () -> Unit) {
+        rule.setContent {
+            SoraAppTheme(darkTheme = false) {
+                CompositionLocalProvider(LocalDensity provides Density(LocalDensity.current.density, fontScale)) {
+                    Column(Modifier.width(320.dp)) { content() }
+                }
+            }
+        }
     }
 
     private fun assertAmountOverValue(amount: SemanticsNodeInteraction, value: SemanticsNodeInteraction) {
@@ -207,6 +230,46 @@ class HoldingFiguresOrderTest {
         val bounds = symbol.getUnclippedBoundsInRoot()
         assertTrue("the name keeps its symbol", (bounds.right - bounds.left).value > 0f)
         symbol.assertNotCut()
+    }
+
+    @Test
+    fun aLongAmountOnANarrowScreenWithTheLargestTextIsNeverCut() {
+        narrow(fontScale = 2f) {
+            AssetItem(
+                assetState = holding("PSWAP", LONG_AMOUNT, "$1\u00A0234\u00A0567.89", "-3.1 %").copy(tokenName = "Polkaswap"),
+                testTag = "LongRow",
+                onClick = {},
+            )
+        }
+        text(LONG_AMOUNT).assertIsDisplayed().assertNotCut()
+        text("PSWAP").assertIsDisplayed().assertNotCut()
+        assertAmountOverValue(text(LONG_AMOUNT), text("$1\u00A0234\u00A0567.89"))
+    }
+
+    @Test
+    fun longPooledAmountsOnANarrowScreenWithTheLargestTextAreNeverCut() {
+        narrow(fontScale = 2f) {
+            PoolsList(
+                PoolsListState(
+                    listOf(
+                        PoolsListItemState(
+                            token1Icon = DEFAULT_ICON_URI,
+                            token2Icon = DEFAULT_ICON_URI,
+                            poolToken1Symbol = "XOR",
+                            poolToken2Symbol = "PSWAP",
+                            poolAmounts = "$LONG_AMOUNT - $LONG_AMOUNT",
+                            fiat = "$99",
+                            fiatChange = "",
+                            tokenIds = "xor" to "pswap",
+                            rewardTokenIconsList = emptyList(),
+                        )
+                    )
+                )
+            )
+        }
+        val whole = LONG_AMOUNT.replace(' ', '\u00A0')
+        text("$whole - $whole").assertIsDisplayed().assertNotCut()
+        assertAmountOverValue(text("$whole - $whole"), text("$99"))
     }
 
     @Test
