@@ -265,11 +265,19 @@ object TenmonFlight {
             // screen is there, and its touches are its own from now.
             letThrough(carry)
             val scene = carry.stage.scene
-            if (scene == null || carry.skipped) {
-                // Its surface gave up on the way out, or the person asked not to wait: what it ends on fades now.
+            if (scene == null) {
+                // Its surface gave up on the way out: what it ends on fades now (no surface to wait for).
                 carry.landing = landing
                 carry.stage.cover.showFrame(ARRIVED, landing)
                 finish(FADE_MILLIS)
+                return
+            }
+            if (carry.skipped) {
+                // The person asked not to wait: what it ends on fades, once this layout pass is over. Its surface is
+                // never taken away inside the screen's layout, where that would wait for the frame being drawn.
+                carry.landing = landing
+                carry.stage.cover.showFrame(ARRIVED, landing)
+                main.post { if (this.carry === carry) finish(FADE_MILLIS) }
                 return
             }
             // Laid out again before the mark has left: it flies to where the screen shows it now.
@@ -294,9 +302,13 @@ object TenmonFlight {
         carry.ready = true
         carry.stage.isClickable = false
         val content = carry.content?.get()
-        content?.importantForAccessibility = carry.contentAccessibility
-        (content as? ViewGroup)?.descendantFocusability = carry.contentFocusability
         carry.content = null
+        content?.importantForAccessibility = carry.contentAccessibility
+        (content as? ViewGroup)?.let { screen ->
+            screen.descendantFocusability = carry.contentFocusability
+            // A keyboard user gets the focus the window would have given the screen had nothing covered it.
+            if (!screen.isInTouchMode && screen.findFocus() == null) screen.restoreDefaultFocus()
+        }
     }
 
     private fun aim(carry: Carry, scene: TenmonView, landing: Landing?) {
