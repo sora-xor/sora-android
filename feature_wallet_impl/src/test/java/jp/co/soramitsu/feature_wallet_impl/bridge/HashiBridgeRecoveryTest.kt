@@ -252,7 +252,7 @@ class HashiBridgeRecoveryTest {
         assertEquals(derivations, accounts.derivations)
         assertEquals(1, ethereum.sent.size)
         // Speeding up the open one is still possible: it is the same transaction at the same nonce.
-        service.speedUp(testAccount, record.id)
+        service.speedUpConfirmed(testAccount, record.id)
         assertEquals(2, ethereum.sent.size)
     }
 
@@ -294,10 +294,10 @@ class HashiBridgeRecoveryTest {
         assertTrue(record.id in service.working.value)
         assertEquals(
             HashiRefusal.Reason.EARLIER_TRANSACTION_PENDING,
-            runCatching { service.continueIncoming(testAccount, record.id, waitForConfirmation = false) }
+            runCatching { service.continueConfirmed(testAccount, record.id, waitForConfirmation = false) }
                 .exceptionOrNull().let { (it as? HashiRefusal)?.reason },
         )
-        service.continueIncomingInBackground(testAccount, record.id)
+        service.continueIncomingInBackground(testAccount, record.id, service.quoteContinueIncoming(testAccount, record.id))
         advanceUntilIdle()
         assertTrue(service.working.value.isEmpty())
         val done = service.transfer(testAccount.substrateAddress, record.id)!!
@@ -333,7 +333,7 @@ class HashiBridgeRecoveryTest {
             val step = store.history.last().ethSteps.last()
             ethereum.confirm(step.latest.hash, listOf(Logs.deposit(destination, BigInteger.valueOf(1_000_000), USDT_TOKEN)))
         }
-        val continued = restarted.continueIncoming(testAccount, record.id, waitForConfirmation = true)
+        val continued = restarted.continueConfirmed(testAccount, record.id, waitForConfirmation = true)
         assertEquals(listOf(HashiEthIntent.APPROVE, HashiEthIntent.DEPOSIT), continued.ethSteps.map { it.intent })
         assertEquals(derivations + 1, accounts.derivations)
     }
@@ -357,12 +357,12 @@ class HashiBridgeRecoveryTest {
         ethereum.accepted.clear()
         assertEquals(
             HashiRefusal.Reason.TOKEN_NOT_ACCEPTED,
-            refusal { service.continueIncoming(testAccount, record.id, waitForConfirmation = true) },
+            refusal { service.continueConfirmed(testAccount, record.id, waitForConfirmation = true) },
         )
         // Or the bridge was paused.
         ethereum.accepted += EthHex.encode(USDT_TOKEN)
         sora.blocks = setOf(HashiBlock.SIGNERS_DOWN)
-        assertEquals(HashiRefusal.Reason.PAUSED, refusal { service.continueIncoming(testAccount, record.id, waitForConfirmation = true) })
+        assertEquals(HashiRefusal.Reason.PAUSED, refusal { service.continueConfirmed(testAccount, record.id, waitForConfirmation = true) })
         assertEquals(derivations, accounts.derivations)
         assertEquals(sent, ethereum.sent.size)
     }
@@ -372,7 +372,7 @@ class HashiBridgeRecoveryTest {
         val first = appStart()
         ethereum.allowance = BigInteger.valueOf(1_000_000)
         // The deposit is broadcast; the app stops before any receipt.
-        val record = first.continueIncoming(
+        val record = first.continueConfirmed(
             testAccount,
             first.let {
                 val quote = it.quoteIncoming(testAccount, USDT_ID, BigDecimal.ONE)
@@ -397,8 +397,8 @@ class HashiBridgeRecoveryTest {
         assertEquals(HashiTransferState.DONE, restarted.transfer(testAccount.substrateAddress, record.id)!!.state)
         assertEquals(1, ethereum.sent.size)
         assertEquals(derivations, accounts.derivations)
-        // "Continue" on a finished deposit signs nothing.
-        assertEquals(HashiTransferState.DONE, restarted.continueIncoming(testAccount, record.id, waitForConfirmation = false).state)
+        // A finished deposit offers nothing to continue, and nothing is signed.
+        assertEquals(HashiRefusal.Reason.NOT_READY, refusal { restarted.continueConfirmed(testAccount, record.id, waitForConfirmation = false) })
         assertEquals(derivations, accounts.derivations)
     }
 
@@ -457,7 +457,7 @@ class HashiBridgeRecoveryTest {
                 ethereum.confirm(step.latest.hash, listOf(Logs.deposit(destination, BigInteger.valueOf(1_000_000), USDT_TOKEN)))
             }
         }
-        val retried = service.retryEthereumStep(testAccount, stuck.id)
+        val retried = service.retryConfirmed(testAccount, stuck.id)
         assertEquals(
             listOf(HashiEthIntent.APPROVE, HashiEthIntent.APPROVE, HashiEthIntent.DEPOSIT),
             retried.ethSteps.map { it.intent },

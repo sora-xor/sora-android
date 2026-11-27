@@ -136,9 +136,19 @@ internal class FakeEthereum : HashiEthereumGateway {
     override suspend fun hasNoCode(address: ByteArray) = EthHex.encode(address) !in withCode
     override suspend fun pendingNonce(address: ByteArray) = pendingNonce
     override suspend fun latestNonce(address: ByteArray) = latestNonce
+    /** Gas the node estimates per call; a test can raise it (a token whose transfer costs more). */
+    var gasEstimate: (ByteArray) -> BigInteger = { data ->
+        when (EthHex.encode(data.copyOfRange(0, 4))) {
+            EthHex.encode(EthAbi.selector("approve(address,uint256)")) -> BigInteger.valueOf(40_000)
+            EthHex.encode(EthAbi.selector("sendERC20ToSidechain(bytes32,uint256,address)")) -> BigInteger.valueOf(50_000)
+            EthHex.encode(EthAbi.selector("sendEthToSidechain(bytes32)")) -> BigInteger.valueOf(25_000)
+            else -> BigInteger.valueOf(100_000)
+        }
+    }
+
     override suspend fun estimateGas(from: ByteArray, to: ByteArray, data: ByteArray, value: BigInteger): BigInteger {
         revert?.let { throw EthCallRevertedException(it, "execution reverted: $it") }
-        return BigInteger.valueOf(100_000)
+        return gasEstimate(data)
     }
     override suspend fun baseFee() = baseFee
     override suspend fun priorityFee() = priority
@@ -230,3 +240,23 @@ internal class InMemoryStore : HashiTransferStore {
         addresses[wallet] = address
     }
 }
+
+/** "Try again" as the transfer's page does it: the cost is quoted and shown, then confirmed. */
+internal suspend fun HashiBridgeService.retryConfirmed(account: SoraAccount, id: String): HashiTransferRecord =
+    if (checkNotNull(transfer(account.substrateAddress, id)).direction == HashiDirection.SORA_TO_ETHEREUM) {
+        sendClaim(account, id, quoteClaim(account, id))
+    } else {
+        continueConfirmed(account, id, waitForConfirmation = true)
+    }
+
+/** "Continue on Ethereum" as the page does it: quoted, shown, confirmed. */
+internal suspend fun HashiBridgeService.continueConfirmed(account: SoraAccount, id: String, waitForConfirmation: Boolean): HashiTransferRecord =
+    continueIncoming(account, id, quoteContinueIncoming(account, id), waitForConfirmation)
+
+/** "Speed up" as the page does it: quoted, shown, confirmed. */
+internal suspend fun HashiBridgeService.speedUpConfirmed(account: SoraAccount, id: String): HashiTransferRecord =
+    speedUp(account, id, quoteSpeedUp(account, id))
+
+/** The most a signed step can cost in gas. */
+internal val HashiEthStep.maximumCostOfAllAttempts: BigInteger
+    get() = attempts.maxOf { BigInteger(it.maxFeePerGas).multiply(BigInteger(gasLimit)) }

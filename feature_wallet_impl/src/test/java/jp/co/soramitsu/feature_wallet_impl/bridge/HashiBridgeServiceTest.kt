@@ -337,7 +337,7 @@ class HashiBridgeServiceTest {
         ethereum.sendFailure = null
         ethereum.latestNonce = BigInteger.valueOf(6)
         ethereum.pendingNonce = BigInteger.valueOf(6)
-        val retried = service.retryEthereumStep(testAccount, record.id)
+        val retried = service.retryConfirmed(testAccount, record.id)
         val steps = retried.ethSteps.filter { it.intent == HashiEthIntent.CLAIM }
         assertEquals(listOf("5", "6"), steps.map { it.nonce })
         assertEquals(HashiTransferState.CLAIM_SUBMITTED, retried.state)
@@ -373,7 +373,7 @@ class HashiBridgeServiceTest {
         // The endpoint that lagged now has the receipt of our own claim.
         ethereum.confirm(step.latest.hash, listOf(Logs.withdrawal(requestHash)))
         val derivations = accounts.derivations
-        val refusal = runCatching { service.retryEthereumStep(testAccount, record.id) }.exceptionOrNull() as? HashiRefusal
+        val refusal = runCatching { service.retryConfirmed(testAccount, record.id) }.exceptionOrNull() as? HashiRefusal
         assertEquals(HashiRefusal.Reason.NOT_READY, refusal?.reason)
         assertEquals(derivations, accounts.derivations)
         assertEquals(1, ethereum.sent.size)
@@ -388,7 +388,7 @@ class HashiBridgeServiceTest {
         assertEquals(HashiTransferState.ETHEREUM_STEP_FAILED, failed.state)
         // Ether topped up from elsewhere: the account's nonce did not move.
         ethereum.sendFailure = null
-        val retried = service.retryEthereumStep(testAccount, record.id)
+        val retried = service.retryConfirmed(testAccount, record.id)
         val claims = retried.ethSteps.filter { it.intent == HashiEthIntent.CLAIM }
         assertEquals(listOf("5"), claims.map { it.nonce })
         assertEquals(HashiEthStepState.BROADCAST, claims.single().state)
@@ -406,7 +406,7 @@ class HashiBridgeServiceTest {
         assertEquals(HashiEthStepState.REPLACED, service.refresh(testAccount, record.id)!!.step(HashiEthIntent.CLAIM)!!.state)
         ethereum.pendingElsewhere += step.latest.hash
         val derivations = accounts.derivations
-        val refusal = runCatching { service.retryEthereumStep(testAccount, record.id) }.exceptionOrNull() as? HashiRefusal
+        val refusal = runCatching { service.retryConfirmed(testAccount, record.id) }.exceptionOrNull() as? HashiRefusal
         assertEquals(HashiRefusal.Reason.NOT_READY, refusal?.reason)
         assertEquals(derivations, accounts.derivations)
         val reopened = service.transfer(testAccount.substrateAddress, record.id)!!
@@ -419,7 +419,7 @@ class HashiBridgeServiceTest {
         val record = readyToClaim()
         val first = service.sendClaim(testAccount, record.id, service.quoteClaim(testAccount, record.id)).step(HashiEthIntent.CLAIM)!!
         ethereum.failNextSends(HashiRpcErrorException(-32000, "replacement transaction underpriced", null))
-        val refusal = runCatching { service.speedUp(testAccount, record.id) }.exceptionOrNull() as? HashiRefusal
+        val refusal = runCatching { service.speedUpConfirmed(testAccount, record.id) }.exceptionOrNull() as? HashiRefusal
         assertEquals(HashiRefusal.Reason.CALL_REVERTED, refusal?.reason)
         val step = service.transfer(testAccount.substrateAddress, record.id)!!.step(HashiEthIntent.CLAIM)!!
         assertEquals(listOf(first.latest.hash), step.attempts.map { it.hash })
@@ -442,9 +442,9 @@ class HashiBridgeServiceTest {
         assertEquals(HashiFailure.DEPOSIT_UNCONFIRMED, replaced.failure)
         val derivations = accounts.derivations
         val sent = ethereum.sent.size
-        val refusal = runCatching { service.retryEthereumStep(testAccount, record.id) }.exceptionOrNull() as? HashiRefusal
+        val refusal = runCatching { service.retryConfirmed(testAccount, record.id) }.exceptionOrNull() as? HashiRefusal
         assertEquals(HashiRefusal.Reason.NOT_READY, refusal?.reason)
-        val continued = runCatching { service.continueIncoming(testAccount, record.id, waitForConfirmation = false) }.exceptionOrNull() as? HashiRefusal
+        val continued = runCatching { service.continueConfirmed(testAccount, record.id, waitForConfirmation = false) }.exceptionOrNull() as? HashiRefusal
         assertEquals(HashiRefusal.Reason.NOT_READY, continued?.reason)
         assertEquals(derivations, accounts.derivations)
         assertEquals(sent, ethereum.sent.size)
@@ -472,7 +472,7 @@ class HashiBridgeServiceTest {
         val record = readyToClaim()
         val sent = service.sendClaim(testAccount, record.id, service.quoteClaim(testAccount, record.id))
         val first = sent.step(HashiEthIntent.CLAIM)!!
-        val faster = service.speedUp(testAccount, record.id).step(HashiEthIntent.CLAIM)!!
+        val faster = service.speedUpConfirmed(testAccount, record.id).step(HashiEthIntent.CLAIM)!!
         assertEquals(first.nonce, faster.nonce)
         assertEquals(2, faster.attempts.size)
         val (old, new) = faster.attempts
@@ -583,7 +583,7 @@ class HashiBridgeServiceTest {
             ethereum.confirm(step.latest.hash, listOf(Logs.deposit(destination, BigInteger.valueOf(1_000_000), USDT_TOKEN)))
             assertEquals(raw, step.latest.raw)
         }
-        val continued = service.continueIncoming(testAccount, record.id, waitForConfirmation = true)
+        val continued = service.continueConfirmed(testAccount, record.id, waitForConfirmation = true)
         assertEquals(HashiEthStepState.CONFIRMED, continued.step(HashiEthIntent.DEPOSIT)!!.state)
     }
 

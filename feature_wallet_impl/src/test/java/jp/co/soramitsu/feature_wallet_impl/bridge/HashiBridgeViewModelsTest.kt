@@ -55,7 +55,10 @@ class HashiBridgeViewModelsTest {
     private val ethereum = FakeEthereum()
     private val accounts = FakeAccounts()
     private val store = InMemoryStore()
-    private val service = HashiBridgeService(sora, ethereum, accounts, store, pollIntervalMillis = 0)
+    // No monitor loop of its own: with no poll interval it would spin on real threads, holding the
+    // service's lock, and a confirmation resumed from that thread lands after advanceUntilIdle().
+    // The pages read the transfer themselves; the tests drive every read.
+    private val service = HashiBridgeService(sora, ethereum, accounts, store, pollIntervalMillis = 0, backgroundMonitoring = false)
     private val walletRouter = mockk<WalletRouter>(relaxed = true)
     private val mainRouter = mockk<MainRouter>(relaxed = true)
     private val resources = mockk<ResourceManager> { every { getString(any()) } answers { "s${firstArg<Int>()}" } }
