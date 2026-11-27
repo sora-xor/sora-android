@@ -52,9 +52,17 @@ import jp.co.soramitsu.ui_core.theme.customTypography
  */
 class HashiBridgeScreenshotActivity : ComponentActivity() {
 
+    /**
+     * Its own text source, fed by this activity's lifecycle like the app's is fed by every activity:
+     * started cold (straight into this page, as the screenshot script does) no other activity of
+     * the app has given the app's one its resources yet.
+     */
+    private val resourceManager = ResourceManager()
+
     override fun onCreate(savedInstanceState: Bundle?) {
+        application.registerActivityLifecycleCallbacks(resourceManager)
         super.onCreate(savedInstanceState)
-        val texts = HashiTexts(ResourceManager(), NumbersFormatter())
+        val texts = HashiTexts(resourceManager, NumbersFormatter())
         val form = intent.getStringExtra("form")
         val step = intent.getStringExtra("step") ?: "waiting_approvals"
         setContent {
@@ -95,6 +103,11 @@ class HashiBridgeScreenshotActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    override fun onDestroy() {
+        application.unregisterActivityLifecycleCallbacks(resourceManager)
+        super.onDestroy()
     }
 }
 
