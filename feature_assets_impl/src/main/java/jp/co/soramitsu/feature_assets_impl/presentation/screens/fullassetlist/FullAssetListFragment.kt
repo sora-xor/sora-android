@@ -38,23 +38,19 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Divider
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
@@ -73,6 +69,7 @@ import jp.co.soramitsu.common.presentation.compose.components.NothingFoundText
 import jp.co.soramitsu.common.domain.CardHubType
 import jp.co.soramitsu.common_wallet.presentation.compose.components.AssetItem
 import jp.co.soramitsu.feature_assets_impl.presentation.components.compose.assetslist.CommonAssetsList
+import jp.co.soramitsu.ui_core.lit.NameAndFigures
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
@@ -104,7 +101,9 @@ class FullAssetListFragment : SoraBaseFragment<FullAssetListViewModel>() {
                 if (state.topList.isEmpty() && state.bottomList.isEmpty()) {
                     NothingFoundText(stringResource(if (state.searchMode) R.string.search_empty_state else R.string.portfolio_nothing_listed))
                 } else {
-                    Row(
+                    // The total beside the heading where both are whole, otherwise on a line of its own under it: a
+                    // long translation or larger text never leaves the total without room.
+                    NameAndFigures(
                         modifier = Modifier
                             .padding(
                                 start = Dimens.x3,
@@ -114,23 +113,22 @@ class FullAssetListFragment : SoraBaseFragment<FullAssetListViewModel>() {
                             )
                             .fillMaxWidth()
                             .wrapContentHeight(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Text(
-                            modifier = Modifier.wrapContentSize(),
-                            text = stringResource(id = CardHubType.ASSETS.userName),
-                            style = MaterialTheme.customTypography.headline2,
-                            color = MaterialTheme.customColors.fgPrimary,
-                        )
-                        Text(
-                            modifier = Modifier.weight(1f),
-                            text = state.fiatSum,
-                            textAlign = TextAlign.End,
-                            style = MaterialTheme.customTypography.headline2,
-                            color = MaterialTheme.customColors.fgPrimary,
-                        )
-                    }
+                        name = {
+                            Text(
+                                text = stringResource(id = CardHubType.ASSETS.userName),
+                                style = MaterialTheme.customTypography.headline2,
+                                color = MaterialTheme.customColors.fgPrimary,
+                            )
+                        },
+                        figures = {
+                            Text(
+                                text = state.fiatSum,
+                                textAlign = TextAlign.End,
+                                style = MaterialTheme.customTypography.headline2,
+                                color = MaterialTheme.customColors.fgPrimary,
+                            )
+                        },
+                    )
                     Box(
                         modifier = Modifier
                             .padding(horizontal = Dimens.x3)

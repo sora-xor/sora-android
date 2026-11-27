@@ -123,6 +123,29 @@ class FullAssetListViewModelTest {
     }
 
     @Test
+    fun `a list worth under a cent totals less than a cent, never zero`() = runTest {
+        // 5 XOR at $0.001
+        val dust = TestAssets.xorAsset(BigDecimal("5")).copy(token = TestTokens.xorToken.copy(fiatPrice = 0.001, fiatSymbol = "$"))
+        val viewModel = viewModel(visible = flowOf(listOf(dust)), all = listOf(dust))
+        advanceUntilIdle()
+
+        assertEquals("<$0.01", viewModel.state.value.fiatSum)
+        assertEquals("<$0.01", viewModel.state.value.bottomList.single().assetFiatAmount)
+    }
+
+    @Test
+    fun `a search that finds only holdings without a price shows no total`() = runTest {
+        val viewModel = viewModel()
+        advanceUntilIdle()
+
+        viewModel.onToolbarSearch("pswap")
+        advanceUntilIdle()
+
+        assertEquals(listOf(pswapAsset.token.id), viewModel.state.value.bottomList.map { it.tokenId })
+        assertEquals("no price, no total: never $0", "", viewModel.state.value.fiatSum)
+    }
+
+    @Test
     fun `a search matching a visible asset lists it on top`() = runTest {
         val viewModel = viewModel()
         advanceUntilIdle()

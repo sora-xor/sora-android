@@ -38,11 +38,11 @@ import javax.inject.Inject
 import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.fiatSum
 import jp.co.soramitsu.common.domain.fiatSymbol
-import jp.co.soramitsu.common.domain.formatFiatAmount
 import jp.co.soramitsu.common.domain.isMatchFilter
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common_wallet.presentation.compose.states.mapAssetsToCardState
+import jp.co.soramitsu.common_wallet.presentation.compose.util.AmountFormat
 import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
 import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
 import jp.co.soramitsu.feature_assets_impl.presentation.states.FullAssetListState
@@ -144,29 +144,26 @@ class FullAssetListViewModel @Inject constructor(
                     group[false] ?: emptyList(),
                     numbersFormatter
                 ),
-                fiatSum = formatFiatAmount(
-                    visAssets.fiatSum(),
-                    visAssets.fiatSymbol(),
-                    numbersFormatter
-                ),
+                fiatSum = headerSum(visAssets, visAssets.fiatSymbol()),
             )
         } else {
             val topFilter = visAssets.filter { it.token.isMatchFilter(filter) }
             val bottomFilter = invisibleAssets.filter { it.token.isMatchFilter(filter) }
-            val topSum = topFilter.fiatSum()
-            val bottomSum = bottomFilter.fiatSum()
             _state.value = _state.value.copy(
                 searchMode = true,
                 topList = mapAssetsToCardState(topFilter, numbersFormatter) + notListedCards(filter),
                 bottomList = mapAssetsToCardState(bottomFilter, numbersFormatter),
-                fiatSum = formatFiatAmount(
-                    topSum + bottomSum,
-                    topFilter.fiatSymbol(),
-                    numbersFormatter
-                ),
+                fiatSum = headerSum(topFilter + bottomFilter, topFilter.fiatSymbol()),
             )
         }
     }
+
+    /**
+     * The list's total as its rows print values: "<$0.01" for a positive total under a cent, nothing when none of the
+     * listed holdings has a price (never "$0" over rows that show no value).
+     */
+    private fun headerSum(assets: List<Asset>, symbol: String): String =
+        if (assets.none { it.fiat != null }) "" else AmountFormat.fiatAtLeastCent(assets.fiatSum(), symbol, numbersFormatter)
 
     /**
      * Held tokens that Polkaswap's blacklist hides: listed on top whatever their fiat value, since
