@@ -57,8 +57,8 @@ internal fun EventLiquidity(
     eventUiModel: EventUiModel.EventTxUiModel.EventLiquidityAddUiModel,
     modifier: Modifier,
 ) {
-    // The label (and the tickers under it) beside the amounts where both are whole, otherwise the amounts on a line of
-    // their own under it, at the end, wrapping rather than cut: each block at its own width, in either direction.
+    // The label and tickers beside the amounts where both are whole, otherwise the amounts on a line of their own
+    // under them, at the end, wrapping rather than cut: each block at its own width, in either direction.
     NameAndFigures(
         modifier = modifier.padding(vertical = Dimens.x1),
         leadingGap = Dimens.x1,
@@ -101,21 +101,23 @@ internal fun EventLiquidity(
                 )
             }
         },
+        // The label and the tickers under it are one block: the amounts stand beside it only where both of its
+        // lines are whole there.
         name = {
-            Text(
-                text = eventUiModel.type,
-                style = MaterialTheme.customTypography.textM,
-                color = MaterialTheme.customColors.fgPrimary,
-            )
-        },
-        below = {
-            TextWithDelimiter(
-                text1 = eventUiModel.ticker1,
-                text2 = eventUiModel.ticker2,
-                delimiter = " / ",
-                color = MaterialTheme.customColors.fgSecondary,
-                style = MaterialTheme.customTypography.textXSBold
-            )
+            Column {
+                Text(
+                    text = eventUiModel.type,
+                    style = MaterialTheme.customTypography.textM,
+                    color = MaterialTheme.customColors.fgPrimary,
+                )
+                TextWithDelimiter(
+                    text1 = eventUiModel.ticker1,
+                    text2 = eventUiModel.ticker2,
+                    delimiter = " / ",
+                    color = MaterialTheme.customColors.fgSecondary,
+                    style = MaterialTheme.customTypography.textXSBold
+                )
+            }
         },
         figures = {
             Column(horizontalAlignment = Alignment.End) {
