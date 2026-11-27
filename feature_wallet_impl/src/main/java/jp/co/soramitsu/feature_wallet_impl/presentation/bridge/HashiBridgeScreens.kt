@@ -86,6 +86,7 @@ fun HashiBridgeScreen(
             HashiAvailabilityUi.PAUSED -> HashiBanner(
                 text = stringResource(R.string.hashi_bridge_paused),
                 testTag = "HashiPausedBanner",
+                reasons = state.pauseReasons,
                 note = stringResource(R.string.hashi_bridge_claims_open),
             )
             HashiAvailabilityUi.UNREADABLE -> HashiBanner(
@@ -145,7 +146,7 @@ fun HashiBridgeScreen(
         }
         state.notice?.let { notice ->
             Text(
-                modifier = Modifier.fillMaxWidth().testTagAsId("HashiNotice"),
+                modifier = Modifier.fillMaxWidth().testTagAsId("HashiNotice").semantics { liveRegion = LiveRegionMode.Polite },
                 text = notice,
                 style = MaterialTheme.customTypography.paragraphS,
                 color = MaterialTheme.customColors.statusError,
@@ -176,14 +177,25 @@ fun HashiBridgeScreen(
 }
 
 @Composable
-fun HashiBanner(text: String, testTag: String, note: String? = null, action: String? = null, onAction: () -> Unit = {}) {
+fun HashiBanner(
+    text: String,
+    testTag: String,
+    reasons: List<String> = emptyList(),
+    note: String? = null,
+    action: String? = null,
+    onAction: () -> Unit = {},
+) {
     ContentCard(
         modifier = Modifier.fillMaxWidth().testTagAsId(testTag),
         innerPadding = PaddingValues(Dimens.x2),
         backgroundColor = MaterialTheme.customColors.statusErrorContainer,
     ) {
         Column {
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            // Read as one announcement, and again when the bridge's state changes.
+            Row(
+                modifier = Modifier.semantics(mergeDescendants = true) { liveRegion = LiveRegionMode.Polite },
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
                 Icon(
                     painter = painterResource(R.drawable.ic_hashi_bridge_24),
                     contentDescription = null,
@@ -194,6 +206,14 @@ fun HashiBanner(text: String, testTag: String, note: String? = null, action: Str
                     modifier = Modifier.padding(start = Dimens.x1),
                     text = text,
                     style = MaterialTheme.customTypography.textSBold,
+                    color = MaterialTheme.customColors.fgPrimary,
+                )
+            }
+            reasons.forEach { reason ->
+                Text(
+                    modifier = Modifier.padding(top = Dimens.x1).testTagAsId("HashiPauseReason"),
+                    text = reason,
+                    style = MaterialTheme.customTypography.paragraphS,
                     color = MaterialTheme.customColors.fgPrimary,
                 )
             }
@@ -223,7 +243,9 @@ private fun HashiEthereumAccountCard(state: HashiBridgeUiState, onCopyAddress: (
             )
             val address = state.ethereumAccount
             if (address == null) {
+                val loading = stringResource(R.string.common_loading)
                 Text(
+                    modifier = if (state.noEthereumAccount) Modifier else Modifier.semantics { contentDescription = loading },
                     text = if (state.noEthereumAccount) stringResource(R.string.hashi_bridge_no_ethereum_account) else "…",
                     style = MaterialTheme.customTypography.paragraphS,
                     color = MaterialTheme.customColors.fgPrimary,
@@ -266,6 +288,7 @@ private fun HashiEthereumAccountCard(state: HashiBridgeUiState, onCopyAddress: (
 @Composable
 private fun HashiHistory(items: List<HashiHistoryItem>, onItem: (String) -> Unit) {
     Text(
+        modifier = Modifier.semantics { heading() },
         text = stringResource(R.string.hashi_bridge_history),
         style = MaterialTheme.customTypography.headline3,
         color = MaterialTheme.customColors.fgPrimary,
@@ -304,14 +327,19 @@ private fun HashiHistory(items: List<HashiHistoryItem>, onItem: (String) -> Unit
 }
 
 @Composable
-fun HashiStatusChip(text: String, kind: HashiStatusKind) {
+fun HashiStatusChip(text: String, kind: HashiStatusKind, startPadding: Boolean = true) {
     val color = when (kind) {
         HashiStatusKind.DONE -> MaterialTheme.customColors.statusSuccess
         HashiStatusKind.FAILED -> MaterialTheme.customColors.statusError
         HashiStatusKind.ACTION -> MaterialTheme.customColors.accentPrimary
         HashiStatusKind.PROGRESS -> MaterialTheme.customColors.fgSecondary
     }
-    Text(text = text, style = MaterialTheme.customTypography.textXSBold, color = color, modifier = Modifier.padding(start = Dimens.x1))
+    Text(
+        text = text,
+        style = MaterialTheme.customTypography.textXSBold,
+        color = color,
+        modifier = if (startPadding) Modifier.padding(start = Dimens.x1) else Modifier,
+    )
 }
 
 @Composable
@@ -402,7 +430,8 @@ fun HashiConfirmDialog(confirm: HashiConfirmUi, busy: Boolean, onConfirm: () -> 
 
 @Composable
 private fun ColumnScope.HashiDetail(label: String, value: String, mono: Boolean = false) {
-    Column(modifier = Modifier.fillMaxWidth()) {
+    // Label and value are one item for a screen reader: "Ethereum gas, 0.0021 ETH".
+    Column(modifier = Modifier.fillMaxWidth().semantics(mergeDescendants = true) {}) {
         Text(label, style = MaterialTheme.customTypography.textXSBold, color = MaterialTheme.customColors.fgSecondary)
         Text(
             value,
@@ -434,9 +463,14 @@ fun HashiTransferScreen(
         }
         ContentCard(modifier = Modifier.fillMaxWidth().testTagAsId("HashiTransferHeader"), innerPadding = PaddingValues(Dimens.x3)) {
             Column {
-                Text(state.title, style = MaterialTheme.customTypography.textXSBold, color = MaterialTheme.customColors.fgSecondary)
-                Text(state.amount, style = MaterialTheme.customTypography.headline2, color = MaterialTheme.customColors.fgPrimary)
-                HashiStatusChip(state.status, state.statusKind)
+                // Direction and amount are the page's heading; the status below is announced when it changes.
+                Column(modifier = Modifier.semantics(mergeDescendants = true) { heading() }) {
+                    Text(state.title, style = MaterialTheme.customTypography.textXSBold, color = MaterialTheme.customColors.fgSecondary)
+                    Text(state.amount, style = MaterialTheme.customTypography.headline2, color = MaterialTheme.customColors.fgPrimary)
+                }
+                Box(modifier = Modifier.testTagAsId("HashiTransferStatus").semantics { liveRegion = LiveRegionMode.Polite }) {
+                    HashiStatusChip(state.status, state.statusKind, startPadding = false)
+                }
             }
         }
         ContentCard(modifier = Modifier.fillMaxWidth().testTagAsId("HashiTransferSteps"), innerPadding = PaddingValues(Dimens.x3)) {
@@ -446,7 +480,7 @@ fun HashiTransferScreen(
         }
         state.error?.let {
             Text(
-                modifier = Modifier.testTagAsId("HashiTransferError"),
+                modifier = Modifier.testTagAsId("HashiTransferError").semantics { liveRegion = LiveRegionMode.Polite },
                 text = it,
                 style = MaterialTheme.customTypography.paragraphS,
                 color = MaterialTheme.customColors.statusError,
@@ -497,7 +531,21 @@ private fun HashiStepRow(number: Int, step: HashiStepUi) {
         HashiStepStatus.FAILED -> MaterialTheme.customColors.statusError
         HashiStepStatus.WAITING -> MaterialTheme.customColors.fgTertiary
     }
-    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.testTagAsId("HashiStep$number")) {
+    // The mark, the spinner and the colour say where the step stands; a screen reader gets it in
+    // words: "2. Bridge approval. In progress."
+    val standing = stringResource(
+        when (step.status) {
+            HashiStepStatus.DONE -> R.string.safe_mode_step_state_done
+            HashiStepStatus.ACTIVE -> R.string.safe_mode_step_state_running
+            HashiStepStatus.WAITING -> R.string.safe_mode_step_state_waiting
+            HashiStepStatus.FAILED -> R.string.common_failed
+        }
+    )
+    val spoken = listOfNotNull("$number. ${step.label}", step.detail, standing).joinToString(". ")
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.testTagAsId("HashiStep$number").clearAndSetSemantics { contentDescription = spoken },
+    ) {
         Box(
             modifier = Modifier.size(28.dp).clip(CircleShape).then(Modifier),
             contentAlignment = Alignment.Center,

@@ -72,6 +72,8 @@ enum class HashiStatusKind { PROGRESS, ACTION, DONE, FAILED }
 
 data class HashiBridgeUiState(
     val availability: HashiAvailabilityUi = HashiAvailabilityUi.CHECKING,
+    /** While paused: why, one short line per reason. */
+    val pauseReasons: List<String> = emptyList(),
     val direction: HashiDirection = HashiDirection.SORA_TO_ETHEREUM,
     val assets: List<HashiAssetItem> = emptyList(),
     val pickerOpen: Boolean = false,
@@ -136,6 +138,20 @@ class HashiTexts(private val resources: ResourceManager, private val numbers: Nu
     fun gas(wei: BigInteger): HashiFeeUi = HashiFeeUi(resources.getString(R.string.hashi_bridge_fee_ethereum), eth(wei))
 
     fun claimEstimate(wei: BigInteger): HashiFeeUi = HashiFeeUi(resources.getString(R.string.hashi_bridge_claim_fee), eth(wei))
+
+    /** Why new transfers are off, one short line per reason (a failed read has its own banner). */
+    fun pauseReasons(availability: HashiAvailability): List<String> = availability.blocks.sortedBy { it.ordinal }.mapNotNull { block ->
+        when (block) {
+            HashiBlock.RECOVERY_NOT_COMPLETE -> R.string.hashi_bridge_reason_recovery
+            HashiBlock.GUARDIAN_HALT -> R.string.hashi_bridge_reason_guardian_halt
+            // The bridge this app knows is not the one that is active on SORA.
+            HashiBlock.NOT_INITIALIZED, HashiBlock.CONTRACT_MISMATCH -> R.string.hashi_bridge_reason_not_active
+            HashiBlock.STALLED_REQUESTS -> R.string.hashi_bridge_reason_stalled
+            HashiBlock.SIGNERS_UNVERIFIED -> R.string.hashi_bridge_reason_signers_unverified
+            HashiBlock.SIGNERS_DOWN -> R.string.hashi_bridge_reason_signers_down
+            HashiBlock.READ_FAILED -> null
+        }
+    }.distinct().map(resources::getString)
 
     fun refusal(error: HashiRefusal, decimals: Int): String = when (error.reason) {
         HashiRefusal.Reason.PAUSED -> resources.getString(R.string.hashi_bridge_paused)

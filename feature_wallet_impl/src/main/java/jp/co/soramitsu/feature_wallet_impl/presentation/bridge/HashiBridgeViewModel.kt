@@ -91,7 +91,10 @@ class HashiBridgeViewModel @Inject constructor(
             _state.update { it.copy(availability = HashiAvailabilityUi.CHECKING) }
             val availability = runCatching { service.availability() }.getOrNull()
             _state.update {
-                it.copy(availability = availability?.let(HashiAvailabilityUi::of) ?: HashiAvailabilityUi.UNREADABLE)
+                it.copy(
+                    availability = availability?.let(HashiAvailabilityUi::of) ?: HashiAvailabilityUi.UNREADABLE,
+                    pauseReasons = availability?.let(texts::pauseReasons).orEmpty(),
+                )
             }
         }
     }
