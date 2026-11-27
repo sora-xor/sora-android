@@ -498,6 +498,9 @@ class LaunchSceneTest {
         val root = FrameLayout(activity)
         val key = Button(activity)
         val host = FrameLayout(activity)
+        // The startup screen is a window of its own over the first screen: its scene lies over the key, whose button
+        // elevation would otherwise put it (and its touches) above a host at no height.
+        host.translationZ = STARTUP_HOST_Z
         root.addView(key, FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT))
         root.addView(host, FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT))
         activity.setContentView(root)
@@ -613,7 +616,11 @@ class LaunchSceneTest {
         val first = firstScreen(scenario)
         assumeTrue("a hot phone shows the plain scene", first.mode == TenmonFlight.Mode.TRACED)
         awaitFrames(first.host)
-        if (startupTap) tapInWindow(first, first.host)
+        if (startupTap) {
+            tapInWindow(first, first.host)
+            // In the real app the startup screen's window takes that tap; here it goes on to the key under the host.
+            first.taps.set(0)
+        }
         scenario.onActivity { activity ->
             assertTrue(TenmonFlight.carryOn(activity))
             TenmonFlight.end(first.host)
@@ -687,3 +694,6 @@ class LaunchSceneTest {
 
 /** The longest wait uncovers a screen that never says it is ready 4.5 s after it was carried over: never sooner. */
 private const val EARLIEST_GRACE_UNCOVER_MILLIS = 4_000L
+
+/** Above the key's button elevation (2 dp, 6 dp pressed) at any density. */
+private const val STARTUP_HOST_Z = 1000f
