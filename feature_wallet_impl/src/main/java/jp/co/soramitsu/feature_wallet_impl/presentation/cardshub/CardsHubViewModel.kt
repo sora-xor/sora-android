@@ -62,6 +62,7 @@ import jp.co.soramitsu.common_wallet.presentation.compose.states.ReferralState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.TitledAmountCardState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.mapAssetsToCardState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.mapPoolsData
+import jp.co.soramitsu.common_wallet.presentation.compose.util.AmountFormat
 import jp.co.soramitsu.demeter.domain.DemeterFarmingInteractor
 import jp.co.soramitsu.demeter.domain.DemeterFarmingPool
 import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
@@ -846,7 +847,7 @@ class CardsHubViewModel @Inject constructor(
         return TitledAmountCardState(
             // A sum over pools without a price is no value, not a zero.
             amount = if (pools.first.any { it.printFiat() != null }) {
-                formatFiatAmount(data.second, pools.first.fiatSymbol, numbersFormatter)
+                AmountFormat.fiatAtLeastCent(data.second, pools.first.fiatSymbol, numbersFormatter)
             } else {
                 PortfolioFormat.NO_VALUE
             },

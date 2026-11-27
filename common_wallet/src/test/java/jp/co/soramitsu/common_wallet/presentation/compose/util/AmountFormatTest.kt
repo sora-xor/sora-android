@@ -32,6 +32,15 @@ class AmountFormatTest {
     }
 
     @Test
+    fun `a positive value under a cent reads as less than a cent, a zero stays a zero`() {
+        assertEquals("<$0.01", AmountFormat.fiatAtLeastCent(0.005, "$", formatter))
+        assertEquals("<$0.01", AmountFormat.fiatAtLeastCent(0.000001, "$", formatter))
+        assertEquals("$0.01", AmountFormat.fiatAtLeastCent(0.01, "$", formatter))
+        assertEquals("$0", AmountFormat.fiatAtLeastCent(0.0, "$", formatter))
+        assertEquals("$12.5", AmountFormat.fiatAtLeastCent(12.5, "$", formatter))
+    }
+
+    @Test
     fun `an empty or blank fiat value is left out`() {
         assertEquals("7", AmountFormat.withFiat("7", ""))
         assertEquals("7", AmountFormat.withFiat("7", " "))

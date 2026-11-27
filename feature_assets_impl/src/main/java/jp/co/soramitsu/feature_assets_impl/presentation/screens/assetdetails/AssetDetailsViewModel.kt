@@ -36,7 +36,6 @@ import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.AssetHolder
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.domain.calcFiat
-import jp.co.soramitsu.common.domain.formatFiatAmount
 import jp.co.soramitsu.common.domain.formatFiatChange
 import jp.co.soramitsu.common.domain.formatFiatOrEmpty
 import jp.co.soramitsu.common.domain.iconUri
@@ -49,6 +48,7 @@ import jp.co.soramitsu.common_wallet.data.XorAssetBalance
 import jp.co.soramitsu.common_wallet.domain.BalanceWrapper
 import jp.co.soramitsu.common_wallet.domain.model.fiatSymbol
 import jp.co.soramitsu.common_wallet.presentation.compose.states.mapPoolsData
+import jp.co.soramitsu.common_wallet.presentation.compose.util.AmountFormat
 import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
 import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
 import jp.co.soramitsu.feature_assets_impl.presentation.states.AssetCardState
@@ -113,7 +113,7 @@ class AssetDetailsViewModel @AssistedInject constructor(
                     state = state.copy(
                         state = state.state.copy(
                             poolsState = mapped.first,
-                            poolsSum = fiatAtLeastCent(mapped.second, it.fiatSymbol),
+                            poolsSum = AmountFormat.fiatAtLeastCent(mapped.second, it.fiatSymbol, numbersFormatter),
                         )
                     )
                 }
@@ -330,16 +330,5 @@ class AssetDetailsViewModel @AssistedInject constructor(
      * over a "$0" it is not worth. A positive value under a cent is "<$0.01", never "$0".
      */
     private fun Token.valueOrEmpty(amount: BigDecimal): String =
-        calcFiat(amount)?.let { fiatAtLeastCent(it, fiatSymbol.orEmpty()) }.orEmpty()
-
-    /** A value as the Wallet home prints it: a positive value under a cent is "<$0.01", never "$0". */
-    private fun fiatAtLeastCent(value: Double, symbol: String): String =
-        if (value > 0.0 && value < SMALLEST_FIAT) {
-            "<" + formatFiatAmount(SMALLEST_FIAT, symbol, numbersFormatter)
-        } else {
-            formatFiatAmount(value, symbol, numbersFormatter)
-        }
+        calcFiat(amount)?.let { AmountFormat.fiatAtLeastCent(it, fiatSymbol.orEmpty(), numbersFormatter) }.orEmpty()
 }
-
-/** The smallest value printed as itself, as on the Wallet home. */
-private const val SMALLEST_FIAT = 0.01

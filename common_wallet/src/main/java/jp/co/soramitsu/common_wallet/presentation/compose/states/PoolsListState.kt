@@ -20,11 +20,11 @@ limitations under the License.
 package jp.co.soramitsu.common_wallet.presentation.compose.states
 
 import jp.co.soramitsu.common.domain.AssetHolder
-import jp.co.soramitsu.common.domain.formatFiat
 import jp.co.soramitsu.common.domain.iconUri
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.StringPair
 import jp.co.soramitsu.common_wallet.domain.model.CommonUserPoolData
+import jp.co.soramitsu.common_wallet.presentation.compose.util.AmountFormat
 
 class PoolsListState(
     val pools: List<PoolsListItemState>
@@ -75,7 +75,9 @@ fun mapPoolsData(
                 ),
                 token1Icon = poolData.basic.baseToken.iconUri(),
                 token2Icon = poolData.basic.targetToken.iconUri(),
-                fiat = formatted[i]?.first?.let { poolData.basic.baseToken.formatFiat(it, numbersFormatter) }
+                // A pool worth under a cent reads "<$0.01", never "$0"; one without a price shows no value.
+                fiat = formatted[i]?.first
+                    ?.let { AmountFormat.fiatAtLeastCent(it, poolData.basic.baseToken.fiatSymbol.orEmpty(), numbersFormatter) }
                     .orEmpty(),
                 fiatChange = "",
 //                fiatChange = formatted[i]?.second?.let {

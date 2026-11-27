@@ -22,7 +22,6 @@ package jp.co.soramitsu.feature_polkaswap_impl.presentation.screens.fullpoollist
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
-import jp.co.soramitsu.common.domain.formatFiatAmount
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.StringPair
@@ -31,6 +30,7 @@ import jp.co.soramitsu.common_wallet.domain.model.fiatSymbol
 import jp.co.soramitsu.common_wallet.domain.model.isFilterMatch
 import jp.co.soramitsu.common_wallet.presentation.compose.states.PoolsListState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.mapPoolsData
+import jp.co.soramitsu.common_wallet.presentation.compose.util.AmountFormat
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsInteractor
 import jp.co.soramitsu.feature_polkaswap_api.launcher.PolkaswapRouter
 import jp.co.soramitsu.ui_core.R
@@ -116,11 +116,7 @@ class FullPoolListViewModel @Inject constructor(
         _state.value = _state.value.copy(
             loading = false,
             list = data.first,
-            fiatSum = formatFiatAmount(
-                data.second,
-                filtered.fiatSymbol,
-                numbersFormatter,
-            ),
+            fiatSum = AmountFormat.fiatAtLeastCent(data.second, filtered.fiatSymbol, numbersFormatter),
         )
     }
 
