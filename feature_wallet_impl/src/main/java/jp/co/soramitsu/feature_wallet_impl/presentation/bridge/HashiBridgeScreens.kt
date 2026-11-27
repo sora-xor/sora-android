@@ -347,7 +347,11 @@ fun HashiStatusChip(text: String, kind: HashiStatusKind, startPadding: Boolean =
 @Composable
 private fun HashiPicker(assets: List<HashiAssetItem>, showBalances: Boolean, onSelect: (String) -> Unit, onClose: () -> Unit) {
     Dialog(onDismissRequest = onClose) {
-        ContentCard(modifier = Modifier.fillMaxWidth().testTagAsId("HashiTokenPicker"), innerPadding = PaddingValues(Dimens.x2)) {
+        ContentCard(
+            modifier = Modifier.fillMaxWidth().testTagAsId("HashiTokenPicker"),
+            innerPadding = PaddingValues(Dimens.x2),
+            backgroundColor = MaterialTheme.customColors.bgPage,
+        ) {
             Column {
                 Text(
                     text = stringResource(R.string.common_choose_asset),
@@ -389,7 +393,13 @@ private fun HashiPicker(assets: List<HashiAssetItem>, showBalances: Boolean, onS
 @Composable
 fun HashiConfirmDialog(confirm: HashiConfirmUi, busy: Boolean, onConfirm: () -> Unit, onDismiss: () -> Unit) {
     Dialog(onDismissRequest = onDismiss) {
-        ContentCard(modifier = Modifier.fillMaxWidth().testTagAsId("HashiConfirm"), innerPadding = PaddingValues(Dimens.x3)) {
+        // A solid sheet like the app's WalletSheet: frosted glass let the page behind show through
+        // the amounts, addresses and the gas.
+        ContentCard(
+            modifier = Modifier.fillMaxWidth().testTagAsId("HashiConfirm"),
+            innerPadding = PaddingValues(Dimens.x3),
+            backgroundColor = MaterialTheme.customColors.bgPage,
+        ) {
             // A long address, a second fee line and large text must all stay reachable on a small screen.
             Column(
                 modifier = Modifier.verticalScroll(rememberScrollState()),
