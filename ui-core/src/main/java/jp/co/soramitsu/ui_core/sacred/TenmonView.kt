@@ -25,7 +25,9 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.core.graphics.withScale
 import androidx.core.graphics.withTranslation
 import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.locks.ReentrantLock
 import jp.co.soramitsu.ui_core.lit.LitLightRig
+import kotlin.concurrent.withLock
 import kotlin.math.max
 import kotlin.math.roundToInt
 
@@ -257,7 +259,7 @@ internal class TenmonView(context: Context) : SurfaceView(context), SurfaceHolde
     var onOver: (() -> Unit)? = null
 
     /** Held while a frame is drawn into the surface: once the surface is going, no frame is begun. */
-    private val frameLock = Any()
+    private val frameLock = ReentrantLock()
     private var drawing: Drawing? = null
     private var stopped = false
     private val buildWatch = Runnable { if (drawing?.hasDrawn != true) fail() }
@@ -304,7 +306,7 @@ internal class TenmonView(context: Context) : SurfaceView(context), SurfaceHolde
         removeCallbacks(buildWatch)
         // Nothing may draw into the surface once this returns: the frame being drawn is waited for, and no other begins.
         drawing?.halt()
-        synchronized(frameLock) { drawing = null }
+        frameLock.withLock { drawing = null }
     }
 
     override fun onSizeChanged(width: Int, height: Int, oldWidth: Int, oldHeight: Int) {
@@ -349,7 +351,31 @@ internal class TenmonView(context: Context) : SurfaceView(context), SurfaceHolde
     fun stop(then: Runnable) {
         val worker = drawing
         stop()
-        if (worker == null) MAIN.post(then) else worker.afterExit(then)
+        when {
+            worker == null -> MAIN.post(then)
+            // No frame is being drawn (the worker may be building its shader, or between frames): none will begin, as
+            // the worker sees it is stopped under this same lock, so the surface can go at once without waiting.
+            frameLock.tryLock() -> {
+                frameLock.unlock()
+                MAIN.post(then)
+            }
+            else -> {
+                // A frame is being drawn: the surface goes once it is handed over. One that stalls is not waited for
+                // past [STALL_MILLIS]: the surface then goes as it always did, waiting only for that frame.
+                val once = object : Runnable {
+                    var done = false
+
+                    override fun run() {
+                        if (done) return
+                        done = true
+                        MAIN.removeCallbacks(this)
+                        then.run()
+                    }
+                }
+                worker.afterExit(once)
+                MAIN.postDelayed(once, STALL_MILLIS)
+            }
+        }
     }
 
     private fun fail() {
@@ -494,7 +520,7 @@ internal class TenmonView(context: Context) : SurfaceView(context), SurfaceHolde
             val tiltX = if (tilts) LitLightRig.x else 0f
             val tiltY = if (tilts) LitLightRig.y else 0f
             val uniforms = scene.uniforms(moment.phase, moment.progress, moment.clock, moment.waited, tiltX, tiltY)
-            synchronized(frameLock) {
+            frameLock.withLock {
                 if (!running) return false
                 val canvas = holder.lockHardwareCanvas() ?: return running
                 try {
@@ -521,6 +547,9 @@ internal class TenmonView(context: Context) : SurfaceView(context), SurfaceHolde
 
         /** The main thread, reached also by a view no longer in a window. */
         val MAIN = Handler(Looper.getMainLooper())
+
+        /** The longest a stopped scene's surface stays on screen for a frame that does not finish. */
+        const val STALL_MILLIS = 250L
 
         const val WARM_UP_LIMIT_MILLIS = 1200L
         const val PATIENT_TAG = "SoraTenmonPatient"
