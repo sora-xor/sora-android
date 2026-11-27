@@ -169,7 +169,9 @@ fun HashiBridgeScreen(
         Spacer(modifier = Modifier.size(Dimens.x2))
     }
     if (state.pickerOpen) {
-        HashiPicker(state.assets, onSelectAsset, onClosePicker)
+        // Each row's balance is the SORA one: shown when sending from SORA only. A deposit's token
+        // field reads the Ethereum balance once a token is chosen.
+        HashiPicker(state.assets, showBalances = state.direction == HashiDirection.SORA_TO_ETHEREUM, onSelectAsset, onClosePicker)
     }
     state.confirm?.let { confirm ->
         HashiConfirmDialog(confirm, state.sending, onConfirm, onDismissConfirm)
@@ -343,7 +345,7 @@ fun HashiStatusChip(text: String, kind: HashiStatusKind, startPadding: Boolean =
 }
 
 @Composable
-private fun HashiPicker(assets: List<HashiAssetItem>, onSelect: (String) -> Unit, onClose: () -> Unit) {
+private fun HashiPicker(assets: List<HashiAssetItem>, showBalances: Boolean, onSelect: (String) -> Unit, onClose: () -> Unit) {
     Dialog(onDismissRequest = onClose) {
         ContentCard(modifier = Modifier.fillMaxWidth().testTagAsId("HashiTokenPicker"), innerPadding = PaddingValues(Dimens.x2)) {
             Column {
@@ -373,7 +375,9 @@ private fun HashiPicker(assets: List<HashiAssetItem>, onSelect: (String) -> Unit
                                 Text(item.token.symbol, style = MaterialTheme.customTypography.textMBold, color = MaterialTheme.customColors.fgPrimary)
                                 Text(item.token.name, style = MaterialTheme.customTypography.textXS, color = MaterialTheme.customColors.fgSecondary, maxLines = 1)
                             }
-                            Text(item.balance, style = MaterialTheme.customTypography.textSBold, color = MaterialTheme.customColors.fgPrimary)
+                            if (showBalances) {
+                                Text(item.balance, style = MaterialTheme.customTypography.textSBold, color = MaterialTheme.customColors.fgPrimary)
+                            }
                         }
                     }
                 }

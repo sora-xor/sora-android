@@ -352,6 +352,8 @@ class HashiBridgeViewModel @Inject constructor(
                 throw cancel
             } catch (refusal: HashiRefusal) {
                 clearQuote()
+                // Paused after the sheet was shown: the banner shows why, the notice says it too.
+                if (refusal.reason == HashiRefusal.Reason.PAUSED) refreshAvailability()
                 _state.update { it.copy(notice = texts.refusal(refusal, resolved?.let(::scaleOf) ?: 0)) }
             } catch (error: Exception) {
                 clearQuote()

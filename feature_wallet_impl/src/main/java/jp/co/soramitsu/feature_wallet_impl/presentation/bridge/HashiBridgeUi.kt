@@ -2,6 +2,7 @@ package jp.co.soramitsu.feature_wallet_impl.presentation.bridge
 
 import java.math.BigDecimal
 import java.math.BigInteger
+import java.math.RoundingMode
 import java.text.DateFormat
 import java.util.Date
 import jp.co.soramitsu.androidfoundation.resource.ResourceManager
@@ -135,12 +136,22 @@ class HashiTexts(private val resources: ResourceManager, private val numbers: Nu
 
     fun sorafee(units: BigInteger): HashiFeeUi = HashiFeeUi(resources.getString(R.string.hashi_bridge_fee_sora), amount(units, 18, "XOR"))
 
-    fun gas(wei: BigInteger): HashiFeeUi = HashiFeeUi(resources.getString(R.string.hashi_bridge_fee_ethereum), eth(wei))
+    /**
+     * An Ethereum gas ceiling: rounded UP to the 8 decimals shown, so what a sheet shows is never
+     * less than what the signed transaction can cost (rounding down would show 0.00012345 ETH for
+     * a step that may take 0.000123456789 ETH).
+     */
+    fun ethCeiling(wei: BigInteger): String =
+        "${numbers.formatBigDecimal(HashiAmounts.fromUnits(wei, 18).setScale(8, RoundingMode.CEILING), 8)} ETH"
 
-    fun claimEstimate(wei: BigInteger): HashiFeeUi = HashiFeeUi(resources.getString(R.string.hashi_bridge_claim_fee), eth(wei))
+    fun gas(wei: BigInteger): HashiFeeUi = HashiFeeUi(resources.getString(R.string.hashi_bridge_fee_ethereum), ethCeiling(wei))
+
+    fun claimEstimate(wei: BigInteger): HashiFeeUi = HashiFeeUi(resources.getString(R.string.hashi_bridge_claim_fee), ethCeiling(wei))
 
     /** Why new transfers are off, one short line per reason (a failed read has its own banner). */
-    fun pauseReasons(availability: HashiAvailability): List<String> = availability.blocks.sortedBy { it.ordinal }.mapNotNull { block ->
+    fun pauseReasons(availability: HashiAvailability): List<String> = pauseReasons(availability.blocks)
+
+    fun pauseReasons(blocks: Collection<HashiBlock>): List<String> = blocks.sortedBy { it.ordinal }.mapNotNull { block ->
         when (block) {
             HashiBlock.RECOVERY_NOT_COMPLETE -> R.string.hashi_bridge_reason_recovery
             HashiBlock.GUARDIAN_HALT -> R.string.hashi_bridge_reason_guardian_halt
@@ -154,7 +165,12 @@ class HashiTexts(private val resources: ResourceManager, private val numbers: Nu
     }.distinct().map(resources::getString)
 
     fun refusal(error: HashiRefusal, decimals: Int): String = when (error.reason) {
-        HashiRefusal.Reason.PAUSED -> resources.getString(R.string.hashi_bridge_paused)
+        // The reasons the service found right before signing (it names the blocks in the detail).
+        HashiRefusal.Reason.PAUSED -> (
+            listOf(resources.getString(R.string.hashi_bridge_paused)) + pauseReasons(
+                error.detail.orEmpty().split(",").mapNotNull { name -> HashiBlock.values().firstOrNull { it.name == name.trim() } }
+            )
+        ).joinToString("\n")
         HashiRefusal.Reason.NO_ETHEREUM_ACCOUNT -> resources.getString(R.string.hashi_bridge_no_ethereum_account)
         HashiRefusal.Reason.NOT_BRIDGEABLE -> resources.getString(R.string.hashi_bridge_error_not_bridgeable)
         HashiRefusal.Reason.AMOUNT_INVALID -> resources.getString(R.string.hashi_bridge_error_amount)
