@@ -33,10 +33,8 @@ import androidx.test.platform.app.InstrumentationRegistry
 import jp.co.soramitsu.sora.baselineprofile.SoraJourney.ONBOARDING_ACTIVITY
 import jp.co.soramitsu.sora.baselineprofile.SoraJourney.PACKAGE_NAME
 import jp.co.soramitsu.sora.baselineprofile.SoraJourney.SECTION_LAUNCH_TO_PIN_PAD
-import jp.co.soramitsu.sora.baselineprofile.SoraJourney.SECTION_LAUNCH_TO_PIN_READY
 import jp.co.soramitsu.sora.baselineprofile.SoraJourney.SECTION_PIN_CHECK
 import jp.co.soramitsu.sora.baselineprofile.SoraJourney.SECTION_STARTUP_TO_SAFE_ROUTE
-import jp.co.soramitsu.sora.baselineprofile.SoraJourney.SECTION_UNLOCK_TO_AMOUNTS
 import jp.co.soramitsu.sora.baselineprofile.SoraJourney.SECTION_UNLOCK_TO_HOME
 import jp.co.soramitsu.sora.baselineprofile.SoraJourney.STARTUP_TIMEOUT
 import org.junit.Assert.assertTrue
@@ -46,12 +44,10 @@ import org.junit.runner.RunWith
 
 /**
  * Measures how SORA opens, without compilation and with the shipped baseline profile, and how smoothly its Wallet
- * home moves. An existing wallet is measured from launch to its home: the PIN pad's first frame
- * ([SECTION_LAUNCH_TO_PIN_PAD]), the moment it takes keys once the launch scene has left
- * ([SECTION_LAUNCH_TO_PIN_READY]), the PIN's answer ([SECTION_PIN_CHECK]), the home's first frame after it
- * ([SECTION_UNLOCK_TO_HOME]) and its first frame with read balances ([SECTION_UNLOCK_TO_AMOUNTS]); the time a
- * person takes to type the PIN is left out. `UnlockTimeline` times the same way one trace per start, with the
- * wallet's saved balances put back or taken away before each.
+ * home moves. An existing wallet is measured from launch to its home with the sections the app marks: the PIN pad's
+ * first frame ([SECTION_LAUNCH_TO_PIN_PAD]), the PIN's answer ([SECTION_PIN_CHECK]) and the home's first frame after
+ * it ([SECTION_UNLOCK_TO_HOME]); the time a person takes to type the PIN is left out. Finer marks (the pad taking
+ * keys, the first frame with read balances) come with the measuring build only.
  */
 @RunWith(AndroidJUnit4::class)
 @OptIn(ExperimentalMetricApi::class)
@@ -145,10 +141,8 @@ class StartupBenchmark {
                 StartupTimingMetric(),
                 section(SECTION_STARTUP_TO_SAFE_ROUTE, "timeToSafeRouteDecision"),
                 section(SECTION_LAUNCH_TO_PIN_PAD, "timeToPinPad"),
-                section(SECTION_LAUNCH_TO_PIN_READY, "timeToPinReady"),
                 section(SECTION_PIN_CHECK, "pinCheck"),
                 section(SECTION_UNLOCK_TO_HOME, "unlockToHome"),
-                section(SECTION_UNLOCK_TO_AMOUNTS, "unlockToReadBalances"),
             ),
             compilationMode = compilationMode,
             startupMode = StartupMode.COLD,

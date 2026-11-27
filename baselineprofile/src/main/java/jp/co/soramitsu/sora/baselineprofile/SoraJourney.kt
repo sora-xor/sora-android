@@ -59,8 +59,6 @@ internal object SoraJourney {
     const val SECTION_LAUNCH_TO_PIN_PAD = "soraLaunchToPinPad"
     const val SECTION_PIN_CHECK = "soraPinCheck"
     const val SECTION_UNLOCK_TO_HOME = "soraUnlockToHome"
-    const val SECTION_LAUNCH_TO_PIN_READY = "soraLaunchToPinReady"
-    const val SECTION_UNLOCK_TO_AMOUNTS = "soraUnlockToAmounts"
 
     const val TIMEOUT_MILLIS = 30_000L
 
@@ -72,6 +70,10 @@ internal object SoraJourney {
 
     /** What the row of PIN dots says to a screen reader, up to the count ("PIN digits entered: 2 of 6"). */
     private const val PIN_DIGITS_ENTERED = "PIN digits entered: "
+
+    /** How long Import account has to offer its sources, and how often it is pressed again. */
+    private const val IMPORT_SOURCE_MILLIS = 5_000L
+    private const val IMPORT_TRIES = 3
 
     /** How long a pressed PIN key has to show as entered, and how often a key that was not taken is pressed again. */
     private const val PIN_KEY_SHOWN_MILLIS = 5_000L
@@ -121,8 +123,19 @@ internal object SoraJourney {
         )
     }
 
+    /**
+     * Clears the app's data, only on a benchmark build that was installed as it is: a test-key build put over a debug
+     * build keeps that build's data (and its wallet) and is no longer debuggable, but its install time says it was
+     * put over something. Uninstall first to measure from a fresh install.
+     */
     fun clearAppData(device: UiDevice) {
         requireTestKeyInstall()
+        val info = InstrumentationRegistry.getInstrumentation().context.packageManager.getPackageInfo(PACKAGE_NAME, 0)
+        assertTrue(
+            "Refusing to clear $PACKAGE_NAME: it was installed over an earlier install, whose wallet it may hold " +
+                "(uninstall it first)",
+            info.firstInstallTime == info.lastUpdateTime,
+        )
         device.executeShellCommand("pm clear $PACKAGE_NAME")
     }
 
@@ -170,9 +183,17 @@ internal object SoraJourney {
     }
 
     private fun importTestWallet(device: UiDevice) {
-        waitFor(device, tag("ImportAccount"), "Import account").click()
-        // Import account first asks for the source: Google, Passphrase, Raw seed or a backup file.
-        waitFor(device, By.text("Passphrase"), "The Passphrase source").click()
+        // Import account first asks for the source: Google, Passphrase, Raw seed or a backup file. A tap the launch
+        // scene took while it still covered the welcome is made again.
+        var source: UiObject2? = null
+        var tries = 0
+        while (source == null && tries < IMPORT_TRIES) {
+            tries += 1
+            waitFor(device, tag("ImportAccount"), "Import account").click()
+            source = device.wait(Until.findObject(By.text("Passphrase")), IMPORT_SOURCE_MILLIS)
+        }
+        assertTrue("Import account was pressed $tries times and never offered the Passphrase source", source != null)
+        source!!.click()
         val field = waitFor(device, By.clazz("android.widget.EditText"), "The recovery phrase field")
         field.click()
         field.text = TEST_PHRASE
@@ -263,13 +284,19 @@ internal object SoraJourney {
         device.waitForIdle()
     }
 
-    /** The home lists read balances (saved or live), no longer "Reading balances…". */
+    /**
+     * The home lists read balances (saved or live), no longer "Reading balances…": neither the line nor the rows that
+     * stand for the balances being read, which say so to a screen reader only.
+     */
     fun waitForReadBalances(device: UiDevice) {
         assertTrue(
             "The Wallet home was still reading its balances after $TIMEOUT_MILLIS ms",
-            device.wait(Until.gone(By.textStartsWith("Reading balances")), TIMEOUT_MILLIS) == true,
+            device.wait(Until.gone(By.descStartsWith(READING_BALANCES)), TIMEOUT_MILLIS) == true &&
+                device.wait(Until.gone(By.textStartsWith(READING_BALANCES)), TIMEOUT_MILLIS) == true,
         )
     }
+
+    private const val READING_BALANCES = "Reading balances"
 
     /** The home's own scroller (the Column under the hero). */
     private fun homeScroller(device: UiDevice): UiObject2 =
