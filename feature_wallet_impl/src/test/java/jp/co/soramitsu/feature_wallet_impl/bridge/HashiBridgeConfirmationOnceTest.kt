@@ -46,16 +46,20 @@ class HashiBridgeConfirmationOnceTest {
     private suspend fun readyToClaim(approvedAmount: BigInteger = million): HashiTransferRecord {
         sora.requestHash = requestHash
         val sent = service.sendOutgoing(testAccount, service.quoteOutgoing(testAccount, USDT_ID, BigDecimal.ONE, recipient), "USDT")
+        approve(approvedAmount)
+        sora.status(requestHash, HashiRequestStatus.APPROVALS_READY)
+        return service.refresh(testAccount, sent.id)!!.also { assertEquals(HashiTransferState.READY_TO_CLAIM, it.state) }
+    }
+
+    private fun approve(amount: BigInteger) {
         sora.approved[EthHex.encode(requestHash)] = HashiApprovedRequest(
             currency = HashiCurrency.TokenAddress(USDT_TOKEN),
-            amount = approvedAmount,
+            amount = amount,
             to = EthHex.decode(recipient),
             from = testAccount.substrateAddress.toAccountId().copyOf(20),
             txHash = requestHash,
             signatures = listOf(HashiPeerSignature(ByteArray(32) { 1 }, ByteArray(32) { 2 }, 0)),
         )
-        sora.status(requestHash, HashiRequestStatus.APPROVALS_READY)
-        return service.refresh(testAccount, sent.id)!!.also { assertEquals(HashiTransferState.READY_TO_CLAIM, it.state) }
     }
 
     private suspend fun claim(id: String): HashiTransferRecord = service.sendClaim(testAccount, id, service.quoteClaim(testAccount, id))
@@ -108,11 +112,41 @@ class HashiBridgeConfirmationOnceTest {
         ethereum.failNextSends(HashiRpcErrorException(-32000, "insufficient funds for gas * price + value", null))
         assertEquals(HashiFailure.ETHEREUM_REFUSED, claim(record.id).failure)
         ethereum.sendFailure = null
-        // Another payment of this account is pending at 5 now: the quote and the first read under
-        // the signing lock see 6; a lagging endpoint would answer 5 to any later read.
-        ethereum.pendingNonceAnswers += listOf(BigInteger.valueOf(6), BigInteger.valueOf(6))
+        // Another payment of this account is pending at 5 now and the quote sees 6; the endpoint
+        // that answers under the signing lock lags and still counts 5.
+        ethereum.pendingNonceAnswers += BigInteger.valueOf(6)
         val retried = claim(record.id)
         assertEquals(listOf("5", "6"), retried.ethSteps.filter { it.intent == HashiEthIntent.CLAIM }.map { it.nonce })
+    }
+
+    @Test
+    fun `a new nonce is never below the count of mined transactions, whatever the pending count says`() = runBlocking {
+        val record = readyToClaim()
+        ethereum.failNextSends(HashiRpcErrorException(-32000, "insufficient funds for gas * price + value", null))
+        claim(record.id)
+        ethereum.sendFailure = null
+        // Three payments of another wallet with this phrase are mined; a lagging node still says 5 pending.
+        ethereum.latestNonce = BigInteger.valueOf(8)
+        val retried = claim(record.id)
+        assertEquals(listOf("5", "8"), retried.ethSteps.filter { it.intent == HashiEthIntent.CLAIM }.map { it.nonce })
+    }
+
+    @Test
+    fun `a claim being signed when another page finds it paid is never saved or sent`() = runBlocking {
+        val record = readyToClaim()
+        val quote = service.quoteClaim(testAccount, record.id)
+        // Right before the key is handed out, somebody's claim is mined and another page sees it.
+        accounts.beforeKey = {
+            accounts.beforeKey = null
+            ethereum.used(HashiBridgeContract.bridge, requestHash)
+            val seen = runCatching { service.quoteClaim(testAccount, record.id) }.exceptionOrNull() as? HashiRefusal
+            assertEquals(HashiRefusal.Reason.ALREADY_RECEIVED, seen?.reason)
+        }
+        service.sendClaim(testAccount, record.id, quote)
+        val after = stored(record.id)
+        assertEquals(HashiTransferState.DONE, after.state)
+        assertEquals(null, after.step(HashiEthIntent.CLAIM))
+        assertTrue(ethereum.sent.isEmpty())
     }
 
     @Test
@@ -187,6 +221,22 @@ class HashiBridgeConfirmationOnceTest {
         assertEquals(HashiRefusal.Reason.AMOUNT_MISMATCH, refusal { service.quoteClaim(testAccount, record.id) })
         assertTrue(ethereum.sent.isEmpty())
         assertEquals(0, accounts.derivations)
+        assertEquals("1000000/1500000", stored(record.id).approvedAmountMismatch)
+        // Once the approval is the confirmed amount the claim goes out and the old note is gone.
+        approve(million)
+        val claimed = claim(record.id)
+        assertEquals(HashiTransferState.CLAIM_SUBMITTED, claimed.state)
+        assertEquals(null, claimed.approvedAmountMismatch)
+    }
+
+    @Test
+    fun `a refusal because the bridge status could not be read says so`() {
+        val texts = HashiTexts(mockk<ResourceManager> { every { getString(any()) } answers { "s${firstArg<Int>()}" } }, NumbersFormatter())
+        val paused = "s${jp.co.soramitsu.common.R.string.hashi_bridge_paused}"
+        val unread = "s${jp.co.soramitsu.common.R.string.hashi_bridge_error_read}"
+        val halt = "s${jp.co.soramitsu.common.R.string.hashi_bridge_reason_guardian_halt}"
+        assertEquals("$paused\n$unread", texts.refusal(HashiRefusal(HashiRefusal.Reason.PAUSED, "READ_FAILED"), 0))
+        assertEquals("$paused\n$halt", texts.refusal(HashiRefusal(HashiRefusal.Reason.PAUSED, "GUARDIAN_HALT"), 0))
     }
 
     @Test

@@ -183,6 +183,26 @@ class HashiRpcClientsTest {
         // Only then does the reverted receipt count.
         b = { null }
         assertEquals(EthTransactionLookup.Mined(0), client.lookupEverywhere(hash))
+        // The other endpoint has it mined but no receipt to show: the same mined transaction.
+        b = { method -> if (method == "eth_getTransactionByHash") buildJsonObject { put("hash", EthHex.encode(hash)); put("blockNumber", "0x10") } else null }
+        assertEquals(EthTransactionLookup.Mined(0), client.lookupEverywhere(hash))
+        // The other endpoint does not answer: a reverted receipt alone is not enough to sign again.
+        b = { IOException("timeout") }
+        assertTrue(runCatching { client.lookupEverywhere(hash) }.exceptionOrNull() is HashiRpcUnavailableException)
+    }
+
+    @Test
+    fun `a transaction mined where no receipt can be read yet counts as live`() = runBlocking {
+        val hash = ByteArray(32) { 6 }
+        val transport = Scripted { endpoint, method, _ ->
+            when {
+                method == "eth_chainId" -> "0x1"
+                endpoint.contains("a.") -> null
+                method == "eth_getTransactionByHash" -> buildJsonObject { put("hash", EthHex.encode(hash)); put("blockNumber", "0x12") }
+                else -> null
+            }
+        }
+        assertEquals(EthTransactionLookup.Pending, EthereumRpcClient(transport, endpoints).lookupEverywhere(hash))
     }
 
     @Test
