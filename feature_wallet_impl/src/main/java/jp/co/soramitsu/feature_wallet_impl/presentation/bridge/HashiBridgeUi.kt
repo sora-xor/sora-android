@@ -166,11 +166,12 @@ class HashiTexts(private val resources: ResourceManager, private val numbers: Nu
 
     fun refusal(error: HashiRefusal, decimals: Int): String = when (error.reason) {
         // The reasons the service found right before signing (it names the blocks in the detail).
-        HashiRefusal.Reason.PAUSED -> (
-            listOf(resources.getString(R.string.hashi_bridge_paused)) + pauseReasons(
-                error.detail.orEmpty().split(",").mapNotNull { name -> HashiBlock.values().firstOrNull { it.name == name.trim() } }
-            )
-        ).joinToString("\n")
+        HashiRefusal.Reason.PAUSED -> {
+            val blocks = error.detail.orEmpty().split(",").mapNotNull { name -> HashiBlock.values().firstOrNull { it.name == name.trim() } }
+            // A status that could not be read has no reason line of its own: it says so.
+            val unread = if (HashiBlock.READ_FAILED in blocks) listOf(resources.getString(R.string.hashi_bridge_error_read)) else emptyList()
+            (listOf(resources.getString(R.string.hashi_bridge_paused)) + pauseReasons(blocks) + unread).joinToString("\n")
+        }
         HashiRefusal.Reason.NO_ETHEREUM_ACCOUNT -> resources.getString(R.string.hashi_bridge_no_ethereum_account)
         HashiRefusal.Reason.NOT_BRIDGEABLE -> resources.getString(R.string.hashi_bridge_error_not_bridgeable)
         HashiRefusal.Reason.AMOUNT_INVALID -> resources.getString(R.string.hashi_bridge_error_amount)
