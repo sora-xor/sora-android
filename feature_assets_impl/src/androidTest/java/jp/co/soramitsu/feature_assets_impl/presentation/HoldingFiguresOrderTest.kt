@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalResources
@@ -273,7 +274,7 @@ class HoldingFiguresOrderTest {
         // Turkish "Dondurulmuş" in the 18 sp headline, twice its size, 320 dp wide: the amount goes under the label.
         narrow(fontScale = 2f) {
             val context = LocalContext.current
-            val turkish = android.content.res.Configuration(context.resources.configuration).apply {
+            val turkish = android.content.res.Configuration(LocalConfiguration.current).apply {
                 setLocale(java.util.Locale.forLanguageTag("tr"))
             }
             val inTurkish = context.createConfigurationContext(turkish)
