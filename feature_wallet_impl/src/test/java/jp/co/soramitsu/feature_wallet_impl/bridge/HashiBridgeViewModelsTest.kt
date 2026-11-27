@@ -31,6 +31,7 @@ import jp.co.soramitsu.feature_wallet_impl.presentation.bridge.HashiBridgeViewMo
 import jp.co.soramitsu.feature_wallet_impl.presentation.bridge.HashiTransferAction
 import jp.co.soramitsu.feature_wallet_impl.presentation.bridge.HashiTransferViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -70,10 +71,17 @@ class HashiBridgeViewModelsTest {
         )
     }
 
-    private fun bridgeViewModel(assetId: String? = USDT_ID) = HashiBridgeViewModel(
+    private fun bridgeViewModel(assetId: String? = USDT_ID, service: HashiBridgeService = this.service) = HashiBridgeViewModel(
         SavedStateHandle(if (assetId != null) mapOf(HashiBridgeViewModel.ARG_ASSET_ID to assetId) else emptyMap()),
         service, assets, walletRouter, mainRouter, mockk<BasicClipboardManager>(relaxed = true), resources, NumbersFormatter(),
     )
+
+    /**
+     * A service whose background work (the submission that goes on after the screen hands it over)
+     * runs on the test's clock, so advanceUntilIdle() waits for it instead of racing a real thread.
+     */
+    private fun TestScope.serviceOnTestClock() =
+        HashiBridgeService(sora, ethereum, accounts, store, pollIntervalMillis = 0, backgroundScope = backgroundScope, backgroundMonitoring = false)
 
     @Test
     fun `today's paused bridge shows the banner and keeps Continue off`() = runTest {
@@ -108,7 +116,7 @@ class HashiBridgeViewModelsTest {
 
     @Test
     fun `Continue quotes, Confirm asks for the PIN and only the PIN result sends`() = runTest {
-        val viewModel = bridgeViewModel()
+        val viewModel = bridgeViewModel(service = serviceOnTestClock())
         advanceUntilIdle()
         assertEquals(HashiAvailabilityUi.OPEN, viewModel.state.value.availability)
         // The amount field takes USDT's 6 Ethereum decimals.
