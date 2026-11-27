@@ -23,7 +23,6 @@ import android.content.ActivityNotFoundException
 import android.content.ClipData
 import android.content.Intent
 import android.graphics.Color
-import android.graphics.drawable.ColorDrawable
 import android.net.Uri
 import android.os.Build
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
@@ -40,6 +39,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.res.stringResource
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
+import androidx.core.graphics.drawable.toDrawable
 import androidx.core.net.toUri
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.Lifecycle
@@ -185,7 +185,7 @@ class WalletStartupActivity : AppCompatActivity() {
      */
     private fun showLaunchPage(launchPage: Boolean) {
         if (launchPage) {
-            window.setBackgroundDrawable(ColorDrawable(ContextCompat.getColor(this, R.color.launch_page)))
+            window.setBackgroundDrawable(ContextCompat.getColor(this, R.color.launch_page).toDrawable())
             return
         }
         val themed = obtainStyledAttributes(intArrayOf(android.R.attr.windowBackground))

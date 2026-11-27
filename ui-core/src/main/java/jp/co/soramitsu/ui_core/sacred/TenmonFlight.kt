@@ -10,6 +10,7 @@ import android.view.ViewGroup
 import android.view.Window
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import java.lang.ref.WeakReference
 import jp.co.soramitsu.ui_core.lit.LitLightRig
 
 /**
@@ -219,7 +220,7 @@ object TenmonFlight {
         val content = decor.findViewById<View>(android.R.id.content)
         val made = Carry(
             stage, bars, bars.isAppearanceLightStatusBars, bars.isAppearanceLightNavigationBars,
-            content, content?.importantForAccessibility ?: View.IMPORTANT_FOR_ACCESSIBILITY_AUTO,
+            content?.let { WeakReference(it) }, content?.importantForAccessibility ?: View.IMPORTANT_FOR_ACCESSIBILITY_AUTO,
             (content as? ViewGroup)?.descendantFocusability ?: ViewGroup.FOCUS_BEFORE_DESCENDANTS,
         )
         content?.importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS
@@ -292,8 +293,9 @@ object TenmonFlight {
     private fun letThrough(carry: Carry) {
         carry.ready = true
         carry.stage.isClickable = false
-        carry.content?.importantForAccessibility = carry.contentAccessibility
-        (carry.content as? ViewGroup)?.descendantFocusability = carry.contentFocusability
+        val content = carry.content?.get()
+        content?.importantForAccessibility = carry.contentAccessibility
+        (content as? ViewGroup)?.descendantFocusability = carry.contentFocusability
         carry.content = null
     }
 
@@ -396,8 +398,11 @@ object TenmonFlight {
         val bars: WindowInsetsControllerCompat,
         val lightStatusBar: Boolean,
         val lightNavigationBar: Boolean,
-        /** The screen's own views, kept from a screen reader and a keyboard while covered; null once given back. */
-        var content: View?,
+        /**
+         * The screen's own views, kept from a screen reader and a keyboard while covered; null once given back. Held
+         * weakly: the screen's window holds them, and this object outlives no window.
+         */
+        var content: WeakReference<View>?,
         val contentAccessibility: Int,
         val contentFocusability: Int,
     ) {
