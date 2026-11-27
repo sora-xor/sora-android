@@ -214,22 +214,30 @@ object TenmonFlight {
         decor.addView(stage, ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
         // Dark icons in the bars over the light page, whatever the theme under it.
         val bars = WindowCompat.getInsetsController(window, decor)
-        // Nor does a screen reader reach what is covered: the screen's own views are kept from it until it is let through.
+        // Nor does a screen reader, or a keyboard, reach what is covered: the screen's own views are kept from them
+        // until it is let through.
         val content = decor.findViewById<View>(android.R.id.content)
         val made = Carry(
             stage, bars, bars.isAppearanceLightStatusBars, bars.isAppearanceLightNavigationBars,
             content, content?.importantForAccessibility ?: View.IMPORTANT_FOR_ACCESSIBILITY_AUTO,
+            (content as? ViewGroup)?.descendantFocusability ?: ViewGroup.FOCUS_BEFORE_DESCENDANTS,
         )
         content?.importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS
+        (content as? ViewGroup)?.let { screen ->
+            // Blocked first, so the focus given up is not handed straight back to a view of the covered screen.
+            screen.descendantFocusability = ViewGroup.FOCUS_BLOCK_DESCENDANTS
+            screen.findFocus()?.clearFocus()
+        }
         bars.isAppearanceLightStatusBars = true
         bars.isAppearanceLightNavigationBars = true
         // A scene that would not draw over this screen has left the still picture in its place, which keeps the screen
-        // covered until it is ready. One that stops while the mark flies on leaves at once: the screen is ready under it.
+        // covered until it is ready. One that stops while the mark flies on to a ready screen leaves at once; one that
+        // stops on a way out the longest wait began keeps its last picture until the screen is ready (or the end).
         stage.onGaveUp = {
             val current = carry
             if (current != null && current.stage === stage && current.left) {
                 stage.cover.showFrame(ARRIVED, current.landing)
-                finish(FADE_MILLIS)
+                if (current.ready) finish(FADE_MILLIS)
             }
         }
         stage.addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
@@ -252,8 +260,18 @@ object TenmonFlight {
     fun firstScreenShown(landing: Landing?) {
         val carry = carry ?: return
         if (carry.left) {
+            // On its way out already: the longest wait for this word was over, or the screen is laid out again. The
+            // screen is there, and its touches are its own from now.
+            letThrough(carry)
+            val scene = carry.stage.scene
+            if (scene == null || carry.skipped) {
+                // Its surface gave up on the way out, or the person asked not to wait: what it ends on fades now.
+                carry.landing = landing
+                carry.stage.cover.showFrame(ARRIVED, landing)
+                finish(FADE_MILLIS)
+                return
+            }
             // Laid out again before the mark has left: it flies to where the screen shows it now.
-            val scene = carry.stage.scene ?: return
             if (timeline.at(SystemClock.elapsedRealtimeNanos()).phase != TenmonScene.Phase.OUTRO) aim(carry, scene, landing)
             return
         }
@@ -270,11 +288,12 @@ object TenmonFlight {
         main.postDelayed(carry.leaves, SETTLE_MILLIS)
     }
 
-    /** Touches, and a screen reader, reach the first screen from here. */
+    /** Touches, a screen reader and a keyboard reach the first screen from here. */
     private fun letThrough(carry: Carry) {
         carry.ready = true
         carry.stage.isClickable = false
         carry.content?.importantForAccessibility = carry.contentAccessibility
+        (carry.content as? ViewGroup)?.descendantFocusability = carry.contentFocusability
         carry.content = null
     }
 
@@ -295,9 +314,10 @@ object TenmonFlight {
             finish(FADE_MILLIS)
             return
         }
-        if (carry.skipped) {
-            // Asked not to wait: the scene does not play its way out. The mark stands where the screen shows its
-            // own, and fades over it.
+        if (carry.skipped && carry.ready) {
+            // Asked not to wait: the scene does not play its way out over the ready screen. The mark stands where the
+            // screen shows its own, and fades over it. (A screen that has not said it is ready is not uncovered any
+            // sooner for the tap: the longest wait plays the way out as it would.)
             carry.stage.cover.showFrame(ARRIVED, carry.landing)
             finish(FADE_MILLIS)
             return
@@ -315,7 +335,8 @@ object TenmonFlight {
             return
         }
         carry.left = true
-        letThrough(carry)
+        // Touches reach a screen that said it is ready (they already do); one the longest wait gave up on stays
+        // covered, its touches the scene's, until it says so or the way out is over.
         aim(carry, scene, carry.landing)
         scene.onOver = { finish(FADE_MILLIS) }
         timeline.leave(SystemClock.elapsedRealtimeNanos())
@@ -329,10 +350,17 @@ object TenmonFlight {
     private fun skip() {
         val carry = carry ?: return
         carry.skipped = true
+        // The surface is taken away once this touch has gone on to the screen: never in the touch's way, where
+        // removing it would wait for the frame being drawn.
         when {
-            carry.left -> finish(FADE_MILLIS)
+            carry.left && carry.ready -> main.post { if (this.carry === carry) finish(FADE_MILLIS) }
+            // On a way out the longest wait began, over a screen not ready yet: the way out is short and keeps it covered.
+            carry.left -> Unit
             // The screen is ready and takes this touch; the scene does not settle or play its way out first.
-            carry.ready -> leave()
+            carry.ready -> {
+                main.removeCallbacks(carry.leaves)
+                main.post(carry.leaves)
+            }
         }
     }
 
@@ -368,12 +396,16 @@ object TenmonFlight {
         val bars: WindowInsetsControllerCompat,
         val lightStatusBar: Boolean,
         val lightNavigationBar: Boolean,
-        /** The screen's own views, kept from a screen reader while covered; null once given back. */
+        /** The screen's own views, kept from a screen reader and a keyboard while covered; null once given back. */
         var content: View?,
         val contentAccessibility: Int,
+        val contentFocusability: Int,
     ) {
         var landing: Landing? = null
-        /** The first screen has said it is laid out: its touches are its own. */
+        /**
+         * The first screen has said it is laid out ([firstScreenShown]): its touches are its own. Only that word sets
+         * it (or the end of the scene): the way out that the longest wait starts does not.
+         */
         var ready = false
         var left = false
         var skipped = false

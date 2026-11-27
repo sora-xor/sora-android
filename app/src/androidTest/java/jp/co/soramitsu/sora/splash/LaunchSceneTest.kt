@@ -8,6 +8,7 @@ import android.os.Handler
 import android.os.Looper
 import android.os.ParcelFileDescriptor
 import android.os.SystemClock
+import android.view.InputDevice
 import android.view.MotionEvent
 import android.view.PixelCopy
 import android.view.SurfaceView
@@ -176,8 +177,21 @@ class LaunchSceneTest {
                 TenmonFlight.firstScreenShown(null)
             }
             awaitFlyingOn(first)
-            scenario.onActivity { assertEquals("the scene still covers the screen", first.uncovered + 1, first.decor.childCount) }
-            tap(first.key)
+            // The DOWN is sent in the same turn of the main thread in which the mark is seen flying on over the screen
+            // with its surface: no fallback, no fade in between.
+            val down = SystemClock.uptimeMillis()
+            instrumentation.runOnMainSync {
+                assertEquals("the scene still covers the screen", first.uncovered + 1, first.decor.childCount)
+                assertTrue("the mark is flying on", TenmonFlight.isLeaving)
+                assertNotNull("its surface is there", find(first.decor.getChildAt(first.decor.childCount - 1)))
+                touchKey(first, MotionEvent.ACTION_DOWN, down)
+                assertNotNull(
+                    "the surface is not taken away in the touch's way",
+                    find(first.decor.getChildAt(first.decor.childCount - 1)),
+                )
+            }
+            instrumentation.runOnMainSync { touchKey(first, MotionEvent.ACTION_UP, down) }
+            instrumentation.waitForIdleSync()
             assertEquals("the first tap goes through the scene as it gives way", 1, first.taps.get())
             // That tap also said the person will not wait: the scene is over, and what it ends on fades.
             scenario.onActivity {
@@ -245,13 +259,17 @@ class LaunchSceneTest {
                 TenmonFlight.end(first.host)
             }
             instrumentation.waitForIdleSync()
-            scenario.onActivity {
+            // At once, in the same turn of the main thread as the word that the screen is ready, before the scene has
+            // settled or gone: the screen is there, and the touch is its own.
+            val down = SystemClock.uptimeMillis()
+            instrumentation.runOnMainSync {
                 TenmonFlight.firstScreenShown(null)
                 assertEquals("the picture still stands over the ready screen", first.uncovered + 1, first.decor.childCount)
+                touchKey(first, MotionEvent.ACTION_DOWN, down)
             }
-            // At once, before the scene has settled or gone: the screen is there, and the touch is its own.
-            tap(first.key)
-            assertEquals("the first tap on the ready screen is never lost", 1, first.taps.get())
+            instrumentation.runOnMainSync { touchKey(first, MotionEvent.ACTION_UP, down) }
+            instrumentation.waitForIdleSync()
+            assertEquals("the first tap on the ready screen is never lost, and counted once", 1, first.taps.get())
             awaitUncovered(first)
         }
     }
@@ -268,13 +286,19 @@ class LaunchSceneTest {
                 TenmonFlight.end(first.host)
             }
             instrumentation.waitForIdleSync()
-            scenario.onActivity {
+            val down = SystemClock.uptimeMillis()
+            instrumentation.runOnMainSync {
                 TenmonFlight.firstScreenShown(null)
                 val top = first.decor.getChildAt(first.decor.childCount - 1)
                 assertNotNull("the traced scene still covers the ready screen", find(top))
+                touchKey(first, MotionEvent.ACTION_DOWN, down)
+                // The surface goes after the touch has reached the key, never in its way (removing it waits for the
+                // frame being drawn).
+                assertNotNull("the surface is not taken away in the touch's way", find(top))
             }
-            tap(first.key)
-            assertEquals("the first tap on the ready screen is never lost", 1, first.taps.get())
+            instrumentation.runOnMainSync { touchKey(first, MotionEvent.ACTION_UP, down) }
+            instrumentation.waitForIdleSync()
+            assertEquals("the first tap on the ready screen is never lost, and counted once", 1, first.taps.get())
             awaitUncovered(first)
         }
     }
@@ -304,6 +328,74 @@ class LaunchSceneTest {
                 }
             }
             awaitUncovered(first)
+        }
+    }
+
+    @Test
+    fun aCoveredScreenTakesNoKeyboardFocusUntilItIsReady() {
+        ActivityScenario.launch(ComponentActivity::class.java).use { scenario ->
+            lateinit var first: FirstScreen
+            var focusability = -1
+            scenario.onActivity {
+                first = makeFirstScreen(it, motion = false)
+                focusability = it.findViewById<ViewGroup>(android.R.id.content).descendantFocusability
+                first.key.isFocusableInTouchMode = true
+                assertTrue("the key takes focus before anything covers it", first.key.requestFocus())
+            }
+            scenario.onActivity { activity ->
+                assertTrue(TenmonFlight.carryOn(activity))
+                TenmonFlight.end(first.host)
+                val content = activity.findViewById<ViewGroup>(android.R.id.content)
+                assertFalse("the covered key lost its focus", first.key.isFocused)
+                assertEquals(ViewGroup.FOCUS_BLOCK_DESCENDANTS, content.descendantFocusability)
+                assertFalse("a keyboard cannot reach the covered key", first.key.requestFocus())
+                TenmonFlight.firstScreenShown(null)
+                assertEquals("given back as it was", focusability, content.descendantFocusability)
+                assertTrue("the ready screen takes focus again", first.key.requestFocus())
+            }
+            awaitUncovered(first)
+        }
+    }
+
+    @Test
+    fun aStartupTapNeverUncoversAScreenThatHasNotSaidItIsReady() {
+        assumeTrue("the traced scene needs Android 13", Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+        ActivityScenario.launch(ComponentActivity::class.java).use { scenario ->
+            val first = firstScreen(scenario)
+            assumeTrue("a hot phone shows the plain scene", first.mode == TenmonFlight.Mode.TRACED)
+            awaitFrames(first.host)
+            // While the wallet is checked: a finger on the rings. The first screen then never says it is ready.
+            tap(first.host)
+            scenario.onActivity { activity ->
+                assertTrue(TenmonFlight.carryOn(activity))
+                TenmonFlight.end(first.host)
+            }
+            // The longest wait for that word is over: the scene plays its way out as it would without the tap, and
+            // keeps the screen covered and its touches until that way out is over.
+            val deadline = SystemClock.uptimeMillis() + 20_000
+            var leaving = false
+            while (!leaving && SystemClock.uptimeMillis() < deadline) {
+                SystemClock.sleep(16)
+                instrumentation.runOnMainSync {
+                    leaving = TenmonFlight.isLeaving
+                    if (leaving) {
+                        assertEquals("still covered", first.uncovered + 1, first.decor.childCount)
+                        val top = first.decor.getChildAt(first.decor.childCount - 1)
+                        assertTrue("a screen that has not said it is ready takes no touch", top.isClickable)
+                        assertNotNull("the scene plays its way out, not cut short by the startup tap", find(top))
+                    } else {
+                        assertEquals("covered until the longest wait is over", first.uncovered + 1, first.decor.childCount)
+                    }
+                }
+            }
+            assertTrue("the longest wait ends in the way out", leaving)
+            tap(first.key)
+            assertEquals("a key under the way out is not pressed", 0, first.taps.get())
+            // Now the screen says it is ready: the person asked not to wait, so what the scene ends on fades at once.
+            scenario.onActivity { TenmonFlight.firstScreenShown(null) }
+            awaitUncovered(first)
+            tap(first.key)
+            assertEquals(1, first.taps.get())
         }
     }
 
@@ -471,6 +563,21 @@ class LaunchSceneTest {
             SystemClock.sleep(200)
         }
         error("PixelCopy did not return a frame (status $status)")
+    }
+
+    /** A touch on [first]'s key sent through its window's views, on the main thread, in the caller's turn. */
+    private fun touchKey(first: FirstScreen, action: Int, downTime: Long) {
+        val place = IntArray(2)
+        first.key.getLocationInWindow(place)
+        val x = place[0] + first.key.width / 2f
+        val y = place[1] + first.key.height * 0.75f
+        val event = MotionEvent.obtain(downTime, SystemClock.uptimeMillis(), action, x, y, 0)
+        event.source = InputDevice.SOURCE_TOUCHSCREEN
+        try {
+            first.decor.dispatchTouchEvent(event)
+        } finally {
+            event.recycle()
+        }
     }
 
     private fun tap(view: View) {
