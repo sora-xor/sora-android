@@ -22,6 +22,7 @@ package jp.co.soramitsu.sora.baselineprofile
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.os.SystemClock
+import android.view.accessibility.AccessibilityNodeInfo
 import java.security.MessageDigest
 import java.util.regex.Pattern
 import androidx.test.platform.app.InstrumentationRegistry
@@ -274,14 +275,13 @@ internal object SoraJourney {
      * show as entered before the next is pressed; one that does not fails the run rather than being pressed again,
      * which could enter it twice and spend a PIN attempt. (The keys are seen only once the launch scene has let the
      * pad through: while it covers the pad, its views are kept from UI Automator as from a screen reader.) Keys and
-     * dots are looked for in the benchmark build's windows only, and no key is pressed unless it is the app in front.
+     * dots are looked for in the benchmark build's windows only; a key is pressed by its click action ([pressKey]).
      */
     fun typePin(device: UiDevice) {
         TEST_PIN.forEachIndexed { index, digit ->
             val entered = index + 1
-            val key = waitFor(device, pinKey(digit), "PIN key $digit")
-            requireInFront(device, "PIN key $digit")
-            key.click()
+            waitFor(device, pinKey(digit), "PIN key $digit")
+            pressKey(device, digit)
             if (entered < TEST_PIN.length) {
                 assertTrue(
                     "PIN key $digit did not show as entered; not pressed again",
@@ -289,6 +289,27 @@ internal object SoraJourney {
                 )
             }
         }
+    }
+
+    /**
+     * Presses [digit]'s key through its own accessibility node in the benchmark build's focused window (its click
+     * action, not a touch at its place on screen): the press reaches that key or nothing, whatever window comes up over
+     * it. Fails, pressing nothing, when the benchmark build is not the focused window or the key is not in it.
+     */
+    private fun pressKey(device: UiDevice, digit: Char) {
+        requireInFront(device, "PIN key $digit")
+        val root = InstrumentationRegistry.getInstrumentation().uiAutomation.rootInActiveWindow
+        assertTrue("The focused window is not $PACKAGE_NAME's; PIN key $digit not pressed", root?.packageName == PACKAGE_NAME)
+        val id = "$TAG_PACKAGE:id/$digit"
+        val queue = ArrayDeque<AccessibilityNodeInfo>().apply { add(root!!) }
+        var key: AccessibilityNodeInfo? = null
+        while (key == null && queue.isNotEmpty()) {
+            val node = queue.removeFirst()
+            if (node.viewIdResourceName == id && node.isVisibleToUser) key = node
+            for (i in 0 until node.childCount) node.getChild(i)?.let(queue::add)
+        }
+        assertTrue("PIN key $digit is not in $PACKAGE_NAME's focused window; not pressed", key != null)
+        assertTrue("PIN key $digit did not take the press", key!!.performAction(AccessibilityNodeInfo.ACTION_CLICK))
     }
 
     /**
@@ -309,7 +330,10 @@ internal object SoraJourney {
      */
     fun dismissLaunchFlight(device: UiDevice) {
         requireInFront(device, "the tap on the launch scene")
-        device.click(device.displayWidth / 2, device.displayHeight / 12)
+        // Inside the benchmark build's own window (all of the screen, or its part of a split screen).
+        val window = device.findObject(inApp(By.depth(0)))?.visibleBounds
+            ?: throw AssertionError("$PACKAGE_NAME shows no window to tap")
+        device.click(window.centerX(), window.top + window.height() / 12)
         SystemClock.sleep(400)
     }
 
