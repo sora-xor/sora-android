@@ -63,12 +63,15 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.hideFromAccessibility
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.min
+import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import java.math.BigDecimal
 import jp.co.soramitsu.common.R
@@ -89,6 +92,7 @@ import jp.co.soramitsu.feature_wallet_impl.domain.portfolio.isTestnet
 import jp.co.soramitsu.feature_wallet_impl.presentation.portfolio.motion.TiltState
 import jp.co.soramitsu.feature_wallet_impl.presentation.portfolio.motion.tiltLayer
 import jp.co.soramitsu.ui_core.component.button.properties.Size as ButtonSize
+import jp.co.soramitsu.ui_core.component.text.FittedText
 import jp.co.soramitsu.ui_core.lit.LitCutGlassPiece
 import jp.co.soramitsu.ui_core.lit.litWell
 import jp.co.soramitsu.ui_core.theme.customTypography
@@ -411,11 +415,11 @@ private fun Orbit(
                             }
                         }
                         Spacer(Modifier.height(2.dp))
-                        Text(
-                            format.amount(amount),
-                            style = NeonType.amountS,
-                            color = n.textPrimary,
-                            maxLines = 1,
+                        // Set smaller where the pill is narrow, then on a second line: never cut.
+                        FittedText(
+                            AnnotatedString(format.amount(amount)),
+                            NeonType.amountS.copy(color = n.textPrimary, textAlign = TextAlign.Center),
+                            maxLines = Int.MAX_VALUE,
                             modifier = Modifier
                                 .clip(RoundedCornerShape(9.dp))
                                 .background(if (dark) Color.Black.copy(alpha = 0.35f) else Color.White.copy(alpha = 0.85f))
@@ -493,11 +497,14 @@ private fun TokenHeader(model: PortfolioModel, locations: TokenLocations, format
             }
         }
         Spacer(Modifier.height(4.dp))
-        Text(
-            format.amount(amount, token.symbol),
-            style = NeonType.displayHero.copy(fontSize = 28.sp, lineHeight = 36.sp),
-            color = n.textPrimary,
-            maxLines = 1,
+        // The amount held is the page's figure: set smaller on a narrow screen or under larger text (never as small as
+        // its value under it), then wrapped; never cut.
+        FittedText(
+            AnnotatedString(format.amount(amount, token.symbol)),
+            NeonType.displayHero.copy(fontSize = 28.sp, lineHeight = (36f / 28f).em, color = n.textPrimary),
+            maxLines = Int.MAX_VALUE,
+            steps = 10,
+            smallest = 18.sp,
         )
         Spacer(Modifier.height(6.dp))
         FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {

@@ -961,17 +961,26 @@ private fun RowAmounts(numbers: RowNumbers, amountSize: TextUnit = TOKEN_ROW_AMO
     // On a line of their own the figures may take the row's whole width; past that they are set smaller, and never cut
     // silently.
     Column(horizontalAlignment = Alignment.End) {
-        // The amount is never cut: set smaller, then on a second line.
-        FittedText(AnnotatedString(numbers.main), NeonType.amountM.copy(fontSize = amountSize, color = n.textPrimary), maxLines = 2)
+        // The amount is never cut: set smaller (never as small as its value under it), then on more lines. Its value
+        // is set smaller and wraps too.
+        FittedText(
+            AnnotatedString(numbers.main),
+            NeonType.amountM.copy(fontSize = amountSize, color = n.textPrimary),
+            maxLines = Int.MAX_VALUE,
+            smallest = ROW_AMOUNT_SMALLEST,
+        )
         numbers.detail?.let {
             Spacer(Modifier.height(gap))
-            FittedText(AnnotatedString(it), NeonType.amountS.copy(color = n.textSecondary))
+            FittedText(AnnotatedString(it), NeonType.amountS.copy(color = n.textSecondary), maxLines = Int.MAX_VALUE)
         }
     }
 }
 
 /** The amount on a token row of the Wallet home. */
 private val TOKEN_ROW_AMOUNT_SIZE = 17.sp
+
+/** A step over the 13 sp of the value under a row's amount ([NeonType.amountS]). */
+internal val ROW_AMOUNT_SMALLEST = 14.sp
 
 /** The amount on a holding row under a token, and on Where it lives. */
 private val HOLDING_ROW_AMOUNT_SIZE = 16.sp

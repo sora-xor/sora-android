@@ -627,11 +627,21 @@ internal fun SheetRow(
             figures = {
                 if (trailingTop != null || trailingBottom != null) {
                     Column(horizontalAlignment = Alignment.End) {
+                        // The amount is never cut and stays the larger figure; its value wraps rather than being cut.
                         trailingTop?.let {
-                            FittedText(AnnotatedString(it), NeonType.amountM.copy(color = n.textPrimary, textAlign = TextAlign.End), maxLines = 2)
+                            FittedText(
+                                AnnotatedString(it),
+                                NeonType.amountM.copy(color = n.textPrimary, textAlign = TextAlign.End),
+                                maxLines = Int.MAX_VALUE,
+                                smallest = ROW_AMOUNT_SMALLEST,
+                            )
                         }
                         trailingBottom?.let {
-                            FittedText(AnnotatedString(it), NeonType.amountS.copy(color = n.textSecondary, textAlign = TextAlign.End))
+                            FittedText(
+                                AnnotatedString(it),
+                                NeonType.amountS.copy(color = n.textSecondary, textAlign = TextAlign.End),
+                                maxLines = Int.MAX_VALUE,
+                            )
                         }
                     }
                 }

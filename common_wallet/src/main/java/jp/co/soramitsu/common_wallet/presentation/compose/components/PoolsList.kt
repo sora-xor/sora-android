@@ -37,6 +37,7 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import jp.co.soramitsu.common.domain.DEFAULT_ICON_URI
 import jp.co.soramitsu.common.presentation.compose.TokenIcon
@@ -116,14 +117,14 @@ fun PoolsList(
                         color = MaterialTheme.customColors.fgPrimary,
                         textAlign = TextAlign.End,
                     ),
-                    maxLines = POOLED_AMOUNTS_LINES,
+                    maxLines = Int.MAX_VALUE,
+                    smallest = POOLED_AMOUNTS_SMALLEST,
                 )
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         color = MaterialTheme.customColors.fgSecondary,
                         style = MaterialTheme.customTypography.textXSBold,
                         text = poolState.fiat,
-                        maxLines = 1,
                     )
                     poolState.rewardTokenIconsList.forEach {
                         TokenIcon(
@@ -144,8 +145,8 @@ internal fun pooledAmountsText(amounts: String): String =
 
 private const val POOLED_AMOUNTS_DELIMITER = " - "
 
-/** Two amounts, and room for either to wrap once more before anything could be cut. */
-private const val POOLED_AMOUNTS_LINES = 4
+/** A step over the 11 sp of the value under the amounts: they stay the larger figures however they are fitted. */
+private val POOLED_AMOUNTS_SMALLEST = 12.sp
 
 @Composable
 @Preview

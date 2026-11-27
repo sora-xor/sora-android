@@ -23,24 +23,42 @@ private const val SMALLEST_FITTED_SP = 11f
 
 /**
  * A text's own size first, then one scaled pixel smaller at a time, at most [steps] times and never under
- * [SMALLEST_FITTED_SP]. The own size is tried exactly as given, so a text that fits is set as if nothing here
- * existed (stepping up from the smallest size in pixels, as the library's own rule does, can stop one size short
+ * [SMALLEST_FITTED_SP] or [floor]. The own size is tried exactly as given, so a text that fits is set as if nothing
+ * here existed (stepping up from the smallest size in pixels, as the library's own rule does, can stop one size short
  * of it at some densities).
+ *
+ * With [fewestLines] a text that may take several lines is first set smaller to take as few as it can at the
+ * smallest size, and only then wraps: the largest size that needs no more lines than the smallest one is taken. An
+ * amount that fits on one line a little smaller is set on one line, not on two at its own size.
  */
-private class FitDown(private val size: TextUnit, private val steps: Int) : TextAutoSize {
+private class FitDown(
+    private val size: TextUnit,
+    private val steps: Int,
+    private val floor: Float,
+    private val fewestLines: Boolean,
+) : TextAutoSize {
     override fun TextAutoSizeLayoutScope.getFontSize(constraints: Constraints, text: AnnotatedString): TextUnit {
         var candidate = size.value
-        val smallest = maxOf(SMALLEST_FITTED_SP, size.value - steps)
+        val smallest = minOf(size.value, maxOf(SMALLEST_FITTED_SP, size.value - steps, floor))
+        // The lines the text needs at its smallest, worked out only when one line will not do.
+        var fewest = 0
         while (candidate > smallest) {
-            if (!performLayout(constraints, text, candidate.sp).overflows()) return candidate.sp
+            val layout = performLayout(constraints, text, candidate.sp)
+            if (!layout.overflows()) {
+                if (!fewestLines || layout.lineCount <= 1) return candidate.sp
+                if (fewest == 0) fewest = performLayout(constraints, text, smallest.sp).lineCount
+                if (layout.lineCount <= fewest) return candidate.sp
+            }
             candidate = maxOf(smallest, candidate - 1f)
         }
         return candidate.sp
     }
 
-    override fun equals(other: Any?): Boolean = other is FitDown && other.size == size && other.steps == steps
+    override fun equals(other: Any?): Boolean =
+        other is FitDown && other.size == size && other.steps == steps && other.floor == floor &&
+            other.fewestLines == fewestLines
 
-    override fun hashCode(): Int = size.hashCode() * 31 + steps
+    override fun hashCode(): Int = ((size.hashCode() * 31 + steps) * 31 + floor.hashCode()) * 31 + fewestLines.hashCode()
 }
 
 /** Whether a laid-out text lost anything: drawn outside its bounds, or cut with an ellipsis. */
@@ -50,14 +68,30 @@ private fun TextLayoutResult.overflows(): Boolean = when (layoutInput.overflow) 
     else -> didOverflowWidth || didOverflowHeight
 }
 
-/** The rule for a text of this size, or none when the size is not in scaled pixels or already at the smallest. */
-internal fun fitDown(size: TextUnit, steps: Int): TextAutoSize? =
-    if (size.isSpecified && size.isSp && size.value > SMALLEST_FITTED_SP && steps > 0) FitDown(size, steps) else null
+/**
+ * The rule for a text of this size, or none when the size is not in scaled pixels or already at the smallest. [floor]
+ * (in scaled pixels) keeps a figure above the line set under it.
+ */
+internal fun fitDown(
+    size: TextUnit,
+    steps: Int,
+    floor: TextUnit = TextUnit.Unspecified,
+    fewestLines: Boolean = false,
+): TextAutoSize? {
+    val least = if (floor.isSpecified && floor.isSp) floor.value else 0f
+    return if (size.isSpecified && size.isSp && size.value > maxOf(SMALLEST_FITTED_SP, least) && steps > 0) {
+        FitDown(size, steps, least, fewestLines)
+    } else {
+        null
+    }
+}
 
 /**
  * A figure or a label that has to stay whole on one line: an amount, a change, a name with its unit. Where the
  * line is too narrow for it (a 320 dp screen, larger text) it is set smaller, a scaled pixel at a time down to
- * [steps] sizes, and only then cut with an ellipsis. Colours come from [style] or the text's own spans.
+ * [steps] sizes (never under [smallest]), and only then cut with an ellipsis. With more than one line allowed it is
+ * set smaller first and wraps only when even its smallest size needs more than one line (an amount given
+ * `Int.MAX_VALUE` lines is never cut). Colours come from [style] or the text's own spans.
  */
 @Composable
 fun FittedText(
@@ -66,6 +100,7 @@ fun FittedText(
     modifier: Modifier = Modifier,
     maxLines: Int = 1,
     steps: Int = 4,
+    smallest: TextUnit = TextUnit.Unspecified,
 ) {
     BasicText(
         text = text,
@@ -73,7 +108,7 @@ fun FittedText(
         style = style,
         overflow = TextOverflow.Ellipsis,
         maxLines = maxLines,
-        autoSize = fitDown(style.fontSize, steps),
+        autoSize = fitDown(style.fontSize, steps, smallest, fewestLines = maxLines > 1),
     )
 }
 
