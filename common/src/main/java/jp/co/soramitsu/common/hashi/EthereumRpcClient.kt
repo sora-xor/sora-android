@@ -234,26 +234,31 @@ class EthereumRpcClient(
     }
 
     /**
-     * What every reachable endpoint knows of the transaction [hash]: ANY mined receipt (with its
-     * status), else KNOWN when one has it pending, else UNKNOWN when at least
-     * [MINIMUM_UNANIMOUS] endpoints answered and none has it. Fewer answers throw: a lagging or
-     * missing endpoint must never make a mined transaction look absent.
+     * What every reachable endpoint knows of the transaction [hash], the most live answer winning:
+     * a receipt with status 1 anywhere, else KNOWN when one has it pending (also over another
+     * endpoint's status-0 receipt, which a reorganisation can leave behind on a lagging node),
+     * else that status-0 receipt, else UNKNOWN when at least [MINIMUM_UNANIMOUS] endpoints answered
+     * and none has it. Fewer answers throw: a lagging or missing endpoint must never make a mined
+     * or pending transaction look absent.
      */
     suspend fun lookupEverywhere(hash: ByteArray): EthTransactionLookup {
         var answers = 0
         var pending = false
+        var reverted: EthTransactionLookup.Mined? = null
         var failure: Throwable? = null
         for (endpoint in endpoints) {
             if (admitted[endpoint] == false) continue
             try {
                 if (admitted[endpoint] != true) admit(endpoint)
                 val receipt = send(endpoint, "eth_getTransactionReceipt", buildJsonArray { add(EthHex.encode(hash)) })
-                if (receipt is JsonObject) {
-                    val status = (receipt["status"] ?: throw IllegalArgumentException("ETH_RECEIPT_INVALID")).quantity()
-                    if (receipt["blockNumber"]?.takeUnless { it is JsonNull } != null) return EthTransactionLookup.Mined(status.toInt())
+                if (receipt is JsonObject && receipt["blockNumber"]?.takeUnless { it is JsonNull } != null) {
+                    val status = (receipt["status"] ?: throw IllegalArgumentException("ETH_RECEIPT_INVALID")).quantity().toInt()
+                    if (status == 1) return EthTransactionLookup.Mined(1)
+                    reverted = EthTransactionLookup.Mined(status)
+                } else {
+                    val transaction = send(endpoint, "eth_getTransactionByHash", buildJsonArray { add(EthHex.encode(hash)) })
+                    if (transaction is JsonObject) pending = true
                 }
-                val transaction = send(endpoint, "eth_getTransactionByHash", buildJsonArray { add(EthHex.encode(hash)) })
-                if (transaction is JsonObject) pending = true
                 answers += 1
             } catch (error: CancellationException) {
                 throw error
@@ -262,6 +267,7 @@ class EthereumRpcClient(
             }
         }
         if (pending) return EthTransactionLookup.Pending
+        reverted?.let { return it }
         if (answers < minOf(MINIMUM_UNANIMOUS, endpoints.size)) throw HashiRpcUnavailableException(failure)
         return EthTransactionLookup.Unknown
     }
