@@ -20,7 +20,6 @@ limitations under the License.
 package jp.co.soramitsu.feature_blockexplorer_api.presentation.screen
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -39,7 +38,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
@@ -49,7 +52,6 @@ import jp.co.soramitsu.common.presentation.compose.TokenIcon
 import jp.co.soramitsu.common.presentation.compose.components.TextWithDelimiter
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.EventUiModel
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionStatus
-import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.toName
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
@@ -98,9 +100,10 @@ internal fun EventSwap(
                 tint = Color.Unspecified
             )
         }
+        // The amounts have at least two thirds of the room left: a long label is cut short, the amounts never.
         Column(
             modifier = Modifier
-                .wrapContentSize()
+                .weight(1f, fill = false)
                 .padding(horizontal = Dimens.x1)
         ) {
             Text(
@@ -121,63 +124,25 @@ internal fun EventSwap(
             )
         }
         Column(
-            modifier = Modifier.weight(1f),
+            modifier = Modifier.weight(2f),
             horizontalAlignment = Alignment.End,
         ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .wrapContentHeight(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.End,
-            ) {
-                Row(
-                    modifier = Modifier.wrapContentSize(),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(
-                        modifier = Modifier.wrapContentSize(),
-                        text = eventUiModel.amountFrom,
-                        style = MaterialTheme.customTypography.textM,
-                        color = MaterialTheme.customColors.fgPrimary,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                    Text(
-                        modifier = Modifier.wrapContentSize(),
-                        text = eventUiModel.amountTo,
-                        style = MaterialTheme.customTypography.textM,
-                        color = MaterialTheme.customColors.statusSuccess,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
-
-                if (eventUiModel.status != TransactionStatus.COMMITTED) {
-                    val statusIcon = if (eventUiModel.status == TransactionStatus.REJECTED) {
-                        R.drawable.ic_error_16
-                    } else {
-                        R.drawable.ic_pending_16
-                    }
-
-                    Icon(
-                        modifier = Modifier
-                            .padding(start = Dimens.x1_2)
-                            .size(Dimens.x2),
-                        painter = painterResource(id = statusIcon),
-                        // Said aloud by a screen reader: a waiting or failed entry is not
-                        // distinguishable from a completed one by its icon alone.
-                        contentDescription = stringResource(id = eventUiModel.status.toName()),
-                        tint = Color.Unspecified
-                    )
-                }
-            }
+            val fromColor = MaterialTheme.customColors.fgPrimary
+            val toColor = MaterialTheme.customColors.statusSuccess
+            EventAmountWithStatus(
+                amount = buildAnnotatedString {
+                    withStyle(SpanStyle(color = fromColor)) { append(eventUiModel.amountFrom) }
+                    withStyle(SpanStyle(color = toColor)) { append(eventUiModel.amountTo) }
+                },
+                color = fromColor,
+                status = eventUiModel.status,
+            )
             Text(
                 modifier = Modifier.wrapContentSize(),
                 text = eventUiModel.fiatTo,
                 style = MaterialTheme.customTypography.textXSBold,
                 color = MaterialTheme.customColors.fgSecondary,
-                maxLines = 1,
+                textAlign = TextAlign.End,
             )
         }
     }

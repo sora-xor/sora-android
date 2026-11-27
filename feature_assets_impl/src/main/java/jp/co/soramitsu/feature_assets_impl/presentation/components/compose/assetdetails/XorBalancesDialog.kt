@@ -19,7 +19,6 @@ limitations under the License.
 
 package jp.co.soramitsu.feature_assets_impl.presentation.screens.assetdetails
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -45,6 +44,7 @@ import androidx.compose.ui.window.Dialog
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.feature_assets_impl.presentation.states.FrozenXorDetailsModel
 import jp.co.soramitsu.common.presentation.compose.neon.ContentCard
+import jp.co.soramitsu.ui_core.lit.NameAndFigures
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
@@ -66,33 +66,37 @@ internal fun XorBalancesDialog(
             // Large text on a short screen wraps the amounts onto more lines: the breakdown scrolls, and every amount,
             // Unbonding the last, can be read.
             Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
-                Row(
+                // The amount beside its label where both are whole, otherwise on a line of its own under it: a long
+                // label (another language, large text) never leaves the amount without room.
+                NameAndFigures(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Row {
+                    name = {
+                        Row {
+                            Text(
+                                text = stringResource(id = R.string.details_frozen),
+                                color = MaterialTheme.customColors.fgPrimary,
+                                style = MaterialTheme.customTypography.headline2
+                            )
+                            Icon(
+                                modifier = Modifier
+                                    .padding(start = Dimens.x1)
+                                    .size(Dimens.x2)
+                                    .align(Alignment.CenterVertically),
+                                painter = painterResource(id = R.drawable.ic_settings_info),
+                                tint = MaterialTheme.customColors.fgSecondary,
+                                contentDescription = ""
+                            )
+                        }
+                    },
+                    figures = {
                         Text(
-                            text = stringResource(id = R.string.details_frozen),
+                            text = state.frozen,
+                            textAlign = TextAlign.End,
                             color = MaterialTheme.customColors.fgPrimary,
                             style = MaterialTheme.customTypography.headline2
                         )
-                        Icon(
-                            modifier = Modifier
-                                .padding(start = Dimens.x1)
-                                .size(Dimens.x2)
-                                .align(Alignment.CenterVertically),
-                            painter = painterResource(id = R.drawable.ic_settings_info),
-                            tint = MaterialTheme.customColors.fgSecondary,
-                            contentDescription = ""
-                        )
-                    }
-                    Text(
-                        text = state.frozen,
-                        textAlign = TextAlign.End,
-                        color = MaterialTheme.customColors.fgPrimary,
-                        style = MaterialTheme.customTypography.headline2
-                    )
-                }
+                    },
+                )
                 // A value only where the token has a price: no line under the amount without one.
                 if (state.frozenFiat.isNotBlank()) {
                     Text(
@@ -157,23 +161,25 @@ internal fun XorBalancesDialog(
 
 @Composable
 private fun BalanceItem(title: String, amount: String, amountFiat: String) {
-    Row(
+    NameAndFigures(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        Text(
-            text = title,
-            textAlign = TextAlign.Start,
-            style = MaterialTheme.customTypography.textXSBold,
-            color = MaterialTheme.customColors.fgSecondary
-        )
-        Text(
-            text = amount,
-            textAlign = TextAlign.End,
-            color = MaterialTheme.customColors.fgPrimary,
-            style = MaterialTheme.customTypography.textM
-        )
-    }
+        name = {
+            Text(
+                text = title,
+                textAlign = TextAlign.Start,
+                style = MaterialTheme.customTypography.textXSBold,
+                color = MaterialTheme.customColors.fgSecondary
+            )
+        },
+        figures = {
+            Text(
+                text = amount,
+                textAlign = TextAlign.End,
+                color = MaterialTheme.customColors.fgPrimary,
+                style = MaterialTheme.customTypography.textM
+            )
+        },
+    )
     if (amountFiat.isNotBlank()) {
         Text(
             modifier = Modifier.fillMaxWidth(),

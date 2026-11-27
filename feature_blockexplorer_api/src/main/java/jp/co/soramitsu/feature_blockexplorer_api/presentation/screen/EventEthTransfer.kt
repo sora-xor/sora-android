@@ -38,7 +38,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -48,7 +48,6 @@ import jp.co.soramitsu.common.domain.DEFAULT_ICON_URI
 import jp.co.soramitsu.common.presentation.compose.TokenIcon
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.EventUiModel
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionStatus
-import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.toName
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
@@ -94,53 +93,12 @@ internal fun EventEthTransfer(
                 .wrapContentSize()
                 .padding(horizontal = Dimens.x1)
         ) {
-            Row(
-                modifier = Modifier
-                    .wrapContentHeight()
-                    .fillMaxWidth()
-            ) {
-                Row(
-                    modifier = Modifier
-                        .weight(1f)
-                        .wrapContentHeight()
-                ) {
-                    Text(
-                        modifier = Modifier.wrapContentSize(),
-                        text = stringResource(id = R.string.common_bridged),
-                        style = MaterialTheme.customTypography.textM,
-                        color = MaterialTheme.customColors.fgPrimary,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                    Text(
-                        modifier = Modifier.weight(1f),
-                        textAlign = TextAlign.End,
-                        text = eventUiModel.amountFormatted,
-                        style = MaterialTheme.customTypography.textM,
-                        color = MaterialTheme.customColors.fgPrimary,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
-                if (eventUiModel.status != TransactionStatus.COMMITTED) {
-                    val statusIcon = if (eventUiModel.status == TransactionStatus.REJECTED) {
-                        R.drawable.ic_error_16
-                    } else {
-                        R.drawable.ic_pending_16
-                    }
-
-                    Icon(
-                        modifier = Modifier
-                            .padding(start = Dimens.x1_2)
-                            .size(Dimens.x2),
-                        painter = painterResource(id = statusIcon),
-                        // Said aloud by a screen reader: a waiting or failed entry is not
-                        // distinguishable from a completed one by its icon alone.
-                        contentDescription = stringResource(id = eventUiModel.status.toName()),
-                        tint = Color.Unspecified
-                    )
-                }
-            }
+            EventLabelAndAmount(
+                label = stringResource(id = R.string.common_bridged),
+                amount = AnnotatedString(eventUiModel.amountFormatted),
+                color = MaterialTheme.customColors.fgPrimary,
+                status = eventUiModel.status,
+            )
             Text(
                 modifier = Modifier
                     .wrapContentSize(),

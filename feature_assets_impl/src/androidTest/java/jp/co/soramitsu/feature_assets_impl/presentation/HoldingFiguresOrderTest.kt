@@ -24,7 +24,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
@@ -244,6 +246,35 @@ class HoldingFiguresOrderTest {
         text(LONG_AMOUNT).assertIsDisplayed().assertNotCut()
         text("PSWAP").assertIsDisplayed().assertNotCut()
         assertAmountOverValue(text(LONG_AMOUNT), text("$1\u00A0234\u00A0567.89"))
+    }
+
+    @Test
+    fun aLongFrozenAmountBesideALongLabelIsNeverCutWithTheLargestTextOnANarrowScreen() {
+        // Turkish "Dondurulmuş" in the 18 sp headline, twice its size, 320 dp wide: the amount goes under the label.
+        narrow(fontScale = 2f) {
+            val context = LocalContext.current
+            val turkish = android.content.res.Configuration(context.resources.configuration).apply {
+                setLocale(java.util.Locale.forLanguageTag("tr"))
+            }
+            val inTurkish = context.createConfigurationContext(turkish)
+            CompositionLocalProvider(LocalContext provides inTurkish, LocalResources provides inTurkish.resources) {
+                AssetDetailsBalanceCard(
+                    amount = "0 XOR",
+                    amountFiat = "$0",
+                    frozenAmount = LONG_AMOUNT,
+                    frozenAmountFiat = "$11",
+                    onSendClick = {},
+                    onReceiveClick = {},
+                    onSwapClick = {},
+                    onBalanceClick = null,
+                    readOnly = false,
+                )
+            }
+        }
+        rule.onNodeWithText("Dondurulmuş", useUnmergedTree = true).assertIsDisplayed()
+        val frozen = rule.onNode(tagEndsWith("AssetFrozenAmount"), useUnmergedTree = true)
+        frozen.assertIsDisplayed().assertNotCut()
+        assertAmountOverValue(frozen, rule.onNode(tagEndsWith("AssetFrozenAmountFiat"), useUnmergedTree = true))
     }
 
     @Test

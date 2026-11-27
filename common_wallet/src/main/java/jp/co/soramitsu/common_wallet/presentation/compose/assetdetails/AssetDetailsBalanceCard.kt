@@ -57,6 +57,7 @@ import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.component.button.properties.Size
 import jp.co.soramitsu.common.presentation.compose.neon.ContentCard
 import jp.co.soramitsu.ui_core.extensions.withOpacity
+import jp.co.soramitsu.ui_core.lit.NameAndFigures
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
@@ -117,36 +118,40 @@ fun AssetDetailsBalanceCard(
             Spacer(modifier = Modifier.height(Dimens.x2))
 
             if (frozenAmount != null) {
-                Row(
+                // The frozen amount is the figure, beside its label where both are whole and otherwise on a line of
+                // its own under it; its value is the small line under it.
+                NameAndFigures(
                     modifier = Modifier
                         .padding(horizontal = Dimens.x3)
                         .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Row {
+                    name = {
+                        Row {
+                            Text(
+                                text = stringResource(id = R.string.details_frozen),
+                                style = MaterialTheme.customTypography.headline2,
+                                color = MaterialTheme.customColors.fgSecondary
+                            )
+                            Icon(
+                                modifier = Modifier
+                                    .padding(start = Dimens.x1)
+                                    .align(Alignment.CenterVertically)
+                                    .size(Dimens.x2),
+                                painter = painterResource(id = R.drawable.ic_neu_lock),
+                                tint = MaterialTheme.customColors.fgSecondary,
+                                contentDescription = "",
+                            )
+                        }
+                    },
+                    figures = {
                         Text(
-                            text = stringResource(id = R.string.details_frozen),
-                            style = MaterialTheme.customTypography.headline2,
-                            color = MaterialTheme.customColors.fgSecondary
+                            modifier = Modifier.testTagAsId("AssetFrozenAmount"),
+                            text = frozenAmount,
+                            textAlign = TextAlign.End,
+                            color = MaterialTheme.customColors.fgPrimary,
+                            style = MaterialTheme.customTypography.headline2
                         )
-                        Icon(
-                            modifier = Modifier
-                                .padding(start = Dimens.x1)
-                                .align(Alignment.CenterVertically)
-                                .size(Dimens.x2),
-                            painter = painterResource(id = R.drawable.ic_neu_lock),
-                            tint = MaterialTheme.customColors.fgSecondary,
-                            contentDescription = "",
-                        )
-                    }
-                    // The frozen amount is the figure; its value is the small line under it.
-                    Text(
-                        modifier = Modifier.testTagAsId("AssetFrozenAmount"),
-                        text = frozenAmount,
-                        color = MaterialTheme.customColors.fgPrimary,
-                        style = MaterialTheme.customTypography.headline2
-                    )
-                }
+                    },
+                )
                 // Its value only where there is one: no price, no line under the amount.
                 if (!frozenAmountFiat.isNullOrBlank()) {
                     Text(

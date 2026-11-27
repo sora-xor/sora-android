@@ -3,9 +3,17 @@
 package jp.co.soramitsu.sora.history
 
 import androidx.activity.ComponentActivity
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.width
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -80,6 +88,52 @@ class TransactionRowInteractionTest {
     @Test fun adarIncomeRetainsExactTokenAmount() = checkRows(listOf("1.23456789 XOR")) {
         EventAdarIncomeUiModel(hash, now, it, "", "1.23456789 XOR", peer)
     }
+    /**
+     * A long amount on a 320 dp screen with text at twice its size, on a waiting entry (its mark takes room too): every
+     * character laid out, none behind an ellipsis, no line wider than the text's place, the place never zero wide.
+     */
+    private fun assertLongAmountWhole(amount: String, row: EventUiModel) {
+        compose.setContent {
+            SoraAppTheme {
+                CompositionLocalProvider(LocalDensity provides Density(LocalDensity.current.density, fontScale = 2f)) {
+                    Box(Modifier.width(320.dp)) { TxHistoryListItem(Modifier, {}, row) }
+                }
+            }
+        }
+        val node = compose.onAllNodesWithText(amount, substring = true, useUnmergedTree = true).onFirst()
+            .assertIsDisplayed().fetchSemanticsNode()
+        val layouts = mutableListOf<TextLayoutResult>()
+        node.config[SemanticsActions.GetTextLayoutResult].action?.invoke(layouts)
+        val layout = layouts.single()
+        val text = layout.layoutInput.text
+        val lines = layout.lineCount
+        val seen = "\"$text\" in a ${node.size} place, $lines lines"
+        assertTrue("the amount has room: $seen", node.size.width > 0)
+        assertTrue("never cut with an ellipsis: $seen", (0 until lines).none(layout::isLineEllipsized))
+        assertTrue("every character is laid out: $seen", layout.getLineEnd(lines - 1, visibleEnd = true) >= text.trimEnd().length)
+        assertTrue(
+            "no line is wider than its place: $seen",
+            (0 until lines).all { layout.getLineRight(it) - layout.getLineLeft(it) <= node.size.width + 1f },
+        )
+    }
+
+    private val longAmount = "123\u00A0456\u00A0789.123456 XOR"
+
+    @Test fun aLongSentAmountOnAWaitingEntryIsWholeWithTheLargestTextOnANarrowScreen() =
+        assertLongAmountWhole(longAmount, EventTransferOutUiModel(hash, "", peer, "10:15", now, longAmount, "$5.00", TransactionStatus.PENDING))
+
+    @Test fun aLongReceivedAmountIsWholeWithTheLargestTextOnANarrowScreen() =
+        assertLongAmountWhole(longAmount, EventTransferInUiModel(hash, now, TransactionStatus.REJECTED, "", peer, "10:15", longAmount, "$5.00"))
+
+    @Test fun aLongBridgedAmountIsWholeWithTheLargestTextOnANarrowScreen() =
+        assertLongAmountWhole(longAmount, EventEthTransfer(hash, now, TransactionStatus.PENDING, "", "", "10:15", longAmount, "$5.00", "bridge-request", "0xrecipient"))
+
+    @Test fun longSwappedAmountsAreWholeWithTheLargestTextOnANarrowScreen() =
+        assertLongAmountWhole(longAmount, EventLiquiditySwapUiModel(hash, "", "", longAmount, "987\u00A0654.321 VAL", "XOR", "VAL", "$5.00", "10:15", now, TransactionStatus.PENDING))
+
+    @Test fun longPoolAmountsAreWholeWithTheLargestTextOnANarrowScreen() =
+        assertLongAmountWhole(longAmount, EventLiquidityAddUiModel(hash, now, TransactionStatus.PENDING, "10:15", "", "", longAmount, "987\u00A0654.321 VAL", "Added liquidity", "XOR", "VAL", "$5.00", true))
+
     @Test fun dateSeparatorsNeverOpenATransaction() {
         val clicked = mutableListOf<String>()
         compose.setContent { SoraAppTheme { TxHistoryListItem(Modifier.testTag("row"), clicked::add, EventUiModel.EventTimeSeparatorUiModel("Yesterday")) } }
