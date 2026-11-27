@@ -31,6 +31,9 @@ import jp.co.soramitsu.feature_wallet_impl.presentation.bridge.HashiBridgeViewMo
 import jp.co.soramitsu.feature_wallet_impl.presentation.bridge.HashiTransferAction
 import jp.co.soramitsu.feature_wallet_impl.presentation.bridge.HashiTransferViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -78,10 +81,12 @@ class HashiBridgeViewModelsTest {
 
     /**
      * A service whose background work (the submission that goes on after the screen hands it over)
-     * runs on the test's clock, so advanceUntilIdle() waits for it instead of racing a real thread.
+     * runs on the test's clock as ordinary (foreground) work, so advanceUntilIdle() runs it to the end
+     * instead of racing a real thread. (TestScope.backgroundScope would not do: advanceUntilIdle()
+     * stops once only background work is left.) The caller cancels [scope] when the test ends.
      */
-    private fun TestScope.serviceOnTestClock() =
-        HashiBridgeService(sora, ethereum, accounts, store, pollIntervalMillis = 0, backgroundScope = backgroundScope, backgroundMonitoring = false)
+    private fun serviceOnTestClock(scope: CoroutineScope) =
+        HashiBridgeService(sora, ethereum, accounts, store, pollIntervalMillis = 0, backgroundScope = scope, backgroundMonitoring = false)
 
     @Test
     fun `today's paused bridge shows the banner and keeps Continue off`() = runTest {
@@ -116,7 +121,15 @@ class HashiBridgeViewModelsTest {
 
     @Test
     fun `Continue quotes, Confirm asks for the PIN and only the PIN result sends`() = runTest {
-        val viewModel = bridgeViewModel(service = serviceOnTestClock())
+        val background = CoroutineScope(StandardTestDispatcher(testScheduler))
+        try {
+            continueConfirmAndPin(bridgeViewModel(service = serviceOnTestClock(background)))
+        } finally {
+            background.cancel()
+        }
+    }
+
+    private suspend fun TestScope.continueConfirmAndPin(viewModel: HashiBridgeViewModel) {
         advanceUntilIdle()
         assertEquals(HashiAvailabilityUi.OPEN, viewModel.state.value.availability)
         // The amount field takes USDT's 6 Ethereum decimals.
