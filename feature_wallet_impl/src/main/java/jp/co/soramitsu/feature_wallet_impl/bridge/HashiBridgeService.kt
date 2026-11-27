@@ -820,15 +820,15 @@ class HashiBridgeService(
         val sameNonce = previous?.takeIf { it.state != HashiEthStepState.CONFIRMED }?.let { old ->
             // Free means: not mined, nothing pending at it (another wallet's payment), not seen used.
             old.nonceValue.takeIf {
-                ethereum.latestNonce(from) <= it && ethereum.pendingNonce(from) <= it && minedNonceFloor(record.ethAccount) <= it
+                ethereum.latestNonce(from) <= it && ethereum.pendingNonce(from) <= it && usedNonceFloor(record.ethAccount) <= it
             }
         }
         val fees = quotedFees ?: fees(from, to, data, value)
         if (ethereum.balance(from) < value.add(fees.maximumCost)) throw HashiRefusal(HashiRefusal.Reason.INSUFFICIENT_ETH_FOR_GAS)
         // Read now, under the signing lock, never from a quote: another transaction of this
-        // account may have taken a nonce since. Never below a nonce this wallet saw mined (an
+        // account may have taken a nonce since. Never below a nonce this wallet saw used (an
         // endpoint a block behind can still answer the old count).
-        val nonce = sameNonce ?: ethereum.pendingNonce(from).max(minedNonceFloor(record.ethAccount))
+        val nonce = sameNonce ?: ethereum.pendingNonce(from).max(usedNonceFloor(record.ethAccount))
         val transaction = Eip1559Transaction(
             chainId = HashiBridgeContract.ETHEREUM_CHAIN_ID,
             nonce = nonce,
@@ -1287,12 +1287,20 @@ class HashiBridgeService(
         HashiEthIntent.CLAIM -> HashiTransferState.CLAIM_SUBMITTED
     }
 
-    /** One past the highest nonce of [ethAccount] this wallet saw mined (by a receipt), or 0. */
-    private suspend fun minedNonceFloor(ethAccount: String): BigInteger =
+    /**
+     * One past the highest nonce of [ethAccount] this wallet saw used on the chain, or 0: by a
+     * receipt of its own (mined or reverted), or by another transaction that took a step's place.
+     * Read from the saved transfers of every SORA account whose Ethereum account this is (accounts
+     * made from one phrase share it), final ones included, so it also holds after a restart.
+     */
+    private suspend fun usedNonceFloor(ethAccount: String): BigInteger =
         store.allTransfers()
-            .filter { it.ethAccount == ethAccount }
+            .filter { it.ethAccount.equals(ethAccount, ignoreCase = true) }
             .flatMap { it.ethSteps }
-            .filter { it.state == HashiEthStepState.CONFIRMED || it.state == HashiEthStepState.REVERTED }
+            .filter {
+                it.state == HashiEthStepState.CONFIRMED || it.state == HashiEthStepState.REVERTED ||
+                    (it.state == HashiEthStepState.REPLACED && it.failure == NONCE_USED_ELSEWHERE)
+            }
             .maxOfOrNull { it.nonceValue.add(BigInteger.ONE) } ?: BigInteger.ZERO
 
     /**
@@ -1382,7 +1390,7 @@ class HashiBridgeService(
         // A saved transfer that cannot be read could hold an open transaction of this account.
         if (!store.isComplete()) throw HashiRefusal(HashiRefusal.Reason.READ_FAILED, "HASHI_STORE_UNREADABLE")
         val open = store.openTransfers().any { record ->
-            record.ethAccount == ethAccount && record.ethSteps.any { it.state.isOpen }
+            record.ethAccount.equals(ethAccount, ignoreCase = true) && record.ethSteps.any { it.state.isOpen }
         }
         if (open) throw HashiRefusal(HashiRefusal.Reason.EARLIER_TRANSACTION_PENDING)
     }
