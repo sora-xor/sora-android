@@ -12,6 +12,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.CircularProgressIndicator
@@ -24,7 +26,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.KeyboardType
@@ -350,14 +358,34 @@ private fun HashiPicker(assets: List<HashiAssetItem>, onSelect: (String) -> Unit
 fun HashiConfirmDialog(confirm: HashiConfirmUi, busy: Boolean, onConfirm: () -> Unit, onDismiss: () -> Unit) {
     Dialog(onDismissRequest = onDismiss) {
         ContentCard(modifier = Modifier.fillMaxWidth().testTagAsId("HashiConfirm"), innerPadding = PaddingValues(Dimens.x3)) {
-            Column(verticalArrangement = Arrangement.spacedBy(Dimens.x1)) {
-                Text(confirm.amount, style = MaterialTheme.customTypography.headline2, color = MaterialTheme.customColors.fgPrimary)
+            // A long address, a second fee line and large text must all stay reachable on a small screen.
+            Column(
+                modifier = Modifier.verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(Dimens.x1),
+            ) {
+                // One heading for the sheet: what is confirmed and how much.
+                Column(modifier = Modifier.fillMaxWidth().semantics(mergeDescendants = true) { heading() }) {
+                    confirm.title?.let {
+                        Text(it, style = MaterialTheme.customTypography.textXSBold, color = MaterialTheme.customColors.fgSecondary)
+                    }
+                    Text(
+                        confirm.amount,
+                        modifier = Modifier.testTagAsId("HashiConfirmAmount"),
+                        style = MaterialTheme.customTypography.headline2,
+                        color = MaterialTheme.customColors.fgPrimary,
+                    )
+                }
                 HashiDetail(stringResource(R.string.hashi_bridge_you_receive), confirm.receive)
                 HashiDetail(stringResource(R.string.hashi_bridge_from), confirm.from, mono = true)
                 HashiDetail(stringResource(R.string.hashi_bridge_to), confirm.to, mono = true)
                 confirm.fees.forEach { fee -> HashiDetail(fee.label, fee.value) }
                 confirm.warning?.let {
-                    Text(it, style = MaterialTheme.customTypography.paragraphS, color = MaterialTheme.customColors.statusError)
+                    Text(
+                        it,
+                        modifier = Modifier.testTagAsId("HashiConfirmWarning"),
+                        style = MaterialTheme.customTypography.paragraphS,
+                        color = MaterialTheme.customColors.statusError,
+                    )
                 }
                 FilledButton(
                     modifier = Modifier.fillMaxWidth().padding(top = Dimens.x1).testTagAsId("HashiConfirmButton"),
@@ -445,7 +473,7 @@ fun HashiTransferScreen(
                 modifier = Modifier.testTagAsId("HashiSpeedUp"),
                 size = Size.Small,
                 order = Order.PRIMARY,
-                enabled = !state.busy,
+                enabled = state.speedUpEnabled,
                 text = stringResource(R.string.hashi_bridge_speed_up),
                 onClick = onSpeedUp,
             )
@@ -458,7 +486,7 @@ fun HashiTransferScreen(
             }
         }
     }
-    state.confirm?.let { HashiConfirmDialog(it, state.busy, onConfirm, onDismissConfirm) }
+    state.confirm?.let { HashiConfirmDialog(it, state.quoting, onConfirm, onDismissConfirm) }
 }
 
 @Composable

@@ -46,11 +46,23 @@ data class HashiTransferRecord(
     val refusal: String? = null,
     /** Outgoing claim: SORA approved another amount than expected (both shown, nothing sent). */
     val approvedAmountMismatch: String? = null,
+    /**
+     * Ether (wei) for Ethereum gas that the person confirmed on a screen and that no signed step
+     * of this transfer has taken yet. Each step of a deposit is signed within it; when a step no
+     * longer fits, nothing is signed and the person is shown the new cost. Null: nothing confirmed.
+     */
+    val gasBudget: String? = null,
     val createdAt: Long,
     val updatedAt: Long,
 ) {
     val soraUnits: BigInteger get() = BigInteger(soraAmount)
     val ethUnits: BigInteger get() = BigInteger(ethAmount)
+
+    /**
+     * The hash of every Ethereum transaction signed for this transfer so far, in order. A screen
+     * remembers it with the cost it shows; a confirmation is taken only while it is unchanged.
+     */
+    val signedHashes: List<String> get() = ethSteps.flatMap { it.hashes }
 
     fun step(intent: HashiEthIntent): HashiEthStep? = ethSteps.lastOrNull { it.intent == intent }
 
@@ -163,6 +175,9 @@ data class HashiEthStep(
 ) {
     val nonceValue: BigInteger get() = BigInteger(nonce)
     val latest: HashiEthAttempt get() = attempts.last()
+
+    /** The most the latest attempt can cost in gas. */
+    val maximumCost: BigInteger get() = BigInteger(latest.maxFeePerGas).multiply(BigInteger(gasLimit))
     val hashes: List<String> get() = attempts.map { it.hash }
 }
 

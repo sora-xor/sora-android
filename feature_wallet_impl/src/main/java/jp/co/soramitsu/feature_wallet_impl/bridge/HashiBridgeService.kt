@@ -73,6 +73,12 @@ class HashiRefusal(val reason: Reason, val detail: String? = null) : Exception(r
          * so nothing is sent twice and no nonce is used twice.
          */
         EARLIER_TRANSACTION_PENDING,
+
+        /**
+         * The Ethereum gas would cost more than the screen showed when the person confirmed.
+         * Nothing was signed; the page shows the new cost and asks again.
+         */
+        COST_CHANGED,
         READ_FAILED,
     }
 }
@@ -100,7 +106,32 @@ class IncomingQuote(
     val gasCostEstimate: BigInteger,
 )
 
-class ClaimQuote(val claim: HashiClaimCall, val fees: EthFees, val nonce: BigInteger)
+class ClaimQuote(
+    val claim: HashiClaimCall,
+    /** Exactly the fees the claim is signed with: its sheet shows their maximum cost. */
+    val fees: EthFees,
+    val nonce: BigInteger,
+    /** [HashiTransferRecord.signedHashes] when this was shown. */
+    val signedBefore: List<String> = emptyList(),
+)
+
+/** The Ethereum steps a deposit still needs, as its page shows them before the PIN. */
+class IncomingStepsQuote(
+    /** The most Ether the remaining steps may cost together: they are signed within it. */
+    val gasCost: BigInteger,
+    /** [HashiTransferRecord.signedHashes] when this was shown. */
+    val signedBefore: List<String>,
+)
+
+/** A faster replacement of one pending transaction, as its page shows it before the PIN. */
+class SpeedUpQuote(
+    val intent: HashiEthIntent,
+    val nonce: BigInteger,
+    /** The attempt this replaces: the latest one when the sheet was shown. */
+    val replaces: String,
+    /** Exactly the fees the replacement is signed with. */
+    val fees: EthFees,
+)
 
 /**
  * The HASHI bridge flows (spec §3–§5 with amendments §8): validation and pre-flight checks,
@@ -129,6 +160,9 @@ class HashiBridgeService(
      * deposit, say) cannot both pass the check and take the same nonce.
      */
     private val ethereumSigning = Mutex()
+
+    /** Held from the "no unresolved SORA transfer" check until the signed transfer is saved. */
+    private val soraSigning = Mutex()
     private val nonceUsedSince = mutableMapOf<String, Long>()
     private val rebroadcastAt = mutableMapOf<String, Long>()
 
@@ -303,7 +337,7 @@ class HashiBridgeService(
         account: SoraAccount,
         quote: OutgoingQuote,
         symbol: String,
-    ): Pair<HashiTransferRecord, PreparedSoraTransfer> {
+    ): Pair<HashiTransferRecord, PreparedSoraTransfer> = soraSigning.withLock {
         requireOpen()
         requireNoUnresolvedSubmission(account.substrateAddress)
         // Derived again after the PIN, not taken from the cache: the claim will need this
@@ -350,7 +384,7 @@ class HashiBridgeService(
                 save(record.copy(state = HashiTransferState.FAILED, failure = HashiFailure.REFUSED_BEFORE_SEND, error = detail))
                 throw HashiRefusal(HashiRefusal.Reason.DRY_RUN_FAILED, detail)
             }
-            return save(record.copy(state = HashiTransferState.SORA_SUBMITTED)) to prepared
+            save(record.copy(state = HashiTransferState.SORA_SUBMITTED)) to prepared
         } catch (error: Throwable) {
             submitting -= record.id
             throw error
@@ -407,6 +441,7 @@ class HashiBridgeService(
         if (record.state != HashiTransferState.READY_TO_CLAIM && record.state != HashiTransferState.ETHEREUM_STEP_FAILED) {
             throw HashiRefusal(HashiRefusal.Reason.NOT_READY)
         }
+        requireRepeatable(record)
         val claim = planClaim(record)
         if (ethereum.isUsed(claim.contract, claim.txHash)) {
             save(record.copy(state = HashiTransferState.DONE, error = "ALREADY_RECEIVED", failure = null))
@@ -419,10 +454,23 @@ class HashiBridgeService(
         }
         val fees = fees(from, claim.contract, claim.data, BigInteger.ZERO)
         if (ethereum.balance(from) < fees.maximumCost) throw HashiRefusal(HashiRefusal.Reason.INSUFFICIENT_ETH_FOR_GAS)
-        return ClaimQuote(claim, fees, ethereum.pendingNonce(from))
+        return ClaimQuote(claim, fees, ethereum.pendingNonce(from), record.signedHashes)
     }
 
-    /** Signs and broadcasts the claim. Called only after the person confirmed it with the PIN. */
+    /** Mined without its proof, or a deposit whose nonce went elsewhere: again could pay twice. */
+    private fun requireRepeatable(record: HashiTransferRecord) {
+        if (record.state == HashiTransferState.ETHEREUM_STEP_FAILED &&
+            (record.failure == HashiFailure.ETHEREUM_UNPROVEN || record.failure == HashiFailure.DEPOSIT_UNCONFIRMED)
+        ) {
+            throw HashiRefusal(HashiRefusal.Reason.NOT_READY)
+        }
+    }
+
+    /**
+     * Signs and broadcasts the claim with exactly the fees of [quote], the ones its sheet showed.
+     * Called only after the person confirmed it with the PIN. A second confirmation of the same
+     * sheet (from this or another screen) signs nothing.
+     */
     suspend fun sendClaim(account: SoraAccount, recordId: String, quote: ClaimQuote): HashiTransferRecord {
         if (!beginWork(recordId)) throw HashiRefusal(HashiRefusal.Reason.EARLIER_TRANSACTION_PENDING)
         return try {
@@ -434,7 +482,11 @@ class HashiBridgeService(
 
     private suspend fun sendClaimUnlocked(account: SoraAccount, recordId: String, quote: ClaimQuote): HashiTransferRecord {
         val record = store.get(account.substrateAddress, recordId) ?: throw HashiRefusal(HashiRefusal.Reason.NOT_READY)
-        if (record.step(HashiEthIntent.CLAIM)?.state?.isOpen == true) throw HashiRefusal(HashiRefusal.Reason.NOT_READY)
+        if (record.step(HashiEthIntent.CLAIM)?.state?.isOpen == true) throw HashiRefusal(HashiRefusal.Reason.EARLIER_TRANSACTION_PENDING)
+        if (record.state != HashiTransferState.READY_TO_CLAIM && record.state != HashiTransferState.ETHEREUM_STEP_FAILED) {
+            throw HashiRefusal(HashiRefusal.Reason.NOT_READY)
+        }
+        requireRepeatable(record)
         // The same claim at a new nonce only when the old nonce was consumed by another
         // transaction or ours reverted (the step is then REPLACED or REVERTED, never open).
         val again = planClaim(record)
@@ -445,7 +497,7 @@ class HashiBridgeService(
         }
         return signAndBroadcast(
             account, record, HashiEthIntent.CLAIM, again.contract, BigInteger.ZERO, again.data, quote.fees,
-            HashiTransferState.CLAIM_SUBMITTED,
+            HashiTransferState.CLAIM_SUBMITTED, signedBefore = quote.signedBefore,
         )
     }
 
@@ -574,7 +626,12 @@ class HashiBridgeService(
     suspend fun startIncoming(account: SoraAccount, quote: IncomingQuote, symbol: String): HashiTransferRecord {
         requireOpen()
         val record = save(newIncoming(account, quote, symbol))
-        return continueIncoming(account, record.id, waitForConfirmation = true)
+        if (!beginWork(record.id)) throw HashiRefusal(HashiRefusal.Reason.EARLIER_TRANSACTION_PENDING)
+        return try {
+            continueIncomingSteps(account, record.id, waitForConfirmation = true)
+        } finally {
+            endWork(record.id)
+        }
     }
 
     private suspend fun newIncoming(account: SoraAccount, quote: IncomingQuote, symbol: String): HashiTransferRecord {
@@ -595,6 +652,8 @@ class HashiBridgeService(
             recipient = EthHex.encode(account.substrateAddress.toAccountId()),
             ethAccount = ethAccount,
             state = HashiTransferState.READY_TO_DEPOSIT,
+            // What the confirmation sheet showed as the Ethereum gas: the steps are signed within it.
+            gasBudget = quote.gasCostEstimate.toString(),
             createdAt = now(),
             updatedAt = now(),
         )
@@ -607,19 +666,63 @@ class HashiBridgeService(
     suspend fun beginIncoming(account: SoraAccount, quote: IncomingQuote, symbol: String): HashiTransferRecord {
         requireOpen()
         val record = save(newIncoming(account, quote, symbol))
-        continueIncomingInBackground(account, record.id)
+        runIncomingInBackground(account, record.id, confirmed = null)
         return record
     }
 
     /**
-     * [continueIncoming] for a screen, in [backgroundScope]. The transfer counts as [working] from
-     * this call on, so its page never offers the same step twice.
+     * What continuing (or trying again) a deposit can cost at most, for its page to show before
+     * the PIN: the steps the chain's allowance still asks for, at today's fees. Nothing is signed.
      */
-    fun continueIncomingInBackground(account: SoraAccount, recordId: String) {
+    suspend fun quoteContinueIncoming(account: SoraAccount, recordId: String): IncomingStepsQuote {
+        val record = store.get(account.substrateAddress, recordId) ?: throw HashiRefusal(HashiRefusal.Reason.NOT_READY)
+        check(record.direction == HashiDirection.ETHEREUM_TO_SORA) { "HASHI_NOT_INCOMING" }
+        if (record.state != HashiTransferState.READY_TO_DEPOSIT && record.state != HashiTransferState.ETHEREUM_STEP_FAILED) {
+            throw HashiRefusal(HashiRefusal.Reason.NOT_READY)
+        }
+        requireRepeatable(record)
+        requireOpen()
+        val asset = requireIncomingStillCredited(record)
+        val from = parseAddress(record.ethAccount)
+        requireNoOpenEthereumStep(record.ethAccount)
+        val baseFee = ethereum.baseFee()
+        val priority = ethereum.priorityFee()
+        val balance = ethereum.balance(from)
+        val destination = EthHex.decodeFixed(record.recipient, 32)
+        val cost = if (asset.isNativeEther) {
+            val fees = HashiEthereumPolicy.fees(baseFee, priority, HashiBridgeContract.GAS_SEND_ETH_TO_SIDECHAIN)
+            if (balance < record.ethUnits.add(fees.maximumCost)) throw HashiRefusal(HashiRefusal.Reason.INSUFFICIENT_BALANCE)
+            fees.maximumCost
+        } else {
+            if (ethereum.tokenBalance(asset.ethToken, from) < record.ethUnits) throw HashiRefusal(HashiRefusal.Reason.INSUFFICIENT_BALANCE)
+            val allowance = ethereum.allowance(asset.ethToken, from, HashiBridgeContract.bridge)
+            if (allowance >= record.ethUnits) {
+                // Only the deposit is left and the chain can price it now (a revert shows here).
+                fees(from, HashiBridgeContract.bridge, HashiBridgeCalls.sendErc20ToSidechain(destination, record.ethUnits, asset.ethToken), BigInteger.ZERO)
+                    .maximumCost
+            } else {
+                var gas = HashiBridgeContract.GAS_APPROVE.add(HashiBridgeContract.GAS_SEND_ERC20_TO_SIDECHAIN)
+                if (allowance.signum() > 0) gas = gas.add(HashiBridgeContract.GAS_APPROVE)
+                HashiEthereumPolicy.fees(baseFee, priority, gas).maximumCost
+            }
+        }
+        if (balance < cost) throw HashiRefusal(HashiRefusal.Reason.INSUFFICIENT_ETH_FOR_GAS)
+        return IncomingStepsQuote(cost, record.signedHashes)
+    }
+
+    /**
+     * [continueIncoming] for a screen, in [backgroundScope]. The transfer counts as [working] from
+     * this call on, so its page never offers the same step twice. A second confirmation while it
+     * runs does nothing.
+     */
+    fun continueIncomingInBackground(account: SoraAccount, recordId: String, quote: IncomingStepsQuote) =
+        runIncomingInBackground(account, recordId, quote)
+
+    private fun runIncomingInBackground(account: SoraAccount, recordId: String, confirmed: IncomingStepsQuote?) {
         if (!beginWork(recordId)) return
         backgroundScope.launch {
             try {
-                runConfirmedIncoming(account, recordId)
+                runConfirmedIncoming(account, recordId, confirmed)
             } finally {
                 endWork(recordId)
             }
@@ -627,7 +730,31 @@ class HashiBridgeService(
         }
     }
 
-    private suspend fun runConfirmedIncoming(account: SoraAccount, recordId: String) {
+    /**
+     * Makes [quote] the gas ceiling of the transfer's next steps: what its sheet showed. Refused
+     * when anything was signed for the transfer since the sheet was shown (another screen's
+     * confirmation was taken first): this one then signs nothing.
+     */
+    private suspend fun acceptConfirmation(account: SoraAccount, recordId: String, quote: IncomingStepsQuote) {
+        val record = store.get(account.substrateAddress, recordId) ?: throw HashiRefusal(HashiRefusal.Reason.NOT_READY)
+        var stale = false
+        transition(record) { stored ->
+            stale = stored.signedHashes != quote.signedBefore
+            if (stale) stored else stored.copy(gasBudget = quote.gasCost.toString())
+        }
+        if (stale) throw HashiRefusal(HashiRefusal.Reason.EARLIER_TRANSACTION_PENDING)
+    }
+
+    private suspend fun runConfirmedIncoming(account: SoraAccount, recordId: String, confirmed: IncomingStepsQuote?) {
+        if (confirmed != null) {
+            try {
+                acceptConfirmation(account, recordId, confirmed)
+            } catch (_: HashiRefusal) {
+                // Another confirmation was taken first: this one does nothing, and says nothing on
+                // a transfer that has moved on.
+                return
+            }
+        }
         try {
             continueIncomingSteps(account, recordId, waitForConfirmation = true)
         } catch (error: CancellationException) {
@@ -648,12 +775,19 @@ class HashiBridgeService(
     }
 
     /**
-     * Runs the next Ethereum step of a deposit (after an explicit confirmation). Each step is
-     * chosen from the chain's current allowance, never from what was planned earlier.
+     * Runs the next Ethereum steps of a deposit, after the person confirmed [quote] with the PIN.
+     * Each step is chosen from the chain's current allowance, never from what was planned earlier,
+     * and signed within the gas the sheet of [quote] showed.
      */
-    suspend fun continueIncoming(account: SoraAccount, recordId: String, waitForConfirmation: Boolean): HashiTransferRecord {
+    suspend fun continueIncoming(
+        account: SoraAccount,
+        recordId: String,
+        quote: IncomingStepsQuote,
+        waitForConfirmation: Boolean,
+    ): HashiTransferRecord {
         if (!beginWork(recordId)) throw HashiRefusal(HashiRefusal.Reason.EARLIER_TRANSACTION_PENDING)
         return try {
+            acceptConfirmation(account, recordId, quote)
             continueIncomingSteps(account, recordId, waitForConfirmation)
         } finally {
             endWork(recordId)
@@ -663,6 +797,7 @@ class HashiBridgeService(
     private suspend fun continueIncomingSteps(account: SoraAccount, recordId: String, waitForConfirmation: Boolean): HashiTransferRecord {
         var record = store.get(account.substrateAddress, recordId) ?: throw HashiRefusal(HashiRefusal.Reason.NOT_READY)
         check(record.direction == HashiDirection.ETHEREUM_TO_SORA) { "HASHI_NOT_INCOMING" }
+        requireRepeatable(record)
         requireOpen()
         // Every step uses the token the person confirmed, never a registration read later.
         var asset = requireIncomingStillCredited(record)
@@ -752,13 +887,18 @@ class HashiBridgeService(
 
     // --- Ethereum steps (spec §8 E) -------------------------------------------------------------
 
-    private suspend fun fees(from: ByteArray, to: ByteArray, data: ByteArray, value: BigInteger): EthFees {
+    private suspend fun fees(from: ByteArray, to: ByteArray, data: ByteArray, value: BigInteger): EthFees =
+        feesNow(from, to, data, value).first
+
+    /** The fees of the call at today's prices, and the base fee they were made from. */
+    private suspend fun feesNow(from: ByteArray, to: ByteArray, data: ByteArray, value: BigInteger): Pair<EthFees, BigInteger> {
         val estimate = try {
             ethereum.estimateGas(from, to, data, value)
         } catch (revert: EthCallRevertedException) {
             throw HashiRefusal(HashiRefusal.Reason.CALL_REVERTED, revert.reason)
         }
-        return HashiEthereumPolicy.fees(ethereum.baseFee(), ethereum.priorityFee(), estimate)
+        val baseFee = ethereum.baseFee()
+        return HashiEthereumPolicy.fees(baseFee, ethereum.priorityFee(), estimate) to baseFee
     }
 
     private suspend fun signAndBroadcast(
@@ -772,9 +912,11 @@ class HashiBridgeService(
         nextState: HashiTransferState,
         /** An approval may be signed again after a confirmed one left the allowance too low. */
         repeatConfirmed: Boolean = false,
+        /** With [quotedFees]: what was signed for the transfer when the quote's sheet was shown. */
+        signedBefore: List<String>? = null,
     ): HashiTransferRecord {
         val signed = ethereumSigning.withLock {
-            signAndSave(account, record, intent, to, value, data, quotedFees, nextState, repeatConfirmed)
+            signAndSave(account, record, intent, to, value, data, quotedFees, nextState, repeatConfirmed, signedBefore)
         } ?: return record
         val (saved, step, raw) = signed
         return broadcast(saved, step, raw.raw, raw.hash)
@@ -783,10 +925,16 @@ class HashiBridgeService(
     /**
      * The signature and the save of one step, under [ethereumSigning]. Null when [intent] is
      * already confirmed and not to be repeated.
+     *
+     * What the step may cost is decided here, against the transfer as it is saved now, never
+     * against what a screen still holds: a claim is signed with exactly [quotedFees] and only
+     * while nothing was signed since their sheet was shown ([signedBefore]); a deposit's step is
+     * signed within the Ether the person confirmed and no step has taken yet
+     * ([HashiTransferRecord.gasBudget]). Otherwise nothing is signed.
      */
     private suspend fun signAndSave(
         account: SoraAccount,
-        record: HashiTransferRecord,
+        start: HashiTransferRecord,
         intent: HashiEthIntent,
         to: ByteArray,
         value: BigInteger,
@@ -794,7 +942,13 @@ class HashiBridgeService(
         quotedFees: EthFees?,
         nextState: HashiTransferState,
         repeatConfirmed: Boolean,
+        signedBefore: List<String>?,
     ): Triple<HashiTransferRecord, HashiEthStep, SignedEthTransaction>? {
+        val record = store.get(start.wallet, start.id) ?: start
+        // Another confirmation of the same sheet was taken first: this one signs nothing.
+        if (signedBefore != null && record.signedHashes != signedBefore) {
+            throw HashiRefusal(HashiRefusal.Reason.EARLIER_TRANSACTION_PENDING)
+        }
         val from = parseAddress(record.ethAccount)
         // One open transaction per Ethereum account: public nodes do not all report a pending
         // transaction in the pending nonce, so a second one could take the first one's nonce.
@@ -823,7 +977,15 @@ class HashiBridgeService(
                 ethereum.latestNonce(from) <= it && ethereum.pendingNonce(from) <= it && usedNonceFloor(record.ethAccount) <= it
             }
         }
-        val fees = quotedFees ?: fees(from, to, data, value)
+        val budget = record.gasBudget?.let(::BigInteger)
+        val fees = if (quotedFees != null) {
+            quotedFees
+        } else {
+            // A deposit's step: within what the person confirmed and no earlier step has taken.
+            val (now, baseFee) = feesNow(from, to, data, value)
+            HashiEthereumPolicy.within(now, baseFee, budget ?: BigInteger.ZERO)
+                ?: throw HashiRefusal(HashiRefusal.Reason.COST_CHANGED)
+        }
         if (ethereum.balance(from) < value.add(fees.maximumCost)) throw HashiRefusal(HashiRefusal.Reason.INSUFFICIENT_ETH_FOR_GAS)
         // Read now, under the signing lock, never from a quote: another transaction of this
         // account may have taken a nonce since. Never below a nonce this wallet saw used (an
@@ -853,7 +1015,18 @@ class HashiBridgeService(
             state = HashiEthStepState.SIGNED,
         )
         // Saved before the broadcast: an unknown result is resolved by sending these bytes again.
-        val saved = save(record.withStep(step).copy(state = nextState, error = null, failure = null, refusal = null))
+        // Onto the transfer as it is saved now (the monitor may have written a status meanwhile);
+        // what was signed for it cannot have changed, every signature is made under this lock.
+        val saved = transition(record) { stored ->
+            stored.withStep(step).copy(
+                state = nextState,
+                error = null,
+                failure = null,
+                refusal = null,
+                // What this step can cost is taken from what was confirmed.
+                gasBudget = if (quotedFees != null) stored.gasBudget else budget?.subtract(fees.maximumCost)?.max(BigInteger.ZERO)?.toString(),
+            )
+        }
         return Triple(saved, step, signed)
     }
 
@@ -919,67 +1092,87 @@ class HashiBridgeService(
         }
     }
 
+    /** The fees of [step]'s latest attempt. */
+    private fun feesOf(step: HashiEthStep): EthFees =
+        EthFees(BigInteger(step.latest.maxPriorityFeePerGas), BigInteger(step.latest.maxFeePerGas), BigInteger(step.gasLimit))
+
     /**
-     * Replaces an open step with the same transaction at the same nonce and fees at least 12.5 %
-     * higher. Called only after a PIN confirmation.
+     * A faster approval or deposit is still one: only while SORA would credit the deposit, and a
+     * deposit only while the allowance still covers it.
      */
-    suspend fun speedUp(account: SoraAccount, recordId: String): HashiTransferRecord {
+    private suspend fun requireStillWanted(record: HashiTransferRecord, step: HashiEthStep, from: ByteArray) {
+        if (record.direction != HashiDirection.ETHEREUM_TO_SORA) return
+        requireOpen()
+        val asset = requireIncomingStillCredited(record)
+        if (step.intent == HashiEthIntent.DEPOSIT && !asset.isNativeEther &&
+            ethereum.allowance(asset.ethToken, from, HashiBridgeContract.bridge) < record.ethUnits
+        ) {
+            throw HashiRefusal(HashiRefusal.Reason.NOT_READY, "ALLOWANCE_CHANGED")
+        }
+    }
+
+    /**
+     * What replacing the transfer's pending transaction with a faster one costs at most, for its
+     * page to show before the PIN: the same transaction at the same nonce with both fees at least
+     * 12.5 % higher, and never below what the network asks now. Nothing is signed.
+     */
+    suspend fun quoteSpeedUp(account: SoraAccount, recordId: String): SpeedUpQuote {
         val record = store.get(account.substrateAddress, recordId) ?: throw HashiRefusal(HashiRefusal.Reason.NOT_READY)
         val step = record.ethSteps.lastOrNull { it.state.isOpen } ?: throw HashiRefusal(HashiRefusal.Reason.NOT_READY)
         val from = parseAddress(record.ethAccount)
-        if (record.direction == HashiDirection.ETHEREUM_TO_SORA) {
-            // A faster approval or deposit is still one: only while SORA would credit the deposit,
-            // and a deposit only while the allowance still covers it.
-            requireOpen()
-            val asset = requireIncomingStillCredited(record)
-            if (step.intent == HashiEthIntent.DEPOSIT && !asset.isNativeEther &&
-                ethereum.allowance(asset.ethToken, from, HashiBridgeContract.bridge) < record.ethUnits
-            ) {
-                throw HashiRefusal(HashiRefusal.Reason.NOT_READY, "ALLOWANCE_CHANGED")
-            }
-        }
-        val old = EthFees(BigInteger(step.latest.maxPriorityFeePerGas), BigInteger(step.latest.maxFeePerGas), BigInteger(step.gasLimit))
-        val current = HashiEthereumPolicy.fees(ethereum.baseFee(), ethereum.priorityFee(), BigInteger(step.gasLimit))
-        val fees = HashiEthereumPolicy.speedUp(old, current.let { EthFees(it.maxPriorityFeePerGas, it.maxFeePerGas, old.gasLimit) })
+        requireStillWanted(record, step, from)
+        val old = feesOf(step)
+        val current = HashiEthereumPolicy.fees(ethereum.baseFee(), ethereum.priorityFee(), old.gasLimit)
+        val fees = HashiEthereumPolicy.speedUp(old, EthFees(current.maxPriorityFeePerGas, current.maxFeePerGas, old.gasLimit))
         check(HashiEthereumPolicy.isValidSpeedUp(old, fees)) { "HASHI_SPEED_UP_INVALID" }
-        val value = BigInteger(step.value)
-        if (ethereum.balance(from) < value.add(fees.maximumCost)) throw HashiRefusal(HashiRefusal.Reason.INSUFFICIENT_ETH_FOR_GAS)
-        val transaction = Eip1559Transaction(
-            HashiBridgeContract.ETHEREUM_CHAIN_ID, step.nonceValue, fees.maxPriorityFeePerGas, fees.maxFeePerGas,
-            fees.gasLimit, EthHex.decode(step.to), value, EthHex.decode(step.data),
-        )
-        val signed = accounts.withPrivateKey(account, record.ethAccount) { key -> transaction.sign(key, expectedFrom = from) }
-        val attempt = HashiEthAttempt(signed.rawHex, signed.hashHex, fees.maxFeePerGas.toString(), fees.maxPriorityFeePerGas.toString(), now())
-        // Added to the step as it is saved now: if the monitor found it mined (or replaced)
-        // during the reads above, the new attempt is dropped unsent.
-        var added: HashiEthStep? = null
-        val saved = transition(record) { stored ->
-            val inStore = stored.stepLike(step)
-            if (inStore == null || !inStore.state.isOpen) {
-                stored
-            } else {
-                inStore.copy(attempts = inStore.attempts + attempt, state = HashiEthStepState.SIGNED).let { next ->
-                    added = next
-                    stored.withStep(next)
-                }
-            }
+        if (ethereum.balance(from) < BigInteger(step.value).add(fees.maximumCost)) {
+            throw HashiRefusal(HashiRefusal.Reason.INSUFFICIENT_ETH_FOR_GAS)
         }
-        val next = added ?: return saved
-        return broadcast(saved, next, signed.raw, signed.hash)
+        return SpeedUpQuote(step.intent, step.nonceValue, step.latest.hash, fees)
     }
 
-    /** Sends the same claim, approval or deposit again at a new nonce after it reverted or was replaced. */
-    suspend fun retryEthereumStep(account: SoraAccount, recordId: String): HashiTransferRecord {
-        val record = store.get(account.substrateAddress, recordId) ?: throw HashiRefusal(HashiRefusal.Reason.NOT_READY)
-        if (record.state != HashiTransferState.ETHEREUM_STEP_FAILED) throw HashiRefusal(HashiRefusal.Reason.NOT_READY)
-        // Mined without its proof, or a deposit whose nonce went elsewhere: again could pay twice.
-        if (record.failure == HashiFailure.ETHEREUM_UNPROVEN || record.failure == HashiFailure.DEPOSIT_UNCONFIRMED) {
-            throw HashiRefusal(HashiRefusal.Reason.NOT_READY)
+    /**
+     * Replaces the pending transaction [quote] was made for with the same one at exactly the fees
+     * its sheet showed. Called only after a PIN confirmation. Decided under [ethereumSigning]
+     * against the transfer as it is saved now: when the transaction is no longer pending, or
+     * another speed-up was signed since the sheet was shown, nothing is signed. So two
+     * confirmations (two screens, a second tap) can never add up to more than one sheet showed.
+     */
+    suspend fun speedUp(account: SoraAccount, recordId: String, quote: SpeedUpQuote): HashiTransferRecord {
+        val (saved, next, signed) = ethereumSigning.withLock {
+            val record = store.get(account.substrateAddress, recordId) ?: throw HashiRefusal(HashiRefusal.Reason.NOT_READY)
+            val step = record.ethSteps.lastOrNull { it.state.isOpen && it.intent == quote.intent && it.nonceValue == quote.nonce }
+                ?: throw HashiRefusal(HashiRefusal.Reason.NOT_READY)
+            if (step.latest.hash != quote.replaces) throw HashiRefusal(HashiRefusal.Reason.EARLIER_TRANSACTION_PENDING)
+            val from = parseAddress(record.ethAccount)
+            requireStillWanted(record, step, from)
+            val fees = quote.fees
+            check(HashiEthereumPolicy.isValidSpeedUp(feesOf(step), fees)) { "HASHI_SPEED_UP_INVALID" }
+            val value = BigInteger(step.value)
+            if (ethereum.balance(from) < value.add(fees.maximumCost)) throw HashiRefusal(HashiRefusal.Reason.INSUFFICIENT_ETH_FOR_GAS)
+            val transaction = Eip1559Transaction(
+                HashiBridgeContract.ETHEREUM_CHAIN_ID, step.nonceValue, fees.maxPriorityFeePerGas, fees.maxFeePerGas,
+                fees.gasLimit, EthHex.decode(step.to), value, EthHex.decode(step.data),
+            )
+            val signed = accounts.withPrivateKey(account, record.ethAccount) { key -> transaction.sign(key, expectedFrom = from) }
+            val attempt = HashiEthAttempt(signed.rawHex, signed.hashHex, fees.maxFeePerGas.toString(), fees.maxPriorityFeePerGas.toString(), now())
+            // Added to the step as it is saved now: if the monitor found it mined (or replaced)
+            // during the reads above, the new attempt is dropped unsent.
+            var added: HashiEthStep? = null
+            val saved = transition(record) { stored ->
+                val inStore = stored.stepLike(step)
+                if (inStore == null || !inStore.state.isOpen || inStore.latest.hash != quote.replaces) {
+                    stored
+                } else {
+                    inStore.copy(attempts = inStore.attempts + attempt, state = HashiEthStepState.SIGNED).let { next ->
+                        added = next
+                        stored.withStep(next)
+                    }
+                }
+            }
+            Triple(saved, added, signed)
         }
-        return when (record.direction) {
-            HashiDirection.SORA_TO_ETHEREUM -> sendClaim(account, recordId, quoteClaim(account, recordId))
-            HashiDirection.ETHEREUM_TO_SORA -> continueIncoming(account, recordId, waitForConfirmation = true)
-        }
+        return broadcast(saved, next ?: return saved, signed.raw, signed.hash)
     }
 
     // --- Monitoring (never signs) ---------------------------------------------------------------

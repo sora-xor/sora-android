@@ -20,6 +20,8 @@ import jp.co.soramitsu.feature_wallet_impl.bridge.HashiBridgeService
 import jp.co.soramitsu.feature_wallet_impl.bridge.HashiDirection
 import jp.co.soramitsu.feature_wallet_impl.bridge.HashiRefusal
 import jp.co.soramitsu.feature_wallet_impl.bridge.HashiTransferRecord
+import jp.co.soramitsu.feature_wallet_impl.bridge.IncomingStepsQuote
+import jp.co.soramitsu.feature_wallet_impl.bridge.SpeedUpQuote
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -33,7 +35,8 @@ import kotlinx.coroutines.launch
 /**
  * The progress page of one bridge transfer. While it is shown the transfer is read again every few
  * seconds (never signed). Its buttons — receive on Ethereum, continue a deposit, try again, speed
- * up — each go through the PIN first.
+ * up — each first show what the step costs at most in Ethereum gas, then go through the PIN. The
+ * service signs within exactly what the sheet showed, and only once per sheet.
  */
 @HiltViewModel
 class HashiTransferViewModel @Inject constructor(
@@ -46,7 +49,7 @@ class HashiTransferViewModel @Inject constructor(
     numbers: NumbersFormatter,
 ) : BaseViewModel() {
 
-    private enum class Pending { CLAIM, CONTINUE, RETRY, SPEED_UP }
+    private enum class Pending { CLAIM, CONTINUE, SPEED_UP }
 
     private val texts = HashiTexts(resources, numbers)
     private val transferId: String = checkNotNull(savedStateHandle.get<String>(ARG_TRANSFER_ID))
@@ -56,6 +59,8 @@ class HashiTransferViewModel @Inject constructor(
     private var account: SoraAccount? = null
     private var record: HashiTransferRecord? = null
     private var claimQuote: ClaimQuote? = null
+    private var stepsQuote: IncomingStepsQuote? = null
+    private var speedUpQuote: SpeedUpQuote? = null
     private var pending: Pending? = null
     private var polling: Job? = null
     private var busy = false
@@ -109,47 +114,80 @@ class HashiTransferViewModel @Inject constructor(
         super.onScreenPaused()
     }
 
-    /** "Receive on Ethereum": the claim is checked (paid already? would it revert?) and shown first. */
+    /**
+     * "Receive on Ethereum", "Continue on Ethereum" and "Try again": the step is checked (paid
+     * already? would it revert?) and its cost is shown first.
+     */
     fun onPrimaryAction() {
-        val current = account ?: return
         val action = _state.value.action ?: return
+        val shown = record ?: return
         if (busy || working) return
-        when (action) {
-            HashiTransferAction.CLAIM -> {
-                setBusy(true)
-                viewModelScope.launch {
-                    try {
-                        val quote = service.quoteClaim(current, transferId)
-                        claimQuote = quote
-                        val record = record ?: return@launch
-                        confirm = HashiConfirmUi(
-                            amount = texts.amount(quote.claim.amount, record.ethDecimals, record.symbol),
-                            receive = texts.amount(quote.claim.amount, record.ethDecimals, record.symbol),
-                            from = record.ethAccount,
-                            to = record.recipient,
-                            fees = listOf(texts.gas(quote.fees.maximumCost)),
-                        )
-                        pending = Pending.CLAIM
-                        notice = null
-                    } catch (cancel: CancellationException) {
-                        throw cancel
-                    } catch (refusal: HashiRefusal) {
-                        notice = texts.refusal(refusal, record?.ethDecimals ?: 0)
-                    } catch (_: Exception) {
-                        notice = texts.refusal(HashiRefusal(HashiRefusal.Reason.READ_FAILED), 0)
-                    } finally {
-                        setBusy(false)
-                    }
-                }
+        val title = texts.string(
+            when (action) {
+                HashiTransferAction.CLAIM -> R.string.hashi_bridge_receive_on_ethereum
+                HashiTransferAction.CONTINUE_DEPOSIT -> R.string.hashi_bridge_continue_deposit
+                HashiTransferAction.TRY_AGAIN -> R.string.hashi_bridge_try_again
             }
-            HashiTransferAction.CONTINUE_DEPOSIT -> askPin(Pending.CONTINUE)
-            HashiTransferAction.TRY_AGAIN -> askPin(Pending.RETRY)
+        )
+        if (shown.direction == HashiDirection.SORA_TO_ETHEREUM) {
+            quoteThenAsk(Pending.CLAIM) { current ->
+                val quote = service.quoteClaim(current, transferId)
+                claimQuote = quote
+                sheet(shown, title, texts.gas(quote.fees.maximumCost), quote.claim.amount)
+            }
+        } else {
+            quoteThenAsk(Pending.CONTINUE) { current ->
+                val quote = service.quoteContinueIncoming(current, transferId)
+                stepsQuote = quote
+                sheet(shown, title, texts.gas(quote.gasCost))
+            }
         }
     }
 
+    /** "Speed up": the replacement's highest possible cost is shown first. */
     fun onSpeedUp() {
-        if (!_state.value.canSpeedUp || busy) return
-        askPin(Pending.SPEED_UP)
+        val shown = record ?: return
+        if (!_state.value.speedUpEnabled || busy) return
+        quoteThenAsk(Pending.SPEED_UP) { current ->
+            val quote = service.quoteSpeedUp(current, transferId)
+            speedUpQuote = quote
+            sheet(shown, texts.string(R.string.hashi_bridge_speed_up), texts.gas(quote.fees.maximumCost))
+        }
+    }
+
+    /** The sheet of one Ethereum step: what moves, between which accounts, and the most its gas can cost. */
+    private fun sheet(shown: HashiTransferRecord, title: String, gas: HashiFeeUi, claimAmount: java.math.BigInteger? = null): HashiConfirmUi {
+        val onEthereum = texts.amount(claimAmount ?: shown.ethUnits, shown.ethDecimals, shown.symbol)
+        val outgoing = shown.direction == HashiDirection.SORA_TO_ETHEREUM
+        return HashiConfirmUi(
+            title = title,
+            amount = onEthereum,
+            receive = if (outgoing) onEthereum else texts.amount(shown.soraUnits, shown.soraPrecision, shown.symbol),
+            from = shown.ethAccount,
+            to = if (outgoing) shown.recipient else shown.wallet,
+            fees = listOf(gas),
+        )
+    }
+
+    private fun quoteThenAsk(what: Pending, quote: suspend (SoraAccount) -> HashiConfirmUi) {
+        val current = account ?: return
+        setBusy(true)
+        viewModelScope.launch {
+            try {
+                clearQuotes()
+                confirm = quote(current)
+                pending = what
+                notice = null
+            } catch (cancel: CancellationException) {
+                throw cancel
+            } catch (refusal: HashiRefusal) {
+                notice = texts.refusal(refusal, record?.ethDecimals ?: 0)
+            } catch (_: Exception) {
+                notice = texts.refusal(HashiRefusal(HashiRefusal.Reason.READ_FAILED), 0)
+            } finally {
+                setBusy(false)
+            }
+        }
     }
 
     fun onConfirm() {
@@ -159,33 +197,36 @@ class HashiTransferViewModel @Inject constructor(
 
     fun onDismissConfirm() {
         confirm = null
-        claimQuote = null
-        pending = null
+        clearQuotes()
         render()
     }
 
-    private fun askPin(what: Pending) {
-        pending = what
-        mainRouter.showPin(PinCodeAction.CONFIRM_BRIDGE)
+    private fun clearQuotes() {
+        claimQuote = null
+        stepsQuote = null
+        speedUpQuote = null
+        pending = null
     }
 
+    /**
+     * The PIN was accepted for the sheet that is shown. Each quote is handed to the service once;
+     * a second call (a result delivered twice) finds nothing pending.
+     */
     fun onPinConfirmed() {
         val current = account ?: return
         val what = pending ?: return
-        pending = null
+        val claim = claimQuote
+        val steps = stepsQuote
+        val speedUp = speedUpQuote
+        clearQuotes()
         confirm = null
         setBusy(true)
         viewModelScope.launch {
             try {
                 when (what) {
-                    Pending.CLAIM -> service.sendClaim(current, transferId, checkNotNull(claimQuote))
-                    Pending.CONTINUE -> service.continueIncomingInBackground(current, transferId)
-                    Pending.RETRY -> if (record?.direction == HashiDirection.ETHEREUM_TO_SORA) {
-                        service.continueIncomingInBackground(current, transferId)
-                    } else {
-                        service.retryEthereumStep(current, transferId)
-                    }
-                    Pending.SPEED_UP -> service.speedUp(current, transferId)
+                    Pending.CLAIM -> service.sendClaim(current, transferId, checkNotNull(claim))
+                    Pending.CONTINUE -> service.continueIncomingInBackground(current, transferId, checkNotNull(steps))
+                    Pending.SPEED_UP -> service.speedUp(current, transferId, checkNotNull(speedUp))
                 }
                 notice = null
             } catch (cancel: CancellationException) {
@@ -195,7 +236,6 @@ class HashiTransferViewModel @Inject constructor(
             } catch (error: Exception) {
                 onError(error)
             } finally {
-                claimQuote = null
                 setBusy(false)
             }
         }

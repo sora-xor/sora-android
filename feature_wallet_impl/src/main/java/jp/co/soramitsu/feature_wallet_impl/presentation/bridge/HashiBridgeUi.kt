@@ -46,6 +46,8 @@ data class HashiAssetItem(
 )
 
 data class HashiConfirmUi(
+    /** What is being confirmed: the direction, or the step's name (receive, continue, speed up). */
+    val title: String? = null,
     val amount: String,
     val receive: String,
     val from: String,
@@ -109,7 +111,11 @@ data class HashiTransferUiState(
     val ethHash: String? = null,
     val action: HashiTransferAction? = null,
     val canSpeedUp: Boolean = false,
+    /** Off only while this page itself is reading a quote or handing a confirmation over. */
+    val speedUpEnabled: Boolean = false,
     val busy: Boolean = false,
+    /** This page is reading a quote or handing a confirmation over: its sheet's button is off. */
+    val quoting: Boolean = false,
     val confirm: HashiConfirmUi? = null,
 )
 
@@ -154,6 +160,7 @@ class HashiTexts(private val resources: ResourceManager, private val numbers: Nu
         HashiRefusal.Reason.NOT_READY -> resources.getString(R.string.hashi_bridge_state_waiting)
         HashiRefusal.Reason.ALREADY_RECEIVED -> resources.getString(R.string.hashi_bridge_state_already_received)
         HashiRefusal.Reason.EARLIER_TRANSACTION_PENDING -> resources.getString(R.string.hashi_bridge_error_pending)
+        HashiRefusal.Reason.COST_CHANGED -> resources.getString(R.string.hashi_bridge_error_cost_changed)
         HashiRefusal.Reason.READ_FAILED -> resources.getString(R.string.hashi_bridge_error_read)
     }
 
@@ -350,7 +357,11 @@ class HashiTexts(private val resources: ResourceManager, private val numbers: Nu
                 else -> null
             }.takeUnless { working },
             canSpeedUp = openStep != null,
+            // A pending transaction can be made faster while the service waits for it: the service
+            // decides under its signing lock, against the saved transfer.
+            speedUpEnabled = openStep != null && !busy,
             busy = busy || working,
+            quoting = busy,
             confirm = confirm,
         )
     }

@@ -26,6 +26,21 @@ object HashiEthereumPolicy {
     }
 
     /**
+     * [fees] made to cost at most [budget], the Ether the person confirmed: unchanged when they
+     * fit, else with a lower `maxFeePerGas` as long as that still leaves room for the base fee to
+     * rise by one full block (12.5 %) above [baseFee] with the tip on top. Null when even that
+     * does not fit: nothing is signed and the person is shown the new cost.
+     */
+    fun within(fees: EthFees, baseFee: BigInteger, budget: BigInteger): EthFees? {
+        if (fees.maximumCost <= budget) return fees
+        if (budget.signum() <= 0) return null
+        val maxFee = budget.divide(fees.gasLimit)
+        val floor = baseFee.multiply(BigInteger.valueOf(9)).add(BigInteger.valueOf(7)).divide(BigInteger.valueOf(8))
+            .add(fees.maxPriorityFeePerGas)
+        return if (maxFee >= floor) EthFees(fees.maxPriorityFeePerGas, maxFee, fees.gasLimit) else null
+    }
+
+    /**
      * A replacement at the same nonce: both fees at least 12.5 % above the old ones (rounded up),
      * and never below what the network asks now ([current]).
      */

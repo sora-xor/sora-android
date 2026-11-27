@@ -294,6 +294,7 @@ class HashiBridgeViewModel @Inject constructor(
     }
 
     private fun confirmOf(quote: OutgoingQuote, item: HashiAssetItem) = HashiConfirmUi(
+        title = resources.getString(R.string.hashi_bridge_to_ethereum),
         amount = texts.amount(quote.soraAmount, quote.asset.soraPrecision, item.token.symbol),
         receive = texts.amount(quote.ethAmount, quote.asset.ethDecimals, item.token.symbol),
         from = account?.substrateAddress.orEmpty(),
@@ -304,6 +305,7 @@ class HashiBridgeViewModel @Inject constructor(
     )
 
     private fun confirmOf(quote: IncomingQuote, item: HashiAssetItem) = HashiConfirmUi(
+        title = resources.getString(R.string.hashi_bridge_to_sora),
         amount = texts.amount(quote.ethAmount, quote.asset.ethDecimals, item.token.symbol),
         receive = texts.amount(quote.soraAmount, quote.asset.soraPrecision, item.token.symbol),
         from = _state.value.ethereumAccount.orEmpty(),
