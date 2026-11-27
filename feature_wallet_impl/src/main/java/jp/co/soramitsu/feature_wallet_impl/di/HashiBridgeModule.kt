@@ -40,8 +40,12 @@ object HashiBridgeModule {
 
     @Provides
     @Singleton
-    fun provideHashiTransferStore(@ApplicationContext context: Context): HashiTransferStore =
-        FileHashiTransferStore(File(context.noBackupFilesDir, "hashi-bridge"))
+    fun provideHashiTransferStore(
+        @ApplicationContext context: Context,
+        testChains: Optional<HashiBridgeTestChains>,
+    ): HashiTransferStore =
+        // A debug build's stand-in chains keep their transfers apart (always absent in release builds).
+        FileHashiTransferStore(testChains.orElse(null)?.transfersDirectory() ?: File(context.noBackupFilesDir, "hashi-bridge"))
 
     @Provides
     @Singleton

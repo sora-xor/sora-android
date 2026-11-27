@@ -86,6 +86,13 @@ interface HashiEthereumGateway {
 interface HashiBridgeTestChains {
     /** Null: the real chains. */
     fun gateways(): Pair<HashiSoraGateway, HashiEthereumGateway>?
+
+    /**
+     * Where the bridge keeps its transfers while the stand-in is on: never the real store, so a
+     * transaction signed for the stand-in can never be sent to a real network later (the monitor
+     * re-sends the saved bytes of unfinished transfers). Null exactly when [gateways] is null.
+     */
+    fun transfersDirectory(): java.io.File?
 }
 
 /** The wallet's Ethereum account (spec §1). */

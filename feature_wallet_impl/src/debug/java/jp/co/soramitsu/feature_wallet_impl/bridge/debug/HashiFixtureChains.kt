@@ -53,7 +53,9 @@ import kotlinx.serialization.json.Json
  *
  * It is on only while `no_backup/hashi-fixture/controls.json` exists when the app starts; a
  * test puts it there (`adb shell run-as … `). Without the file a debug build talks to the real
- * chains, like a release build.
+ * chains, like a release build. While it is on, the bridge keeps its transfers in
+ * `no_backup/hashi-fixture/transfers`, never in the real store: a transaction signed for the
+ * pretend chain is never re-sent to Ethereum after the file is removed.
  *
  * Everything the pretend chains know is kept in `chain.json` beside it and written after every
  * change, so stopping the app in the middle of a transfer and starting it again continues from
@@ -70,15 +72,22 @@ object HashiFixtureModule {
 }
 
 class HashiFixtureChains(private val directory: File) : HashiBridgeTestChains {
+    /** Decided once per process, so the gateways and the transfer store always agree. */
+    private val on: Boolean by lazy { File(directory, CONTROLS).isFile }
+
     override fun gateways(): Pair<HashiSoraGateway, HashiEthereumGateway>? {
-        if (!File(directory, CONTROLS).isFile) return null
+        if (!on) return null
         val world = FixtureWorld(directory)
         return FixtureSora(world) to FixtureEthereum(world)
     }
 
+    /** The pretend chains' transfers live beside them, never in the real store. */
+    override fun transfersDirectory(): File? = if (on) File(directory, TRANSFERS) else null
+
     companion object {
         const val CONTROLS = "controls.json"
         const val CHAIN = "chain.json"
+        const val TRANSFERS = "transfers"
     }
 }
 
