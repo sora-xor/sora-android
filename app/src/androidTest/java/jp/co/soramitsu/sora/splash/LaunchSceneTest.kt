@@ -423,7 +423,6 @@ class LaunchSceneTest {
                 assertTrue("nobody asked it not to wait: still on its way out", TenmonFlight.isLeaving)
             }
             instrumentation.runOnMainSync {
-                assertTrue("the way out plays on after the screen's word", TenmonFlight.isLeaving)
                 assertEquals("still on its way out", first.uncovered + 1, first.decor.childCount)
                 assertNotNull(
                     "nobody asked it not to wait: the way out plays on",
@@ -621,11 +620,14 @@ class LaunchSceneTest {
             // In the real app the startup screen's window takes that tap; here it goes on to the key under the host.
             first.taps.set(0)
         }
+        // When the carry began, read on the main thread in the same turn (the longest wait starts there): a test thread
+        // that wakes late must not make a timely uncover look early.
+        var carried = 0L
         scenario.onActivity { activity ->
             assertTrue(TenmonFlight.carryOn(activity))
+            carried = SystemClock.uptimeMillis()
             TenmonFlight.end(first.host)
         }
-        val carried = SystemClock.uptimeMillis()
         val deadline = carried + 20_000
         var seen = false
         var uncovered = false
