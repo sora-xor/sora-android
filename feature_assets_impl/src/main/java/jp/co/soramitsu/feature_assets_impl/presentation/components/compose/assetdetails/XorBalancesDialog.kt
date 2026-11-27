@@ -89,13 +89,16 @@ internal fun XorBalancesDialog(
                         style = MaterialTheme.customTypography.headline2
                     )
                 }
-                Text(
-                    modifier = Modifier.fillMaxWidth(),
-                    text = state.frozenFiat,
-                    textAlign = TextAlign.End,
-                    style = MaterialTheme.customTypography.headline3,
-                    color = MaterialTheme.customColors.fgSecondary
-                )
+                // A value only where the token has a price: no line under the amount without one.
+                if (state.frozenFiat.isNotBlank()) {
+                    Text(
+                        modifier = Modifier.fillMaxWidth(),
+                        text = state.frozenFiat,
+                        textAlign = TextAlign.End,
+                        style = MaterialTheme.customTypography.headline3,
+                        color = MaterialTheme.customColors.fgSecondary
+                    )
+                }
                 Spacer(modifier = Modifier.height(Dimens.x3))
 
                 BalanceItem(
@@ -167,11 +170,13 @@ private fun BalanceItem(title: String, amount: String, amountFiat: String) {
             style = MaterialTheme.customTypography.textM
         )
     }
-    Text(
-        modifier = Modifier.fillMaxWidth(),
-        textAlign = TextAlign.End,
-        text = amountFiat,
-        style = MaterialTheme.customTypography.textXSBold,
-        color = MaterialTheme.customColors.fgSecondary
-    )
+    if (amountFiat.isNotBlank()) {
+        Text(
+            modifier = Modifier.fillMaxWidth(),
+            textAlign = TextAlign.End,
+            text = amountFiat,
+            style = MaterialTheme.customTypography.textXSBold,
+            color = MaterialTheme.customColors.fgSecondary
+        )
+    }
 }

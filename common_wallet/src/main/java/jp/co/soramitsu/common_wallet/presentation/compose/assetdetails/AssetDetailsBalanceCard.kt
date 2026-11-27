@@ -116,7 +116,7 @@ fun AssetDetailsBalanceCard(
 
             Spacer(modifier = Modifier.height(Dimens.x2))
 
-            if (frozenAmount != null && frozenAmountFiat != null) {
+            if (frozenAmount != null) {
                 Row(
                     modifier = Modifier
                         .padding(horizontal = Dimens.x3)
@@ -147,16 +147,19 @@ fun AssetDetailsBalanceCard(
                         style = MaterialTheme.customTypography.headline2
                     )
                 }
-                Text(
-                    modifier = Modifier
-                        .padding(horizontal = Dimens.x3)
-                        .fillMaxWidth()
-                        .testTagAsId("AssetFrozenAmountFiat"),
-                    text = frozenAmountFiat,
-                    textAlign = TextAlign.End,
-                    style = MaterialTheme.customTypography.textXSBold,
-                    color = MaterialTheme.customColors.fgSecondary
-                )
+                // Its value only where there is one: no price, no line under the amount.
+                if (!frozenAmountFiat.isNullOrBlank()) {
+                    Text(
+                        modifier = Modifier
+                            .padding(horizontal = Dimens.x3)
+                            .fillMaxWidth()
+                            .testTagAsId("AssetFrozenAmountFiat"),
+                        text = frozenAmountFiat,
+                        textAlign = TextAlign.End,
+                        style = MaterialTheme.customTypography.textXSBold,
+                        color = MaterialTheme.customColors.fgSecondary
+                    )
+                }
             }
             if (lockedNote != null) {
                 // Says why the liquid balance is smaller than what the account holds. An

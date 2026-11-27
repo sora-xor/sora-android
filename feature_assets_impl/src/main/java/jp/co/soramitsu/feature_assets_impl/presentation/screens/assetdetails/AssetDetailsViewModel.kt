@@ -34,11 +34,13 @@ import jp.co.soramitsu.androidfoundation.resource.ResourceManager
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.AssetHolder
+import jp.co.soramitsu.common.domain.Token
+import jp.co.soramitsu.common.domain.calcFiat
+import jp.co.soramitsu.common.domain.formatFiat
 import jp.co.soramitsu.common.domain.formatFiatAmount
 import jp.co.soramitsu.common.domain.formatFiatChange
 import jp.co.soramitsu.common.domain.formatFiatOrEmpty
 import jp.co.soramitsu.common.domain.iconUri
-import jp.co.soramitsu.common.domain.printFiat
 import jp.co.soramitsu.common.logger.WalletDiagnostics
 import jp.co.soramitsu.common.presentation.compose.components.initSmallTitle2
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
@@ -170,10 +172,8 @@ class AssetDetailsViewModel @AssistedInject constructor(
                             numbersFormatter,
                             AssetHolder.ROUNDING,
                         ),
-                        transferableBalanceFiat = asset.token.printFiat(
-                            transferable,
-                            numbersFormatter,
-                        ),
+                        // With no price there is no value: the amount stands alone, never over a "$0" it is not.
+                        transferableBalanceFiat = asset.token.valueOrEmpty(transferable),
                         frozenBalance = xorBalance?.let {
                             asset.token.printBalance(
                                 it.frozen,
@@ -181,9 +181,7 @@ class AssetDetailsViewModel @AssistedInject constructor(
                                 AssetHolder.ROUNDING
                             )
                         },
-                        frozenBalanceFiat = xorBalance?.let {
-                            asset.token.printFiat(it.frozen, numbersFormatter)
-                        },
+                        frozenBalanceFiat = xorBalance?.let { asset.token.valueOrEmpty(it.frozen) },
                         lockedNote = xorBalance?.locked
                             ?.takeIf { it > BigDecimal.ZERO }
                             ?.let { locked ->
@@ -287,37 +285,37 @@ class AssetDetailsViewModel @AssistedInject constructor(
                                     numbersFormatter,
                                     AssetHolder.ROUNDING,
                                 ),
-                                token.printFiat(xorBalance.frozen, numbersFormatter),
+                                token.valueOrEmpty(xorBalance.frozen),
                                 token.printBalance(
                                     xorBalance.bonded,
                                     numbersFormatter,
                                     AssetHolder.ROUNDING,
                                 ),
-                                token.printFiat(xorBalance.bonded, numbersFormatter),
+                                token.valueOrEmpty(xorBalance.bonded),
                                 token.printBalance(
                                     xorBalance.locked,
                                     numbersFormatter,
                                     AssetHolder.ROUNDING,
                                 ),
-                                token.printFiat(xorBalance.locked, numbersFormatter),
+                                token.valueOrEmpty(xorBalance.locked),
                                 token.printBalance(
                                     xorBalance.reserved,
                                     numbersFormatter,
                                     AssetHolder.ROUNDING,
                                 ),
-                                token.printFiat(xorBalance.reserved, numbersFormatter),
+                                token.valueOrEmpty(xorBalance.reserved),
                                 token.printBalance(
                                     xorBalance.redeemable,
                                     numbersFormatter,
                                     AssetHolder.ROUNDING,
                                 ),
-                                token.printFiat(xorBalance.redeemable, numbersFormatter),
+                                token.valueOrEmpty(xorBalance.redeemable),
                                 token.printBalance(
                                     xorBalance.unbonding,
                                     numbersFormatter,
                                     AssetHolder.ROUNDING,
                                 ),
-                                token.printFiat(xorBalance.unbonding, numbersFormatter),
+                                token.valueOrEmpty(xorBalance.unbonding),
                             )
                         )
                     )
@@ -331,4 +329,11 @@ class AssetDetailsViewModel @AssistedInject constructor(
             }
         }
     }
+
+    /**
+     * What [amount] of this token is worth, or nothing when the token has no price: an amount stands alone rather than
+     * over a "$0" it is not worth.
+     */
+    private fun Token.valueOrEmpty(amount: BigDecimal): String =
+        calcFiat(amount)?.let { formatFiat(it, numbersFormatter) }.orEmpty()
 }

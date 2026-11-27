@@ -159,6 +159,41 @@ class AssetDetailsViewModelTest {
         }
 
     @Test
+    fun `a token with no price shows its amounts alone, never over a zero value`() = runTest {
+        coEvery { assetsInteractor.getXorBalance(any()) } returns
+            liveBreakdown(transferable = "40", locked = "110")
+        val unpriced = allLocked.copy(token = allLocked.token.copy(fiatPrice = null, fiatSymbol = "$"))
+        val viewModel = viewModel(unpriced)
+        advanceUntilIdle()
+
+        val page = viewModel.state.state
+        assertEquals("40 XOR", page.transferableBalance)
+        assertEquals("", page.transferableBalanceFiat)
+        assertEquals("110 XOR", page.frozenBalance)
+        assertEquals("", page.frozenBalanceFiat)
+
+        viewModel.onBalanceClick()
+        advanceUntilIdle()
+        val breakdown = checkNotNull(viewModel.state.state.xorBalance)
+        assertEquals("", breakdown.frozenFiat)
+        assertEquals("", breakdown.lockedFiat)
+        assertEquals("", breakdown.bondedFiat)
+    }
+
+    @Test
+    fun `a priced token shows the value of each amount under it`() = runTest {
+        coEvery { assetsInteractor.getXorBalance(any()) } returns
+            liveBreakdown(transferable = "40", locked = "110")
+        val priced = allLocked.copy(token = allLocked.token.copy(fiatPrice = 2.0, fiatSymbol = "$"))
+        val viewModel = viewModel(priced)
+        advanceUntilIdle()
+
+        val page = viewModel.state.state
+        assertTrue(page.transferableBalanceFiat, page.transferableBalanceFiat.startsWith("$80"))
+        assertTrue(page.frozenBalanceFiat.orEmpty(), page.frozenBalanceFiat.orEmpty().startsWith("$220"))
+    }
+
+    @Test
     fun `when the network cannot be asked the amounts saved with the balance are shown`() =
         runTest {
             coEvery { assetsInteractor.getXorBalance(any()) } throws IOException("socket closed")
