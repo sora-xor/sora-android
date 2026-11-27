@@ -420,9 +420,14 @@ class HashiBridgeService(
         submitting -= record.id
     }
 
-    private suspend fun applySubmission(record: HashiTransferRecord, outcome: SoraSubmission): HashiTransferRecord = when (outcome) {
-        is SoraSubmission.Included -> {
-            val requestHash = try {
+    /**
+     * Writes what the submission said onto the transfer as it is saved now, and only while SORA's
+     * answer is still the newest news: the monitor may have found the block and the request (and
+     * the person may have claimed already) before this call returned, and that is never undone.
+     */
+    private suspend fun applySubmission(record: HashiTransferRecord, outcome: SoraSubmission): HashiTransferRecord {
+        val requestHash = if (outcome is SoraSubmission.Included) {
+            try {
                 sora.requestHashOf(outcome.blockHash, checkNotNull(record.soraExtrinsicHash))
             } catch (error: CancellationException) {
                 throw error
@@ -430,26 +435,29 @@ class HashiBridgeService(
                 // Included; the request hash is read again when the transfer is refreshed.
                 null
             }
-            if (requestHash == null) {
-                save(record.copy(state = HashiTransferState.SORA_SUBMITTED, soraBlockHash = outcome.blockHash))
-            } else {
-                save(
-                    record.copy(
+        } else {
+            null
+        }
+        return transition(record) { current ->
+            if (!current.state.isSoraUnresolved) return@transition current
+            when (outcome) {
+                is SoraSubmission.Included -> if (requestHash == null) {
+                    current.copy(state = HashiTransferState.SORA_SUBMITTED, soraBlockHash = current.soraBlockHash ?: outcome.blockHash)
+                } else {
+                    current.copy(
                         state = HashiTransferState.WAITING_APPROVALS,
                         soraBlockHash = outcome.blockHash,
                         requestHash = EthHex.encode(requestHash),
                         error = null,
                     )
+                }
+                is SoraSubmission.FailedOnChain -> current.copy(
+                    state = HashiTransferState.FAILED, failure = HashiFailure.FAILED_ON_SORA, error = outcome.detail,
                 )
+                is SoraSubmission.NotSent -> current.copy(state = HashiTransferState.FAILED, failure = HashiFailure.NOT_SENT, error = outcome.detail)
+                SoraSubmission.Pending -> current.copy(state = HashiTransferState.SORA_SUBMITTED)
             }
         }
-        is SoraSubmission.FailedOnChain -> save(
-            record.copy(state = HashiTransferState.FAILED, failure = HashiFailure.FAILED_ON_SORA, error = outcome.detail)
-        )
-        is SoraSubmission.NotSent -> save(
-            record.copy(state = HashiTransferState.FAILED, failure = HashiFailure.NOT_SENT, error = outcome.detail)
-        )
-        SoraSubmission.Pending -> save(record.copy(state = HashiTransferState.SORA_SUBMITTED))
     }
 
     /** Prepares the claim of an approved withdrawal; available while new transfers are paused. */
@@ -462,7 +470,7 @@ class HashiBridgeService(
         requireRepeatable(record)
         val claim = planClaim(record)
         if (ethereum.isUsed(claim.contract, claim.txHash)) {
-            save(record.copy(state = HashiTransferState.DONE, error = "ALREADY_RECEIVED", failure = null))
+            markAlreadyReceived(record)
             throw HashiRefusal(HashiRefusal.Reason.ALREADY_RECEIVED)
         }
         val from = parseAddress(record.ethAccount)
@@ -510,13 +518,29 @@ class HashiBridgeService(
         val again = planClaim(record)
         check(again.data.contentEquals(quote.claim.data)) { "HASHI_CLAIM_CHANGED" }
         if (ethereum.isUsed(again.contract, again.txHash)) {
-            save(record.copy(state = HashiTransferState.DONE, error = "ALREADY_RECEIVED", failure = null))
+            markAlreadyReceived(record)
             throw HashiRefusal(HashiRefusal.Reason.ALREADY_RECEIVED)
         }
         return signAndBroadcast(
             account, record, HashiEthIntent.CLAIM, again.contract, BigInteger.ZERO, again.data, quote.fees,
             HashiTransferState.CLAIM_SUBMITTED, signedBefore = quote.signedBefore, confirmationsBefore = quote.confirmationsBefore,
         )
+    }
+
+    /**
+     * The claim is paid on Ethereum. Written onto the transfer as it is saved now, never over a
+     * copy read before the network call: a claim this wallet signed meanwhile (on another page)
+     * keeps its step, so its nonce stays counted. Then it is DONE only once that claim is settled.
+     */
+    private suspend fun markAlreadyReceived(record: HashiTransferRecord) {
+        transition(record) { current ->
+            when {
+                current.state.isFinal -> current
+                // Our own claim is out: the monitor reads its receipt and finishes the transfer.
+                current.ethSteps.any { it.state.isOpen } -> current
+                else -> current.copy(state = HashiTransferState.DONE, error = "ALREADY_RECEIVED", failure = null)
+            }
+        }
     }
 
     private suspend fun planClaim(record: HashiTransferRecord): HashiClaimCall {
@@ -528,7 +552,7 @@ class HashiBridgeService(
         return try {
             HashiClaimPlanner.plan(asset, request, parseAddress(record.recipient), expected)
         } catch (mismatch: HashiClaimAmountMismatchException) {
-            save(record.copy(approvedAmountMismatch = "${mismatch.expected}/${mismatch.approved}"))
+            transition(record) { it.copy(approvedAmountMismatch = "${mismatch.expected}/${mismatch.approved}") }
             throw HashiRefusal(HashiRefusal.Reason.AMOUNT_MISMATCH, "${mismatch.expected}/${mismatch.approved}")
         } catch (error: IllegalArgumentException) {
             throw HashiRefusal(HashiRefusal.Reason.NOT_READY, error.message)
@@ -783,8 +807,8 @@ class HashiBridgeService(
             // Nothing was signed for the refused step. The transfer keeps its place and says why.
             val refusal = error as? HashiRefusal
             try {
-                store.get(account.substrateAddress, recordId)?.let {
-                    save(it.copy(refusal = (refusal?.reason ?: HashiRefusal.Reason.READ_FAILED).name, error = refusal?.detail))
+                store.get(account.substrateAddress, recordId)?.let { record ->
+                    transition(record) { it.copy(refusal = (refusal?.reason ?: HashiRefusal.Reason.READ_FAILED).name, error = refusal?.detail) }
                 }
             } catch (cancellation: CancellationException) {
                 throw cancellation
@@ -855,13 +879,14 @@ class HashiBridgeService(
                 // yet (endpoints can be a block apart). Read again before concluding anything.
                 allowanceReads += 1
                 if (allowanceReads > MAX_ALLOWANCE_READS) {
-                    return save(
-                        record.copy(
-                            state = HashiTransferState.ETHEREUM_STEP_FAILED,
-                            failure = HashiFailure.ALLOWANCE_NOT_SET,
-                            error = null,
-                        )
-                    )
+                    // Onto the transfer as saved now: a step the monitor found meanwhile stays.
+                    return transition(record) { current ->
+                        if (current.state.isFinal || current.ethSteps.any { it.state.isOpen }) {
+                            current
+                        } else {
+                            current.copy(state = HashiTransferState.ETHEREUM_STEP_FAILED, failure = HashiFailure.ALLOWANCE_NOT_SET, error = null)
+                        }
+                    }
                 }
                 delay(pollIntervalMillis)
                 return@repeat
