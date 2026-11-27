@@ -310,8 +310,8 @@ class LaunchSceneTest {
             val first = firstScreen(scenario)
             assumeTrue("a hot phone shows the plain scene", first.mode == TenmonFlight.Mode.TRACED)
             awaitFrames(first.host)
-            // While the wallet is checked: a finger on the rings.
-            tap(first.host)
+            // While the wallet is checked: a finger on the rings, sent through the window's views on the main thread.
+            tapInWindow(first, first.host)
             scenario.onActivity { activity ->
                 assertTrue(TenmonFlight.carryOn(activity))
                 TenmonFlight.end(first.host)
@@ -365,7 +365,7 @@ class LaunchSceneTest {
             assumeTrue("a hot phone shows the plain scene", first.mode == TenmonFlight.Mode.TRACED)
             awaitFrames(first.host)
             // While the wallet is checked: a finger on the rings. The first screen then never says it is ready.
-            tap(first.host)
+            tapInWindow(first, first.host)
             scenario.onActivity { activity ->
                 assertTrue(TenmonFlight.carryOn(activity))
                 TenmonFlight.end(first.host)
@@ -566,11 +566,21 @@ class LaunchSceneTest {
     }
 
     /** A touch on [first]'s key sent through its window's views, on the main thread, in the caller's turn. */
-    private fun touchKey(first: FirstScreen, action: Int, downTime: Long) {
+    private fun touchKey(first: FirstScreen, action: Int, downTime: Long) = touchInWindow(first, first.key, action, downTime)
+
+    /** A tap on [view] sent through [first]'s window's views from the main thread, then the main queue drained. */
+    private fun tapInWindow(first: FirstScreen, view: View) {
+        val down = SystemClock.uptimeMillis()
+        instrumentation.runOnMainSync { touchInWindow(first, view, MotionEvent.ACTION_DOWN, down) }
+        instrumentation.runOnMainSync { touchInWindow(first, view, MotionEvent.ACTION_UP, down) }
+        instrumentation.waitForIdleSync()
+    }
+
+    private fun touchInWindow(first: FirstScreen, view: View, action: Int, downTime: Long) {
         val place = IntArray(2)
-        first.key.getLocationInWindow(place)
-        val x = place[0] + first.key.width / 2f
-        val y = place[1] + first.key.height * 0.75f
+        view.getLocationInWindow(place)
+        val x = place[0] + view.width / 2f
+        val y = place[1] + view.height * 0.75f
         val event = MotionEvent.obtain(downTime, SystemClock.uptimeMillis(), action, x, y, 0)
         event.source = InputDevice.SOURCE_TOUCHSCREEN
         try {
