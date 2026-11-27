@@ -39,7 +39,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -49,7 +48,6 @@ import jp.co.soramitsu.common.domain.DEFAULT_ICON_URI
 import jp.co.soramitsu.common.presentation.compose.TokenIcon
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.EventUiModel
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionStatus
-import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.toName
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
@@ -111,67 +109,22 @@ internal fun EventDemeterStake(
         }
         Column(
             modifier = Modifier
-                .wrapContentSize()
-                .padding(horizontal = Dimens.x1)
+                .weight(1f)
+                .padding(start = Dimens.x1)
         ) {
-            Text(
-                modifier = Modifier.wrapContentSize(),
-                text = stringResource(id = if (eventUiModel.stake) R.string.demeter_staked_liquidity else R.string.demeter_unstaked_liquidity),
-                style = MaterialTheme.customTypography.textM,
-                color = MaterialTheme.customColors.fgPrimary,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
+            // The amount beside the label where both are whole, otherwise on a line of its own under it, wrapping
+            // rather than cut (320 dp, larger text, a long translation).
+            EventLabelAndAmount(
+                label = stringResource(id = if (eventUiModel.stake) R.string.demeter_staked_liquidity else R.string.demeter_unstaked_liquidity),
+                amount = AnnotatedString("%s %s".format(eventUiModel.amountFormatted, eventUiModel.symbols)),
+                color = if (eventUiModel.stake) MaterialTheme.customColors.fgPrimary else MaterialTheme.customColors.statusSuccess,
+                status = eventUiModel.status,
             )
             Text(
                 modifier = Modifier.wrapContentSize(),
                 text = stringResource(id = R.string.explore_demeter_title),
                 style = MaterialTheme.customTypography.textXSBold,
                 overflow = TextOverflow.Ellipsis,
-                color = MaterialTheme.customColors.fgSecondary,
-                maxLines = 1,
-            )
-        }
-        Column(
-            modifier = Modifier.weight(1f),
-            horizontalAlignment = Alignment.End,
-        ) {
-            Row(
-                modifier = Modifier.wrapContentSize(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    modifier = Modifier.wrapContentSize(),
-                    text = "%s %s".format(eventUiModel.amountFormatted, eventUiModel.symbols),
-                    textAlign = TextAlign.End,
-                    overflow = TextOverflow.Ellipsis,
-                    style = MaterialTheme.customTypography.textM,
-                    color = if (eventUiModel.stake) MaterialTheme.customColors.fgPrimary else MaterialTheme.customColors.statusSuccess,
-                    maxLines = 1,
-                )
-
-                if (eventUiModel.status != TransactionStatus.COMMITTED) {
-                    val statusIcon = if (eventUiModel.status == TransactionStatus.REJECTED) {
-                        R.drawable.ic_error_16
-                    } else {
-                        R.drawable.ic_pending_16
-                    }
-
-                    Icon(
-                        modifier = Modifier
-                            .padding(start = Dimens.x1_2)
-                            .size(Dimens.x2),
-                        painter = painterResource(id = statusIcon),
-                        // Said aloud by a screen reader: a waiting or failed entry is not
-                        // distinguishable from a completed one by its icon alone.
-                        contentDescription = stringResource(id = eventUiModel.status.toName()),
-                        tint = Color.Unspecified
-                    )
-                }
-            }
-            Text(
-                modifier = Modifier.wrapContentSize(),
-                text = "",
-                style = MaterialTheme.customTypography.textXSBold,
                 color = MaterialTheme.customColors.fgSecondary,
                 maxLines = 1,
             )

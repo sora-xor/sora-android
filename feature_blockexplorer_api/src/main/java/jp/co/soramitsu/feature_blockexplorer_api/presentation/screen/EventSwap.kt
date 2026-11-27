@@ -21,7 +21,6 @@ package jp.co.soramitsu.feature_blockexplorer_api.presentation.screen
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -41,7 +40,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -52,6 +50,7 @@ import jp.co.soramitsu.common.presentation.compose.TokenIcon
 import jp.co.soramitsu.common.presentation.compose.components.TextWithDelimiter
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.EventUiModel
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionStatus
+import jp.co.soramitsu.ui_core.lit.NameAndFigures
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
@@ -61,60 +60,56 @@ internal fun EventSwap(
     eventUiModel: EventUiModel.EventTxUiModel.EventLiquiditySwapUiModel,
     modifier: Modifier,
 ) {
-    Row(
+    // The label (and the tickers under it) beside the amounts where both are whole, otherwise the amounts on a line of
+    // their own under it, at the end, wrapping rather than cut: each block at its own width, in either direction.
+    NameAndFigures(
         modifier = modifier.padding(vertical = Dimens.x1),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        ConstraintLayout(
-            modifier = Modifier.wrapContentSize()
-        ) {
-            val (token1, token2, typeIcon) = createRefs()
-            TokenIcon(
-                modifier = Modifier.constrainAs(token1) {
-                    top.linkTo(parent.top)
-                    start.linkTo(parent.start)
-                },
-                uri = eventUiModel.iconFrom,
-                size = 28.dp,
-            )
-            TokenIcon(
-                modifier = Modifier.constrainAs(token2) {
-                    top.linkTo(token1.top, margin = 12.dp)
-                    start.linkTo(token1.start, margin = 12.dp)
-                },
-                uri = eventUiModel.iconTo,
-                size = 28.dp,
-            )
-            Icon(
-                modifier = Modifier
-                    .size(Dimens.x2)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.customColors.bgSurface)
-                    .padding(2.dp)
-                    .constrainAs(typeIcon) {
-                        bottom.linkTo(token2.bottom)
-                        start.linkTo(token2.start, margin = (-16).dp)
+        leadingGap = Dimens.x1,
+        leading = {
+            ConstraintLayout(
+                modifier = Modifier.wrapContentSize()
+            ) {
+                val (token1, token2, typeIcon) = createRefs()
+                TokenIcon(
+                    modifier = Modifier.constrainAs(token1) {
+                        top.linkTo(parent.top)
+                        start.linkTo(parent.start)
                     },
-                painter = painterResource(id = R.drawable.ic_polkaswap_40),
-                contentDescription = null,
-                tint = Color.Unspecified
-            )
-        }
-        // The amounts have at least two thirds of the room left: a long label is cut short, the amounts never.
-        Column(
-            modifier = Modifier
-                .weight(1f, fill = false)
-                .padding(horizontal = Dimens.x1)
-        ) {
+                    uri = eventUiModel.iconFrom,
+                    size = 28.dp,
+                )
+                TokenIcon(
+                    modifier = Modifier.constrainAs(token2) {
+                        top.linkTo(token1.top, margin = 12.dp)
+                        start.linkTo(token1.start, margin = 12.dp)
+                    },
+                    uri = eventUiModel.iconTo,
+                    size = 28.dp,
+                )
+                Icon(
+                    modifier = Modifier
+                        .size(Dimens.x2)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.customColors.bgSurface)
+                        .padding(2.dp)
+                        .constrainAs(typeIcon) {
+                            bottom.linkTo(token2.bottom)
+                            start.linkTo(token2.start, margin = (-16).dp)
+                        },
+                    painter = painterResource(id = R.drawable.ic_polkaswap_40),
+                    contentDescription = null,
+                    tint = Color.Unspecified
+                )
+            }
+        },
+        name = {
             Text(
-                modifier = Modifier.wrapContentSize(),
                 text = stringResource(id = R.string.polkaswap_swapped),
                 style = MaterialTheme.customTypography.textM,
                 color = MaterialTheme.customColors.fgPrimary,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
             )
-
+        },
+        below = {
             TextWithDelimiter(
                 text1 = eventUiModel.tickerFrom,
                 text2 = eventUiModel.tickerTo,
@@ -122,30 +117,28 @@ internal fun EventSwap(
                 color = MaterialTheme.customColors.fgSecondary,
                 style = MaterialTheme.customTypography.textXSBold
             )
-        }
-        Column(
-            modifier = Modifier.weight(2f),
-            horizontalAlignment = Alignment.End,
-        ) {
-            val fromColor = MaterialTheme.customColors.fgPrimary
-            val toColor = MaterialTheme.customColors.statusSuccess
-            EventAmountWithStatus(
-                amount = buildAnnotatedString {
-                    withStyle(SpanStyle(color = fromColor)) { append(eventUiModel.amountFrom) }
-                    withStyle(SpanStyle(color = toColor)) { append(eventUiModel.amountTo) }
-                },
-                color = fromColor,
-                status = eventUiModel.status,
-            )
-            Text(
-                modifier = Modifier.wrapContentSize(),
-                text = eventUiModel.fiatTo,
-                style = MaterialTheme.customTypography.textXSBold,
-                color = MaterialTheme.customColors.fgSecondary,
-                textAlign = TextAlign.End,
-            )
-        }
-    }
+        },
+        figures = {
+            Column(horizontalAlignment = Alignment.End) {
+                val fromColor = MaterialTheme.customColors.fgPrimary
+                val toColor = MaterialTheme.customColors.statusSuccess
+                EventAmountWithStatus(
+                    amount = buildAnnotatedString {
+                        withStyle(SpanStyle(color = fromColor)) { append(eventUiModel.amountFrom) }
+                        withStyle(SpanStyle(color = toColor)) { append(eventUiModel.amountTo) }
+                    },
+                    color = fromColor,
+                    status = eventUiModel.status,
+                )
+                Text(
+                    text = eventUiModel.fiatTo,
+                    style = MaterialTheme.customTypography.textXSBold,
+                    color = MaterialTheme.customColors.fgSecondary,
+                    textAlign = TextAlign.End,
+                )
+            }
+        },
+    )
 }
 
 @Preview(showBackground = true)

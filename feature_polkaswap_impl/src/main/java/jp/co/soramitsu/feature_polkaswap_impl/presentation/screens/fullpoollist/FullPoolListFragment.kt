@@ -23,17 +23,14 @@ import android.os.Bundle
 import android.view.View
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
@@ -53,6 +50,7 @@ import jp.co.soramitsu.common.base.theOnlyRoute
 import jp.co.soramitsu.common.domain.BottomBarController
 import jp.co.soramitsu.common.presentation.compose.components.NothingFoundText
 import jp.co.soramitsu.common_wallet.presentation.compose.components.PoolsList
+import jp.co.soramitsu.ui_core.lit.NameAndFigures
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
@@ -81,7 +79,9 @@ class FullPoolListFragment : SoraBaseFragment<FullPoolListViewModel>() {
                     .fillMaxSize()
             ) {
                 val state = viewModel.state.collectAsStateWithLifecycle()
-                Row(
+                // The total beside the heading where both are whole, otherwise on a line of its own under it: a long
+                // translation or larger text never leaves the total without room.
+                NameAndFigures(
                     modifier = Modifier
                         .padding(
                             start = Dimens.x3,
@@ -91,23 +91,22 @@ class FullPoolListFragment : SoraBaseFragment<FullPoolListViewModel>() {
                         )
                         .fillMaxWidth()
                         .wrapContentHeight(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(
-                        modifier = Modifier.wrapContentSize(),
-                        text = stringResource(id = R.string.pooled_assets),
-                        style = MaterialTheme.customTypography.headline2,
-                        color = MaterialTheme.customColors.fgPrimary,
-                    )
-                    Text(
-                        modifier = Modifier.weight(1f),
-                        text = state.value.fiatSum,
-                        textAlign = TextAlign.End,
-                        style = MaterialTheme.customTypography.headline2,
-                        color = MaterialTheme.customColors.fgPrimary,
-                    )
-                }
+                    name = {
+                        Text(
+                            text = stringResource(id = R.string.pooled_assets),
+                            style = MaterialTheme.customTypography.headline2,
+                            color = MaterialTheme.customColors.fgPrimary,
+                        )
+                    },
+                    figures = {
+                        Text(
+                            text = state.value.fiatSum,
+                            textAlign = TextAlign.End,
+                            style = MaterialTheme.customTypography.headline2,
+                            color = MaterialTheme.customColors.fgPrimary,
+                        )
+                    },
+                )
                 Column(
                     modifier = Modifier
                         .fillMaxSize()

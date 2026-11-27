@@ -4,6 +4,7 @@ package jp.co.soramitsu.sora.history
 
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.mutableStateOf
@@ -89,14 +90,15 @@ class TransactionRowInteractionTest {
         EventAdarIncomeUiModel(hash, now, it, "", "1.23456789 XOR", peer)
     }
     /**
-     * A long amount on a 320 dp screen with text at twice its size, on a waiting entry (its mark takes room too): every
-     * character laid out, none behind an ellipsis, no line wider than the text's place, the place never zero wide.
+     * A long amount on a 320 dp screen with text at twice its size, on a waiting entry (its mark takes room too), in a
+     * card's 24 dp margins as Recent activity has them: every character laid out, none behind an ellipsis, no line
+     * wider than the text's place nor below it, the place never zero wide and shown whole.
      */
     private fun assertLongAmountWhole(amount: String, row: EventUiModel) {
         compose.setContent {
             SoraAppTheme {
                 CompositionLocalProvider(LocalDensity provides Density(LocalDensity.current.density, fontScale = 2f)) {
-                    Box(Modifier.width(320.dp)) { TxHistoryListItem(Modifier, {}, row) }
+                    Box(Modifier.width(320.dp).padding(horizontal = 24.dp)) { TxHistoryListItem(Modifier, {}, row) }
                 }
             }
         }
@@ -114,6 +116,14 @@ class TransactionRowInteractionTest {
         assertTrue(
             "no line is wider than its place: $seen",
             (0 until lines).all { layout.getLineRight(it) - layout.getLineLeft(it) <= node.size.width + 1f },
+        )
+        assertTrue("no line falls below its place: $seen", !layout.didOverflowHeight && layout.getLineBottom(lines - 1) <= node.size.height + 1f)
+        val shown = node.boundsInRoot
+        val origin = node.positionInRoot
+        assertTrue(
+            "the place shows whole, ${node.size} at $origin in $shown: $seen",
+            origin.x >= shown.left - 1f && origin.x + node.size.width <= shown.right + 1f &&
+                origin.y >= shown.top - 1f && origin.y + node.size.height <= shown.bottom + 1f,
         )
     }
 
@@ -133,6 +143,17 @@ class TransactionRowInteractionTest {
 
     @Test fun longPoolAmountsAreWholeWithTheLargestTextOnANarrowScreen() =
         assertLongAmountWhole(longAmount, EventLiquidityAddUiModel(hash, now, TransactionStatus.PENDING, "10:15", "", "", longAmount, "987\u00A0654.321 VAL", "Added liquidity", "XOR", "VAL", "$5.00", true))
+
+    private val longFarmAmount = "123\u00A0456\u00A0789.123456"
+
+    @Test fun aLongStakedAmountIsWholeWithTheLargestTextOnANarrowScreen() =
+        assertLongAmountWhole(longFarmAmount, EventDemeterStakeUiModel(hash, now, TransactionStatus.PENDING, "", "", "", true, longFarmAmount, "XOR / VAL"))
+
+    @Test fun aLongWithdrawnFarmAmountIsWholeWithTheLargestTextOnANarrowScreen() =
+        assertLongAmountWhole(longFarmAmount, EventDemeterStakeUiModel(hash, now, TransactionStatus.REJECTED, "", "", "", false, longFarmAmount, "XOR / VAL"))
+
+    @Test fun aLongReferralBondIsWholeWithTheLargestTextOnANarrowScreen() =
+        assertLongAmountWhole(longAmount, EventReferralProgramUiModel(hash, now, TransactionStatus.PENDING, "", R.string.referral_bond_button_title, "Invitations bonded", false, "10:15", longAmount))
 
     @Test fun dateSeparatorsNeverOpenATransaction() {
         val clicked = mutableListOf<String>()
