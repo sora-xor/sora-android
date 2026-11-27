@@ -54,6 +54,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -67,6 +68,7 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
@@ -120,6 +122,10 @@ private object OrbitDepth {
 }
 
 internal val ORBIT_HEIGHT = 252.dp
+
+/** The orbit, and each satellite's amount on it, for tests. */
+internal const val ORBIT_TEST_TAG = "WhereItLivesOrbit"
+internal const val ORBIT_AMOUNT_TEST_TAG = "WhereItLivesOrbitAmount"
 
 /** The orbit is on screen while the scroll has not passed its bottom (top bar space plus the orbit). */
 /** The top bar: its row starts where the home's top row does. */
@@ -291,20 +297,35 @@ private fun Orbit(
     val edge = Color.White.copy(alpha = if (dark) 0.2f else 0.9f)
     val measurer = rememberTextMeasurer()
     val density = LocalDensity.current
+    val cy = ORBIT_HEIGHT * 0.54f
+    val ry = 48.dp
+    // A satellite's amount wraps onto more lines with large text: the orbit is as tall as its lowest amount needs
+    // (tilted as far as it goes), so no digit is drawn over what comes under the orbit.
+    val orbitHeight = with(density) {
+        networks.foldIndexed(ORBIT_HEIGHT) { index, tallest, network ->
+            val angle = (angles.getOrNull(index) ?: 0.0) * PI / 180
+            val pill = measurer.measure(
+                text = AnnotatedString(format.amount(amounts.getValue(network))),
+                style = NeonType.amountS,
+                constraints = Constraints(maxWidth = (SATELLITE_WIDTH - SATELLITE_PILL_PADDING * 2).roundToPx()),
+            )
+            val pillBottom = cy + ry * sin(angle).toFloat() - 26.dp + 52.dp + 2.dp + pill.size.height.toDp() + 2.dp
+            maxOf(tallest, pillBottom + (OrbitDepth.SATELLITES * OrbitDepth.Y_RATIO).dp)
+        }
+    }
     // The orbit is a picture drawn on a canvas that is not mirrored: it is laid out left to right in every language,
     // so the satellites and the gate stand where their lines are drawn.
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
         BoxWithConstraints(
             Modifier
                 .fillMaxWidth()
-                .height(ORBIT_HEIGHT)
+                .height(orbitHeight)
+                .testTag(ORBIT_TEST_TAG)
         ) {
             val width = maxWidth
             val cx = width / 2
-            val cy = ORBIT_HEIGHT * 0.54f
             // Narrow enough that the side satellites' amounts stay on screen.
             val rx = min(150.dp, (width - 96.dp) / 2)
-            val ry = 48.dp
             val gateX = width - 62.dp
             val gateY = 48.dp
             val positions = networks.mapIndexed { index, network ->
@@ -382,10 +403,14 @@ private fun Orbit(
                     // A side satellite stands near the screen's edge on a narrow phone: where its amount would
                     // not be whole on the screen however the phone is tilted, the satellite moves in as far as it
                     // must and its badge stays on the ring, so the amount stands a little off its badge's middle.
-                    val pillWidth = with(density) {
-                        val pill = measurer.measure(format.amount(amount), NeonType.amountS, maxLines = 1, softWrap = false)
-                        pill.size.width.toDp()
-                    } + SATELLITE_PILL_PADDING * 2
+                    // The pill is never wider than its satellite: a longer amount is set smaller or wraps there.
+                    val pillWidth = min(
+                        with(density) {
+                            val pill = measurer.measure(format.amount(amount), NeonType.amountS, maxLines = 1, softWrap = false)
+                            pill.size.width.toDp()
+                        } + SATELLITE_PILL_PADDING * 2,
+                        SATELLITE_WIDTH,
+                    )
                     val pillLeft = pos.first - pillWidth / 2
                     val pillRight = pos.first + pillWidth / 2
                     val inward = when {
@@ -421,6 +446,7 @@ private fun Orbit(
                             NeonType.amountS.copy(color = n.textPrimary, textAlign = TextAlign.Center),
                             maxLines = Int.MAX_VALUE,
                             modifier = Modifier
+                                .testTag(ORBIT_AMOUNT_TEST_TAG)
                                 .clip(RoundedCornerShape(9.dp))
                                 .background(if (dark) Color.Black.copy(alpha = 0.35f) else Color.White.copy(alpha = 0.85f))
                                 .padding(horizontal = SATELLITE_PILL_PADDING, vertical = 1.dp),

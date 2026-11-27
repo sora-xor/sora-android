@@ -3,7 +3,9 @@
 package jp.co.soramitsu.sora.portfolio
 
 import androidx.activity.ComponentActivity
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
@@ -11,8 +13,11 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.domain.AssetHolder
@@ -439,6 +444,28 @@ class PortfolioInteractionCoverageTest {
         compose.onAllNodesWithText(format.amount(testnet.total, xor.symbol)).onFirst().assertExists()
         compose.onNodeWithText(PortfolioFormat.NO_VALUE).assertDoesNotExist()
         compose.onNodeWithText("$0", substring = true).assertDoesNotExist()
+    }
+
+    @Test fun longOrbitAmountsWithTheLargestTextOnANarrowScreenStayOnScreenAndInTheOrbit() {
+        // Three networks (one in front, at the bottom of the ring), long amounts, 320 dp wide, text at twice its size.
+        val long = BigDecimal("123456789.123456")
+        val model = model(holdings = listOf(source.copy(total = long), secondary.copy(total = long), testnet.copy(total = long)))
+        show {
+            Box(Modifier.width(320.dp)) {
+                CompositionLocalProvider(LocalDensity provides Density(LocalDensity.current.density, fontScale = 2f)) {
+                    WhereItLivesScreen(model, xor.id, PortfolioFormat(NumbersFormatter(), "$"), TiltState(), rememberScrollState(), actions)
+                }
+            }
+        }
+        val orbit = compose.onNodeWithTag(ORBIT_TEST_TAG).getUnclippedBoundsInRoot()
+        val amounts = compose.onAllNodesWithTag(ORBIT_AMOUNT_TEST_TAG, useUnmergedTree = true)
+        amounts.assertCountEquals(3)
+        repeat(3) { index ->
+            val pill = amounts[index].getUnclippedBoundsInRoot()
+            assertTrue("amount $index starts on screen: $pill", pill.left >= 0.dp)
+            assertTrue("amount $index ends on screen: $pill", pill.right <= 320.dp)
+            assertTrue("amount $index stays in the orbit, above the token's header: $pill in $orbit", pill.bottom <= orbit.bottom)
+        }
     }
 
     @Test fun aPricedTokenSaysItsShareOfTheTotal() {
