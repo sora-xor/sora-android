@@ -73,8 +73,11 @@ class HoldingFiguresOrderTest {
         val layouts = mutableListOf<TextLayoutResult>()
         fetchSemanticsNode().config[SemanticsActions.GetTextLayoutResult].action?.invoke(layouts)
         val layout = layouts.single()
-        assertTrue("the amount is never cut", (0 until layout.lineCount).none(layout::isLineEllipsized))
-        assertTrue("the amount is never cut", !layout.didOverflowWidth && !layout.didOverflowHeight)
+        val seen = "\"${layout.layoutInput.text}\" in ${layout.size} of ${layout.layoutInput.constraints}, " +
+            "${layout.lineCount} lines, text ${layout.multiParagraph.width} x ${layout.multiParagraph.height}"
+        assertTrue("never cut with an ellipsis: $seen", (0 until layout.lineCount).none(layout::isLineEllipsized))
+        assertTrue("never wider than its place: $seen", !layout.didOverflowWidth)
+        assertTrue("never taller than its place: $seen", !layout.didOverflowHeight)
     }
 
     private fun assertAmountOverValue(amount: SemanticsNodeInteraction, value: SemanticsNodeInteraction) {
